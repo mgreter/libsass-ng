@@ -828,7 +828,7 @@ namespace Sass {
           throw Exception::ModuleAlreadyKnown(compiler, rule->ns());
         }
 
-        std::cerr << "LOADED " << rule->ns() << "\n";
+        //std::cerr << "LOADED " << rule->ns() << "\n";
 
         frame->module->moduse[rule->ns()] =
         { rule->root47()->idxs, rule->root47() };
@@ -941,7 +941,7 @@ namespace Sass {
     callStackFrame cframe(logger, trace);
     // std::cerr << "LOad: " << rule->url() << "\n";
     if (Root* root = loadModRule(rule)) {
-      std::cerr << "LOADED mod rule\n";
+      // std::cerr << "LOADED mod rule\n";
       modctx42->upstream.push_back(root);
       if (!root->isCompiled) {
         ImportStackFrame iframe(compiler, root->import);
@@ -975,7 +975,7 @@ namespace Sass {
       }
     }
 
-    std::cerr << "Expose use rule\n";
+    // std::cerr << "Expose use rule\n";
     exposeUseRule(rule);
     return nullptr;
   }

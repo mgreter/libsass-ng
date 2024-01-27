@@ -1470,7 +1470,7 @@ namespace Sass {
 
     }
     else if (isPlainCss) {
-      std::cerr << "Must create PlainCss callable\n";
+      // std::cerr << "Must create PlainCss callable\n";
       callable = SASS_MEMORY_NEW(PlainCssCallable,
         function->pstate(), function->name());
     }

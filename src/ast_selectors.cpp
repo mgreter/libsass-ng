@@ -1204,7 +1204,7 @@ namespace Sass {
           if (SelectorList* sel = pseudo->selector()) {
             auto asd = sel->resolveParentSelectors(
               parents, traces, implicit_parent);
-            std::cerr << "Resolved [" << asd->inspect() << "]\n";
+            // std::cerr << "Resolved [" << asd->inspect() << "]\n";
             pseudo->selector(asd);
           }
         }

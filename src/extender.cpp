@@ -1012,7 +1012,7 @@ namespace Sass {
               if (newComplex->leadingCombinators().empty() ||
                 ListEquality(complex->leadingCombinators(), newComplex->leadingCombinators(), PtrObjEqualityFn<SelectorCombinator>)) {
                 if (complex->hasPreLineFeed() || newComplex->hasPreLineFeed()) {
-                  std::cerr << "has pre line feed\n";
+                  // std::cerr << "has pre line feed\n";
                 }
                 add.push_back(SASS_MEMORY_NEW(ComplexSelector, complex->pstate(),
                   complex->leadingCombinators(), newComplex->elements(),
