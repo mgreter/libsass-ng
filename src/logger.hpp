@@ -21,7 +21,7 @@ namespace Sass {
   void print_wrapped(sass::string const& input, size_t width, sass::ostream& os);
 
   // The logger belongs to context
-  class Logger {
+  class Logger : public OutputOptions {
 
   public:
 
@@ -32,16 +32,26 @@ namespace Sass {
       WARN_NUMBER_ARG,
       WARN_NUMBER_PERCENT,
       WARN_GLOBAL_ASSIGN,
+      WARN_GLOBAL_ASSIGN_ROOT,
       WARN_COLOR_ITPL,
       WARN_EMPTY_SELECTOR,
       WARN_DOUBLE_PARENT,
       WARN_STRING_CALL,
       WARN_MOZ_DOC,
-      WARN_RULE
+      WARN_RULE,
+      WARN_SEL_USELESS,
+      WARN_SEL_USELESS_EXTEND,
+      WARN_SEL_ERROR,
+      WARN_SEL_BOGUS,
+      WARN_ELSEIF,
+      WARN_FN_UNITS,
+      WARN_DUPE_VAR_FLAG,
+      WARN_DOUBLE_DASH_MIXIN,
+      WARN_ABS_PERCENT,
     };
 
     // Epsilon for precision
-    double epsilon;
+    // double epsilon;
 
     // warning buffers
     sass::ostream logstrm;
@@ -59,7 +69,7 @@ namespace Sass {
     // Helper function to ease color output. Returns the
     // passed color if color output is enable, otherwise
     // it will simply return an empty string.
-    inline const char* getTerm(const char* color) {
+    inline const char* getTerm(const char* color) const {
       if (support_colors) {
         return color;
       }
@@ -89,7 +99,7 @@ namespace Sass {
       size_t columns,
       sass::string& lhs,
       sass::string& mid,
-      sass::string& rhs);
+      sass::string& rhs) const;
 
   private:
 
@@ -127,7 +137,9 @@ namespace Sass {
 
     // Default constructor
     Logger(bool colors = false, bool unicode = false,
-      int precision = SassDefaultPrecision, size_t columns = NPOS);
+      int precision = SassDefaultPrecision,
+      size_t columns = SassDefaultColumns,
+      SassOutputStyle style = SASS_STYLE_NESTED);
 
     // Auto-detect if colors and unicode is supported
     // Mostly depending if a terminal is connected
@@ -142,7 +154,7 @@ namespace Sass {
     void setLogColumns(size_t columns = NPOS);
 
     // Precision for numbers to be printed
-    void setPrecision(int precision);
+    // void setPrecision(int precision);
 
     // Print a warning without any SourceSpan (used by @warn)
     void addWarning(const sass::string& message, enum WarningType);

@@ -15,12 +15,12 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    bool _equalsIgnoreCase(const char a, const char b) {
+    static bool _equalsIgnoreCase(const char a, const char b) {
       return Character::characterEqualsIgnoreCase(a, b);
     }
 
     // Optimized version where we know one side is already lowercase
-    bool _equalsIgnoreCaseConst(const char a, const char b) {
+    static bool _equalsIgnoreCaseConst(const char a, const char b) {
       return a == b || a == Character::toLowerCase(b);
     }
 

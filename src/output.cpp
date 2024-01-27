@@ -30,7 +30,7 @@ namespace Sass {
   // Local helper function to right-trim multi-line text.
   // Only the last line is right trimmed in an optimized way.
   // Note: this is merely cosmetic to match dart-sass output.
-  void trim_trailing_lines(sass::string& text)
+  static void trim_trailing_lines(sass::string& text)
   {
     auto start = text.begin();
     auto lastlf = text.end();
@@ -152,10 +152,12 @@ namespace Sass {
   void Output::visitCssImport(CssImport* imp)
   {
     if (imp->outOfOrder()) {
-      imports.insert(imports.end(),
-        comments.begin(), comments.end());
-      imports.emplace_back(imp);
-      comments.clear();
+      //imports.insert(imports.end(),
+      //  comments.begin(), comments.end());
+      //imports.emplace_back(imp);
+      //comments.clear();
+      flushCssComments();
+      Cssize::visitCssImport(imp);
     }
     else {
       // This case is possible if an `@import` within

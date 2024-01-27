@@ -27,7 +27,7 @@ namespace Sass {
     }
     else {
       //std::cerr << "Case 4 " << includeLeadingCombinator << "\n";
-      for (auto component : elements) {
+      for (auto& component : elements) {
         if (component->combinators().size() > 1) return true;
         return component->selector()->accept(this);
       }

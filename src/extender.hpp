@@ -13,9 +13,10 @@
 
 #include "ast_helpers.hpp"
 #include "backtrace.hpp"
-#include "extension.hpp"
+//#include "extension.hpp"
 
 namespace Sass {
+
 
   /////////////////////////////////////////////////////////////////////////
   // Different hash map types used by extender
@@ -26,6 +27,7 @@ namespace Sass {
     ExtensionObj,
     ObjPtrHash,
     ObjPtrEquality
+    , Sass::Allocator<ExtensionObj>
   > ExtSet;
 
   // This is special (ptrs!)
@@ -33,7 +35,15 @@ namespace Sass {
     ComplexSelectorObj,
     ObjPtrHash,
     ObjPtrEquality
+    , Sass::Allocator<ComplexSelectorObj>
   > ExtCplxSelSet;
+
+  typedef UnorderedSet<
+    ComplexSelectorObj,
+    ObjHash,
+    ObjEquality
+    , Sass::Allocator<ComplexSelectorObj>
+  > ExtCplxSelSet2;
 
   typedef UnorderedSet<
     SimpleSelectorObj,
@@ -56,8 +66,10 @@ namespace Sass {
     ExtListSelSet,
     ObjHash,
     ObjEquality
-    // , Sass::Allocator<SimpleSelectorObj>
-  > ExtSelMap;
+    //, Sass::Allocator<SimpleSelectorObj>
+    //, Sass::Allocator<Sass::SharedPtr<Sass::SelectorList> >
+    , Sass::Allocator<std::pair<const SimpleSelectorObj, ExtListSelSet>>
+  > ExtSelMap; // selectors54
 
   typedef OrderedMap<
     ComplexSelectorObj,
@@ -67,8 +79,8 @@ namespace Sass {
     Sass::Allocator<std::pair<ComplexSelectorObj, ExtensionObj>>
   > ExtSelExtMapEntry;
 
-  typedef UnorderedMap<
-    SimpleSelectorObj,
+  typedef OrderedMap<
+    const SimpleSelectorObj,
     ExtSelExtMapEntry,
     ObjHash,
     ObjEquality,
@@ -91,8 +103,6 @@ namespace Sass {
 
     mutable ExtSmplSelSet wasExtended2;
 
-  private:
-
     /////////////////////////////////////////////////////////////////////////
     // The mode that controls this extender's behavior.
     /////////////////////////////////////////////////////////////////////////
@@ -104,18 +114,24 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     BackTraces* traces = nullptr;
 
+  private:
+
+
+
     /////////////////////////////////////////////////////////////////////////
     // A map from all simple selectors in the stylesheet to the rules that
     // contain them.This is used to find which rules an `@extend` applies to.
     /////////////////////////////////////////////////////////////////////////
   public:
-    ExtSelMap selectors54;
+    ExtSelMap selectors54; // _selectors
+
+    void debug();
 
     /////////////////////////////////////////////////////////////////////////
     // A map from all extended simple selectors
     // to the sources of those extensions.
     /////////////////////////////////////////////////////////////////////////
-    ExtSelExtMap extensionsBySimpleSelector;
+    ExtSelExtMap extensionsBySimpleSelector; // _extensions
 
     /// Whether this extender has no extensions.
     bool isEmpty() const {
@@ -138,12 +154,12 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     OrderedMap<
       SelectorListObj,
-      CssMediaRuleObj,
+      CssMediaQueryVectorObj,
       ObjPtrHash,
       ObjPtrEquality,
       Sass::Allocator<std::pair<
         SelectorListObj,
-        CssMediaRuleObj
+        CssMediaQueryVectorObj
       >>
     > mediaContexts;
     
@@ -171,7 +187,7 @@ namespace Sass {
     // This allows us to ensure that we don't trim any selectors
     // that need to exist to satisfy the [first law of extend][].
     /////////////////////////////////////////////////////////////////////////
-    ExtCplxSelSet originals;
+    ExtCplxSelSet originals91; // only check for pointer
 
   public:
 
@@ -222,7 +238,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     void addSelector(
       const SelectorListObj& selector,
-      const CssMediaRuleObj& mediaContext);
+      CssMediaQueryVector* mediaContext);
 
     /////////////////////////////////////////////////////////////////////////
     // Registers the [SimpleSelector]s in [list]
@@ -244,7 +260,7 @@ namespace Sass {
     void addExtension(
       const SelectorListObj& extender,
       const SimpleSelectorObj& target,
-      const CssMediaRuleObj& mediaQueryContext,
+      CssMediaQueryVector* mediaQueryContext,
       const ExtendRuleObj& extend,
       bool is_optional = false);
 
@@ -261,8 +277,8 @@ namespace Sass {
     // extend any selector. Updates the passed reference
     // to point to that Extension for further analysis.
     /////////////////////////////////////////////////////////////////////////
-    bool checkForUnsatisfiedExtends2(
-      Extension& unsatisfied) const;
+    // bool checkForUnsatisfiedExtends2(
+    //   Extension& unsatisfied) const;
 
     /////////////////////////////////////////////////////////////////////////
     /// Extends [this] with all the extensions in [extensions].
@@ -272,6 +288,7 @@ namespace Sass {
     void addExtensions(
       sass::vector<ExtensionStoreObj>& extensionStores);
 
+    Extension* PutOrMerge(ExtSelExtMapEntry& map, ComplexSelector* key, Extension* value);
 
   private:
 
@@ -292,6 +309,9 @@ namespace Sass {
     // and [right] don't have the same extender and target.
     /////////////////////////////////////////////////////////////////////////
     static Extension* mergeExtension(
+      Extension* lhs,
+      Extension* rhs);
+    static Extension* mergeExtension2(
       Extension* lhs,
       Extension* rhs);
 
@@ -322,7 +342,7 @@ namespace Sass {
     bool extendList(
       const SelectorListObj& list,
       const ExtSelExtMap& extensions,
-      const CssMediaRuleObj& mediaContext,
+      CssMediaQueryVector* mediaContext,
       sass::vector<ComplexSelectorObj>& result);
 
     /////////////////////////////////////////////////////////////////////////
@@ -333,7 +353,7 @@ namespace Sass {
       // Taking in a reference here makes MSVC debug stuck!?
       const ComplexSelectorObj& list,
       const ExtSelExtMap& extensions,
-      const CssMediaRuleObj& mediaQueryContext);
+      CssMediaQueryVector* mediaQueryContext);
 
     /////////////////////////////////////////////////////////////////////////
     // Returns a one-off [Extension] whose
@@ -361,7 +381,7 @@ namespace Sass {
     sass::vector<ComplexSelectorObj> extendCompound(
       const CplxSelComponentObj& component,
       const ExtSelExtMap& extensions,
-      const CssMediaRuleObj& mediaQueryContext,
+      CssMediaQueryVector* mediaQueryContext,
       const SelectorCombinatorVector& prefixes,
       bool inOriginal = false);
 
@@ -381,7 +401,7 @@ namespace Sass {
     sass::vector<sass::vector<Extender>> extendSimple(
       const SimpleSelectorObj& simple,
       const ExtSelExtMap& extensions,
-      const CssMediaRuleObj& mediaQueryContext,
+      CssMediaQueryVector* mediaQueryContext,
       ExtSmplSelSet* targetsUsed);
 
     /////////////////////////////////////////////////////////////////////////
@@ -390,7 +410,7 @@ namespace Sass {
     static sass::vector<ComplexSelectorObj> extendPseudoComplex(
       const ComplexSelectorObj& complex,
       const PseudoSelectorObj& pseudo,
-      const CssMediaRuleObj& mediaQueryContext);
+      CssMediaQueryVector* mediaQueryContext);
 
     /////////////////////////////////////////////////////////////////////////
     // Extends [pseudo] using [extensions], and returns
@@ -399,7 +419,7 @@ namespace Sass {
     sass::vector<PseudoSelectorObj> extendPseudo(
       const PseudoSelectorObj& pseudo,
       const ExtSelExtMap& extensions,
-      const CssMediaRuleObj& mediaQueryContext);
+      CssMediaQueryVector* mediaQueryContext);
 
     /////////////////////////////////////////////////////////////////////////
     // Rotates the element in list from [start] (inclusive) to [end] (exclusive)
@@ -409,14 +429,21 @@ namespace Sass {
       sass::vector<ComplexSelectorObj>& list,
       size_t start, size_t end);
 
+
+    sass::vector<ComplexSelectorObj> _unifyExtenders(
+      sass::vector<Extender>& extenders,
+      CssMediaQueryVector* mediaQueryContext,
+      const SourceSpan span);
+
     /////////////////////////////////////////////////////////////////////////
     // Removes elements from [selectors] if they're subselectors of other
     // elements. The [isOriginal] callback indicates which selectors are
     // original to the document, and thus should never be trimmed.
     /////////////////////////////////////////////////////////////////////////
-    void trim(
-      sass::vector<ComplexSelectorObj>& selectors,
-      const ExtCplxSelSet& set) const;
+    sass::vector<ComplexSelectorObj> _trim(
+      const sass::vector<ComplexSelectorObj>& selectors,
+      std::function<bool(ComplexSelector* complex)> isOriginal
+      /*bool(*isOriginal)(const ComplexSelector* complex)*/);
 
     /////////////////////////////////////////////////////////////////////////
     // Returns the maximum specificity of the given [simple] source selector.
@@ -443,6 +470,10 @@ namespace Sass {
     static bool hasMoreThanOne(const ComplexSelectorObj& vec);
 
   };
+
+
+
+
 
 }
 

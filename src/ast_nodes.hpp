@@ -53,12 +53,12 @@ namespace Sass {
 
     // Delete compare operators to make implementation more clear
     // Helps us spot cases where we use undefined implementations
-    virtual bool operator==(const AstNode& rhs) const = delete;
-    virtual bool operator!=(const AstNode& rhs) const = delete;
-    virtual bool operator>=(const AstNode& rhs) const = delete;
-    virtual bool operator<=(const AstNode& rhs) const = delete;
-    virtual bool operator>(const AstNode& rhs) const = delete;
-    virtual bool operator<(const AstNode& rhs) const = delete;
+    bool operator==(const AstNode& rhs) const = delete;
+    bool operator!=(const AstNode& rhs) const = delete;
+    bool operator>=(const AstNode& rhs) const = delete;
+    bool operator<=(const AstNode& rhs) const = delete;
+    bool operator>(const AstNode& rhs) const = delete;
+    bool operator<(const AstNode& rhs) const = delete;
 
     // Crutches to implement calculation
 		virtual AstNode* simplify(Logger& logger);
@@ -123,6 +123,8 @@ namespace Sass {
     ItplString(const SourceSpan& pstate, const sass::string& text);
     Type getType() const override final { return LiteralInterpolant; }
 
+    sass::string toString() const;
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ItplString);
   };
@@ -141,12 +143,16 @@ namespace Sass {
     Interpolation(const SourceSpan& pstate,
       Interpolant* interpolant = nullptr);
 
+    // Value constructor
+    Interpolation(const SourceSpan& pstate,
+      sass::vector<InterpolantObj>&& itpls);
+
     // // If this contains no interpolated expressions, returns its text contents.
     const sass::string& getPlainString() const;
 
     // Returns the plain text before the interpolation, or the empty string.
     const sass::string& getInitialPlain() const;
-
+     
     // Wrap interpolation within a string expression
     StringExpression* wrapInStringExpression();
 
@@ -162,24 +168,35 @@ namespace Sass {
   // exist primarily to be evaluated and returned.
   //////////////////////////////////////////////////////////////////////
 
-  class Expression : public Interpolant,
-    public ExpressionVisitable<Value*>
+  class Expression : public Interpolant/*,
+    public ExpressionVisitable<Value*>,
+    public ExpressionVisitable<Expression*>*/
   {
   public:
 
     // Value constructor
     Expression(SourceSpan&& pstate);
+    Expression(const SourceSpan& pstate);
+
+    virtual Value* accept(ExpressionVisitor<Value*>* visitor) = 0;
+    virtual Expression* accept(ExpressionVisitor<Expression*>* visitor) = 0;
 
     // C++ does not consider return type for function overloading
     // Therefore we need to differentiate by the function name
     // Basically the same as `ExpressionVisitable<bool>`
     virtual bool isCalcSafe() = 0;
 
+    FunctionExpressionObj toCalc();
+
+    virtual sass::string recommendation() const;
+
     // Needed here to avoid ambiguity from base-classes (issue seems gone)!??
     // virtual Value* accept(ExpressionVisitor<Value*>* visitor) override = 0;
 
     // Implementation for parent Interpolant interface
     Type getType() const override final { return ExpressionInterpolant; }
+
+    // operator sass::string() const { return toString(); }
 
     virtual sass::string toString() const = 0;
 
@@ -548,7 +565,7 @@ namespace Sass {
     virtual Value* getValueAt(Value* index, Logger& logger);
 
     // Return normalized index for vector from overflowable sass index
-    size_t sassIndexToListIndex(Value* sassIndex, Logger& logger, const sass::string& name);
+    size_t sassIndexToListIndex(Value* sassIndex, Logger& logger, const sass::string& name) const;
 
     /// Parses [this] as a selector list, in the same manner as the
     /// `selector-parse()` function.

@@ -73,6 +73,8 @@
 // Include random seed
 #include "randomize.hpp"
 
+// #define USE_TSL_HOPSCOTCH
+
 // Include unordered map implementation
 #ifdef USE_TSL_HOPSCOTCH
 #include "tessil/hopscotch_map.h"
@@ -120,6 +122,9 @@ namespace Sass {
     // Precision for fractional numbers
     int precision;
 
+    // Epsilon for fuzzy compare
+    double epsilon;
+
     // Number format for sprintf.
     // Cached to speed up output.
     char nr_sprintf[32];
@@ -128,6 +133,7 @@ namespace Sass {
     void setPrecision(int precision)
     {
       this->precision = precision;
+      this->epsilon = pow(0.1, precision);
       // Update sprintf format to match precision
       snprintf(this->nr_sprintf, 32, "%%.%df", precision);
     }
@@ -140,8 +146,10 @@ namespace Sass {
       output_style(style),
       precision(precision)
     {
+      setPrecision(precision);
       // Update sprintf format to match precision
-      snprintf(nr_sprintf, 32, "%%.%df", precision);
+      // snprintf(nr_sprintf, 32, "%%.%df", precision);
+      // epsilon = pow(0.1, precision);
     }
 
   };

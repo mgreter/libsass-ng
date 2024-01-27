@@ -8,25 +8,27 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Root::Root(const SourceSpan& pstate, size_t reserve)
-    : AstNode(pstate), Vectorized<Statement>(reserve), Module(nullptr)
+  Stylesheet::Stylesheet(const SourceSpan& pstate, size_t reserve)
+    : AstNode(pstate), Vectorized<Statement>(reserve), Module(pstate.getSource()->getAbsPath(), nullptr)
   {}
 
-  Root::Root(const SourceSpan& pstate, StatementVector&& vec)
-    : AstNode(pstate), Vectorized<Statement>(std::move(vec)), Module(nullptr)
+  Stylesheet::Stylesheet(const SourceSpan& pstate, StatementVector&& vec)
+    : AstNode(pstate), Vectorized<Statement>(std::move(vec)), Module(pstate.getSource()->getAbsPath(), nullptr)
   {}
 
-  void Root::addExtension(
+  void Module::addExtension(
     const SelectorListObj& extender3,
     const SimpleSelectorObj& target,
     const CssMediaRuleObj& mediaQueryContext,
     const ExtendRuleObj& extend,
-    bool is_optional)
+    bool is_optional) const
   {
-//UUU    for (Root* mod : upstream) {
+//UUU    for (Stylesheet* mod : upstream) {
 //UUU      mod->addExtension(extend, target, mediaQueryContext, is_optional);
 //UUU    }
-    if (extender) extender->addExtension(extender3, target, mediaQueryContext, extend, is_optional);
+    // std::cerr << "============ add extension\n";
+    if (extender52) extender52->addExtension(extender3, target, mediaQueryContext->queries2(), extend, is_optional);
+    else std::cerr << "!!!!! MODULE HAS NO EXTENSION STORE\n";
   }
 
 

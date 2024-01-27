@@ -88,7 +88,7 @@ namespace Sass {
     }
 
     // Check if entity is read-only
-    inline bool isPrivate(uint32_t privateOffset) {
+    inline bool isPrivate(uint32_t privateOffset) const {
       return idxs == nullptr &&
         offset <= privateOffset;
     }
@@ -130,6 +130,8 @@ namespace Sass {
     // dynamic setter and getter by EnvKey.
     EnvRefs* pscope;
 
+    const EnvRefs* nextScope() const;
+
     // Lexical scope entries
     VidxEnvKeyMap varIdxs;
     MidxEnvKeyMap mixIdxs;
@@ -146,6 +148,11 @@ namespace Sass {
     // All @use as "*" do not get exposed to the parent scope though.
     sass::vector<EnvRefs*> forwards;
 
+    // Required
+    sass::vector<ForwardRule*> delayedMerge;
+
+    sass::string through;
+
     // Some scopes are connected to a module
     // Those expose some additional exports
     // Modules are global so we just link them
@@ -154,6 +161,9 @@ namespace Sass {
     // Imports are transparent for variables, functions and mixins
     // We always need to create entities inside the parent scope
     bool isImport = false;
+
+    // Only set temporarily when evaluating through forwards
+    // bool isForward = false;
 
     // Flag if this scope is considered internal
     bool isInternal = false;

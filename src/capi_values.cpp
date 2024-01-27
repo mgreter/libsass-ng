@@ -24,20 +24,20 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Map* getMap(struct SassValue* value) { return Value::unwrap(value).isaMap(); }
-  List* getList(struct SassValue* value) { return Value::unwrap(value).isaList(); }
-  Null* getNull(struct SassValue* value) { return Value::unwrap(value).isaNull(); }
-  Value* getValue(struct SassValue* value) { return Value::unwrap(value).isaValue(); }
-  Number* getNumber(struct SassValue* value) { return Value::unwrap(value).isaNumber(); }
-  String* getString(struct SassValue* value) { return Value::unwrap(value).isaString(); }
-  Boolean* getBoolean(struct SassValue* value) { return Value::unwrap(value).isaBoolean(); }
-  ColorRgba* getTerm(struct SassValue* value) { return Value::unwrap(value).isaColorRgba(); }
-  CustomError* getError(struct SassValue* value) { return Value::unwrap(value).isaCustomError(); }
-  CustomWarning* getWarning(struct SassValue* value) { return Value::unwrap(value).isaCustomWarning(); }
+  static Map* getMap(struct SassValue* value) { return Value::unwrap(value).isaMap(); }
+  static List* getList(struct SassValue* value) { return Value::unwrap(value).isaList(); }
+  static Null* getNull(struct SassValue* value) { return Value::unwrap(value).isaNull(); }
+  static Value* getValue(struct SassValue* value) { return Value::unwrap(value).isaValue(); }
+  static Number* getNumber(struct SassValue* value) { return Value::unwrap(value).isaNumber(); }
+  static String* getString(struct SassValue* value) { return Value::unwrap(value).isaString(); }
+  static Boolean* getBoolean(struct SassValue* value) { return Value::unwrap(value).isaBoolean(); }
+  static ColorRgba* getTerm(struct SassValue* value) { return Value::unwrap(value).isaColorRgba(); }
+  static CustomError* getError(struct SassValue* value) { return Value::unwrap(value).isaCustomError(); }
+  static CustomWarning* getWarning(struct SassValue* value) { return Value::unwrap(value).isaCustomWarning(); }
 
   // Return another reference to an existing value. We simply re-use the reference counted
   // object and re-implement the memory handling also partially here (SharedImpl lite).
-  struct SassValue* newSassValue(Value* value) { value->refcount += 1; return value->wrap(); }
+  static struct SassValue* newSassValue(Value* value) { value->refcount += 1; return value->wrap(); }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ extern "C" {
   void ADDCALL sass_list_set_is_bracketed(struct SassValue* v, bool is_bracketed) { getList(v)->hasBrackets(is_bracketed); }
 
   void ADDCALL sass_list_push(struct SassValue* list, struct SassValue* value) { getList(list)->append(getValue(value)); }
-  void ADDCALL sass_list_unshift(struct SassValue* list, struct SassValue* value) { getList(list)->unshift(getValue(value)); }
+  // void ADDCALL sass_list_unshift(struct SassValue* list, struct SassValue* value) { getList(list)->unshift(getValue(value)); }
   struct SassValue* ADDCALL sass_list_at(struct SassValue* list, size_t i) { return Value::wrap(getList(list)->at(i)); }
   struct SassValue* ADDCALL sass_list_pop(struct SassValue* list, struct SassValue* value) { return Value::wrap(getList(list)->pop()); }
   struct SassValue* ADDCALL sass_list_shift(struct SassValue* list, struct SassValue* value) { return Value::wrap(getList(list)->shift()); }

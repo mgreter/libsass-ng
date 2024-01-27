@@ -29,13 +29,16 @@ namespace Sass {
   bool IsCssInvisibleVisitor::visitCssStyleRule(CssStyleRule* rule)
   {
     //std::cerr << "visit css style rule " << includeBogus << "\n";
-    if (includeBogus && rule->selector()->isInvisible()) {
-      //std::cerr << "has bogus\n";
-      return true;
+    if (includeBogus) {
+      if (rule->selector()->isInvisible()) {
+        return true;
+      }
     }
-    if (rule->selector()->isInvisibleOtherThanBogusCombinators()) {
-      //std::cerr << "has bogus 2\n";
-      return true;
+    else {
+      if (rule->selector()->isInvisibleOtherThanBogusCombinators()) {
+        //std::cerr << "has bogus 2\n";
+        return true;
+      }
     }
     return EveryCssVisitor::visitCssStyleRule(rule);
   }

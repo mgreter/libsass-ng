@@ -11,12 +11,15 @@
 /////////////////////////////////////////////////////////////////////////
 
 // Define memory alignment requirements
-#define SASS_MEM_ALIGN sizeof(unsigned int)
+#define SASS_MEM_ALIGN alignof(void*)
 
 // The number of bytes we use for our book-keeping before every
 // memory fragment. Needed to know to which bucket we belongs on
 // deallocations, or if it should go directly to the `free` call.
-#define SassAllocatorBookSize sizeof(unsigned int)
+// Note: is actually `unsigned int`, but since we must pad the
+// leading memory, so it boils down to max(SASS_MEM_ALIGN, ...)
+// We assume that pointer size is always bigger than `unsigned int`
+#define SassAllocatorBookSize alignof(void*)
 
 // Bytes reserve for book-keeping on the arenas
 // Currently unused and for later optimization

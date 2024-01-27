@@ -515,7 +515,7 @@ public:
         return *this;
     }
     
-    ordered_hash& operator=(ordered_hash&& other) {
+    ordered_hash& operator=(ordered_hash&& other) noexcept {
         other.swap(*this);
         other.clear();
         

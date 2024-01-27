@@ -30,7 +30,7 @@ namespace Sass {
   // check if plugin is compatible with this version
   // plugins may be linked static against libsass
   // we try to be compatible between major versions
-  inline bool compatibility(const char* their_version)
+  inline static bool compatibility(const char* their_version)
   {
     // first check if anyone has an unknown version
     const char* our_version = libsass_version();

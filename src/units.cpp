@@ -7,6 +7,7 @@
 #include "string_utils.hpp"
 
 #include <set>
+#include <unordered_map>
 
 namespace Sass {
 
@@ -361,8 +362,8 @@ namespace Sass {
     denominators.clear();
 
     // recreate sorted units vectors
-    for (auto kv : exponents) {
-      int &exponent = kv.second;
+    for (auto& kv : exponents) {
+      int exponent = kv.second;
       while (exponent > 0 && exponent --)
         numerators.emplace_back(kv.first);
       while (exponent < 0 && exponent ++)
@@ -389,8 +390,8 @@ namespace Sass {
         r = u.find_first_of("*/", l);
         sass::string unit(u.substr(l, r == sass::string::npos ? r : r - l));
         if (!unit.empty()) {
-          if (nominator) numerators.emplace_back(unit);
-          else denominators.emplace_back(unit);
+          if (nominator) numerators.push_back(unit);
+          else denominators.push_back(unit);
         }
         if (r == sass::string::npos) break;
         // ToDo: should error for multiple slashes
@@ -405,6 +406,29 @@ namespace Sass {
     }
   }
   // EO unit
+
+  sass::string Units::unitSuggestion(const sass::string& name, const sass::string unit) const
+  {
+    sass::string text;
+    size_t iL = numerators.size();
+    size_t nL = denominators.size();
+    if (iL > 0) text += "calc(";
+    text += "$" + name;
+    for (size_t n = 0; n < nL; n += 1) {
+      text += " * 1";
+      text += denominators[n];
+    }
+    for (size_t i = 0; i < iL; i += 1) {
+      text += " / 1";
+      text += numerators[i];
+    }
+    if (!unit.empty()) {
+      text += " * 1";
+      text += unit;
+    }
+    if (iL > 0) text += ")";
+    return text;
+  }
 
   // Convert units to string
   const sass::string& Units::unit() const
@@ -559,8 +583,8 @@ namespace Sass {
   // Meaning we don't know to convert it
   bool Units::isCustomUnit() const
   {
-    for (auto n : numerators) if (isaCustomUnit(n)) return true;
-    for (auto d : denominators) if (isaCustomUnit(d)) return true;
+    for (auto& n : numerators) if (isaCustomUnit(n)) return true;
+    for (auto& d : denominators) if (isaCustomUnit(d)) return true;
     return false;
   }
   // EO isCustomUnit

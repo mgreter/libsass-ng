@@ -3,6 +3,8 @@
 /sassc
 /sass-spec
 /plugins/
+/src-bolt-ok
+/src-bolt-bad
 
 VERSION
 .DS_Store

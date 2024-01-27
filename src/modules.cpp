@@ -10,36 +10,39 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Module::Module(EnvRefs* idxs) :
+  void Module::determineTransitivelyContainsExtensions()
+  {
+    if (transitivelyContainsExtensions)
+    {
+      std::cerr << "ALREADY SET TRANSITIVELY\n";
+    }
+    if (extender52 && !extender52->isEmpty())
+    {
+      transitivelyContainsExtensions = true;
+    }
+    for (const auto& mod : upstream77) {
+      if (mod->transitivelyContainsExtensions)
+      {
+        transitivelyContainsExtensions = true;
+        break;
+      }
+    }
+    // std::cerr << "TO MODULE " << url << " => " << transitivelyContainsExtensions << "\n";
+  }
+
+  Module::Module(const sass::string& url, EnvRefs* idxs) :
     Env(idxs),
-    extender()
+    url(url),
+    extender52()
   {}
 
   // Check if there are any unsatisfied extends (will throw)
 
-  bool Module::checkForUnsatisfiedExtends3(Extension & unsatisfied) const
-  {
-    ExtSmplSelSet originals;
-    for (auto& entry : extender->selectors54) {
-      originals.insert(entry.first);
-    }
-
-    if (extender->checkForUnsatisfiedExtends2(unsatisfied)) {
-      return true;
-    }
-    for (auto& asd : upstream) {
-      if (asd->checkForUnsatisfiedExtends3(unsatisfied)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  BuiltInMod::BuiltInMod(EnvRoot& root) :
-    Module(new EnvRefs(
+  BuiltInMod::BuiltInMod(const sass::string& url, EnvRoot& root) :
+    Module(url, new EnvRefs(
       root,
       nullptr,
       false,  // isImport

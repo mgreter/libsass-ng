@@ -54,6 +54,9 @@ namespace Sass {
     // Whether the parser is currently within a parenthesized expression.
     bool inParentheses = false;
 
+    // Whether the parser is currently within an expression.
+    bool inExpression = false;
+
     // Whether the parser is currently parsing root rules
     bool inRoot = true;
 
@@ -83,7 +86,7 @@ namespace Sass {
     {}
 
     // Main parser entry function
-    Root* parseRoot();
+    Stylesheet* parseRoot();
 
     // Parse external callback function
     ExternalCallable* parseExternalCallable();
@@ -94,7 +97,7 @@ namespace Sass {
     CallableSignature* parseArgumentDeclaration();
 
     // Whether this is a plain CSS stylesheet.
-    virtual bool plainCss() const { return false; }
+    virtual bool parsingCss() const { return false; }
 
     // Whether this is parsing the indented syntax.
     virtual bool isIndented() const { return false; };
@@ -213,6 +216,8 @@ namespace Sass {
 
     // Consumes a statement that's allowed within a declaration.
     Statement* readDeclarationOrAtRule();
+
+    Declaration* tryDeclarationChildren(Interpolation* name, Offset start, Expression* value = nullptr);
 
     // Consumes an at-rule. This consumes at-rules that are allowed at all levels
     // of the document; the [child] parameter is called to consume any at-rules
@@ -344,7 +349,7 @@ namespace Sass {
 
     // Consumes a `@forward` rule.
     // [start] should point before the `@`.
-    ForwardRule* readForwardRule(Offset start);
+    Statement* readForwardRule(Offset start);
 
     sass::string readUseNamespace(const sass::string& url, const Offset& start);
 

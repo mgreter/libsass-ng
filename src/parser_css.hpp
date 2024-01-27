@@ -29,7 +29,7 @@ namespace Sass {
   protected:
 
     // Whether this is a plain CSS stylesheet.
-    bool plainCss() const override final { return true; }
+    bool parsingCss() const override final { return true; }
 
     // Consumes a plain-CSS `@import` rule that disallows
     // interpolation. [start] should point before the `@`.
@@ -44,7 +44,7 @@ namespace Sass {
     SilentComment* readSilentComment() override final;
 
     // Consume a silent comment and throws error
-    void scanSilentComment() override final;
+    bool scanSilentComment() override final;
 
     // Parse allowed at-rule statement and parse children via [child_parser] parser function
     Statement* readAtRule(Statement* (StylesheetParser::* child_parser)(), bool root = false) override final;

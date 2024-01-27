@@ -98,7 +98,6 @@ namespace Sass {
     bool file_exists(const sass::string& path, const sass::string& CWD, std::unordered_map<sass::string, bool>& cache)
     {
       #ifdef _WIN32
-        wchar_t resolved[32768];
         // windows unicode file-paths are encoded in utf16
         sass::string abspath(join_paths(CWD, path));
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
@@ -108,6 +107,7 @@ namespace Sass {
         if (it != cache.end()) {
           return it->second;
         }
+        wchar_t resolved[32768]{};
         sass::wstring wpath(Unicode::utf8to16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
@@ -148,7 +148,7 @@ namespace Sass {
     // EO is_absolute_path
 
     // helper function to find the last directory separator
-    inline size_t find_last_folder_separator(const sass::string& path, size_t limit = sass::string::npos)
+    inline static size_t find_last_folder_separator(const sass::string& path, size_t limit = sass::string::npos)
     {
       size_t pos;
       size_t pos_p = path.find_last_of('/', limit);
@@ -357,7 +357,7 @@ namespace Sass {
     // (4) given + extension
     // (5) given + _index.scss
     // (6) given + _index.sass
-    void find_file_or_partial(
+    static void find_file_or_partial(
       const sass::string& root,
       const sass::string& dirname,
       const sass::string& basename,
@@ -399,7 +399,7 @@ namespace Sass {
       // Don't look for any other suffixes, we already got one!
       if (!suffix.empty()) return;
 
-      for (auto ext : exts) {
+      for (const auto& ext : exts) {
         if (ext == ".css" && candidates.size()) return;
         if (basename[0] != '_') {
           relPath = join_paths(dirname, "_" + basename + suffix + ext);
@@ -445,7 +445,7 @@ namespace Sass {
       sass::string abs_path(join_paths(root, rel_path));
 
       sass::string suffix;
-      for (auto ext : exts) {
+      for (const auto& ext : exts) {
         if (StringUtils::endsWithIgnoreCase(name, ext)) {
           name.resize(name.size() - ext.size());
           suffix = ext;
@@ -505,12 +505,12 @@ namespace Sass {
       #ifdef _WIN32
         char* contents;
         DWORD dwBytes;
-        wchar_t resolved[32768];
         // windows unicode file-paths are encoded in utf16
         sass::string abspath(join_paths(CWD, path));
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
+        wchar_t resolved[32768]{};
         sass::wstring wpath(Unicode::utf8to16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
         DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);

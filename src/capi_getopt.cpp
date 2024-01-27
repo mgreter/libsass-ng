@@ -148,20 +148,20 @@ const struct SassGetOptEnum srcmap_options[] = {
 };
 
 // Simple proxy functions to call out to compiler (or set certain options directly)
-void getopt_set_input_format(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.input_syntax = value.syntax; }
-void getopt_set_output_style(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.output_style = value.style; }
-void getopt_add_include_path(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.addIncludePaths(value.string); }
-void getopt_load_plugins(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.loadPlugins(value.string); }
-void getopt_set_srcmap_mode(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.mode = value.mode; }
-void getopt_set_srcmap_file_urls(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.file_urls = value.boolean; }
-void getopt_set_srcmap_contents(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.embed_contents = value.boolean; }
-void getopt_set_srcmap_root(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.root = value.boolean; }
-void getopt_set_srcmap_path(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.path = value.boolean; }
-void getopt_set_term_unicode(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_unicode = value.boolean; }
-void getopt_set_term_colors(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_colors = value.boolean; }
-void getopt_set_suppress_stderr(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.suppress_stderr = true; }
+static void getopt_set_input_format(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.input_syntax = value.syntax; }
+static void getopt_set_output_style(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.output_style = value.style; }
+static void getopt_add_include_path(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.addIncludePaths(value.string); }
+static void getopt_load_plugins(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.loadPlugins(value.string); }
+static void getopt_set_srcmap_mode(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.mode = value.mode; }
+static void getopt_set_srcmap_file_urls(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.file_urls = value.boolean; }
+static void getopt_set_srcmap_contents(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.embed_contents = value.boolean; }
+//static void getopt_set_srcmap_root(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.root = value.boolean; }
+static void getopt_set_srcmap_path(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.path = value.boolean; }
+static void getopt_set_term_unicode(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_unicode = value.boolean; }
+static void getopt_set_term_colors(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_colors = value.boolean; }
+static void getopt_set_suppress_stderr(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.suppress_stderr = true; }
 
-void getopt_error(struct SassGetOpt* getopt, const char* what)
+static void getopt_error(struct SassGetOpt* getopt, const char* what)
 {
   if (getopt) {
     handle_error(getopt->compiler, 9, what, nullptr);
@@ -169,7 +169,7 @@ void getopt_error(struct SassGetOpt* getopt, const char* what)
 }
 
 // Precision setter has specific validation (no corresponding type in GetOpt parser)
-void getopt_set_precision(struct SassGetOpt* getopt, union SassOptionValue value)
+static void getopt_set_precision(struct SassGetOpt* getopt, union SassOptionValue value)
 {
   // The GetOpt API does not yet know integers
   try {
@@ -182,24 +182,24 @@ void getopt_set_precision(struct SassGetOpt* getopt, union SassOptionValue value
   }
 }
 
-void cli_sass_compiler_set_line_numbers(struct SassGetOpt* getopt, union SassOptionValue value) {
+static void cli_sass_compiler_set_line_numbers(struct SassGetOpt* getopt, union SassOptionValue value) {
   std::cerr << "cli_sass_compiler_set_line_numbers " << value.boolean << "\n";
 }
 
 
-void getopt_print_help(struct SassGetOpt* getopt, std::ostream& stream);
+static void getopt_print_help(struct SassGetOpt* getopt, std::ostream& stream);
 
-void cli_sass_compiler_version(struct SassGetOpt* getopt, union SassOptionValue value) {
-  getopt_print_help(getopt, std::cerr);
-  exit(0);
-}
+// static void cli_sass_compiler_version(struct SassGetOpt* getopt, union SassOptionValue value) {
+//   getopt_print_help(getopt, std::cerr);
+//   exit(0);
+// }
 
-void cli_sass_compiler_help(struct SassGetOpt* getopt, union SassOptionValue value) {
-  getopt_print_help(getopt, std::cerr);
-  exit(0);
-}
+//static void cli_sass_compiler_help(struct SassGetOpt* getopt, union SassOptionValue value) {
+//  getopt_print_help(getopt, std::cerr);
+//  exit(0);
+//}
 
-void cli_sass_compiler_input_file_arg(struct SassGetOpt* getopt, const char* path)
+static void cli_sass_compiler_input_file_arg(struct SassGetOpt* getopt, const char* path)
 {
   struct SassImport* entry = strncmp(path, "--", 2) == 0
     ? sass_make_stdin_import("stream://stdin")
@@ -208,13 +208,13 @@ void cli_sass_compiler_input_file_arg(struct SassGetOpt* getopt, const char* pat
   sass_delete_import(entry);
 }
 
-void cli_sass_compiler_output_file_arg(struct SassGetOpt* getopt, const char* path)
+static void cli_sass_compiler_output_file_arg(struct SassGetOpt* getopt, const char* path)
 {
   sass_compiler_set_output_path(getopt->compiler.wrap(), path);
 }
 
 
-sass::string format_option(struct SassGetOpt* getopt, SassOption& option)
+static sass::string format_option(struct SassGetOpt* getopt, SassOption& option)
 {
   Compiler& compiler(getopt->compiler);
   sass::sstream line;
@@ -290,7 +290,7 @@ void getopt_print_help(struct SassGetOpt* getopt, std::ostream& stream)
   }
 }
 
-sass::vector<const SassOption*> find_short_options(struct SassGetOpt* getopt, const char arg)
+static sass::vector<const SassOption*> find_short_options(struct SassGetOpt* getopt, const char arg)
 {
   sass::vector<const SassOption*> matches;
   for (SassOption& option : getopt->options) {
@@ -301,7 +301,7 @@ sass::vector<const SassOption*> find_short_options(struct SassGetOpt* getopt, co
   return matches;
 }
 
-sass::vector<const SassOption*> find_long_options(struct SassGetOpt* getopt, const sass::string& arg)
+static sass::vector<const SassOption*> find_long_options(struct SassGetOpt* getopt, const sass::string& arg)
 {
   sass::vector<const SassOption*> matches;
   for (const SassOption& option : getopt->options) {
@@ -322,7 +322,7 @@ sass::vector<const SassOption*> find_long_options(struct SassGetOpt* getopt, con
   return matches;
 }
 
-sass::vector<const struct SassGetOptEnum*> find_options_enum(
+static sass::vector<const struct SassGetOptEnum*> find_options_enum(
   const struct SassGetOptEnum* enums, const sass::string& arg)
 {
   sass::vector<const struct SassGetOptEnum*> matches;
@@ -338,14 +338,14 @@ sass::vector<const struct SassGetOptEnum*> find_options_enum(
 // Check for too many or not enough arguments
 // Skip this check if nothing is expected at all
 // This will simply store the arguments in `args`
-void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
+static void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
 {
   if (getopt->compiler.state) return;
   if (getopt->arguments.empty()) return;
   size_t want_size = getopt->arguments.size();
-  size_t requires = getopt->arguments.size();
+  size_t requiring = getopt->arguments.size();
   for (const auto& arg : getopt->arguments) {
-    if (arg.optional) requires -= 1;
+    if (arg.optional) requiring -= 1;
   }
   size_t have_size = getopt->args.size();
   for (size_t i = 0; i < have_size; i += 1) {
@@ -363,7 +363,7 @@ void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
       getopt->arguments[i].cb(getopt, getopt->args[i].c_str());
     }
   }
-  for (size_t i = have_size; i < requires; i += 1) {
+  for (size_t i = have_size; i < requiring; i += 1) {
     sass::sstream strm;
     sass::string value(getopt->arguments[i].name);
     StringUtils::makeReplace(value, "'", "\\'");
@@ -376,7 +376,7 @@ void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
 }
 
 // Check for pending required option
-void getopt_check_required_option(struct SassGetOpt* getopt)
+static void getopt_check_required_option(struct SassGetOpt* getopt)
 {
   if (getopt->compiler.state) return;
   // Expected argument, error
@@ -403,7 +403,7 @@ void getopt_check_required_option(struct SassGetOpt* getopt)
 // argument, if required by the previous option, is handled correctly.
 // This is a bit different to "official" GNU GetOpt, but should be
 // reasonably well and support more advanced usages than before.
-void getopt_parse(struct SassGetOpt* getopt, const char* value)
+static void getopt_parse(struct SassGetOpt* getopt, const char* value)
 {
   if (value == nullptr) return;
   if (getopt->compiler.state) return;
@@ -656,6 +656,7 @@ extern "C" {
     /* enum: style */ sass_getopt_register_option(getopt, 't', "style", "Set output style (nested, expanded, compact or compressed).", false, "STYLE", false, style_options, getopt_set_output_style);
     /* enum: format */ sass_getopt_register_option(getopt, 'f', "format", "Set explicit input syntax (scss, sass, css or auto).", false, "SYNTAX", true, format_options, getopt_set_input_format);
     /* path */ sass_getopt_register_option(getopt, 'I', "include-path", "Add include path to look for imports.", false, "PATH", false, nullptr, getopt_add_include_path);
+    /* path */ sass_getopt_register_option(getopt, '\0', "load-path", "Add include path to look for imports.", false, "PATH", false, nullptr, getopt_add_include_path);
     /* path */ sass_getopt_register_option(getopt, 'P', "plugin-path", "Add plugin path to auto load plugins.", false, "PATH", false, nullptr, getopt_load_plugins);
     /* enum: mode */ sass_getopt_register_option(getopt, 'm', "sourcemap", "Set how to create and emit source mappings.", false, "TYPE", true, srcmap_options, getopt_set_srcmap_mode);
     /* bool */ sass_getopt_register_option(getopt, '\0', "sourcemap-file-urls", "Emit absolute file:// urls in includes array.", true, nullptr, true, nullptr, getopt_set_srcmap_file_urls);

@@ -16,15 +16,15 @@ namespace Sass {
   using namespace Character;
 
   // Consume multiple media queries delimited by commas.
-  CssMediaQueryVector MediaQueryParser::parse()
+  CssMediaQueryVector* MediaQueryParser::parse()
   {
-    CssMediaQueryVector queries;
+    sass::vector<CssMediaQueryObj> queries;
     do {
       scanWhitespace();
       queries.emplace_back(readMediaQuery());
     } while (scanner.scanChar($comma));
     scanner.expectDone();
-    return queries;
+    return SASS_MEMORY_NEW(CssMediaQueryVector, std::move(queries));
   }
 
   sass::string MediaQueryParser::readMediaInParens() {

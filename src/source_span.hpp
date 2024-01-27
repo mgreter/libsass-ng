@@ -38,11 +38,25 @@ namespace Sass {
     // Create span between two ast-node source-spans
     static SourceSpan delta(AstNode* lhs, AstNode* rhs);
 
+    // Create span from start with given length
+    SourceSpan first(uint32_t length) const;
+
     bool operator==(const SourceSpan& rhs) const;
 
   public: // down casts
 
     CAPI_WRAPPER(SourceSpan, SassSrcSpan);
+
+  };
+
+  struct StringToken {
+    sass::string str;
+    SourceSpan pstate;
+
+    operator sass::string&() { return str; }
+    operator const sass::string& () { return str; }
+    operator SourceSpan&() { return pstate; }
+
 
   };
 

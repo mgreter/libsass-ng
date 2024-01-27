@@ -27,7 +27,7 @@ namespace Sass {
     {}
 
     // Consume multiple media queries delimited by commas.
-    CssMediaQueryVector parse();
+    CssMediaQueryVector* parse();
 
     sass::string readMediaInParens();
 

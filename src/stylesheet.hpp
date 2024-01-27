@@ -16,28 +16,21 @@ namespace Sass {
 
   // parsed stylesheet from loaded resource
   // this should be a `Module` for sass 4.0
-  class Root final : public AstNode,
+  class Stylesheet final : public AstNode,
     public Vectorized<Statement>,
     public Module
   {
   public:
 
-    // sass::vector<Root*> upstreams;
+    // sass::vector<Stylesheet*> upstreams;
 
     // Import object through which this module was loaded.
     // It also has the input type (css vs sass) attached
     ImportObj import;
 
-    Root(const SourceSpan& pstate, size_t reserve = 0);
+    Stylesheet(const SourceSpan& pstate, size_t reserve = 0);
 
-    Root(const SourceSpan& pstate, StatementVector&& vec);
-
-    void addExtension(
-      const SelectorListObj& extender,
-      const SimpleSelectorObj& target,
-      const CssMediaRuleObj& mediaQueryContext,
-      const ExtendRuleObj& extend,
-      bool is_optional);
+    Stylesheet(const SourceSpan& pstate, StatementVector&& vec);
 
 
   };

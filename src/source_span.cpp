@@ -41,6 +41,12 @@ namespace Sass {
       lhs->pstate(), rhs->pstate());
   }
 
+  SourceSpan SourceSpan::first(uint32_t length) const
+  {
+    Offset offset; offset.column = length;
+    return SourceSpan(source, position, offset);
+  }
+
   bool SourceSpan::operator==(const SourceSpan& rhs) const
   {
     return source.ptr() == rhs.source.ptr()

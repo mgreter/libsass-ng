@@ -9,6 +9,8 @@
 #include "dart_helpers.hpp"
 #include "ast_nodes.hpp"
 #include "unicode.hpp"
+#include "cssize.hpp"
+#include "inspect.hpp"
 
 #include <algorithm>
 
@@ -24,6 +26,76 @@ namespace Sass {
   static std::hash<sass::string> stringHasher;
 
   const double NaN = std::numeric_limits<double>::quiet_NaN();
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  AstNode* Value::simplify(Logger& logger) {
+    CallStackFrame frame(logger, pstate());
+    throw Exception::SassScriptException(logger, pstate(),
+      "Value " + inspect() + " can't be used in a calculation.");
+  }
+
+  // Only used for nth sass function
+  // Single values act like lists with 1 item
+  // Doesn't allow overflow of index (throw error)
+  // Allows negative index but no overflow either
+  Value* Value::getValueAt(Value* index, Logger& logger)
+  {
+    // Check out of boundary access
+    sassIndexToListIndex(index, logger, "n");
+    // Return single value
+    return this;
+  }
+
+  // Only used for nth sass function
+  // Doesn't allow overflow of index (throw error)
+  // Allows negative index but no overflow either
+  Value* Map::getValueAt(Value* index, Logger& logger)
+  {
+    return getPairAsList(sassIndexToListIndex(index, logger, "n"));
+  }
+
+  // Search the position of the given value
+  size_t List::indexOf(Value* value) {
+    return Sass::indexOf(elements(), value);
+  }
+
+  // Only used for nth sass function
+  // Doesn't allow overflow of index (throw error)
+  // Allows negative index but no overflow either
+  Value* List::getValueAt(Value* index, Logger& logger)
+  {
+    return get(sassIndexToListIndex(index, logger, "n"));
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  sass::string Value::inspect(int precision, bool quotes) const
+  {
+    OutputOptions out(
+      SASS_STYLE_NESTED,
+      precision);
+    Inspect i(out);
+    i.inspect = true;
+    i.quotes = quotes;
+    // Inspect must be const, accept isn't
+    const_cast<Value*>(this)->accept(&i);
+    return i.get_buffer();
+  }
+
+  sass::string Value::toCss(bool quote) const
+  {
+    OutputOptions out(
+      SASS_STYLE_TO_CSS,
+      SassDefaultPrecision);
+    Cssize i(out);
+    i.quotes = quote;
+    // Inspect must be const, accept isn't
+    const_cast<Value*>(this)->accept(&i);
+    return i.get_buffer();
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -183,16 +255,18 @@ namespace Sass {
 
   Value* Calculation::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (auto str = other->isaString()) return Value::plus(other, logger, pstate);
-    callStackFrame csf(logger, pstate);
+    if (auto str = other->isaString())
+      return Value::plus(str, logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(logger, pstate,
       "Undefined operation \"" + toCss() + " + " + other->toCss() + "\".");
   }
 
   Value* Calculation::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (auto str = other->isaString()) return Value::minus(other, logger, pstate);
-    callStackFrame csf(logger, pstate);
+    if (auto str = other->isaString())
+      return Value::minus(str, logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(logger, pstate,
       "Undefined operation \"" + toCss() + " - " + other->toCss() + "\".");
   }
@@ -200,7 +274,7 @@ namespace Sass {
   // The SassScript unary `+` operation.
   Value* Calculation::unaryPlus(Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(logger, pstate,
       "Undefined operation \"+" + toCss() + "\".");
   }
@@ -208,7 +282,7 @@ namespace Sass {
   // The SassScript unary `-` operation.
   Value* Calculation::unaryMinus(Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(logger, pstate,
       "Undefined operation \"-" + toCss() + "\".");
   }
@@ -269,7 +343,7 @@ namespace Sass {
   Value* Color::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaNumber() || other->isaColor()) {
-      callStackFrame csf(logger, pstate);
+      CallStackFrame csf(logger, pstate);
       throw Exception::SassScriptException(
         "Undefined operation \"" + inspect()
         + " + " + other->inspect() + "\".",
@@ -281,7 +355,7 @@ namespace Sass {
   Value* Color::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaNumber() || other->isaColor()) {
-      callStackFrame csf(logger, pstate);
+      CallStackFrame csf(logger, pstate);
       throw Exception::SassScriptException(
         "Undefined operation \"" + inspect()
         + " - " + other->inspect() + "\".",
@@ -293,7 +367,7 @@ namespace Sass {
   Value* Color::dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaNumber() || other->isaColor()) {
-      callStackFrame csf(logger, pstate);
+      CallStackFrame csf(logger, pstate);
       throw Exception::SassScriptException(
         "Undefined operation \"" + inspect()
         + " / " + other->inspect() + "\".",
@@ -304,7 +378,7 @@ namespace Sass {
 
   Value* Color::modulo(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " % " + other->inspect() + "\".",
@@ -313,7 +387,7 @@ namespace Sass {
 
   Value* Color::remainder(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " % " + other->inspect() + "\".",
@@ -646,7 +720,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // hue to RGB helper function
-  double h_to_rgb(double m1, double m2, double h)
+  static double h_to_rgb(double m1, double m2, double h)
   {
     h = absmod(h, 1.0);
     if (h * 6.0 < 1) return m1 + (m2 - m1) * h * 6;
@@ -750,7 +824,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Helper to determine if we can work with both numbers directly
-  bool isSimpleNumberComparison(const Number& lhs, const Number& rhs)
+  static bool isSimpleNumberComparison(const Number& lhs, const Number& rhs)
   {
     // Gather statistics from the units
     size_t l_n_units = lhs.numerators.size();
@@ -837,11 +911,11 @@ namespace Sass {
         return l.value() > r.value();
       }
       // Throw error, unit are incompatible
-      callStackFrame csf(logger, pstate);
+      CallStackFrame csf(logger, pstate);
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " > " + other->inspect() + "\".",
@@ -866,11 +940,11 @@ namespace Sass {
         return l.value() >= r.value();
       }
       // Throw error, unit are incompatible
-      callStackFrame csf(logger, pstate);
+      CallStackFrame csf(logger, pstate);
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " >= " + other->inspect() + "\".",
@@ -895,11 +969,11 @@ namespace Sass {
         return l.value() < r.value();
       }
       // Throw error, unit are incompatible
-      callStackFrame csf(logger, pstate);
+      CallStackFrame csf(logger, pstate);
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " < " + other->inspect() + "\".",
@@ -924,11 +998,11 @@ namespace Sass {
         return l.value() <= r.value();
       }
       // Throw error, unit are incompatible
-      callStackFrame csf(logger, pstate);
+      CallStackFrame csf(logger, pstate);
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " <= " + other->inspect() + "\".",
@@ -942,11 +1016,11 @@ namespace Sass {
 
 
   // Local functions that implement the value operation
-  inline double add(double x, double y) { return x + y; }
-  inline double sub(double x, double y) { return x - y; }
-  inline double mul(double x, double y) { return x * y; }
-  inline double div(double x, double y) { return x / y; }
-  inline double mod(double x, double y)
+  inline static double add(double x, double y) { return x + y; }
+  inline static double sub(double x, double y) { return x - y; }
+  inline static double mul(double x, double y) { return x * y; }
+  inline static double div(double x, double y) { return x / y; }
+  inline static double mod(double x, double y)
   {
 
     // ToDo: move this special case to mod operator
@@ -972,7 +1046,7 @@ namespace Sass {
       return ret;
     }
   }
-  inline double rem(double x, double y)
+  inline static double rem(double x, double y)
   {
     if ((x > 0 && y < 0) || (x < 0 && y > 0)) {
       double ret = std::remainder(x, y);
@@ -1113,7 +1187,7 @@ namespace Sass {
       double f(right.getUnitConversionFactor(left));
       // Returns zero on incompatible units
       if (f == 0.0) {
-        callStackFrame csf(logger, pstate);
+        CallStackFrame csf(logger, pstate);
         throw Exception::UnitMismatch(
           logger, left, right);
       }
@@ -1133,7 +1207,7 @@ namespace Sass {
       return operate(add, *nr, logger, pstate);
     }
     if (!other->isaColor()) return Value::plus(other, logger, pstate);
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " + " + other->inspect() + "\".",
@@ -1147,7 +1221,7 @@ namespace Sass {
       return operate(sub, *nr, logger, pstate);
     }
     if (!other->isaColor()) return Value::minus(other, logger, pstate);
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " - " + other->inspect() + "\".",
@@ -1161,7 +1235,7 @@ namespace Sass {
       return operate(mul, *nr, logger, pstate);
     }
     if (!other->isaColor()) return Value::times(other, logger, pstate);
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " * " + other->inspect() + "\".",
@@ -1175,7 +1249,7 @@ namespace Sass {
       return operate(mod, *nr, logger, pstate);
     }
     if (!other->isaColor()) return Value::modulo(other, logger, pstate);
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " % " + other->inspect() + "\".",
@@ -1189,7 +1263,7 @@ namespace Sass {
       return operate(rem, *nr, logger, pstate);
     }
     if (!other->isaColor()) return Value::remainder(other, logger, pstate);
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " %% " + other->inspect() + "\".",
@@ -1244,13 +1318,13 @@ namespace Sass {
   // Implement number specific assertions
   /////////////////////////////////////////////////////////////////////////
 
-  long Number::assertInt(Logger& logger, const sass::string& name)
+  long Number::assertInt(Logger& logger, const sass::string& name) const
   {
     if (fuzzyIsInt(value_, logger.epsilon)) {
       return lround(value_);
     }
     SourceSpan span(this->pstate());
-    callStackFrame csf(logger, span);
+    CallStackFrame csf(logger, span);
     throw Exception::SassScriptException(
       inspect() + " is not an int.",
       logger, span, name);
@@ -1260,7 +1334,7 @@ namespace Sass {
   {
     if (!hasUnits()) return this;
     SourceSpan span(this->pstate());
-    callStackFrame csf(logger, span);
+    CallStackFrame csf(logger, span);
     throw Exception::SassScriptException(
       "Expected " + inspect() + " to have no units.",
       logger, span, name);
@@ -1270,7 +1344,7 @@ namespace Sass {
   {
     if (hasUnit(unit)) return this;
     SourceSpan span(this->pstate());
-    callStackFrame csf(logger, span);
+    CallStackFrame csf(logger, span);
     throw Exception::SassScriptException(
       "Expected " + inspect() + " to have unit \"" + unit + "\".",
       logger, span, name);
@@ -1280,7 +1354,7 @@ namespace Sass {
   {
     if (numerators.empty() && denominators.empty()) return this;
     SourceSpan span(this->pstate());
-    callStackFrame csf(logger, span);
+    CallStackFrame csf(logger, span);
     throw Exception::SassScriptException(
       "Expected " + inspect() + " to have no units.",
       logger, span, name);
@@ -1294,7 +1368,7 @@ namespace Sass {
         << min << units.unit() << " and "
         << max << units.unit() << ".";
       SourceSpan span(this->pstate());
-      callStackFrame csf(logger, span);
+      CallStackFrame csf(logger, span);
       throw Exception::SassScriptException(
         msg.str(), logger, span, name);
     }
@@ -1304,17 +1378,11 @@ namespace Sass {
   const Number* Number::checkPercent(Logger& logger, const sass::string& name) const
   {
     if (!hasUnit("%")) {
-      sass::sstream msg;
-      StringVector dif(numerators);
-      StringVector mul(denominators);
-      // ToDo: don't report percentage twice!?
-      for (auto& unit : mul) unit = " * 1" + unit;
-      for (auto& unit : dif) unit = " / 1" + unit;
-      sass::string reunit(StringUtils::join(mul, "") + StringUtils::join(dif, ""));
-      msg << "$" << name << ": Passing a number without unit % (" << inspect() << ") is deprecated." << STRMLF;
-      msg << "To preserve current behavior: $" << name << reunit << " * 1%" << STRMLF;
-      auto add = msg.str();
-      logger.addDeprecation(add, pstate(), Logger::WARN_NUMBER_PERCENT);
+      sass::string txt = "$" + name + ": ";
+      txt += "Passing a number without unit % (" + inspect() + ") is deprecated.\n";
+      txt += "\nTo preserve current behavior: " + unitSuggestion(name, "%") + "\n";
+      txt += "\nMore info: https://sass-lang.com/d/function-units";
+      logger.addDeprecation(txt, pstate(), Logger::WARN_NUMBER_PERCENT);
     }
     return this;
   }
@@ -1354,6 +1422,19 @@ namespace Sass {
     copy->lhsAsSlash_.clear();
     copy->rhsAsSlash_.clear();
     return copy;
+  }
+
+  sass::string Number::recommendation() const
+  {
+    if (hasAsSlash()) {
+      sass::string text("math.div(");
+      text += lhsAsSlash_->recommendation();
+      text += ", ";
+      text += rhsAsSlash_->recommendation();
+      text += ")";
+      return text;
+    }
+    return inspect();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -1425,7 +1506,7 @@ namespace Sass {
 
   AstNode* String::simplify(Logger& logger) {
     if (hasQuotes_ == false) return this;
-    callStackFrame csf(logger, pstate_);
+    CallStackFrame csf(logger, pstate_);
     throw Exception::SassScriptException(logger, pstate_,
       "Quoted string " + inspect() + " can't be used in a calculation.");
   }
@@ -1508,9 +1589,9 @@ namespace Sass {
   bool Map::operator== (const Map& rhs) const
   {
     if (size() != rhs.size()) return false;
-    for (auto kv : elements_) {
-      auto lv = kv.second;
-      auto rv = rhs.at(kv.first);
+    for (const auto& kv : elements_) {
+      const auto& lv = kv.second;
+      const auto& rv = rhs.at(kv.first);
       return ObjEqualityFn(lv, rv);
     }
     return true;
@@ -1535,7 +1616,7 @@ namespace Sass {
         Value* key = list->get(0);
         Value* val = list->get(1);
         size_t idx = 0;
-        for (auto kv : elements_) {
+        for (const auto& kv : elements_) {
           if (*kv.first == *key) {
             if (*kv.second == *val) {
               return idx;
@@ -1617,8 +1698,8 @@ namespace Sass {
     if (separator() != rhs.separator()) return false;
     if (hasBrackets() != rhs.hasBrackets()) return false;
     for (size_t i = 0, L = size(); i < L; ++i) {
-      auto rv = rhs.get(i);
-      auto lv = this->get(i);
+      const auto& rv = rhs.get(i);
+      const auto& lv = this->get(i);
       if (!lv && rv) return false;
       else if (!rv && lv) return false;
       else if (!(*lv == *rv)) return false;
@@ -1701,7 +1782,7 @@ namespace Sass {
     if (Vectorized<Value>::hash_ == 0) {
       hash_start(Value::hash_, typeid(ArgumentList).hash_code());
       hash_combine(Value::hash_, Vectorized<Value>::hash());
-      for (auto child : _keywords) {
+      for (const auto& child : _keywords) {
         hash_combine(Value::hash_, child.first.hash());
         hash_combine(Value::hash_, child.second->hash());
       }
@@ -1715,7 +1796,7 @@ namespace Sass {
   Map* ArgumentList::keywordsAsSassMap() const
   {
     Map* map = SASS_MEMORY_NEW(Map, pstate());
-    for (auto kv : _keywords) {
+    for (const auto& kv : _keywords) {
       String* keystr = SASS_MEMORY_NEW(
         String, kv.second->pstate(),
         sass::string(kv.first.orig()));

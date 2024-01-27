@@ -48,6 +48,7 @@ namespace Sass {
   // Consume a silent comment and throws error
   SilentComment* CssParser::readSilentComment()
   {
+    if (inExpression) return nullptr;
     Offset start(scanner.offset);
     lastSilentComment = ScssParser::readSilentComment();
     error("Silent comments aren't allowed in plain CSS.",
@@ -57,17 +58,19 @@ namespace Sass {
   // EO readSilentComment
 
   // Consume a silent comment and throws error
-  void CssParser::scanSilentComment()
+  bool CssParser::scanSilentComment()
   {
+    if (inExpression) return false;
     Offset start(scanner.offset);
     lastSilentComment = ScssParser::readSilentComment();
     error("Silent comments aren't allowed in plain CSS.",
       scanner.relevantSpanFrom(start));
+    return !lastSilentComment.isNull();
   }
   // EO readSilentComment
 
   // Helper to declare all forbidden at-rules
-  bool isForbiddenCssAtRule(const sass::string& name)
+  static bool isForbiddenCssAtRule(const sass::string& name)
   {
     return name == "at-root"
       || name == "content"
@@ -132,7 +135,7 @@ namespace Sass {
   // EO readAtRule
 
   // Helper to declare all forbidden functions
-  bool isDisallowedFunction(sass::string name)
+  static bool isDisallowedFunction(sass::string name)
   {
     return name == str_red
       || name == str_green
@@ -219,7 +222,7 @@ namespace Sass {
     Offset start(scanner.offset);
     scanner.expectChar($lparen);
     scanWhitespace();
-    Expression* expression = readExpressionUntilComma();
+    ExpressionObj expression = readExpressionUntilComma();
     scanner.expectChar($rparen);
     return SASS_MEMORY_NEW(ParenthesizedExpression,
       scanner.relevantSpanFrom(start), expression);
@@ -280,7 +283,7 @@ namespace Sass {
         scanner.relevantSpanFrom(start));
     }
 
-    Interpolation* name = SASS_MEMORY_NEW(Interpolation, identifier->pstate());
+    InterpolationObj name = SASS_MEMORY_NEW(Interpolation, identifier->pstate());
     name->append(SASS_MEMORY_NEW(StringExpression, identifier->pstate(), identifier));
 
     CallableArguments* args = SASS_MEMORY_NEW(CallableArguments,

@@ -37,6 +37,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitSelectorExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitSelectorExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
@@ -74,6 +77,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitValueExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitValueExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return false; }
@@ -105,6 +111,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitNullExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitNullExpression(this);
     }
 
@@ -140,6 +149,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitColorExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitColorExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return false; }
@@ -173,6 +185,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitNumberExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitNumberExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return true; }
@@ -204,6 +219,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitBooleanExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitBooleanExpression(this);
     }
 
@@ -259,9 +277,15 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitStringExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitStringExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
+
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
 
   private:
 
@@ -270,9 +294,6 @@ namespace Sass {
     // quote as quote_mark. Otherwise we check if the string contains any double
     // quotes, which will trigger the use of single quotes as best quote_mark.
     uint8_t findBestQuote() const;
-
-    // Convert to string (only for debugging)
-    sass::string toString() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(StringExpression);
@@ -296,6 +317,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitSupportsExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitSupportsExpression(this);
     }
 
@@ -338,6 +362,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitMapExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitMapExpression(this);
     }
 
@@ -401,6 +428,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitListExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitListExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
@@ -434,8 +464,17 @@ namespace Sass {
       UnaryOpType optype,
       ExpressionObj operand);
 
+    // Value constructor
+    UnaryOpExpression(
+      const SourceSpan& pstate,
+      UnaryOpType optype,
+      ExpressionObj operand);
+
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitUnaryOpExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitUnaryOpExpression(this);
     }
 
@@ -497,13 +536,28 @@ namespace Sass {
       bool allowSlash = false,
       bool isCalcSafe = true);
 
+    // Value constructor
+    BinaryOpExpression(
+      const SourceSpan& pstate,
+      SassOperator operand,
+      const SourceSpan& opstate,
+      Expression* lhs,
+      Expression* rhs,
+      bool allowSlash = false,
+      bool isCalcSafe = true);
+
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitBinaryOpExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitBinaryOpExpression(this);
     }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
+
+    sass::string recommendation() const override final;
 
     // Convert to string (only for debugging)
     sass::string toString() const override final;
@@ -549,6 +603,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitVariableExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitVariableExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return true; }
@@ -578,8 +635,16 @@ namespace Sass {
       SourceSpan&& pstate,
       Expression* expression);
 
+    // Value constructor
+    ParenthesizedExpression(
+      const SourceSpan& pstate,
+      Expression* expression);
+
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitParenthesizedExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitParenthesizedExpression(this);
     }
 
@@ -588,6 +653,8 @@ namespace Sass {
 
     // Convert to string (only for debugging)
     sass::string toString() const override final;
+
+    sass::string recommendation() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ParenthesizedExpression);
@@ -651,6 +718,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitItplFnExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitItplFnExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return true; }
@@ -675,6 +745,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitIfExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitIfExpression(this);
     }
 
@@ -710,6 +783,13 @@ namespace Sass {
 
   public:
 
+    // Might be used for reporting
+    SourceSpan span() const {
+      SourceSpan rv(pstate_);
+      rv.span = name_;
+      return rv;
+    }
+
     // Value constructor
     FunctionExpression(SourceSpan pstate,
       const sass::string& name,
@@ -718,6 +798,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitFunctionExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitFunctionExpression(this);
     }
 

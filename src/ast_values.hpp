@@ -385,13 +385,13 @@ namespace Sass {
 		AstNode* simplify(Logger& logger) override final { return this; }
 
     // Check if we have delayed value info
-    bool hasAsSlash() {
+    inline bool hasAsSlash() const {
       return !lhsAsSlash_.isNull()
         && !rhsAsSlash_.isNull();
     }
 
     // Check if number matches [unit]
-    bool hasUnit(const sass::string& unit) const {
+    inline bool hasUnit(const sass::string& unit) const {
       return numerators.size() == 1 &&
         denominators.empty() &&
         numerators.front() == unit;
@@ -418,6 +418,8 @@ namespace Sass {
 
     // Implement delayed value fetcher
     Value* withoutSlash() override final;
+
+    sass::string recommendation() const;
 
     // Implement interface for base Value class
     size_t hash() const override final;
@@ -446,7 +448,7 @@ namespace Sass {
     Number* assertNumber(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
 
     // Implement number specific assertions
-    long assertInt(Logger& logger, const sass::string& name = Strings::empty);
+    long assertInt(Logger& logger, const sass::string& name = Strings::empty) const;
     Number* assertUnitless(Logger& logger, const sass::string& name = Strings::empty);
 		Number* assertHasUnits(Logger& logger, const sass::string& unit, const sass::string& name = Strings::empty);
 		Number* assertNoUnits(Logger& logger, const sass::string& name = Strings::empty);
@@ -849,7 +851,7 @@ namespace Sass {
 
     // Clone all items in-place
     ArgumentList* cloneChildren(SASS_MEMORY_ARGS_VOID) override final {
-      for (auto it : _keywords) {
+      for (std::pair<EnvKey, ValueObj> it : _keywords) {
         it.second = it.second->copy(SASS_MEMORY_PARAMS_VOID);
         it.second->cloneChildren(SASS_MEMORY_PARAMS_VOID);
       }

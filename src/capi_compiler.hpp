@@ -17,7 +17,7 @@ namespace Sass {
   int handle_error(Compiler& compiler, int status,
     const char* what = nullptr, StackTraces* traces = nullptr);
 
-  // Wrap Structured Exceptions for MSVC (void on no MSVC compilers)
+  // Wrap Structured Exceptions for MSVC (void on non MSVC compilers)
   template <class T, typename ...ARGS> void sass_wrap_msvc_exception(
     T& compiler, void (*fn)(T& compiler, ARGS...), ARGS... args);
 

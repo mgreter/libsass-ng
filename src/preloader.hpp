@@ -24,13 +24,13 @@ namespace Sass {
   public:
 
     Eval& eval;
-    Root* root;
+    Stylesheet* root;
     Compiler& compiler;
 
     // Alias into context
-    Root*& modctx;
+    Stylesheet*& modctx21;
 
-    sass::vector<Root*> modules;
+    sass::vector<Stylesheet*> modules;
 
     // Alias into context
     WithConfig*& wconfig;
@@ -45,11 +45,12 @@ namespace Sass {
 
     Preloader(
       Eval& eval,
-      Root* root);
+      Stylesheet* root);
 
     void process();
 
-    void acceptRoot(Root* root);
+    void acceptRoot(Stylesheet* root);
+    void acceptImport(Stylesheet* root);
 
 
     void visitAtRootRule(AtRootRule* rule) override final;

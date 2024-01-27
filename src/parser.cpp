@@ -62,8 +62,7 @@ namespace Sass {
     auto next = scanner.peekChar(1);
     if (next == $slash) {
       //lastSilentComment = read
-      scanSilentComment();
-      return true;
+      return scanSilentComment();
     }
     else if (next == $asterisk) {
       scanLoudComment();
@@ -75,12 +74,13 @@ namespace Sass {
   }
 
   // Consumes and ignores a silent (Sass-style) comment.
-  void Parser::scanSilentComment()
+  bool Parser::scanSilentComment()
   {
     scanner.expect("//");
     while (!scanner.isDone() && !isNewline(scanner.peekChar())) {
       scanner.readChar();
     }
+    return true;
   }
 
   // Consumes and ignores a loud (CSS-style) comment.
@@ -139,6 +139,18 @@ namespace Sass {
     return std::move(text.buffer);
 
   }
+
+  StringToken Parser::readIdentifierToken(bool unit)
+  {
+
+    // NOTE: this logic is largely duplicated in StylesheetParser._interpolatedIdentifier
+    // and isIdentifier in utils.dart. Most changes here should be mirrored there.
+
+    Offset start(scanner.offset);
+    sass::string id(readIdentifier(unit));
+    return { id, scanner.relevantSpanFrom(start) };
+  }
+
 
   // Consumes a chunk of a plain CSS identifier after the name start.
   sass::string Parser::identifierBody()
@@ -631,7 +643,7 @@ namespace Sass {
 
   // Returns whether the scanner is immediately before a sequence
   // of characters that could be part of a plain CSS identifier body.
-  bool Parser::lookingAtIdentifierBody()
+  bool Parser::lookingAtIdentifierBody() const
   {
     uint8_t next = scanner.peekChar();
     return next && (isName(next) || next == $backslash);
@@ -681,7 +693,7 @@ namespace Sass {
   // Throws a parser error associated with [pstate].
   void Parser::error(sass::string message, SourceSpan pstate)
   {
-    callStackFrame frame(compiler, BackTrace(pstate));
+    CallStackFrame frame(compiler, BackTrace(pstate));
     throw Exception::ParserException(compiler, message);
   }
   // EO error

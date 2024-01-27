@@ -42,6 +42,8 @@ namespace Sass {
   {
   public:
 
+    sass::string url;
+
     // Flag for internal modules
     // They don't have any content
     bool isBuiltIn = false;
@@ -57,6 +59,12 @@ namespace Sass {
     // The compiled AST-Tree
     CssParentNodeObj compiled;
 
+    // Whether this module *or* any modules
+    // in [upstream] contain `@extend` rules.
+    bool transitivelyContainsExtensions = false;
+
+    void determineTransitivelyContainsExtensions();
+
     // All @forward rules get merged into these objects
     // Those are not available on the local scope, they
     // are only used when another module consumes us!
@@ -66,14 +74,19 @@ namespace Sass {
     FidxEnvKeyMap mergedFwdFn;
 
     // Modules that this module uses.
-    sass::vector<Root*> upstream;
+    sass::vector<Stylesheet*> upstream77;
+
+    sass::vector<CssImportObj> imports56;
 
     ModuleMap<std::pair<EnvRefs*, Module*>> moduse;
 
+    ModuleMap<std::pair<EnvRefs*, Module*>> modimps;
+
     // The extensions defined in this module, which is also able to update
     // [css]'s style rules in-place based on downstream extensions.
-    ExtensionStoreObj extender = nullptr;
+    ExtensionStoreObj extender52 = nullptr;
 
+    sass::vector<CssCommentObj> precomments;
     // Special set with global assignments
     // Needed for imports within style-rules
     // ToDo: not really tested via specs yet?
@@ -81,10 +94,15 @@ namespace Sass {
 
   public:
 
-    Module(EnvRefs* idxs);
+    Module(const sass::string& url, EnvRefs* idxs);
 
-    // Check if there are any unsatisfied extends (will throw)
-    bool checkForUnsatisfiedExtends3(Extension& unsatisfied) const;
+
+    void addExtension(
+      const SelectorListObj& extender,
+      const SimpleSelectorObj& target,
+      const CssMediaRuleObj& mediaQueryContext,
+      const ExtendRuleObj& extend,
+      bool is_optional) const;
 
   };
 
@@ -97,7 +115,7 @@ namespace Sass {
     void addFunction(const EnvKey& name, uint32_t offset);
     void addVariable(const EnvKey& name, uint32_t offset);
     void addMixin(const EnvKey& name, uint32_t offset);
-    BuiltInMod(EnvRoot& root);
+    BuiltInMod(const sass::string& url, EnvRoot& root);
     ~BuiltInMod();
   };
 

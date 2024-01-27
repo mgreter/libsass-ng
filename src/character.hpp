@@ -138,6 +138,18 @@ namespace Sass {
         || character == $colon;
     }
 
+    inline bool isSimpleSelectorStart(uint8_t character, bool plainCss)
+    {
+      if (character == $ampersand)
+        return plainCss;
+      return character == $asterisk
+        || character == $lbracket
+        || character == $dot
+        || character == $hash
+        || character == $percent
+        || character == $colon;
+    }
+
     // Returns the value of [character] as a hex digit.
     // Assumes that [character] is a hex digit.
     inline uint8_t asHex(uint8_t character)

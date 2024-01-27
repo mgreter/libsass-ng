@@ -9,87 +9,109 @@
 
 namespace Sass {
 
-  // We want to compare selector lists position independent, so we use a Set.
-  // This means we either need to implement a less compare method or a hashing
-  // function. Given that we might compare selectors quite often the hashing
-  // approach has proven to be slightly faster. It has some memory overhead,
-  // but trades off nicely for better runtime performance.
   bool SelectorList::operator== (const SelectorList& rhs) const
   {
     if (&rhs == this) return true;
-    if (rhs.size() != size()) return false;
-    std::unordered_set<const ComplexSelector*, PtrObjHash, PtrObjEquality> lhs_set;
-    lhs_set.reserve(size());
-    for (const ComplexSelectorObj& element : elements()) {
-      lhs_set.insert(element.ptr());
-    }
-    for (const ComplexSelectorObj& element : rhs.elements()) {
-      if (lhs_set.count(element.ptr()) == 0) return false;
+    size_t len = size();
+    size_t rlen = rhs.size();
+    if (len != rlen) return false;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
+    for (size_t i = 0; i < len; i += 1) {
+      if (get(i)->hash() != rhs.get(i)->hash()) return false;
+      if (!(*get(i) == *rhs.get(i))) return false;
     }
     return true;
   }
 
   bool ComplexSelector::operator== (const ComplexSelector& rhs) const
   {
+    if (&rhs == this) return true;
     size_t len = size();
     size_t rlen = rhs.size();
     if (len != rlen) return false;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
     for (size_t i = 0; i < len; i += 1) {
       if (!(*get(i) == *rhs.get(i))) return false;
     }
     return true;
   }
 
-  //bool SelectorCombinator::operator==(const SelectorCombinator& rhs) const
-  //{
-  //  return combinator() == rhs.combinator();
-  //}
-
   bool CompoundSelector::operator== (const CompoundSelector& rhs) const
   {
     if (&rhs == this) return true;
-    if (rhs.size() != size()) return false;
-    std::unordered_set<const SimpleSelector*, PtrObjHash, PtrObjEquality> lhs_set;
-    lhs_set.reserve(size());
-    for (const SimpleSelectorObj& element : elements()) {
-      lhs_set.insert(element.ptr());
-    }
-    // there is no break?!
-    for (const SimpleSelectorObj& element : rhs.elements()) {
-      if (lhs_set.find(element.ptr()) == lhs_set.end()) return false;
+    size_t len = size();
+    size_t rlen = rhs.size();
+    if (len != rlen) return false;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
+    for (size_t i = 0; i < len; i += 1) {
+      if (get(i)->hash() != rhs.get(i)->hash()) return false;
+      if (!(*get(i) == *rhs.get(i))) return false;
     }
     return true;
   }
 
   bool IDSelector::operator== (const IDSelector& rhs) const
   {
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
     // ID has no namespace
     return name() == rhs.name();
   }
 
   bool TypeSelector::operator== (const TypeSelector& rhs) const
   {
-    bool a = nsMatch(rhs);
-    bool b = name_ == rhs.name_;
-    return a && b;
-    return nsMatch(rhs) && name() == rhs.name();
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
+    // Match equality hard
+    return ns_ == rhs.ns_ &&
+      hasNs_ == rhs.hasNs_ &&
+      name_ == rhs.name_;
   }
 
   bool ClassSelector::operator== (const ClassSelector& rhs) const
   {
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
     // Class has no namespace
     return name() == rhs.name();
   }
 
   bool PlaceholderSelector::operator== (const PlaceholderSelector& rhs) const
   {
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
     // Placeholder has no namespace
     return name() == rhs.name();
   }
 
   bool AttributeSelector::operator== (const AttributeSelector& rhs) const
   {
-    // smaller return, equal go on, bigger abort
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
     return nsMatch(rhs)
       && op() == rhs.op()
       && name() == rhs.name()
@@ -99,11 +121,22 @@ namespace Sass {
 
   bool PseudoSelector::operator== (const PseudoSelector& rhs) const
   {
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
     return nsMatch(rhs)
       && name() == rhs.name()
       && argument() == rhs.argument()
       && isPseudoElement() == rhs.isPseudoElement()
       && ObjEquality()(selector(), rhs.selector());
+  }
+
+  // CSS Parent selectors have no distinction feature
+  bool CssParentSelector::operator== (const CssParentSelector& rhs) const
+  {
+    return true;
   }
 
   /////////////////////////////////////////////////////////////////////////

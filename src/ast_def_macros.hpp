@@ -39,10 +39,14 @@ public:
 };
 
 // Macros to help create and maintain local and recursive flag states
+#define RAII_INT(name,opt) LocalOption<int> flag_##name(name, opt)
 #define RAII_FLAG(name,opt) LocalOption<bool> flag_##name(name, opt)
+#define RAII_SIZE(name,opt) LocalOption<size_t> flag_##name(name, opt)
 #define RAII_PTR(var,name,opt) LocalOption<var*> flag_##name(name, opt)
+#define RAII_OBJ(var,name,opt) LocalOption<SharedPtr<var>> flag_##name(name, (var*)opt)
+// #define RAII_VEC(var,name,opt) LocalOption<sass::vector<var*>> flag_##name(name, opt)
 #define RAII_SELECTOR(name,opt) LocalStack<SelectorListObj> stack_##name(name, opt)
-#define RAII_MODULE(name,opt) LocalStack<Root*> stack_##name(name, opt)
+#define RAII_MODULE(name,opt) LocalStack<Stylesheet*> stack_##name(name, opt)
 
 // Macro to help impose maximum nesting to avoid stack overflow
 #define NESTING_GUARD(name) \

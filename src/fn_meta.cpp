@@ -11,8 +11,6 @@
 #include "ast_expressions.hpp"
 #include "string_utils.hpp"
 
-#include "debugger.hpp"
-
 namespace Sass {
 
   namespace Functions {
@@ -24,7 +22,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(typeOf)
+      static BUILT_IN_FN(typeOf)
       {
         sass::string copy(arguments[0]->type());
         return SASS_MEMORY_NEW(String,
@@ -33,7 +31,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(inspect)
+      static BUILT_IN_FN(inspect)
       {
         if (arguments[0] == nullptr) {
           return SASS_MEMORY_NEW(
@@ -45,7 +43,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnIf)
+      static BUILT_IN_FN(fnIf)
       {
         // Always evaluates both sides!
         return arguments[0]->isTruthy() ?
@@ -54,7 +52,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnCalcName)
+      static BUILT_IN_FN(fnCalcName)
       {
         auto calculation = arguments[0]->assertCalculation(compiler, Sass::Strings::calc);
         return SASS_MEMORY_NEW(String, calculation->pstate(), calculation->name().c_str(), true);
@@ -62,17 +60,17 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnCalcArgs)
+      static BUILT_IN_FN(fnCalcArgs)
       {
         auto calculation = arguments[0]->assertCalculation(compiler, Sass::Strings::calc);
         const sass::vector<AstNodeObj>& args(calculation->arguments());
         ValueVector values; // args.size()
 
-        for (auto arg : args) {
+        for (auto& arg : args) {
           if (auto* value = arg->isaValue()) {
             if (auto* calcop = value->isaCalcOperation()) {
               values.push_back(SASS_MEMORY_NEW(String,
-                value->pstate(), value->toString(), false));
+                calcop->pstate(), calcop->toString(), false));
             }
             else {
               values.push_back(value);
@@ -95,12 +93,12 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(keywords)
+      static BUILT_IN_FN(keywords)
       {
         ArgumentList* argumentList = arguments[0]->assertArgumentList(compiler, Sass::Strings::args);
         const ValueFlatMap& keywords = argumentList->keywords();
         MapObj map = SASS_MEMORY_NEW(Map, arguments[0]->pstate());
-        for (auto kv : keywords) {
+        for (auto& kv : keywords) {
           sass::string key = kv.first.norm(); // .substr(1);
           // Util::ascii_normalize_underscore(key);
           // Wrap string key into a sass value
@@ -113,7 +111,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(featureExists)
+      static BUILT_IN_FN(featureExists)
       {
         String* feature = arguments[0]->assertString(compiler, "feature");
         static const auto* const features =
@@ -131,7 +129,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(globalVariableExists)
+      static BUILT_IN_FN(globalVariableExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
@@ -151,7 +149,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasVar = false;
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
@@ -170,14 +168,14 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(variableExists)
+      static BUILT_IN_FN(variableExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         EnvRef vidx = compiler.varRoot.findVarIdx(variable->value(), "");
 
         bool hasVar = false;
         auto parent = compiler.getCurrentModule();
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
@@ -194,7 +192,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(functionExists)
+      static BUILT_IN_FN(functionExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
@@ -214,7 +212,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->fnIdxs.count(variable->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -230,7 +228,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(mixinExists)
+      static BUILT_IN_FN(mixinExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
@@ -251,7 +249,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->mixIdxs.count(variable->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -269,7 +267,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnApply)
+      static BUILT_IN_FN(fnApply)
       {
         // auto mixin = ;
         Callable* callable = arguments[0]->assertMixin(compiler, Sass::Strings::mixin)->callable();
@@ -298,7 +296,7 @@ namespace Sass {
 
           CallableDeclaration* ctblk = nullptr;
           if (eval.content) ctblk = eval.content->declaration();
-          CallableArguments* args = SASS_MEMORY_NEW(CallableArguments, pstate,
+          CallableArgumentsObj args = SASS_MEMORY_NEW(CallableArguments, pstate,
             {}, {}, SASS_MEMORY_NEW(ValueExpression, callable->pstate(), arglist));
           eval.applyMixin(pstate, mixin->name(), mixin, ctblk, args);
           return SASS_MEMORY_NEW(Boolean, pstate, false);
@@ -332,7 +330,7 @@ namespace Sass {
 
           CallableDeclaration* ctblk = nullptr;
           if (eval.content) ctblk = eval.content->declaration();
-          CallableArguments* args = SASS_MEMORY_NEW(CallableArguments, pstate,
+          CallableArgumentsObj args = SASS_MEMORY_NEW(CallableArguments, pstate,
             {}, {}, SASS_MEMORY_NEW(ValueExpression, callable->pstate(), arglist));
           eval.applyMixin(pstate, bc->name(), bc, ctblk, args);
           return SASS_MEMORY_NEW(Boolean, pstate, false);
@@ -354,8 +352,8 @@ namespace Sass {
       }
 
       /*******************************************************************/
-
-      BUILT_IN_FN(fnGetMixin)
+      /*
+      static BUILT_IN_FN(fnGetMixin)
       {
         String* name = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
@@ -378,7 +376,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->mixIdxs.count(name->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -390,7 +388,7 @@ namespace Sass {
 
         auto midx = compiler.varRoot.findMixIdx(name->value(), "");
         if (midx.isValid()) {
-          auto callable = compiler.varRoot.getMixin(midx);
+          const auto& callable = compiler.varRoot.getMixin(midx);
           return SASS_MEMORY_NEW(Mixin, pstate, callable);
         }
         else {
@@ -407,13 +405,14 @@ namespace Sass {
         //   return arguments[0]->isTruthy() ?
         //   arguments[1] : arguments[0];
       }
+      */
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnAcceptsContent)
+      static BUILT_IN_FN(fnAcceptsContent)
       {
         Mixin* mixin = arguments[0]->assertMixin(compiler, Sass::Strings::mixin);
-        if (auto callable = mixin->callable())
+        if (const auto& callable = mixin->callable())
         {
           if (BuiltInCallable* builtin = callable->isaBuiltInCallable()) {
             return SASS_MEMORY_NEW(Boolean, pstate, builtin->acceptsContent());
@@ -443,7 +442,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(contentExists)
+      static BUILT_IN_FN(contentExists)
       {
         if (!eval.isInMixin()) {
           throw Exception::RuntimeException(compiler,
@@ -455,7 +454,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(moduleVariables)
+      static BUILT_IN_FN(moduleVariables)
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
@@ -468,7 +467,7 @@ namespace Sass {
             throw Exception::RuntimeException(compiler, "There is "
               "no module with namespace \"" + ns->value() + "\".");
           }
-          for (auto entry : refs->varIdxs) {
+          for (auto& entry : refs->varIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef vidx(refs, entry.second);
@@ -476,7 +475,7 @@ namespace Sass {
               varRoot.getVariable(vidx) });
           }
           if (root)
-          for (auto entry : root->mergedFwdVar) {
+          for (auto& entry : root->mergedFwdVar) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef vidx(entry.second);
@@ -493,7 +492,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnModuleMixins)
+      static BUILT_IN_FN(fnModuleMixins)
       {
         String* ns = arguments[0]->assertString(compiler, Sass::Strings::module);
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
@@ -506,20 +505,20 @@ namespace Sass {
             throw Exception::RuntimeException(compiler, "There is "
               "no module with namespace \"" + ns->value() + "\".");
           }
-          for (auto entry : refs->mixIdxs) {
+          for (const auto& entry : refs->mixIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef fidx(refs, entry.second);
-            auto callable = compiler.varRoot.getMixin(fidx);
+            const auto& callable = compiler.varRoot.getMixin(fidx);
             auto fn = SASS_MEMORY_NEW(Mixin, pstate, callable);
             list->insert({ name, fn });
           }
           if (root)
-            for (auto entry : root->mergedFwdMix) {
+            for (const auto& entry : root->mergedFwdMix) {
               auto name = SASS_MEMORY_NEW(String, pstate,
                 sass::string(entry.first.norm()), true);
               EnvRef fidx(entry.second);
-              auto callable = compiler.varRoot.getMixin(fidx);
+              const auto& callable = compiler.varRoot.getMixin(fidx);
               auto fn = SASS_MEMORY_NEW(Mixin, pstate, callable);
               list->insert({ name, fn });
             }
@@ -531,7 +530,7 @@ namespace Sass {
         return list.detach();
       }
 
-      BUILT_IN_FN(moduleFunctions)
+      static BUILT_IN_FN(moduleFunctions)
       {
         String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
@@ -544,20 +543,20 @@ namespace Sass {
             throw Exception::RuntimeException(compiler, "There is "
               "no module with namespace \"" + ns->value() + "\".");
           }
-          for (auto entry : refs->fnIdxs) {
+          for (const auto& entry : refs->fnIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef fidx(refs, entry.second);
-            auto callable = compiler.varRoot.getFunction(fidx);
+            const auto& callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
           }
           if (root)
-          for (auto entry : root->mergedFwdFn) {
+          for (const auto& entry : root->mergedFwdFn) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef fidx(entry.second);
-            auto callable = compiler.varRoot.getFunction(fidx);
+            const auto& callable = compiler.varRoot.getFunction(fidx);
             auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
           }
@@ -573,7 +572,7 @@ namespace Sass {
 
       /// Like `_environment.findFunction`, but also returns built-in
       /// globally-available functions.
-      Callable* _getFunction(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
+      static Callable* _getFunction(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
         EnvRef fidx = ctx.varRoot.findFnIdx(name, "");
         if (!fidx.isValid()) return nullptr;
         return ctx.varRoot.getFunction(fidx);
@@ -581,13 +580,13 @@ namespace Sass {
 
       /// Like `_environment.findFunction`, but also returns built-in
       /// globally-available functions.
-      Callable* _getMixin(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
+      static Callable* _getMixin(const EnvKey& name, Compiler& ctx, const sass::string& ns = "") {
         EnvRef fidx = ctx.varRoot.findMixIdx(name, "");
         if (!fidx.isValid()) return nullptr;
         return ctx.varRoot.getMixin(fidx);
       }
 
-      BUILT_IN_FN(findFunction)
+      static BUILT_IN_FN(findFunction)
       {
 
         String* name = arguments[0]->assertString(compiler, Sass::Strings::name);
@@ -607,7 +606,7 @@ namespace Sass {
 
         auto parent = compiler.getCurrentModule();
 
-        if (ns != nullptr) {
+        if (ns != nullptr && !ns->value().empty()) {
           auto pp = parent->module->moduse.find(ns->value());
           if (pp != parent->module->moduse.end()) {
             EnvRefs* module = pp->second.first;
@@ -662,7 +661,7 @@ namespace Sass {
       }
 
 
-      BUILT_IN_FN(findMixin)
+      static BUILT_IN_FN(findMixin)
       {
 
         String* name = arguments[0]->assertString(compiler, Sass::Strings::name);
@@ -681,7 +680,7 @@ namespace Sass {
 
         auto parent = compiler.getCurrentModule();
 
-        if (ns != nullptr) {
+        if (ns != nullptr && !ns->value().empty()) {
           auto pp = parent->module->moduse.find(ns->value());
           if (pp != parent->module->moduse.end()) {
             EnvRefs* module = pp->second.first;
@@ -737,7 +736,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(call)
+      static BUILT_IN_FN(call)
       {
 
         Value* function = arguments[0]->assertValue(compiler, "function");
@@ -762,22 +761,20 @@ namespace Sass {
           CallableArguments, pstate, ExpressionVector{}, {}, restArg, kwdRest);
 
         if (String * str = function->isaString()) {
-          sass::string name = str->value();
           compiler.addDeprecation(
-            "Passing a string to call() is deprecated and will be illegal in LibSass 4.1.0.\n"
-            "Use call(get-function(" + str->inspect() + ")) instead.",
+            "Passing a string to call() is deprecated and will be illegal in LibSass 5.0.0.\n"
+            "\nRecommendation: call(get-function(" + str->inspect() + "))",
             str->pstate(), Logger::WARN_STRING_CALL);
-
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
           itpl->append(SASS_MEMORY_NEW(String, pstate, sass::string(str->value())));
           FunctionExpressionObj expression = SASS_MEMORY_NEW(
             FunctionExpression, pstate, str->value(), invocation);
           return eval.acceptFunctionExpression(expression);
-
         }
 
         Function* fn = function->assertFunction(compiler, "function");
         if (fn->cssName().empty()) {
+          if (fn->callable() == nullptr) return nullptr;
           return fn->callable()->execute(eval, invocation, pstate);
         }
         else {
@@ -794,72 +791,17 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(loadCss)
+      static BUILT_IN_FN(loadCss)
       {
+
+       // std::cerr << "+++ in load css\n";
+
         String* url = arguments[0]->assertStringOrNull(compiler, Strings::url);
         MapObj withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
 
-        bool hasWith = withMap && !withMap->empty();
+        eval.importCssModule(url, withMap, pstate);
 
-        EnvKeyFlatMap<ValueObj> config;
-        sass::vector<WithConfigVar> withConfigs;
-
-        if (hasWith) {
-          for (auto& kv : withMap->elements()) {
-            String* name = kv.first->assertString(compiler, "with key");
-            EnvKey kname(name->value());
-            WithConfigVar kvar;
-            kvar.name = name->value();
-            kvar.value33 = kv.second;
-            kvar.isGuarded41 = false;
-            kvar.wasAssigned = false;
-            kvar.pstate = name->pstate();
-            withConfigs.push_back(kvar);
-            if (config.count(kname) == 1) {
-              throw Exception::RuntimeException(compiler,
-                "The variable $" + kname.norm() + " was configured twice.");
-            }
-            config[name->value()] = kv.second;
-          }
-        }
-
-        if (StringUtils::startsWith(url->value(), "sass:", 5)) {
-
-          if (hasWith) {
-            throw Exception::RuntimeException(compiler, "Built-in "
-              "module " + url->value() + " can't be configured.");
-          }
-
-          return SASS_MEMORY_NEW(Null, SourceSpan::internal("[LOADCSS]")); // pstate leaks?;
-        }
-
-        WithConfig wconfig(compiler.wconfig, withConfigs, hasWith);
-
-        WithConfig*& pwconfig(compiler.wconfig);
-        RAII_PTR(WithConfig, pwconfig, &wconfig);
-
-        sass::string prev(pstate.getAbsPath());
-        if (Root* sheet = eval.loadModule(
-          prev, url->value(), false)) {
-
-          sheet->extender = eval.extender2;
-
-          if (!sheet->isCompiled) {
-            ImportStackFrame iframe(compiler, sheet->import);
-            LocalOption<bool> scoped(compiler.hasWithConfig,
-              compiler.hasWithConfig || hasWith);
-            // RAII_PTR(Root, extctx33, root);
-            eval.compileModule(sheet);
-            wconfig.finalize(compiler);
-          }
-          else if (compiler.hasWithConfig || hasWith) {
-            throw Exception::ParserException(compiler,
-              sass::string(sheet->pstate().getImpPath())
-              + " was already loaded, so it "
-              "can't be configured using \"with\".");
-          }
-          eval.insertModule(sheet);
-        }
+        //std::cerr << "+++ out load css\n";
 
         return SASS_MEMORY_NEW(Null, SourceSpan::internal("[LOADCSS]")); // pstate leaks?
       }

@@ -75,7 +75,7 @@ namespace Sass {
   template <class T>
   T flatten(const sass::vector<T>& all)
   {
-    T flattened;
+    T flattened{};
     for (const auto& sub : all) {
       std::copy(std::begin(sub), std::end(sub),
         std::back_inserter(flattened));
@@ -91,7 +91,7 @@ namespace Sass {
   // Passes additional closure variables to `fn`
   template <class T, class U, typename ...Args>
   T expand(const T& cnt, U fn, Args... args) {
-    T flattened;
+    T flattened{};
     for (const auto& sub : cnt) {
       auto rv = fn(sub, args...);
       flattened.insert(flattened.end(),
@@ -105,7 +105,7 @@ namespace Sass {
   template <class T>
   T flattenInner(const sass::vector<T>& vec)
   {
-    T outer;
+    T outer{};
     for (const auto& sub : vec) {
       outer.emplace_back(std::move(flatten(sub)));
     }
@@ -148,7 +148,7 @@ namespace Sass {
   // Implementation of [Map.addAll], but for LibSass.
   /////////////////////////////////////////////////////////////////////////
   template <class K1, class K2>
-  void mapAddAll(K1 dst, K2 source)
+  void mapAddAll(K1& dst, K2& source)
   {
     for (auto& src : source) {
       dst[src.first] = src.second;
@@ -160,7 +160,7 @@ namespace Sass {
   // This avoids copying inner maps from [source] if possible.
   /////////////////////////////////////////////////////////////////////////
   template <class K1, class K2>
-  void mapAddAll2(K1 dst, K2 source)
+  void mapAddAll2(K1& dst, K2& source)
   {
     for (auto& src : source) {
       mapAddAll(dst[src.first], src.second);

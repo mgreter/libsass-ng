@@ -24,6 +24,10 @@ namespace Sass {
   // will also check for the case when both numbers are infinite
   #define NEAR_EQUAL_INF(lhs, rhs) ((lhs == rhs) || (std::fabs(lhs - rhs) < NUMBER_EPSILON))
 
+  // macro to test if numbers are equal within a small error margin
+  // will also check for the case when both numbers are infinite
+  #define FUZZY_EQUAL_INF(lhs, rhs, eps) ((lhs == rhs) || (std::fabs(lhs - rhs) < eps))
+
   /////////////////////////////////////////////////////////////////////////#
   // We define various functions and functors here.
   // Functions satisfy the BinaryPredicate requirement
@@ -34,20 +38,23 @@ namespace Sass {
   // Implement compare and hashing operations for raw pointers
   /////////////////////////////////////////////////////////////////////////#
 
+  static std::hash<void*> ptrHasher;
+
+
   template <class T>
-  size_t PtrHashFn(const T* ptr) {
-    return ((size_t)ptr) >> 3;
+  inline size_t PtrHashFn(const T* ptr) {
+    return ptrHasher((void*)ptr);
   }
 
   struct PtrHash {
     template <class T>
-    size_t operator() (const T* ptr) const {
-      return PtrHashFn(ptr);
+    inline size_t operator() (const T* ptr) const {
+      return ptrHasher(ptr);
     }
   };
 
   template <class T>
-  bool PtrEqualityFn(const T* lhs, const T* rhs) {
+  inline bool PtrEqualityFn(const T* lhs, const T* rhs) {
     return lhs == rhs; // compare raw pointers
   }
 
@@ -64,8 +71,8 @@ namespace Sass {
 
   template <class T>
   // Hash the raw pointer instead of object
-  size_t ObjPtrHashFn(const T& obj) {
-    return PtrHashFn(obj.ptr());
+  inline size_t ObjPtrHashFn(const T& obj) {
+    return ptrHasher(obj.ptr());
   }
 
   struct ObjPtrHash {
@@ -78,49 +85,49 @@ namespace Sass {
 
   template <class T>
   // Hash the object and its content
-  size_t ObjHashFn(const T& obj) {
+  inline size_t ObjHashFn(const T& obj) {
     return obj ? obj->hash() : 0;
   }
 
   struct ObjHash {
     template <class T>
     // Hash the object and its content
-    size_t operator() (const T& obj) const {
+    inline size_t operator() (const T& obj) const {
       return ObjHashFn(obj);
     }
   };
 
   template <class T>
   // Hash the object behind pointer
-  size_t PtrObjHashFn(const T* obj) {
+  inline size_t PtrObjHashFn(const T* obj) {
     return obj ? obj->hash() : 0;
   }
 
   struct PtrObjHash {
     template <class T>
     // Hash the object behind pointer
-    size_t operator() (const T* obj) const {
+    inline size_t operator() (const T* obj) const {
       return PtrObjHashFn(obj);
     }
   };
 
   template <class T>
   // Compare raw pointers to the object
-  bool ObjPtrEqualityFn(const T& lhs, const T& rhs) {
+  inline bool ObjPtrEqualityFn(const T& lhs, const T& rhs) {
     return PtrEqualityFn(lhs.ptr(), rhs.ptr());
   }
 
   struct ObjPtrEquality {
     template <class T>
     // Compare raw pointers to the object
-    bool operator() (const T& lhs, const T& rhs) const {
+    inline bool operator() (const T& lhs, const T& rhs) const {
       return ObjPtrEqualityFn<T>(lhs, rhs);
     }
   };
 
   template <class T>
   // Compare the objects behind the pointers
-  bool PtrObjEqualityFn(const T* lhs, const T* rhs) {
+  inline bool PtrObjEqualityFn(const T* lhs, const T* rhs) {
     if (lhs == nullptr) return rhs == nullptr;
     else if (rhs == nullptr) return false;
     else return lhs == rhs || *lhs == *rhs;
@@ -129,21 +136,21 @@ namespace Sass {
   struct PtrObjEquality {
     template <class T>
     // Compare the objects behind the pointers
-    bool operator() (const T* lhs, const T* rhs) const {
+    inline bool operator() (const T* lhs, const T* rhs) const {
       return PtrObjEqualityFn<T>(lhs, rhs);
     }
   };
 
   template <class T>
   // Compare the objects and its contents
-  bool ObjEqualityFn(const T& lhs, const T& rhs) {
+  inline bool ObjEqualityFn(const T& lhs, const T& rhs) {
     return PtrObjEqualityFn(lhs.ptr(), rhs.ptr());
   }
 
   struct ObjEquality {
     template <class T>
     // Compare the objects and its contents
-    bool operator() (const T& lhs, const T& rhs) const {
+    inline bool operator() (const T& lhs, const T& rhs) const {
       return ObjEqualityFn<T>(lhs, rhs);
     }
   };
@@ -154,7 +161,7 @@ namespace Sass {
 
   template <class T>
   // Compare the objects behind pointers
-  bool PtrObjLessThanFn(const T* lhs, const T* rhs) {
+  inline bool PtrObjLessThanFn(const T* lhs, const T* rhs) {
     if (lhs == nullptr) return rhs != nullptr;
     else if (rhs == nullptr) return false;
     else return lhs != rhs && *lhs < *rhs;
@@ -163,21 +170,21 @@ namespace Sass {
   struct PtrObjLessThan {
     template <class T>
     // Compare the objects behind pointers
-    bool operator() (const T* lhs, const T* rhs) const {
+    inline bool operator() (const T* lhs, const T* rhs) const {
       return PtrObjLessThanFn<T>(lhs, rhs);
     }
   };
 
   template <class T>
   // Compare the objects and its content
-  bool ObjLessThanFn(const T& lhs, const T& rhs) {
+  inline bool ObjLessThanFn(const T& lhs, const T& rhs) {
     return PtrObjLessThanFn(lhs.ptr(), rhs.ptr());
   };
 
   struct ObjLessThan {
     template <class T>
     // Compare the objects and its content
-    bool operator() (const T& lhs, const T& rhs) const {
+    inline bool operator() (const T& lhs, const T& rhs) const {
       return ObjLessThanFn<T>(lhs, rhs);
     }
   };
@@ -190,7 +197,7 @@ namespace Sass {
   template <class X, class Y,
     typename XT = typename X::value_type,
     typename YT = typename Y::value_type>
-  bool ListEquality(const X& lhs, const Y& rhs,
+  inline bool ListEquality(const X& lhs, const Y& rhs,
     bool(*cmp)(const XT*, const YT*))
   {
     return lhs.size() == rhs.size() &&
@@ -200,13 +207,13 @@ namespace Sass {
 
   // Return if Vector is empty
   template <class T>
-  bool listIsEmpty(T* cnt) {
+  inline bool listIsEmpty(T* cnt) {
     return cnt && cnt->empty();
   }
 
   // Erase items from vector that match predicate
   template<class T, class UnaryPredicate>
-  void listEraseItemIf(T& vec, UnaryPredicate* predicate)
+  inline void listEraseItemIf(T& vec, UnaryPredicate* predicate)
   {
     vec.erase(std::remove_if(vec.begin(), vec.end(), predicate), vec.end());
   }
@@ -214,7 +221,7 @@ namespace Sass {
   // Check that every item in `lhs` is also in `rhs`
   // Note: this works by comparing the raw pointers
   template <typename T>
-  bool listIsSubsetOrEqual(const T& lhs, const T& rhs) {
+  inline bool listIsSubsetOrEqual(const T& lhs, const T& rhs) {
     for (const auto& item : lhs) {
       if (std::find(rhs.begin(), rhs.end(), item) == rhs.end())
         return false;

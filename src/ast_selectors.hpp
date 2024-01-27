@@ -27,7 +27,7 @@ namespace Sass {
     const CplxSelComponentVector& complex1,
     const CplxSelComponentVector& complex2);
 
-  sass::vector<ComplexSelectorObj> weave(
+  sass::vector<ComplexSelectorObj> weave27(
     const sass::vector<ComplexSelectorObj>& complexes,
     bool forceLineBreak = false);
 
@@ -47,7 +47,7 @@ namespace Sass {
     public SelectorVisitable<void>,
     public SelectorVisitable<bool>
   {
-  protected:
+  public:
 
     // Hash is only calculated once and afterwards the value
     // must not be mutated, which is the case with how sass
@@ -56,6 +56,10 @@ namespace Sass {
     // Must create a copy if you need to alter such an object.
     // Selectors are mostly used as keys in @extend rules.
     mutable size_t hash_;
+
+    // Returns zero if not yet hashed
+    // Useful to speed up comparisons
+    size_t hashed() const { return hash_; }
 
   public:
 
@@ -74,6 +78,8 @@ namespace Sass {
     bool isBogusOtherThanLeadingCombinator() const;
 
     bool isInvisible() const;
+
+    void assertNotBogus(Logger& logger, const sass::string& name);
 
     // To be implemented by specialization
     virtual size_t hash() const = 0;
@@ -116,6 +122,7 @@ namespace Sass {
     DECLARE_ISA_CASTER(AttributeSelector);
     DECLARE_ISA_CASTER(PlaceholderSelector);
     DECLARE_ISA_CASTER(SelectorNS);
+    DECLARE_ISA_CASTER(CssParentSelector);
     DECLARE_ISA_CASTER(SimpleSelector);
     DECLARE_ISA_CASTER(ComplexSelector);
     //DECLARE_ISA_CASTER(SelectorCombinator);
@@ -185,6 +192,44 @@ namespace Sass {
     virtual SimpleSelector* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
 
     IMPLEMENT_ISA_CASTER(SimpleSelector);
+
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  class CssParentSelector : public SimpleSelector
+  {
+  public:
+    CssParentSelector(const SourceSpan& pstate);
+
+    CssParentSelector(const CssParentSelector* ptr);
+
+    // Implement hash functionality
+    virtual size_t hash() const override;
+
+    // This is a very interesting line, as it seems pointless, since the base class
+// already marks this as an unimplemented interface methods, but by defining this
+// line here, we make sure that callers know the return is a bit more specific.
+    // virtual SelectorNS* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
+
+    // Implement specialized specificity function
+    virtual unsigned long specificity() const override {
+      return Constants::Specificity::ID;
+    }
+
+    // Unify ID selector with multiple simple selectors
+    // CompoundSelector* unifyWith(CompoundSelector*);
+    virtual sass::vector<SimpleSelectorObj> unify(
+      const sass::vector<SimpleSelectorObj>& other)
+      override final;
+
+    IMPLEMENT_SEL_COPY_IGNORE(CssParentSelector);
+    IMPLEMENT_ACCEPT(void, Selector, CssParentSelector);
+    IMPLEMENT_ACCEPT(bool, Selector, CssParentSelector);
+    IMPLEMENT_EQ_OPERATOR(Selector, CssParentSelector);
+
+    IMPLEMENT_ISA_CASTER(CssParentSelector);
 
   };
 
@@ -565,7 +610,7 @@ namespace Sass {
 
     // Returns a new [PseudoSelector] based on ourself,
     // but with the selector replaced with [selector].
-    PseudoSelector* withSelector(SelectorList* selector);
+    PseudoSelector* withSelector(SelectorList* selector) const;
 
     // Implement specialized specificity function
     virtual unsigned long specificity() const override {
@@ -605,7 +650,7 @@ namespace Sass {
     // line break before list separator
     ADD_CONSTREF(bool, hasPreLineFeed);
 
-    // line break after the selector
+    // line break after the selector?
     ADD_CONSTREF(bool, hasLineBreak);
 
     ADD_CONSTREF(SelectorCombinatorVector, leadingCombinators);
@@ -677,7 +722,8 @@ namespace Sass {
       resolveParentSelectors(
         SelectorList* parent,
         BackTraces& traces,
-        bool implicit_parent = true);
+        bool implicit_parent = true,
+        bool preserve_parent = false);
 
 
     // Unify two complex selectors with each other
@@ -763,6 +809,8 @@ namespace Sass {
     ComplexSelector* wrapInComplex2();
 
     ComplexSelector* wrapInComplex(SelectorCombinatorVector);
+
+    ComplexSelector* wrapInComplex(const SourceSpan& pstate, SelectorCombinatorVector);
 
     // virtual CplxSelComponent* produce() = 0;
 
@@ -927,6 +975,11 @@ namespace Sass {
       sass::vector<SimpleSelectorObj>&& selectors,
       bool hasPostLineBreak = false);
 
+    CompoundSelector(
+      const SourceSpan& pstate,
+      const sass::vector<SimpleSelectorObj>& selectors,
+      bool hasPostLineBreak = false);
+
     // Copy constructor
     CompoundSelector(
       const CompoundSelector* ptr,
@@ -999,8 +1052,6 @@ namespace Sass {
 
   public:
 
-    SelectorList* assertNotBogus(const sass::string& name);
-
     // Value move constructor
     SelectorList(
       const SourceSpan& pstate,
@@ -1024,7 +1075,8 @@ namespace Sass {
     SelectorList* resolveParentSelectors(
       SelectorList* parent,
       BackTraces& traces,
-      bool implicit_parent = true);
+      bool implicit_parent = true,
+      bool preserve_parent = false);
 
     // Check if any of the selectors is/has a placeholder
     bool hasPlaceholder() const override final;

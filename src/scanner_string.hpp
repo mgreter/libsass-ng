@@ -102,16 +102,16 @@ namespace Sass {
 
     // If the string has not been fully consumed,
     // this throws a [FormatException].
-    void expectDone();
+    void expectDone() const;
 
     // Returns whether or not [pattern] matches at the current position
     // of the string. This doesn't move the scan pointer forward.
-    bool matches(const sass::string& pattern);
+    bool matches(const sass::string& pattern) const;
 
     // Returns the substring of [string] between [start] and [end].
     // Unlike [String.substring], [end] defaults to [position]
     // rather than the end of the string.
-    sass::string substring(const char* start, const char* end = 0);
+    sass::string substring(const char* start, const char* end = 0) const;
 
     // Throws a [FormatException] describing that [name] is
     // expected at the current position in the string.
@@ -158,6 +158,16 @@ namespace Sass {
       return source ? source->adjustSourceSpan(pstate) : pstate;
     }
 
+    // Get a source span pointing to raw position
+    // Raw means whitespace may already be consumed
+    // Uses relveant span if end of file reached
+    inline SourceSpan rawSpanOrRelevant() const
+    {
+      if (peekChar() == 0) return relevantSpan();
+      if (offset.line == relevant.line) return rawSpan();
+      return relevantSpan();
+    }
+
     // Get a source span pointing to last relevant position
     // Last relevant means whitespace is not yet parsed (word ending)
     inline SourceSpan relevantSpan() const // 161
@@ -168,7 +178,7 @@ namespace Sass {
 
     // Create a source span from start to raw position
     // Raw means whitespace may already be consumed
-    inline SourceSpan rawSpanFrom(const Offset& start) // 53
+    inline SourceSpan rawSpanFrom(const Offset& start) const // 53
     {
       SourceSpan pstate(source, start, Offset::distance(start, offset));
       return source ? source->adjustSourceSpan(pstate) : pstate;
@@ -176,13 +186,13 @@ namespace Sass {
 
     // Create a source span from start to last relevant position
     // Last relevant means whitespace is not yet parsed (word ending)
-    inline SourceSpan relevantSpanFrom(const Offset& start) // 161
+    inline SourceSpan relevantSpanFrom(const Offset& start) const // 161
     {
       SourceSpan pstate(source, start, Offset::distance(start, relevant));
       return source ? source->adjustSourceSpan(pstate) : pstate;
     }
 
-    inline SourceSpan relevantSpanFrom(const Offset& start, size_t delta) // 161
+    inline SourceSpan relevantSpanFrom(const Offset& start, size_t delta) const // 161
     {
       SourceSpan pstate(source, start, Offset::distance(start, relevant));
       return source ? source->adjustSourceSpan(pstate) : pstate;

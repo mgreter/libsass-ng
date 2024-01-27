@@ -32,14 +32,14 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    double coerceToDeg(const Number* number) {
+    static double coerceToDeg(const Number* number) {
       Units radiants("deg");
       // if (std::isinf(number->value())) return number->value();
       if (double factor = number->getUnitConversionFactor(radiants)) {
         return number->value() * factor;
       }
       return number->value();
-      // callStackFrame csf(compiler, number->pstate());
+      // CallStackFrame csf(compiler, number->pstate());
       // throw Exception::RuntimeException(compiler, "$" + vname +
       //   ": Expected " + number->inspect() + " to be an angle.");
     }
@@ -49,7 +49,7 @@ namespace Sass {
 
     // Returns whether [value] is an unquoted string
     // that start with `var(` and contains `/`.
-    bool isVarSlash(Value* value)
+    static bool isVarSlash(Value* value)
     {
       if (value == nullptr) return false;
       const String* str = value->isaString();
@@ -62,7 +62,7 @@ namespace Sass {
 
     // Returns whether [value] is an unquoted
     // string that start with `var(`.
-    bool isVar(const Value* value)
+    static bool isVar(const Value* value)
     {
       if (value == nullptr) return false;
       const String* str = value->isaString();
@@ -75,7 +75,7 @@ namespace Sass {
     // Returns whether [value] is an unquoted
     // string that start either with `calc(`,
     // "var(", "env(", "min(" or "max(".
-    bool isSpecialNumber(const Value* value)
+    static bool isSpecialNumber(const Value* value)
     {
       if (value == nullptr) return false;
       if (/*const Calculation* calc = */value->isaCalculation()) {
@@ -92,10 +92,10 @@ namespace Sass {
         || startsWith(str->value(), "max(", 4)
         || startsWith(str->value(), "clamp(", 6);
     }
-    // EO isSpecialNumber
+    // EO isSpecialNumber 
 
     // Implements regex check against /^[a-zA-Z]+\s*=/
-    bool isMsFilterStart(const sass::string& text)
+    static bool isMsFilterStart(const sass::string& text)
     {
       auto it = text.begin();
       // The filter must start with alpha
@@ -107,43 +107,20 @@ namespace Sass {
     // EO isMsFilterStart
 
 /// Prints a deprecation warning if [hue] has a unit other than `deg`.
-    void checkAngle(Logger& logger, const Number* angle, const sass::string& name)
+    static void checkAngle(Logger& logger, const Number* angle, const sass::string& name)
     {
-
-      if (!angle->hasUnits() || angle->hasUnit("deg")) return;
-
-      sass::sstream message;
-      message << "$" << name << ": Passing a unit other than deg (";
-      message << angle->inspect() << ") is deprecated." << STRMLF;
-
-      if (angle->numerators.size() == 1 && angle->denominators.size() == 0 &&
-        get_unit_class(string_to_unit(angle->numerators[0])) == UnitClass::ANGLE)
-      {
-        double coerced = angle->getUnitConversionFactor(Strings::deg) * angle->value();
-        Number correct(angle->pstate(), coerced, "deg");
-        Number wrong(angle->pstate(), angle->value(), "deg");
-        message << "You're passing " << angle->inspect() << ", which is currently (incorrectly) converted to " << wrong.inspect() << "." << STRMLF;
-        message << "Soon, it will instead be correctly converted to " << correct.inspect() << "." << STRMLF << STRMLF;
-        message << "To preserve current behavior: $" << name << " * 1deg/1" << angle->numerators[0] << STRMLF;
-        message << "To migrate to new behavior: 0deg + $" << name << STRMLF;
-      }
-      else {
-        StringVector dif(angle->numerators);
-        StringVector mul(angle->denominators);
-        // ToDo: don't report percentage twice!?
-        for (auto& unit : mul) unit = " * 1" + unit;
-        for (auto& unit : dif) unit = " / 1" + unit;
-        message << STRMLF << "To preserve current behavior: $" << name
-          << StringUtils::join(mul, "") << StringUtils::join(dif, "") << STRMLF;
-      }
-
-      message << STRMLF << "See https://sass-lang.com/d/color-units" << STRMLF;
-      logger.addDeprecation(message.str(), angle->pstate(), Logger::WARN_ANGLE_CONVERT);
+     // if (!angle->hasUnits()) return;
+      if (angle->hasCompatibleUnits(unit_deg, false)) return;
+      sass::string text = "$" + name + ": ";
+      text += "Passing a unit other than deg (" + angle->inspect() + ") is deprecated.\n";
+      text += "\nTo preserve current behavior: " + angle->unitSuggestion(name) + "\n";
+      text += "\nSee https://sass-lang.com/d/color-units";
+      logger.addDeprecation(text, angle->pstate(), Logger::WARN_ANGLE_CONVERT);
     }
 
     // Helper function for debugging
     // ToDo return EnvKey?
-    const sass::string& getColorArgName(
+    static const sass::string& getColorArgName(
       size_t idx, const sass::string& name)
     {
       switch (idx) {
@@ -156,7 +133,7 @@ namespace Sass {
     // EO getColorArgName
 
     // Return value that will render as-is in css
-    String* getFunctionString(
+    static String* getFunctionString(
       const sass::string& name,
       const SourceSpan& pstate,
       const ValueVector& arguments = {},
@@ -178,7 +155,7 @@ namespace Sass {
     }
     // EO getFunctionString
 
-    Value* parseColorChannels(
+    static Value* parseColorChannels(
       const sass::string& name,
       Value* channels,
       const SourceSpan& pstate,
@@ -243,7 +220,7 @@ namespace Sass {
           msg << " space-separated";
         }
         msg << " list.";
-        callStackFrame csf(compiler, list->pstate());
+        CallStackFrame csf(compiler, list->pstate());
         throw Exception::RuntimeException(compiler, msg.str());
       }
 
@@ -260,7 +237,7 @@ namespace Sass {
 
       // Check if we have too many arguments
       if (list->size() > 3) {
-        callStackFrame csf(compiler, list->pstate());
+        CallStackFrame csf(compiler, list->pstate());
         throw Exception::TooManyArguments(compiler, list->size(), 3);
       }
       // Check for not enough arguments
@@ -311,7 +288,7 @@ namespace Sass {
 
     // Handle one argument function invocation
     // Used by color functions rgb, hsl and hwb
-    Value* handleOneArgColorFn(
+    static Value* handleOneArgColorFn(
       const sass::string& name,
       Value* argument,
       colFn function,
@@ -340,7 +317,7 @@ namespace Sass {
 
     /// Returns [color1] and [color2], mixed
     // together and weighted by [weight].
-    ColorRgba* mixColors(
+    static ColorRgba* mixColors(
       const Color* color1,
       const Color* color2,
       const Number* weight,
@@ -381,7 +358,7 @@ namespace Sass {
     }
     // EO mixColor
 
-    double scaleValue(
+    static double scaleValue(
       double current,
       double scale,
       double max)
@@ -394,7 +371,7 @@ namespace Sass {
     // or less than [max] and returned. If [number] is a percentage, it's scaled to
     // be within `0` and [max]. Otherwise, this throws a [SassScriptException].
     // [name] is used to identify the argument in the error message.
-    double _percentageOrUnitless(
+    static double _percentageOrUnitless(
       const Number* number, double max,
       const sass::string& name,
       Logger& traces)
@@ -407,7 +384,7 @@ namespace Sass {
         value = max * number->value() / 100;
       }
       else {
-        callStackFrame csf(traces, number->pstate());
+        CallStackFrame csf(traces, number->pstate());
         throw Exception::RuntimeException(traces,
           name + ": Expected " + number->inspect()
           + " to have no units or \"%\".");
@@ -417,7 +394,7 @@ namespace Sass {
       return value;
     }
 
-    String* _functionRgbString(sass::string name, ColorRgba* color, Value* alpha, const SourceSpan& pstate)
+    static String* _functionRgbString(sass::string name, ColorRgba* color, Value* alpha, const SourceSpan& pstate)
     {
       sass::sstream fncall;
       fncall << name << "(";
@@ -429,7 +406,7 @@ namespace Sass {
         pstate, fncall.str());
     }
 
-    Value* handleTwoArgRgb(sass::string name, ValueVector arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    static Value* handleTwoArgRgb(sass::string name, ValueVector arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       // Check if any `calc()` or `var()` are passed
       if (isVar(arguments[0])) {
@@ -471,43 +448,43 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(rgb4arg)
+      static BUILT_IN_FN(rgb4arg)
       {
         return rgbFn(Strings::rgb,
           arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(rgb3arg)
+      static BUILT_IN_FN(rgb3arg)
       {
         return rgbFn(Strings::rgb,
           arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(fnRgb4arg)
+      static BUILT_IN_FN(fnRgb4arg)
       {
         return rgbFn(Strings::rgb,
           arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(fnRgb3arg)
+      static BUILT_IN_FN(fnRgb3arg)
       {
         return rgbFn(Strings::rgb,
           arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(rgb2arg)
+      static BUILT_IN_FN(rgb2arg)
       {
         return handleTwoArgRgb(Strings::rgb,
           arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(fnRgb2arg)
+      static BUILT_IN_FN(fnRgb2arg)
       {
         return handleTwoArgRgb(Strings::rgb,
           arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(rgb1arg)
+      static BUILT_IN_FN(rgb1arg)
       {
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
@@ -520,7 +497,7 @@ namespace Sass {
           arguments[0], &rgbFn, compiler, pstate, false);
       }
 
-      BUILT_IN_FN(fnRgb1arg)
+      static BUILT_IN_FN(fnRgb1arg)
       {
         std::cerr << "Hello dear\n";
         #if SassPreserveColorInfo
@@ -536,43 +513,43 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(rgba4arg)
+      static BUILT_IN_FN(rgba4arg)
       {
         return rgbFn(Strings::rgba,
           arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(rgba3arg)
+      static BUILT_IN_FN(rgba3arg)
       {
         return rgbFn(Strings::rgba,
           arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(fnRgba4arg)
+      static BUILT_IN_FN(fnRgba4arg)
       {
         return rgbFn(Strings::rgba,
           arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(fnRgba3arg)
+      static BUILT_IN_FN(fnRgba3arg)
       {
         return rgbFn(Strings::rgba,
           arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(rgba2arg)
+      static BUILT_IN_FN(rgba2arg)
       {
         return handleTwoArgRgb(Strings::rgba,
           arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(fnRgba2arg)
+      static BUILT_IN_FN(fnRgba2arg)
       {
         return handleTwoArgRgb(Strings::rgba,
           arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(rgba1arg)
+      static BUILT_IN_FN(rgba1arg)
       {
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
@@ -583,7 +560,7 @@ namespace Sass {
           arguments[0], &rgbFn, compiler, pstate, false);
       }
 
-      BUILT_IN_FN(fnRgba1arg)
+      static BUILT_IN_FN(fnRgba1arg)
       {
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
@@ -596,31 +573,31 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(hsl4arg)
+      static BUILT_IN_FN(hsl4arg)
       {
         return hslFn(Strings::hsl,
           arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(hsl3arg)
+      static BUILT_IN_FN(hsl3arg)
       {
         return hslFn(Strings::hsl,
           arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(fnHsl4arg)
+      static BUILT_IN_FN(fnHsl4arg)
       {
         return hslFn(Strings::hsl,
           arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(fnHsl3arg)
+      static BUILT_IN_FN(fnHsl3arg)
       {
         return hslFn(Strings::hsl,
           arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(hsl2arg)
+      static BUILT_IN_FN(hsl2arg)
       {
         // hsl(123, var(--foo)) is valid CSS because --foo might be `10%, 20%`
         // and functions are parsed after variable substitution.
@@ -631,13 +608,13 @@ namespace Sass {
         throw Exception::MissingArgument(compiler, key_lightness);
       }
 
-      BUILT_IN_FN(fnHsl2arg)
+      static BUILT_IN_FN(fnHsl2arg)
       {
         // Otherwise throw error for missing argument
         throw Exception::TooManyArguments(compiler, 2, 1);
       }
 
-      BUILT_IN_FN(hsl1arg)
+      static BUILT_IN_FN(hsl1arg)
       {
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
@@ -650,7 +627,7 @@ namespace Sass {
           arguments[0], &hslFn, compiler, pstate, false);
       }
 
-      BUILT_IN_FN(fnHsl1arg)
+      static BUILT_IN_FN(fnHsl1arg)
       {
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
@@ -665,27 +642,27 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(hsla4arg)
+      static BUILT_IN_FN(hsla4arg)
       {
         return hslFn(Strings::hsla, arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(hsla3arg)
+      static BUILT_IN_FN(hsla3arg)
       {
         return hslFn(Strings::hsla, arguments, pstate, compiler, false);
       }
 
-      BUILT_IN_FN(fnHsla4arg)
+      static BUILT_IN_FN(fnHsla4arg)
       {
         return hslFn(Strings::hsla, arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(fnHsla3arg)
+      static BUILT_IN_FN(fnHsla3arg)
       {
         return hslFn(Strings::hsla, arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(hsla2arg)
+      static BUILT_IN_FN(hsla2arg)
       {
         // hsl(123, var(--foo)) is valid CSS because --foo might be `10%, 20%`
         // and functions are parsed after variable substitution.
@@ -696,13 +673,13 @@ namespace Sass {
         throw Exception::MissingArgument(compiler, key_lightness);
       }
 
-      BUILT_IN_FN(fnHsla2arg)
+      static BUILT_IN_FN(fnHsla2arg)
       {
         // Otherwise throw error for missing argument
         throw Exception::TooManyArguments(compiler, 2, 1);
       }
 
-      BUILT_IN_FN(hsla1arg)
+      static BUILT_IN_FN(hsla1arg)
       {
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
@@ -713,7 +690,7 @@ namespace Sass {
           arguments[0], &hslFn, compiler, pstate, false);
       }
 
-      BUILT_IN_FN(fnHsla1arg)
+      static BUILT_IN_FN(fnHsla1arg)
       {
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
@@ -726,44 +703,44 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(hwb4arg)
+      static BUILT_IN_FN(hwb4arg)
       {
         return hwbFn(Strings::hwb,
           arguments, pstate, compiler, false);
       }
 
 
-      BUILT_IN_FN(hwb3arg)
-      {
-        return hwbFn(Strings::hwb,
-          arguments, pstate, compiler, false);
-      }
+      // static BUILT_IN_FN(hwb3arg)
+      // {
+      //   return hwbFn(Strings::hwb,
+      //     arguments, pstate, compiler, false);
+      // }
 
-      BUILT_IN_FN(fnHwb4arg)
-      {
-        return hwbFn(Strings::hwb,
-          arguments, pstate, compiler, true);
-      }
-
-
-      BUILT_IN_FN(fnHwb3arg)
+      static BUILT_IN_FN(fnHwb4arg)
       {
         return hwbFn(Strings::hwb,
           arguments, pstate, compiler, true);
       }
 
-      BUILT_IN_FN(hwb2arg)
-      {
-        return getFunctionString(Strings::hwb, pstate, arguments);
-      }
 
-      BUILT_IN_FN(fnHwb2arg)
-      {
-        // Otherwise throw error for missing argument
-        throw Exception::TooManyArguments(compiler, 2, 1);
-      }
+      // static BUILT_IN_FN(fnHwb3arg)
+      // {
+      //   return hwbFn(Strings::hwb,
+      //     arguments, pstate, compiler, true);
+      // }
 
-      BUILT_IN_FN(hwb1arg)
+      //static BUILT_IN_FN(hwb2arg)
+      //{
+      //  return getFunctionString(Strings::hwb, pstate, arguments);
+      //}
+
+      // static BUILT_IN_FN(fnHwb2arg)
+      // {
+      //   // Otherwise throw error for missing argument
+      //   throw Exception::TooManyArguments(compiler, 2, 1);
+      // }
+
+      static BUILT_IN_FN(hwb1arg)
       {
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
@@ -776,7 +753,7 @@ namespace Sass {
           arguments[0], &hwbFn, compiler, pstate, false);
       }
 
-      BUILT_IN_FN(fnHwb1arg)
+      static BUILT_IN_FN(fnHwb1arg)
       {
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
@@ -796,80 +773,80 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(hwba4arg)
-      {
-        return hwbFn(Strings::hwba, arguments, pstate, compiler, false);
-      }
+      // static BUILT_IN_FN(hwba4arg)
+      // {
+      //   return hwbFn(Strings::hwba, arguments, pstate, compiler, false);
+      // }
 
-      BUILT_IN_FN(hwba3arg)
-      {
-        return hwbFn(Strings::hwba, arguments, pstate, compiler, false);
-      }
+      // static BUILT_IN_FN(hwba3arg)
+      // {
+      //   return hwbFn(Strings::hwba, arguments, pstate, compiler, false);
+      // }
 
-      BUILT_IN_FN(fnHwba4arg)
-      {
-        return hwbFn(Strings::hwba, arguments, pstate, compiler, true);
-      }
+      // static BUILT_IN_FN(fnHwba4arg)
+      // {
+      //   return hwbFn(Strings::hwba, arguments, pstate, compiler, true);
+      // }
 
-      BUILT_IN_FN(fnHwba3arg)
-      {
-        return hwbFn(Strings::hwba, arguments, pstate, compiler, true);
-      }
+      // static BUILT_IN_FN(fnHwba3arg)
+      // {
+      //   return hwbFn(Strings::hwba, arguments, pstate, compiler, true);
+      // }
 
-      BUILT_IN_FN(hwba2arg)
-      {
-        return getFunctionString(Strings::hwba, pstate, arguments);
-      }
+      // static BUILT_IN_FN(hwba2arg)
+      // {
+      //   return getFunctionString(Strings::hwba, pstate, arguments);
+      // }
 
-      BUILT_IN_FN(fnHwba2arg)
-      {
-        throw Exception::TooManyArguments(compiler, 2, 1);
-      }
+      // static BUILT_IN_FN(fnHwba2arg)
+      // {
+      //   throw Exception::TooManyArguments(compiler, 2, 1);
+      // }
 
-      BUILT_IN_FN(hwba1arg)
-      {
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          return color->toHWBA();
-        }
-        #endif
-        return handleOneArgColorFn(Strings::hwba,
-          arguments[0], &hwbFn, compiler, pstate, false);
-      }
-
-      BUILT_IN_FN(fnHwba1arg)
-      {
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          return color->toHWBA();
-        }
-        #endif
-        ValueObj value = handleOneArgColorFn(Strings::hwba,
-          arguments[0], &hwbFn, compiler, pstate, true);
-        if (value->isaString()) {
-          throw Exception::RuntimeException(compiler, "Expected "
-            "numeric channels, got \"" + value->inspect() + "\".");
-        }
-        return value.detach();
-      }
+      // static BUILT_IN_FN(hwba1arg)
+      // {
+      //   #if SassPreserveColorInfo
+      //   if (Color* color = arguments[0]->isaColor()) {
+      //     return color->toHWBA();
+      //   }
+      //   #endif
+      //   return handleOneArgColorFn(Strings::hwba,
+      //     arguments[0], &hwbFn, compiler, pstate, false);
+      // }
+      // 
+      // static BUILT_IN_FN(fnHwba1arg)
+      // {
+      //   #if SassPreserveColorInfo
+      //   if (Color* color = arguments[0]->isaColor()) {
+      //     return color->toHWBA();
+      //   }
+      //   #endif
+      //   ValueObj value = handleOneArgColorFn(Strings::hwba,
+      //     arguments[0], &hwbFn, compiler, pstate, true);
+      //   if (value->isaString()) {
+      //     throw Exception::RuntimeException(compiler, "Expected "
+      //       "numeric channels, got \"" + value->inspect() + "\".");
+      //   }
+      //   return value.detach();
+      // }
 
       /*******************************************************************/
 
-      BUILT_IN_FN(red)
+      static BUILT_IN_FN(red)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
         return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgba->r(), compiler.epsilon));
       }
 
-      BUILT_IN_FN(green)
+      static BUILT_IN_FN(green)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
         return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgba->g(), compiler.epsilon));
       }
 
-      BUILT_IN_FN(blue)
+      static BUILT_IN_FN(blue)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
@@ -878,15 +855,10 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(invert)
+      static BUILT_IN_FN(invert)
       {
         const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
-
-        //if (isSpecialNumber(arguments[0])) {
-        //  return getFunctionString(
-        //    Strings::invert,
-        //    pstate, arguments);
-        //}
+        weight->checkPercent(compiler, Strings::weight);
         if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0]) /* or isSpecialValue*/) {
           // Allow only the value `100` or a percentage (unit == `% `)
           const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
@@ -908,8 +880,15 @@ namespace Sass {
         return mixColors(inverse, color, weight, pstate, compiler);
       }
 
-      BUILT_IN_FN(fnInvert)
+      static BUILT_IN_FN(fnInvert)
       {
+        if (arguments[0]->isaNumber()) {
+          compiler.addDeprecation("Passing a number (" +
+            arguments[0] + ") to color.invert() is deprecated.\n"
+            "\nRecommendation: grayscale(" + arguments[0] + ")",
+            arguments[0]->pstate(), Logger::WARN_NUMBER_ARG);
+        }
+
         if (isSpecialNumber(arguments[0])) {
           return getFunctionString(
             Strings::invert,
@@ -928,40 +907,40 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(hue)
+      static BUILT_IN_FN(hue)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
         return SASS_MEMORY_NEW(Number, pstate, hsla->h(), Strings::deg);
       }
 
-      BUILT_IN_FN(saturation)
+      static BUILT_IN_FN(saturation)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
         return SASS_MEMORY_NEW(Number, pstate, hsla->s(), Strings::percent);
       }
 
-      BUILT_IN_FN(lightness)
+      static BUILT_IN_FN(lightness)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
         return SASS_MEMORY_NEW(Number, pstate, hsla->l(), Strings::percent);
       }
 
-      BUILT_IN_FN(noLighten)
+      static BUILT_IN_FN(noLighten)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "lighten", "$lightness: ");
       }
 
-      BUILT_IN_FN(noDarken)
+      static BUILT_IN_FN(noDarken)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "darken", "$lightness: -");
       }
 
-      BUILT_IN_FN(whiteness)
+      static BUILT_IN_FN(whiteness)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         #if SassPreserveColorInfo
@@ -976,7 +955,7 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate, hwba->w(), Strings::percent);
       }
 
-      BUILT_IN_FN(blackness)
+      static BUILT_IN_FN(blackness)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         #if SassPreserveColorInfo
@@ -993,7 +972,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(adjustHue)
+      static BUILT_IN_FN(adjustHue)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* degrees = arguments[1]->assertNumber(compiler, Strings::degrees);
@@ -1003,13 +982,13 @@ namespace Sass {
         return copy.detach();
       }
 
-      BUILT_IN_FN(noAdjustHue)
+      static BUILT_IN_FN(noAdjustHue)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "adjust-hue", "$hue: ", Strings::degrees);
       }
 
-      BUILT_IN_FN(complement)
+      static BUILT_IN_FN(complement)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
@@ -1019,7 +998,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(grayscale)
+      static BUILT_IN_FN(grayscale)
       {
         // Gracefully handle if number is passed
         if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0])) {
@@ -1033,7 +1012,7 @@ namespace Sass {
         return copy.detach(); // Return HSLA
       }
 
-      BUILT_IN_FN(lighten)
+      static BUILT_IN_FN(lighten)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
@@ -1043,7 +1022,7 @@ namespace Sass {
         return copy.detach(); // Return HSLA
       }
 
-      BUILT_IN_FN(darken)
+      static BUILT_IN_FN(darken)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
@@ -1055,7 +1034,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(saturate2arg)
+      static BUILT_IN_FN(saturate2arg)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
@@ -1066,7 +1045,7 @@ namespace Sass {
         return copy.detach(); // Return HSLA
       }
 
-      BUILT_IN_FN(saturate1arg)
+      static BUILT_IN_FN(saturate1arg)
       {
         if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0])) {
           return getFunctionString(
@@ -1077,7 +1056,7 @@ namespace Sass {
         return getFunctionString(Strings::saturate, pstate, { arguments[0] });
       }
 
-      BUILT_IN_FN(desaturate)
+      static BUILT_IN_FN(desaturate)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
@@ -1088,32 +1067,32 @@ namespace Sass {
       }
 
 
-      BUILT_IN_FN(noFadeIn)
+      static BUILT_IN_FN(noFadeIn)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "fade-in", "$alpha: ");
       }
       
-      BUILT_IN_FN(noFadeOut)
+      static BUILT_IN_FN(noFadeOut)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "fade-out", "$alpha: -");
       }
 
-      BUILT_IN_FN(noTansparentize)
+      static BUILT_IN_FN(noTansparentize)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "transparentize", "$alpha: -");
       }
 
      
-      BUILT_IN_FN(noSaturate)
+      static BUILT_IN_FN(noSaturate)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "saturate", "$saturation: ");
       }
         
-      BUILT_IN_FN(noDesaturate)
+      static BUILT_IN_FN(noDesaturate)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "desaturate", "$saturation: -");
@@ -1121,7 +1100,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(opacify)
+      static BUILT_IN_FN(opacify)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
@@ -1131,7 +1110,7 @@ namespace Sass {
         return copy.detach(); // Return HSLA
       }
 
-      BUILT_IN_FN(transparentize)
+      static BUILT_IN_FN(transparentize)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
@@ -1141,21 +1120,22 @@ namespace Sass {
         return copy.detach(); // Return HSLA
       }
 
-      BUILT_IN_FN(noOpacify)
+      static BUILT_IN_FN(noOpacify)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "opacify", "$alpha: ");
       }
-
-      BUILT_IN_FN(noTransparentize)
+      /*
+      static BUILT_IN_FN(noTransparentize)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "transparentize", "$alpha: -");
       }
+      */
 
       /*******************************************************************/
 
-      BUILT_IN_FN(alphaOne)
+      static BUILT_IN_FN(alphaOne)
       {
         if (String * string = arguments[0]->isaString()) {
           if (!string->hasQuotes() && isMsFilterStart(string->value())) {
@@ -1166,7 +1146,7 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
-      BUILT_IN_FN(alphaAny)
+      static BUILT_IN_FN(alphaAny)
       {
         size_t size = arguments[0]->lengthAsList();
 
@@ -1191,12 +1171,12 @@ namespace Sass {
           // Support the proprietary Microsoft alpha() function.
           return getFunctionString(Strings::alpha, pstate, arguments);
         }
-        callStackFrame csf(compiler, arguments[0]->pstate());
+        CallStackFrame csf(compiler, arguments[0]->pstate());
         throw Exception::TooManyArguments(compiler, size, 1);
       }
 
 
-      BUILT_IN_FN(opacity)
+      static BUILT_IN_FN(opacity)
       {
         // Gracefully handle if number is passed
         if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0])) {
@@ -1207,33 +1187,31 @@ namespace Sass {
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
-      BUILT_IN_FN(noGrayscale)
+      static BUILT_IN_FN(noGrayscale)
       {
         if (arguments[0]->isaNumber()) {
-          compiler.addWarning("Passing a number to "
-            "color.grayscale() is deprecated.\n\nRecommendation: "
-            "grayscale(" + arguments[0]->inspect() + ")",
-            arguments[0]->pstate(),
-            Logger::WARN_NUMBER_ARG);
+          compiler.addDeprecation("Passing a number (" +
+            arguments[0] + ") to color.grayscale() is deprecated.\n"
+            "\nRecommendation: grayscale(" + arguments[0] + ")",
+            arguments[0]->pstate(), Logger::WARN_NUMBER_ARG);
         }
         return grayscale(pstate, arguments, compiler, eval);
       }
         
 
 
-      BUILT_IN_FN(noOpacity)
+      static BUILT_IN_FN(noOpacity)
       {
         if (arguments[0]->isaNumber()) {
-          compiler.addWarning("Passing a number to "
-            "color.opacity() is deprecated.\n\nRecommendation: "
-            "opacity(" + arguments[0]->inspect() + ")",
-            arguments[0]->pstate(),
-            Logger::WARN_NUMBER_ARG);
+          compiler.addDeprecation("Passing a number (" +
+            arguments[0] + ") to color.opacity() is deprecated.\n"
+            "\nRecommendation: opacity(" + arguments[0] + ")",
+            arguments[0]->pstate(), Logger::WARN_NUMBER_ARG);
         }
         return opacity(pstate, arguments, compiler, eval);
       }
 
-      BUILT_IN_FN(ieHexStr)
+      static BUILT_IN_FN(ieHexStr)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ColorRgbaObj rgba = color->toRGBA(); // This might create a copy
@@ -1251,7 +1229,7 @@ namespace Sass {
         return SASS_MEMORY_NEW(String, pstate, ss.str());
       }
 
-      Number* getKwdArg(ValueFlatMap& keywords, const EnvKey& name, Logger& logger)
+      static Number* getKwdArg(ValueFlatMap& keywords, const EnvKey& name, Logger& logger)
       {
         EnvKey variable(name.norm());
         auto kv = keywords.find(variable);
@@ -1266,14 +1244,14 @@ namespace Sass {
       }
 
 
-      BUILT_IN_FN(adjust)
+      static BUILT_IN_FN(adjust)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(compiler, "kwargs");
         if (!argumentList->empty()) {
           SourceSpan span(color->pstate());
-          callStackFrame frame(compiler, BackTrace(
+          CallStackFrame frame(compiler, BackTrace(
             span, Strings::colorAdjust));
           throw Exception::RuntimeException(compiler,
             "Only one positional argument is allowed. All "
@@ -1357,14 +1335,14 @@ namespace Sass {
         return arguments[0];
       }
 
-      BUILT_IN_FN(change)
+      static BUILT_IN_FN(change)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(compiler, "kwargs");
         if (!argumentList->empty()) {
           SourceSpan span(color->pstate());
-          callStackFrame frame(compiler, BackTrace(
+          CallStackFrame frame(compiler, BackTrace(
             span, Strings::colorChange));
           throw Exception::RuntimeException(compiler,
             "Only one positional argument is allowed. All "
@@ -1400,10 +1378,10 @@ namespace Sass {
           throw Exception::UnknownNamedArgument(compiler, keywords);
         }
 
-        bool hasRgb = nr_r || nr_g || nr_b;
-        bool hasHsl = nr_s || nr_l;
-        bool hasHwb = nr_wn || nr_bn;
-        bool hasHue = nr_h;
+        bool hasRgb = nr_r != nullptr || nr_g != nullptr || nr_b != nullptr;
+        bool hasHsl = nr_s != nullptr || nr_l != nullptr;
+        bool hasHwb = nr_wn != nullptr || nr_bn != nullptr;
+        bool hasHue = nr_h != nullptr;
 
         if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
         else if (hasRgb && hasHue) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL/HWB" });
@@ -1444,14 +1422,14 @@ namespace Sass {
         return arguments[0];
       }
 
-      BUILT_IN_FN(scale)
+      static BUILT_IN_FN(scale)
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(compiler, "kwargs");
         if (!argumentList->empty()) {
           SourceSpan span(color->pstate());
-          callStackFrame frame(compiler, BackTrace(
+          CallStackFrame frame(compiler, BackTrace(
             span, Strings::scaleColor));
           throw Exception::RuntimeException(compiler,
             "Only one positional argument is allowed. All "
@@ -1523,11 +1501,12 @@ namespace Sass {
         return arguments[0];
       }
 
-      BUILT_IN_FN(mix)
+      static BUILT_IN_FN(mix)
       {
         const Color* color1 = arguments[0]->assertColor(compiler, "color1");
         const Color* color2 = arguments[1]->assertColor(compiler, "color2");
         const Number* weight = arguments[2]->assertNumber(compiler, "weight");
+        weight->checkPercent(compiler, Strings::weight);
         return mixColors(color1, color2, weight, pstate, compiler);
       }
 
@@ -1795,6 +1774,7 @@ namespace Sass {
         ->assertHasUnits(logger, "%", Strings::blackness);
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
+      checkAngle(logger, h, Strings::hue);
       return SASS_MEMORY_NEW(ColorHwba, pstate,
         coerceToDeg(h),
         w->assertRange(0.0, 100.0, w, logger, Strings::whiteness),

@@ -24,6 +24,7 @@ namespace Sass {
     virtual bool visitPseudoSelector(PseudoSelector* pseudo) override;
     virtual bool visitSelectorList(SelectorList* list) override;
     virtual bool visitTypeSelector(TypeSelector* type) override final;
+    virtual bool visitCssParentSelector(CssParentSelector* parent) override;
     // virtual bool visitSelectorCombinator(SelectorCombinator* combinator) override final;
 
   };

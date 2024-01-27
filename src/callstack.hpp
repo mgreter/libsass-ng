@@ -20,7 +20,7 @@ namespace Sass {
   // We assume this happens in well defined order, as
   // we do not check if we actually remove ourself!
   // ToDo: rename to callTrace
-  class callStackFrame {
+  class CallStackFrame {
 
   private:
 
@@ -36,7 +36,7 @@ namespace Sass {
   public:
 
     // Create object and add frame to stack
-    callStackFrame(BackTraces& backTraces,
+    CallStackFrame(BackTraces& backTraces,
       const BackTrace& frame,
       bool viaCall = false) :
       backTraces(backTraces),
@@ -48,7 +48,7 @@ namespace Sass {
     }
 
     // Remove frame from stack on destruction
-    ~callStackFrame()
+    ~CallStackFrame()
     {
       // Pop frame from stack
       if (!viaCall) backTraces.pop_back();

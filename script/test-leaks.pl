@@ -23,7 +23,7 @@ use warnings;
 ############################################################
 
 # number of threads to use
-my $threads = $ARGV[0] || 8;
+my $threads = $ARGV[0] || 32;
 
 # the github repositories to checkout
 # if you need other branch, clone manually!
@@ -89,7 +89,13 @@ foreach my $file (shuffle @files) {
     my $cmd = sprintf('../sassc/bin/sassc %s', $file);
     my $check = sprintf('valgrind --leak-check=yes %s', $cmd);
     run3($check, undef, \ my $out, \ my $err);
-    if ($err =~ m/in use at exit: 0 bytes in 0 blocks/) {
+    # make sure we don't have any lost memory
+    # note that some static memory will still be reachable
+    # this is ok and by design, as it will be re-used if needed
+    # we may want to add a function to also release that memory?
+    if ($err =~ m/definitely lost: 0 bytes in 0 blocks/ &&
+        $err =~ m/indirectly lost: 0 bytes in 0 blocks/ &&
+        $err =~ m/possibly lost: 0 bytes in 0 blocks/) {
       print "."; # print success indicator
     } else {
       print "F"; # print error indicator

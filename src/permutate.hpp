@@ -42,7 +42,7 @@ namespace Sass {
       if (in[i].size() == 0) return {};
     }
 
-    size_t* state = new size_t[L + 1];
+    size_t* state = new size_t[L + 1]{};
     sass::vector<sass::vector<T>> out;
 
     // First initialize all states for every permutation group

@@ -25,7 +25,7 @@ namespace Sass {
   }
 
   // The main compiler context object holding config and results
-  class Compiler final : public OutputOptions, public Logger {
+  class Compiler final : public Logger {
 
   private:
 
@@ -50,7 +50,7 @@ namespace Sass {
 
   public:
 
-    Root* modctx3 = nullptr;
+    Stylesheet* modctx3 = nullptr;
 
     WithConfig* wconfig = nullptr;
 
@@ -72,7 +72,7 @@ namespace Sass {
     // Sheets are filled after resources are parsed
     // This could be shared, should go to engine!?
     // ToDo: should be case insensitive on windows?
-    std::map<const sass::string, RootObj> sheets;
+    std::map<const sass::string, StylesheetObj> sheets;
 
     // Only used to cache `loadImport` calls
     std::map<const sass::string, ImportObj> sources;
@@ -150,7 +150,7 @@ namespace Sass {
       if (it != modules.end()) {
         return *it->second;
       }
-      BuiltInMod* module = new BuiltInMod(varRoot);
+      BuiltInMod* module = new BuiltInMod("sass://" + name, varRoot);
       modules.insert({ name, module });
       return *module;
     }
@@ -188,7 +188,7 @@ namespace Sass {
     ImportObj entry_point;
 
     // Parsed ast-tree
-    RootObj sheet;
+    StylesheetObj sheet;
 
     // Evaluated ast-tree
     CssRootObj compiled;
@@ -241,7 +241,7 @@ namespace Sass {
 
     char* renderSrcMapLink(const SourceMap& source_map);
 
-    char* renderEmbeddedSrcMap(const SourceMap& source_map);
+    char* renderEmbeddedSrcMap(const SourceMap& source_map) const;
 
     void reportSuppressedWarnings();
 
@@ -304,7 +304,7 @@ namespace Sass {
 
     // Parse the import (updates syntax flag if AUTO was set)
     // Results will be stored at `sheets[source->getAbsPath()]`
-    Root* registerImport(ImportObj import);
+    Stylesheet* registerImport(ImportObj import);
 
     // Called by parserStylesheet on the very first parse call
     void applyCustomHeaders(StatementVector& root, SourceSpan pstate);
@@ -317,7 +317,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     void loadBuiltInFunctions();
 
-    Root* parseRoot(ImportObj import);
+    Stylesheet* parseRoot(ImportObj import);
 
   private:
 
@@ -340,7 +340,7 @@ namespace Sass {
       void registerCustomFunction(struct SassFunction* function);
 
     // Invoke parser according to import format
-    RootObj parseSource(ImportObj source);
+      StylesheetObj parseSource(ImportObj source);
 
   public:
 

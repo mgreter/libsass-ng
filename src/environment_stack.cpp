@@ -82,23 +82,29 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  const EnvRefs* EnvRefs::nextScope() const
+  {
+    //return pscope;
+    return pscope;
+  }
+
   // Register new variable on local stack
   // Invoked mostly by stylesheet parser
   EnvRef EnvRefs::createVariable(
     const EnvKey& name)
   {
     if (isInternal) {
-      uint32_t offset = (uint32_t)root.intVariables.size();
+      size_t offset = root.intVariables.size();
       root.intVariables.resize(offset + 1);
-      varIdxs[name] = offset;
-      return { offset };
+      varIdxs[name] = (uint32_t)offset;
+      return { (uint32_t)offset };
     }
     // Get local offset to new variable
-    uint32_t offset = (uint32_t)varIdxs.size();
+    size_t offset = varIdxs.size();
     // Remember the variable name
-    varIdxs[name] = offset;
+    varIdxs[name] = (uint32_t)offset;
     // Return stack index reference
-    return { this, offset };
+    return { this, (uint32_t)offset };
   }
   // EO createVariable
 
@@ -110,21 +116,21 @@ namespace Sass {
     const EnvKey& name, bool special)
   {
     if (isInternal) {
-      uint32_t offset = (uint32_t)root.intFunction.size();
+      size_t offset = root.intFunction.size();
       // ToDo: why is this here, very weird!
       // if (!special)
       // ToDo: store in n_functions to count
       root.intFunction.resize(offset + 1);
       // if (offset == 127) std::cerr << "Resized the fucker\n";
-      fnIdxs[name] = offset;
-      return { offset };
+      fnIdxs[name] = (uint32_t)offset;
+      return { (uint32_t)offset };
     }
     // Get local offset to new function
-    uint32_t offset = (uint32_t)fnIdxs.size();
+    size_t offset = fnIdxs.size();
     // Remember the function name
-    fnIdxs[name] = offset;
+    fnIdxs[name] = (uint32_t)offset;
     // Return stack index reference
-    return { this, offset };
+    return { this, (uint32_t)offset };
   }
   // EO createFunction
 
@@ -135,17 +141,17 @@ namespace Sass {
     const EnvKey& name)
   {
     if (isInternal) {
-      uint32_t offset = (uint32_t)root.intMixin.size();
+      size_t offset = root.intMixin.size();
       root.intMixin.resize(offset + 1);
-      mixIdxs[name] = offset;
-      return { offset };
+      mixIdxs[name] = (uint32_t)offset;
+      return { (uint32_t)offset };
     }
     // Get local offset to new mixin
-    uint32_t offset = (uint32_t)mixIdxs.size();
+    size_t offset = mixIdxs.size();
     // Remember the mixin name
-    mixIdxs[name] = offset;
+    mixIdxs[name] = (uint32_t)offset;
     // Return stack index reference
-    return { this, offset };
+    return { this, (uint32_t)offset };
   }
   // EO createMixin
 
@@ -154,16 +160,47 @@ namespace Sass {
 
   // Get value instance by stack index reference
   // Just converting and returning reference to array offset
+  //ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
+  //{
+  //  if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+  //    return intVariables[vidx.offset];
+  //  }
+  //  else {
+  //    return varStack[vidx.idxs->varOffset + vidx.offset];
+  //  }
+  //}
+  // EO getVariable
+
+
+  // Get value instance by stack index reference
+  // Just converting and returning reference to array offset
+
+  static ValueObj qwe = SASS_MEMORY_NEW(Null, SourceSpan::internal("null"));
+
   ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
   {
+    if (!vidx.isValid()) {
+      std::cerr << " Trying to access invalid variable\n";
+      return qwe;
+    }
     if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+      if (vidx.offset >= intVariables.size()) {
+        std::cerr << " Trying to access non existing variable " << vidx.offset << "\n";
+        return qwe;
+        
+      }
+      //const ValueObj& val = intVariables[vidx.offset];
+      //if (val == nullptr) std::cerr << "Get variable at " << vidx.offset << " NULL\n";
+      //else std::cerr << "Get variable at " << vidx.offset << " " << val->toString() << "\n";
       return intVariables[vidx.offset];
     }
     else {
+      //const ValueObj& val = varStack[vidx.idxs->varOffset + vidx.offset];
+      //if (val == nullptr) std::cerr << "Get variable at " << vidx.offset << " NULL\n";
+      //else std::cerr << "Get variable at " << vidx.offset << " " << val->toString() << "\n";
       return varStack[vidx.idxs->varOffset + vidx.offset];
     }
   }
-  // EO getVariable
 
   // Get function instance by stack index reference
   // Just converting and returning reference to array offset
@@ -218,7 +255,7 @@ namespace Sass {
   void EnvRoot::setModVar(const uint32_t offset, Value* value, bool guarded, const SourceSpan& pstate)
   {
     if (offset < privateVarOffset) {
-      callStackFrame frame(compiler, pstate);
+      CallStackFrame frame(compiler, pstate);
       throw Exception::RuntimeException(compiler,
         "Cannot modify built-in variable.");
     }
@@ -232,13 +269,21 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setVariable(const EnvRef& vidx, Value* value, bool guarded)
   {
+    if (!vidx.isValid()) {
+      return;
+    }
     if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+       //if (value == nullptr)std::cerr << "SET VARIABLE " << vidx.offset << " to NULL\n";
+       //else std::cerr << "SET VARIABLE " << vidx.offset << " to " << value->toString() << "\n";
       ValueObj& slot(intVariables[vidx.offset]);
       if (!guarded || !slot || slot->isaNull()) {
         slot = value;
       }
     }
     else {
+      //if (value == nullptr)std::cerr << "SET SCOPE VARIABLE " << vidx.offset << " to NULL\n";
+      //else std::cerr << "SET SCOPE VARIABLE " << vidx.offset << " to " << value->toString() << "\n";
+      if (vidx.idxs->varOffset == NPOS) return;
       ValueObj& slot(varStack[vidx.idxs->varOffset + vidx.offset]);
       if (slot == nullptr || guarded == false) slot = value;
     }
@@ -249,11 +294,15 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setFunction(const EnvRef& fidx, UserDefinedCallable* value, bool guarded)
   {
+    if (!fidx.isValid()) {
+      return;
+    }
     if (fidx.idxs == nullptr || fidx.idxs->isInternal) {
       if (!guarded || intFunction[fidx.offset] == nullptr)
         if (value != nullptr) intFunction[fidx.offset] = value;
     }
     else {
+      if (fidx.idxs->fnOffset == NPOS) return;
       CallableObj& slot(fnStack[fidx.idxs->fnOffset + fidx.offset]);
       if (!guarded || !slot) slot = value;
     }
@@ -264,11 +313,15 @@ namespace Sass {
   // Just converting reference to array offset and assigning
   void EnvRoot::setMixin(const EnvRef& midx, UserDefinedCallable* value, bool guarded)
   {
+    if (!midx.isValid()) {
+      return;
+    }
     if (midx.idxs == nullptr || midx.idxs->isInternal) {
       if (!guarded || intMixin[midx.offset] == nullptr)
         intMixin[midx.offset] = value;
     }
     else {
+      if (midx.idxs->mixOffset == NPOS) return;
       CallableObj& slot(mixStack[midx.idxs->mixOffset + midx.offset]);
       if (!guarded || !slot) slot = value;
     }
@@ -282,29 +335,38 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  EnvRef EnvRefs::findMixIdx(const EnvKey& name) const
+  EnvRef EnvRefs::findMixIdx(const EnvKey& named) const
   {
-    for (const EnvRefs* current = this; current; current = current->pscope)
+    EnvKey name(named);
+    for (const EnvRefs* current = this; current; current = current->nextScope())
     {
       if (!name.isPrivate()) {
-        for (auto fwds : current->forwards) {
-          auto fwd = fwds->mixIdxs.find(name);
+        for (auto it = current->forwards.rbegin();
+          it != current->forwards.rend(); it++)
+        {
+          const auto& fwds = *it;
+          const auto& fwd = fwds->mixIdxs.find(name);
           if (fwd != fwds->mixIdxs.end()) {
             return { fwds, fwd->second };
           }
           if (Module* mod = fwds->module) {
-            auto fwd = mod->mergedFwdMix.find(name);
-            if (fwd != mod->mergedFwdMix.end()) {
-              return { fwd->second };
+            if (!mod->idxs->isImport) {
+              const auto& fwd = mod->mergedFwdMix.find(name);
+              if (fwd != mod->mergedFwdMix.end()) {
+                return { fwd->second };
+              }
             }
           }
         }
       }
-      if (current->isImport) continue;
-      auto it = current->mixIdxs.find(name);
+      // End of checking forwards
+      if (current->isImport) continue; // MIDSTREAM
+      const auto& it = current->mixIdxs.find(name);
       if (it != current->mixIdxs.end()) {
         return { current, it->second };
       }
+      if (current->through != "") name =
+        EnvKey(current->through + name.norm());
     }
     return nullidx;
   }
@@ -315,29 +377,38 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  EnvRef EnvRefs::findFnIdx(const EnvKey& name) const
+  EnvRef EnvRefs::findFnIdx(const EnvKey& named) const
   {
-    for (const EnvRefs* current = this; current; current = current->pscope)
+    EnvKey name(named);
+    for (const EnvRefs* current = this; current; current = current->nextScope())
     {
       if (!name.isPrivate()) {
-        for (auto fwds : current->forwards) {
-          auto fwd = fwds->fnIdxs.find(name);
+        for (auto it = current->forwards.rbegin();
+          it != current->forwards.rend(); it++)
+        {
+          const auto& fwds = *it;
+          const auto& fwd = fwds->fnIdxs.find(name);
           if (fwd != fwds->fnIdxs.end()) {
             return { fwds, fwd->second };
           }
           if (Module* mod = fwds->module) {
-            auto fwd = mod->mergedFwdFn.find(name);
-            if (fwd != mod->mergedFwdFn.end()) {
-              return { fwd->second };
+            if (!mod->idxs->isImport) {
+              const auto& fwd = mod->mergedFwdFn.find(name);
+              if (fwd != mod->mergedFwdFn.end()) {
+                return { fwd->second };
+              }
             }
           }
         }
       }
-      if (current->isImport) continue;
-      auto it = current->fnIdxs.find(name);
+      // End of checking forwards
+      if (current->isImport) continue; // MIDSTREAM
+      const auto& it = current->fnIdxs.find(name);
       if (it != current->fnIdxs.end()) {
         return { current, it->second };
       }
+      if (current->through != "") name =
+        EnvKey(current->through + name.norm());
     }
     return nullidx;
   }
@@ -348,37 +419,46 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  EnvRef EnvRefs::findVarIdx(const EnvKey& name) const
+  EnvRef EnvRefs::findVarIdx(const EnvKey& named) const
   {
-    for (const EnvRefs* current = this; current; current = current->pscope)
+    EnvKey name(named);
+    for (const EnvRefs* current = this; current; current = current->nextScope())
     {
-      for (auto fwds : current->forwards) {
-        auto fwd = fwds->varIdxs.find(name);
+      for (auto it = current->forwards.rbegin();
+        it != current->forwards.rend(); it++)
+      {
+        const auto& fwds = *it;
+        const auto& fwd = fwds->varIdxs.find(name);
         if (fwd != fwds->varIdxs.end()) {
           if (name.isPrivate()) {
             throw Exception::ParserException(root.compiler,
               "Private members can't be accessed "
               "from outside their modules.");
           }
-          return { fwds, fwd->second };
+          return { fwds, fwd->second }; // SPECED
         }
         if (Module* mod = fwds->module) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            if (name.isPrivate()) {
-              throw Exception::ParserException(root.compiler,
-                "Private members can't be accessed "
-                "from outside their modules.");
+          if (!mod->idxs->isImport) {
+            const auto& fwd = mod->mergedFwdVar.find(name);
+            if (fwd != mod->mergedFwdVar.end()) {
+              if (name.isPrivate()) {
+                throw Exception::ParserException(root.compiler,
+                  "Private members can't be accessed "
+                  "from outside their modules.");
+              }
+              return { fwd->second }; // SPECED
             }
-            return { fwd->second };
           }
         }
       }
-      if (current->isImport) continue;
-      auto it = current->varIdxs.find(name);
-      if (it != current->varIdxs.end()) {
-        return { current, it->second };
+      // End of checking forwards
+      if (current->isImport) continue; // MIDSTREAM
+      auto vit = current->varIdxs.find(name);
+      if (vit != current->varIdxs.end()) {
+        return { current, vit->second }; // SPECED
       }
+      if (current->through != "") name =
+        EnvKey(current->through + name.norm());
     }
     return nullidx;
   }
@@ -389,33 +469,40 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  void EnvRefs::findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& name) const
+  void EnvRefs::findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& named) const
   {
-    for (const EnvRefs* current = this; current; current = current->pscope)
+    EnvKey name(named);
+    for (const EnvRefs* current = this; current; current = current->nextScope())
     {
-      if (current->isImport == false) {
-        auto it = current->varIdxs.find(name);
-        if (it != current->varIdxs.end()) {
-          vidxs.emplace_back(EnvRef{
-            current, it->second });
-        }
-      }
-      if (name.isPrivate()) continue;
-      for (auto fwds : current->forwards) {
-        auto fwd = fwds->varIdxs.find(name);
-        if (fwd != fwds->varIdxs.end()) {
-          vidxs.emplace_back(EnvRef{
-            fwds, fwd->second });
-        }
-        if (Module* mod = fwds->module) {
-          auto fwd = mod->mergedFwdVar.find(name);
-          if (fwd != mod->mergedFwdVar.end()) {
-            vidxs.emplace_back(EnvRef{
-              fwd->second });
+      for (auto it = current->forwards.rbegin();
+        it != current->forwards.rend(); it++)
+      {
+        const auto& fwds = *it;
+        if (!name.isPrivate()) {
+          const auto& fwd = fwds->varIdxs.find(name);
+          if (fwd != fwds->varIdxs.end()) {
+            vidxs.emplace_back(fwds, fwd->second);
+          }
+          if (Module* mod = fwds->module) {
+            if (!mod->idxs->isImport)
+            {
+              const auto& fwd = mod->mergedFwdVar.find(name);
+              if (fwd != mod->mergedFwdVar.end()) {
+                vidxs.emplace_back(fwd->second);
+              }
+            }
           }
         }
       }
+      if (current->isImport) continue; // MIDSTREAM
+      auto vit = current->varIdxs.find(name);
+      if (vit != current->varIdxs.end()) {
+        vidxs.emplace_back(current, vit->second);
+      }
+      if (current->through != "") name =
+        EnvKey(current->through + name.norm());
     }
+    //std::cerr << "-----------------------------------------\n";
   }
   // EO getVariable
 
@@ -426,8 +513,8 @@ namespace Sass {
       root.setModVar(it->second, value, guarded, pstate);
       return { it->second };
     }
-    for (auto fwds : forwards) {
-      auto it = fwds->varIdxs.find(name);
+    for (const auto& fwds : forwards) {
+      const auto it = fwds->varIdxs.find(name);
       if (it != fwds->varIdxs.end()) {
         root.setModVar(it->second, value, guarded, pstate);
         return { it->second };
@@ -439,7 +526,7 @@ namespace Sass {
 
   bool EnvRefs::hasNameSpace(const sass::string& ns) const
   {
-    for (const EnvRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->nextScope())
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -464,7 +551,7 @@ namespace Sass {
 
   EnvRef EnvRefs::findVarIdx(const EnvKey& name, const sass::string& ns) const
   {
-    for (const EnvRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->nextScope())
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -474,6 +561,7 @@ namespace Sass {
       if (EnvRefs* idxs = it->second.first) {
         auto it = idxs->varIdxs.find(name);
         if (it != idxs->varIdxs.end()) {
+          // std::cerr << "FOUND SCOPED\n";
           return { idxs, it->second };
         }
       }
@@ -481,6 +569,7 @@ namespace Sass {
         auto fwd = mod->mergedFwdVar.find(name);
         if (fwd != mod->mergedFwdVar.end()) {
           EnvRef vidx{ fwd->second };
+          //std::cerr << "FOUND MERGED -- wrongly\n";
           ValueObj& val = root.getVariable(vidx);
           if (val != nullptr) return vidx;
         }
@@ -492,7 +581,7 @@ namespace Sass {
 
   EnvRef EnvRefs::findMixIdx(const EnvKey& name, const sass::string& ns) const
   {
-    for (const EnvRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->nextScope())
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -517,7 +606,7 @@ namespace Sass {
 
   EnvRef EnvRefs::findFnIdx(const EnvKey& name, const sass::string& ns) const
   {
-    for (const EnvRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->nextScope())
     {
       if (current->isImport) continue;
       Module* mod = current->module;
@@ -577,7 +666,7 @@ namespace Sass {
 
   EnvRef EnvRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
   {
-    for (const EnvRefs* current = this; current; current = current->pscope)
+    for (const EnvRefs* current = this; current; current = current->nextScope())
     {
       if (current->isImport) continue;
       Module* mod = current->module;

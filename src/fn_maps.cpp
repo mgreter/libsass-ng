@@ -22,7 +22,7 @@ namespace Sass {
       // Merges [map1] and [map2], with values in [map2] taking precedence.
       // If both [map1] and [map2] have a map value associated with
       // the same key, this recursively merges those maps as well.
-      Map* deepMergeImpl(Map* map1, Map* map2)
+      static Map* deepMergeImpl(Map* map1, Map* map2)
       {
 
         if (map2->empty()) return map1;
@@ -44,7 +44,7 @@ namespace Sass {
         // entries in `map1` don't have corresponding keys in `map2`, or if they're
         // maps that need to be merged in their own right.
         // Note: this changes insertion order, bad!?
-        for (auto kv : map2->elements()) {
+        for (const auto& kv : map2->elements()) {
           Value* key = kv.first;
           Value* value = kv.second;
           auto it = result->find(key);
@@ -100,7 +100,7 @@ namespace Sass {
         // entries in `map1` don't have corresponding keys in `map2`, or if they're
         // maps that need to be merged in their own right.
         // Note: this changes insertion order, bad!?
-        for (auto kv : map1->elements()) {
+        for (const auto& kv : map1->elements()) {
           Value* key = kv.first;
           Value* value = kv.second;
           auto it = result->find(key);
@@ -130,7 +130,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(get)
+      static BUILT_IN_FN(get)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         Value* key = arguments[1]->assertValue(compiler, Strings::key);
@@ -169,7 +169,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnMapSetThreeArgs)
+      static BUILT_IN_FN(fnMapSetThreeArgs)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         auto copy = SASS_MEMORY_COPY(map); // Can be optimized!
@@ -185,7 +185,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnMapSetTwoArgs)
+      static BUILT_IN_FN(fnMapSetTwoArgs)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         MapObj copy = map = SASS_MEMORY_COPY(map); // Can be optimized
@@ -245,7 +245,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(merge)
+      static BUILT_IN_FN(merge)
       {
         MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
         MapObj map2 = arguments[1]->assertMap(compiler, Strings::map2);
@@ -253,21 +253,22 @@ namespace Sass {
         // This can shave off a few percent of run-time
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
         if (eval.assigne && eval.assigne->ptr() == map1.ptr()) {
-          if (map1->refcount < AssignableRefCount + 1) {
-            for (auto kv : map2->elements()) { map1->insertOrSet(kv); }
+          if (map1->refcount < SassAssignableRefCount + 1) {
+            for (auto& kv : map2->elements()) {
+              map1->insertOrSet(kv); }
             return map1.detach();
           }
         }
         #endif
         Map* copy = SASS_MEMORY_COPY(map1);
-        for (auto kv : map2->elements()) {
+        for (auto& kv : map2->elements()) {
           copy->insertOrSet(kv); }
         return copy;
       }
 
       /*******************************************************************/
 
-      BUILT_IN_FN(merge_many)
+      static BUILT_IN_FN(merge_many)
       {
         MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
 
@@ -317,7 +318,7 @@ namespace Sass {
           ++cur;
         }
 
-        for (auto kv : last->elements()) {
+        for (const auto& kv : last->elements()) {
           copy->insertOrSet(kv); }
         return map1.detach();
       }
@@ -327,19 +328,19 @@ namespace Sass {
       // Because the signature below has an explicit `$key` argument, it doesn't
       // allow zero keys to be passed. We want to allow that case, so we add an
       // explicit overload for it.
-      BUILT_IN_FN(remove_one)
+      static BUILT_IN_FN(remove_one)
       {
         return arguments[0]->assertMap(compiler, Strings::map);
       }
 
       /*******************************************************************/
 
-      BUILT_IN_FN(remove_many)
+      static BUILT_IN_FN(remove_many)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (eval.assigne && eval.assigne->ptr() == map.ptr() && map->refcount < AssignableRefCount + 1) {
+        if (eval.assigne && eval.assigne->ptr() == map.ptr() && map->refcount < SassAssignableRefCount + 1) {
           map->erase(arguments[1]);
           for (Value* key : arguments[2]->start()) {
             map->erase(key);
@@ -358,7 +359,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(keys)
+      static BUILT_IN_FN(keys)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         return SASS_MEMORY_NEW(List, pstate, std::move(map->keys()), SASS_COMMA);
@@ -366,7 +367,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(values)
+      static BUILT_IN_FN(values)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         return SASS_MEMORY_NEW(List, pstate, std::move(map->values()), SASS_COMMA);
@@ -374,7 +375,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(hasKey)
+      static BUILT_IN_FN(hasKey)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         Value* key = arguments[1]->assertValue(compiler, Strings::key);
@@ -424,7 +425,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnDeepMerge)
+      static BUILT_IN_FN(fnDeepMerge)
       {
         MapObj map1 = arguments[0]->assertMap(compiler, Strings::map1);
         MapObj map2 = arguments[1]->assertMap(compiler, Strings::map2);
@@ -434,7 +435,7 @@ namespace Sass {
       
       /*******************************************************************/
 
-      BUILT_IN_FN(fnDeepRemove)
+      static BUILT_IN_FN(fnDeepRemove)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
         MapObj result = SASS_MEMORY_COPY(map);

@@ -819,7 +819,7 @@ namespace Sass {
     // Optional root object, indicating that we have
     // a connected environment. Must be the same instance
     // as root if set (as Root implements Module).
-    ADD_CONSTREF(RootObj, root47);
+    ADD_CONSTREF(StylesheetObj, root47);
 
     // Flag to see if rule was already exposed
     // Normally modules are exposed as singletons
@@ -916,6 +916,7 @@ namespace Sass {
   private:
 
     ADD_CONSTREF(EnvRef, vidx);
+    ADD_CONSTREF(sass::vector<EnvRef>, vidxs);
     ADD_CONSTREF(EnvKey, variable);
     ADD_CONSTREF(sass::string, ns);
     ADD_CONSTREF(ExpressionObj, value);
@@ -960,7 +961,11 @@ namespace Sass {
     // The name of the mixin being invoked.
     ADD_CONSTREF(EnvKey, name);
 
+    // Span over the name only
+    ADD_CONSTREF(SourceSpan, span);
+
     ADD_CONSTREF(EnvRef, midx);
+
 
     // The block that will be invoked for [ContentRule]s in the mixin
     // being invoked, or `null` if this doesn't pass a content block.
@@ -972,6 +977,7 @@ namespace Sass {
     IncludeRule(
       SourceSpan&& pstate,
       const EnvKey& name,
+      SourceSpan&& span,
       const sass::string& ns,
       CallableArguments* arguments,
       ContentBlock* content = nullptr);

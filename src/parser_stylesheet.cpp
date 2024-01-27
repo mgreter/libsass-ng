@@ -19,8 +19,6 @@
 #include "ast_expressions.hpp"
 #include "parser_expression.hpp"
 
-#include "debugger.hpp"
-
 namespace Sass {
 
   // Import some namespaces
@@ -46,7 +44,7 @@ namespace Sass {
   // EO parseExternalCallable
 
   // Parse stylesheet root block
-  Root* StylesheetParser::parseRoot()
+  Stylesheet* StylesheetParser::parseRoot()
   {
 
     // skip over optional utf8 bom
@@ -57,15 +55,17 @@ namespace Sass {
     Offset start(scanner.offset);
 
     // Create new root object and setup all states
-    RootObj root = SASS_MEMORY_NEW(Root, scanner.rawSpan());
+    StylesheetObj root = SASS_MEMORY_NEW(Stylesheet, scanner.rawSpan());
     // Get pointer to variables of current context
     root->idxs = compiler.varRoot.stack.back();
     // Assign new module to the current context
     compiler.varRoot.stack.back()->module = root;
 
+    // root->extender54 = new ExtensionStore();
+
     // Set the current module context
     RAII_MODULE(modules, root);
-    RAII_PTR(Root, modctx, root);
+    RAII_PTR(Stylesheet, modctx, root);
 
     // Get reference to (not yet) parsed children
     StatementVector& children(root->elements());
@@ -126,6 +126,10 @@ namespace Sass {
       scanWhitespace();
       return readMixinRule(start);
 
+    case $rbrace:
+      error("unmatched \"}\".", scanner.rawSpan());
+      return nullptr; // satisfy falltrhough warning
+
     default:
       if (inStyleRule || inUnknownAtRule || inMixin || inContentBlock) {
         return readDeclarationOrStyleRule();
@@ -182,7 +186,7 @@ namespace Sass {
     Offset start(scanner.offset);
     uint8_t next = scanner.peekChar();
     if (next == $u || next == $U) {
-      Expression* url = readFunctionOrStringExpression();
+      ExpressionObj url = readFunctionOrStringExpression();
       scanWhitespace();
       auto modifiers = tryImportModifiers();
       rule->append(SASS_MEMORY_NEW(StaticImport,
@@ -283,7 +287,7 @@ namespace Sass {
 
   // Returns whether [identifier] is module-private.
   // Assumes [identifier] is a valid Sass identifier.
-  bool isPrivate(const sass::string& identifier)
+  static bool isPrivate(const sass::string& identifier)
   {
     return identifier[0] == $minus ||
       identifier[0] == $underscore;
@@ -304,7 +308,9 @@ namespace Sass {
   StyleRule* StylesheetParser::readStyleRule(Interpolation* itpl)
   {
     isUseAllowed = false;
+
     RAII_FLAG(inStyleRule, true);
+    // std::cerr << "READ STYLE RULE\n";
 
     // The indented syntax allows a single backslash to distinguish a style rule
     // from old-style property syntax. We don't support old property syntax, but
@@ -315,6 +321,7 @@ namespace Sass {
       itpl->concat(readStyleRule); readStyleRule = itpl;
       readStyleRule->pstate(scanner.rawSpanFrom(itpl->pstate().position));
     }
+
     EnvFrame local(compiler, false);
 
     Offset start(scanner.offset);
@@ -328,6 +335,7 @@ namespace Sass {
         itpl ? itpl->pstate() : SourceSpan{}, Logger::WARN_EMPTY_SELECTOR);
     }
 
+    // std::cerr << "FINAL\n";
     return styles.detach();
 
   }
@@ -362,9 +370,9 @@ namespace Sass {
   Statement* StylesheetParser::readDeclarationOrStyleRule()
   {
 
-    if (plainCss() && inStyleRule && !inUnknownAtRule) {
-      return readPropertyOrVariableDeclaration();
-    }
+    //if (plainCss() && inStyleRule && !inUnknownAtRule) {
+    //  return readPropertyOrVariableDeclaration();
+    //}
 
     // The indented syntax allows a single backslash to distinguish a style rule
     // from old-style property syntax. We don't support old property syntax, but
@@ -412,7 +420,7 @@ namespace Sass {
   Statement* StylesheetParser::readVariableDeclarationOrStyleRule()
   {
 
-    if (plainCss()) return readStyleRule();
+    if (parsingCss()) return readStyleRule();
 
     // The indented syntax allows a single backslash to distinguish a style rule
     // from old-style property syntax. We don't support old property syntax, but
@@ -504,11 +512,8 @@ namespace Sass {
     }
 
     sass::string postColonWhitespace = rawText(&StylesheetParser::scanWhitespace);
-    if (lookingAtChildren()) {
-      return withChildren<Declaration>(
-        &StylesheetParser::readDeclarationOrAtRule,
-        start, name, nullptr, false);
-    }
+
+    if (auto nested = tryDeclarationChildren(name, start, nullptr)) return nested;
 
     midBuffer.write(postColonWhitespace);
     bool couldBeSelector = postColonWhitespace.empty()
@@ -557,17 +562,11 @@ namespace Sass {
       return nullptr;
     }
 
-    if (lookingAtChildren()) {
-      // Offset start(scanner.offset);
-      return withChildren<Declaration>(
-        &StylesheetParser::readDeclarationOrAtRule,
-        start, name, value, false);
-    }
-    else {
+    if (auto nested = tryDeclarationChildren(name, start, value)) return nested;
+
       expectStatementSeparator();
       return SASS_MEMORY_NEW(Declaration,
         scanner.relevantSpanFrom(start), name, value);
-    }
 
   }
   // EO tryDeclarationOrBuffer
@@ -594,7 +593,7 @@ namespace Sass {
       nameBuffer.addInterpolation(readInterpolatedIdentifier());
       name = nameBuffer.getInterpolation(scanner.relevantSpanFrom(start));
     }
-    else if (!plainCss()) {
+    else if (!parsingCss()) {
       AssignRule* assignment = nullptr;
       Interpolation* interpolation = nullptr;
       tryVariableDeclarationOrInterpolation(assignment, interpolation);
@@ -616,37 +615,35 @@ namespace Sass {
         name, value->wrapInStringExpression());
     }
 
-    if (lookingAtChildren()) {
-      if (plainCss()) {
-        error("Nested declarations aren't allowed in plain CSS.",
-          scanner.rawSpan());
-      }
-      return withChildren<Declaration>(
-        &StylesheetParser::readDeclarationOrAtRule, start, name,
-        nullptr, startsWith(name->getInitialPlain(), "--", 2));
-    }
+    scanWhitespace();
 
+    // Check if we already see a declaration (consume early and return)
+    if (Declaration* nested = tryDeclarationChildren(name, start, nullptr)) return nested;
     ExpressionObj value = readExpression();
-    if (lookingAtChildren()) {
-      if (plainCss()) {
+    if (Declaration* nested = tryDeclarationChildren(name, start, value)) return nested;
+
+    expectStatementSeparator();
+    return SASS_MEMORY_NEW(Declaration,
+      scanner.relevantSpanFrom(start), name, value,
+      startsWith(name->getInitialPlain(), "--", 2));
+
+    }
+  // EO readPropertyOrVariableDeclaration
+
+  Declaration* StylesheetParser::tryDeclarationChildren(Interpolation* name, Offset start, Expression* value)
+  {
+    // std::cerr << "try decl child " << scanner.position << "\n";
+    if (!lookingAtChildren()) return nullptr;
+      if (parsingCss()) {
         error("Nested declarations aren't allowed in plain CSS.",
           scanner.rawSpan());
       }
-      // only without children;
       return withChildren<Declaration>(
         &StylesheetParser::readDeclarationOrAtRule,
         start, name, value,
         startsWith(name->getInitialPlain(), "--", 2));
     }
-    else {
-      expectStatementSeparator();
-      return SASS_MEMORY_NEW(Declaration,
-        scanner.relevantSpanFrom(start), name, value,
-        startsWith(name->getInitialPlain(), "--", 2));
-    }
 
-  }
-  // EO readPropertyOrVariableDeclaration
 
   // Consumes a statement that's allowed within a declaration.
   Statement* StylesheetParser::readDeclarationOrAtRule() // _declarationChild
@@ -1165,7 +1162,7 @@ namespace Sass {
     // Check if name is valid identifier
     if (url.empty() || isDigit(url[0])) {
       SourceSpan pstate(scanner.relevantSpanFrom(start));
-      callStackFrame csf(compiler, pstate);
+      CallStackFrame csf(compiler, pstate);
       throw Exception::InvalidDefaultNamespace(compiler, url);
     }
 
@@ -1289,7 +1286,7 @@ namespace Sass {
         buffer.addInterpolation(identifier);
         // std::cerr << " asddde " << identifier << "\n";
 
-        auto name = identifier->getPlainString();
+        const auto& name = identifier->getPlainString();
 
         // std::cerr << "is it " << name.c_str() << "\n";
 
@@ -1372,7 +1369,7 @@ namespace Sass {
 
       Offset start(scanner.offset);
       StringScannerState state(scanner.state());
-      auto name = readExpression();
+      ExpressionObj name = readExpression();
       scanner.expectChar($colon);
       return readSupportsDeclarationValue(name, start);
     }
@@ -1386,8 +1383,8 @@ namespace Sass {
 
     Offset start(scanner.offset);
     StringScannerState state(scanner.state());
-    auto name = readInterpolatedIdentifier();
-    assert(name.asPlain != "not");
+    InterpolationObj name = readInterpolatedIdentifier();
+    //assert(name.asPlain != "not");
 
     if (!scanner.scanChar($lparen)) {
       scanner.backtrack(state);
@@ -1459,7 +1456,7 @@ namespace Sass {
     // Check if name is valid identifier
     //if (url.empty() || isDigit(url[0])) {
     //  // don't throw if it has an "as"
-    //  callStackFrame csf(compiler, state);
+    //  CallStackFrame csf(compiler, state);
     //  throw Exception::InvalidSassIdentifier(compiler, url);
     //}
 
@@ -1468,7 +1465,7 @@ namespace Sass {
     expectStatementSeparator("@use rule");
 
     if (isUseAllowed == false) {
-      callStackFrame csf(compiler, state);
+      CallStackFrame csf(compiler, state);
       throw Exception::TardyAtRule(
         compiler, Strings::useRule);
     }
@@ -1484,7 +1481,7 @@ namespace Sass {
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
       if (hasWith) {
-        callStackFrame csf(compiler, rule->pstate());
+        CallStackFrame csf(compiler, rule->pstate());
         throw Exception::RuntimeException(compiler,
           "Built-in modules can't be configured.");
       }
@@ -1496,7 +1493,7 @@ namespace Sass {
       BuiltInMod* module(compiler.getModule(name));
 
       if (module == nullptr) {
-        callStackFrame csf(compiler, rule->pstate());
+        CallStackFrame csf(compiler, rule->pstate());
         throw Exception::RuntimeException(compiler,
           "Invalid internal module requested.");
       }
@@ -1514,28 +1511,31 @@ namespace Sass {
       start = (start == NPOS ? 0 : start + 1);
       auto end = url.find_first_of(".", start);
       if (url[start] == '_') start += 1;
-      ns = url.substr(start, end);
+      ns = url.substr(start, end - start);
     }
 
     rule->ns(ns == "*" ? "" : ns);
+    // std::cerr << "SET NS TO " << rule->ns() << "\n";
     return rule.detach();
   }
 
   // Consumes a `@forward` rule.
   // [start] should point before the `@`.
-  ForwardRule* StylesheetParser::readForwardRule(Offset start)
+  Statement* StylesheetParser::readForwardRule(Offset start)
   {
+  //  return readUseRule(start);
     scanWhitespace();
     sass::string url = string();
 
     scanWhitespace();
-    sass::string prefix;
+    sass::string ns;
     if (scanIdentifier("as")) {
       scanWhitespace();
-      prefix = readIdentifier();
+      ns = readIdentifier();
       scanner.expectChar($asterisk);
       scanWhitespace();
     }
+    // std::cerr << "debug " << ns << "\n";
 
     bool isShown = false;
     bool isHidden = false;
@@ -1558,7 +1558,7 @@ namespace Sass {
 
     if (isUseAllowed == false) {
       SourceSpan state(scanner.relevantSpanFrom(start));
-      callStackFrame csf(compiler, state);
+      CallStackFrame csf(compiler, state);
       throw Exception::ParserException(compiler,
         "@forward rules must be written before any other rules.");
     }
@@ -1566,7 +1566,7 @@ namespace Sass {
     ForwardRuleObj rule = SASS_MEMORY_NEW(ForwardRule,
       scanner.relevantSpanFrom(start),
       scanner.sourceUrl, url, {},
-      prefix, wconfig,
+      ns, wconfig,
       std::move(varFilters),
       std::move(callFilters),
       std::move(config),
@@ -1577,7 +1577,7 @@ namespace Sass {
     if (startsWithIgnoreCase(url, "sass:", 5)) {
 
       if (hasWith) {
-        callStackFrame csf(compiler, rule->pstate());
+        CallStackFrame csf(compiler, rule->pstate());
         throw Exception::RuntimeException(compiler,
           "Built-in modules can't be configured.");
       }
@@ -1588,13 +1588,22 @@ namespace Sass {
         rule->root47(nullptr);
       }
       else {
-        callStackFrame csf(compiler, rule->pstate());
+        CallStackFrame csf(compiler, rule->pstate());
         throw Exception::RuntimeException(compiler,
           "Invalid internal module requested.");
       }
 
     }
 
+    if (ns.empty() && !url.empty()) {
+      auto start = url.find_last_of("/\\");
+      start = (start == NPOS ? 0 : start + 1);
+      auto end = url.find_first_of(".", start);
+      if (url[start] == '_') start += 1;
+      ns = url.substr(start, end - start);
+    }
+    rule->ns(ns == "*" ? "" : ns);
+    // std::cerr << "SET NS TO " << rule->ns() << "\n";
     return rule.detach();
   }
 
@@ -1604,10 +1613,10 @@ namespace Sass {
   {
 
     sass::string ns;
-    sass::string name = readIdentifier();
+    StringToken name = readIdentifierToken();
     if (scanner.scanChar($dot)) {
-      ns = name;
-      name = readPublicIdentifier();
+      ns = name.str;
+      name.str = readPublicIdentifier();
     }
 
     scanWhitespace();
@@ -1636,7 +1645,7 @@ namespace Sass {
     sass::vector<EnvRef> midxs;
 
     IncludeRuleObj rule = SASS_MEMORY_NEW(IncludeRule,
-    scanner.relevantSpanFrom(start), name, ns, arguments);
+    scanner.relevantSpanFrom(start), name.str, std::move(name.pstate), ns, arguments);
 
     ContentBlockObj content;
     if (contentArguments || lookingAtChildren()) {
@@ -1763,8 +1772,8 @@ namespace Sass {
     if (needsDeprecationWarning) {
 
       compiler.addDeprecation(
-        "@-moz-document is deprecated and support will be removed from Sass in a future\n"
-        "release. For details, see http://bit.ly/moz-document.",
+        "@-moz-document is deprecated and support will be removed in LibSass 5.0.0.\n"
+        "For details, see http://bit.ly/moz-document.",
         atRule->pstate(), Logger::WARN_MOZ_DOC);
     }
 
@@ -1787,7 +1796,7 @@ namespace Sass {
   // [start] should point before the `@`.
   SupportsRule* StylesheetParser::readSupportsRule(Offset start)
   {
-    auto condition = readSupportsCondition();
+    SupportsConditionObj condition(readSupportsCondition());
     scanWhitespace();
     EnvFrame local(compiler, true);
     return withChildren<SupportsRule>(
@@ -1948,7 +1957,7 @@ namespace Sass {
       ExpressionObj expression = readExpressionUntilComma(!mixin);
       if (expression == nullptr) {
         error("Expected expression.",
-          scanner.rawSpan());
+          scanner.rawSpanOrRelevant());
       }
       scanWhitespace();
       VariableExpression* var = expression->isaVariableExpression();
@@ -1958,7 +1967,7 @@ namespace Sass {
           error("Duplicate argument.",
             expression->pstate());
         }
-        auto ex = readExpressionUntilComma(!mixin);
+        ExpressionObj ex = readExpressionUntilComma(!mixin);
         named[var->name()] = ex;
       }
       else if (scanner.scanChar($dot)) {
@@ -2028,12 +2037,13 @@ namespace Sass {
     // std::cerr << "---------- PARSE EXPRESSION\n";
 
     if (until != nullptr && (this->*until)()) {
-      SourceSpan span(scanner.rawSpan());
+      SourceSpan span(scanner.rawSpanOrRelevant());
       error("Expected expression.", span);
     }
 
     // StringScannerState beforeBracket;
     Offset start(scanner.offset);
+    RAII_FLAG(inExpression, true);
     if (bracketList) {
       // beforeBracket = scanner.position;
       scanner.expectChar($lbracket);
@@ -2197,7 +2207,7 @@ namespace Sass {
         break;
 
       case $a:
-        if (!plainCss() && scanIdentifier("and")) {
+        if (!parsingCss() && scanIdentifier("and")) {
           ep.addOperator(SassOperator::AND, beforeToken);
         }
         else {
@@ -2206,7 +2216,7 @@ namespace Sass {
         break;
 
       case $o:
-        if (!plainCss() && scanIdentifier("or")) {
+        if (!parsingCss() && scanIdentifier("or")) {
           ep.addOperator(SassOperator::OR, beforeToken);
         }
         else {
@@ -2291,7 +2301,7 @@ namespace Sass {
         }
 
         if (ep.singleExpression == nullptr) {
-          SourceSpan span(scanner.rawSpan());
+          SourceSpan span(scanner.rawSpanOrRelevant());
           error("Expected expression.", span);
         }
 
@@ -2497,7 +2507,7 @@ namespace Sass {
         return readIdentifierLike();
       }
       error("Expected expression.",
-        scanner.rawSpan());
+        scanner.rawSpanOrRelevant());
       return nullptr;
     }
   }
@@ -2508,7 +2518,7 @@ namespace Sass {
   {
     // Expressions are only allowed within calculations, but we verify this at
     // evaluation time.
-    if (plainCss()) {
+    if (parsingCss()) {
       // This one is needed ...
       // error("Parentheses aren't allowed in plain CSS outside calculation.",
       //error("Parentheses aren't allowed in plain CSS.",
@@ -2773,7 +2783,7 @@ namespace Sass {
         scanner.relevantSpan());
     }
 
-    if (plainCss() && op != UnaryOpType::SLASH) {
+    if (parsingCss() && op != UnaryOpType::SLASH) {
       error("Operators aren't allowed in plain CSS.",
         scanner.relevantSpan());
     }
@@ -2819,7 +2829,7 @@ namespace Sass {
   }
 
   /* Locale unspecific atof function. */
-  double sass_strtod(const char* str)
+  static double sass_strtod(const char* str)
   {
     char separator = *(localeconv()->decimal_point);
     if (separator != '.') {
@@ -2885,7 +2895,7 @@ namespace Sass {
     if (next == $plus || next == $minus) scanner.readChar();
     if (!isDigit(scanner.peekChar())) {
       SourceSpan span(scanner.relevantSpan());
-      callStackFrame frame(compiler,
+      CallStackFrame frame(compiler,
         BackTrace(span));
       error(
         "Expected digit.",
@@ -2973,14 +2983,14 @@ namespace Sass {
       name = readPublicIdentifier();
     }
 
-    if (plainCss()) {
+    if (parsingCss()) {
       error("Sass variables aren't allowed in plain CSS.",
         scanner.relevantSpanFrom(start));
     }
 
     if (!ns.empty()) {
       auto pstate(scanner.relevantSpanFrom(start));
-      callStackFrame csf(compiler, pstate);
+      CallStackFrame csf(compiler, pstate);
       throw Exception::ParserException(compiler,
         "Variable namespaces not supported!");
     }
@@ -2997,7 +3007,7 @@ namespace Sass {
   // Consumes a selector expression.
   SelectorExpression* StylesheetParser::readParentExpression()
   {
-    if (plainCss()) {
+    if (parsingCss()) {
       error("The parent selector isn't allowed in plain CSS.",
         scanner.rawSpan());
       /* ,length: 1 */
@@ -3008,8 +3018,8 @@ namespace Sass {
 
     if (scanner.scanChar($ampersand)) {
       compiler.addWarning(
-        "In Sass, \"&&\" means two copies of the parent selector. You "
-        "probably want to use \"and\" instead.",
+        "In Sass, \"&&\" means two copies of the parent selector."
+        "\nYou probably want to use \"and\" instead.",
         scanner.relevantSpanFrom(start),
         Logger::WARN_DOUBLE_PARENT);
       scanner.offset.column -= 1;
@@ -3161,7 +3171,7 @@ namespace Sass {
           scanner.relevantSpanFrom(start), name, plain);
 
         if (isPrivate(name)) {
-          callStackFrame csf(compiler, expression->pstate());
+          CallStackFrame csf(compiler, expression->pstate());
           throw Exception::ParserException(compiler,
             "Private members can't be accessed "
             "from outside their modules.");
@@ -3615,10 +3625,14 @@ namespace Sass {
 
       default:
         if (lookingAtIdentifier()) {
-          buffer.write(readIdentifier());
+          auto ident = readIdentifier();
+          // std::cerr << "LOOK AT IDENT " << ident << "\n";
+          buffer.write(ident);
         }
         else {
-          buffer.write(scanner.readChar());
+          auto rv = scanner.readChar();
+          // std::cerr << "READ " << rv << "\n";
+          buffer.write(rv);
         }
         break;
       }
@@ -3628,7 +3642,9 @@ namespace Sass {
     // scanner.relevant
     // scanner.backtrack(scanner.relevant);
     // scanWhitespaceWithoutComments(); // consume trailing white-space
-    return buffer.getInterpolation(scanner.rawSpanFrom(start.offset), false);
+    auto qwe = buffer.getInterpolation(scanner.rawSpanFrom(start.offset), false);
+    // std::cerr << "RETURN " << qwe->toString() << "\n";
+    return qwe;
 
   }
   // readAlmostAnyValue
@@ -3870,7 +3886,7 @@ namespace Sass {
     ExpressionObj contents(readExpression());
     scanner.expectChar($rbrace);
 
-    if (plainCss()) {
+    if (parsingCss()) {
       error(
         "Interpolation isn't allowed in plain CSS.",
         scanner.rawSpanFrom(start));
@@ -4027,7 +4043,7 @@ namespace Sass {
       return;
     }
 
-    auto identifier1 = readInterpolatedIdentifier();
+    InterpolationObj identifier1 = readInterpolatedIdentifier();
     if (equalsIgnoreCase(identifier1->getPlainString(), "not")) {
       // For example, "@media not (...) {"
       expectWhitespace();
@@ -4047,7 +4063,7 @@ namespace Sass {
     }
 
     buffer.writeCharCode($space);
-    auto identifier2 = readInterpolatedIdentifier();
+    InterpolationObj identifier2 = readInterpolatedIdentifier();
 
     if (equalsIgnoreCase(identifier2->getPlainString(), "and")) {
       expectWhitespace();
@@ -4176,7 +4192,7 @@ namespace Sass {
       readSupportsConditionInParens();
     scanWhitespace();
     bool hasOp = false;
-    SupportsOperation::Operand op;
+    SupportsOperation::Operand op{};
     while (lookingAtIdentifier()) {
       if (hasOp) {
         if (op == SupportsOperation::AND)
@@ -4325,8 +4341,8 @@ namespace Sass {
     ExpressionObj value;
     if (StringExpression* ex = name->isaStringExpression()) {
       if (ex->text() != nullptr && ex->hasQuotes() == false) {
-        auto plain = ex->text()->getInitialPlain();
-        if (strncmp(plain.c_str(), "--", 2) == 0) {
+        const auto& plain = ex->text()->getInitialPlain();
+        if (StringUtils::startsWith(plain, "--", 2)) {
           value = SASS_MEMORY_NEW(StringExpression,
             scanner.rawSpanFrom(start),
             readInterpolatedDeclarationValue());
@@ -4357,7 +4373,7 @@ namespace Sass {
     scanWhitespace();
 
     bool hasOp = false;
-    SupportsOperation::Operand op;
+    SupportsOperation::Operand op{};
     SupportsOperationObj operation{};
     while (lookingAtIdentifier()) {
       if (hasOp) {

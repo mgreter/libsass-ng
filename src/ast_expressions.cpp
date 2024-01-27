@@ -117,8 +117,8 @@ namespace Sass {
     sass::string&& text,
     bool hasQuotes) :
     Expression(std::move(pstate)),
-    text_(SASS_MEMORY_NEW(Interpolation, pstate,
-      SASS_MEMORY_NEW(String, pstate, std::move(text)))),
+    text_(SASS_MEMORY_NEW(Interpolation, pstate_,
+      SASS_MEMORY_NEW(String, pstate_, std::move(text)))),
     hasQuotes_(hasQuotes)
   {}
 
@@ -130,15 +130,15 @@ namespace Sass {
   {
     using namespace Character;
     bool containsDoubleQuote = false;
-    for (auto item : text_->elements()) {
-      if (auto str = item->isaString()) { // Ex
+    for (auto& item : text_->elements()) {
+      if (const auto& str = item->isaString()) { // Ex
         const auto& value = str->value();
         for (size_t i = 0; i < value.size(); i++) {
           if (value[i] == $apos) return $quote;
           if (value[i] == $quote) containsDoubleQuote = true;
         }
       }
-      else if (auto str = item->isaItplString()) { // Ex
+      else if (const auto& str = item->isaItplString()) { // Ex
         const auto& value = str->text();
         for (size_t i = 0; i < value.size(); i++) {
           if (value[i] == $apos) return $quote;
@@ -210,7 +210,7 @@ namespace Sass {
       buffer.write(quote);
     }
 
-    for (auto value : text_->elements()) {
+    for (const auto& value : text_->elements()) {
       if (ItplString* str = value->isaItplString()) {
         sass::string value(str->text());
         for (size_t i = 0; i < value.size(); i++) {
@@ -319,20 +319,38 @@ namespace Sass {
     isCalcSafeOp_(isCalcSafeOp)
   {}
 
+  BinaryOpExpression::BinaryOpExpression(
+    const SourceSpan& pstate,
+    SassOperator operand,
+    const SourceSpan& opstate,
+    Expression* lhs,
+    Expression* rhs,
+    bool allowSlash,
+    bool isCalcSafeOp) :
+    Expression(pstate),
+    operand_(operand),
+    opstate_(opstate),
+    left_(lhs),
+    right_(rhs),
+    allowsSlash_(allowSlash),
+    warned_(false),
+    isCalcSafeOp_(isCalcSafeOp)
+  {}
+
   // Convert to string (only for debugging)
   sass::string BinaryOpExpression::toString() const
   {
-    if (operand_ == SassOperator::DIV) {
+    if (false && operand_ == SassOperator::DIV) {
       sass::sstream buffer;
       buffer << "math.div(";
-      auto left = this->left(); // Hack to make analysis work.
+      const auto& left = this->left(); // Hack to make analysis work.
       auto lhs = left->isaBinaryOpExpression();
       auto leftNeedsParens = lhs && sass_op_to_precedence(lhs->operand_) < sass_op_to_precedence(operand_);
       if (leftNeedsParens) buffer << Character::$lparen;
       buffer << left->toString();
       if (leftNeedsParens) buffer << Character::$rparen;
       buffer << ", ";
-      auto right = this->right(); // Hack to make analysis work.
+      const auto& right = this->right(); // Hack to make analysis work.
       auto rhs = right->isaBinaryOpExpression();
       auto rightNeedsParens = rhs && sass_op_to_precedence(rhs->operand_) <= sass_op_to_precedence(operand_);
       if (rightNeedsParens) buffer << Character::$lparen;
@@ -343,7 +361,7 @@ namespace Sass {
     }
     else {
       sass::sstream buffer;
-      auto left = this->left(); // Hack to make analysis work.
+      const auto& left = this->left(); // Hack to make analysis work.
       auto lhs = left->isaBinaryOpExpression();
       auto leftNeedsParens = lhs && sass_op_to_precedence(lhs->operand_) < sass_op_to_precedence(operand_);
       if (leftNeedsParens) buffer << Character::$lparen;
@@ -352,7 +370,7 @@ namespace Sass {
       if (operand_ != SassOperator::IESEQ) buffer << Character::$space;
       buffer << sass_op_separator(operand_);
       if (operand_ != SassOperator::IESEQ) buffer << Character::$space;
-      auto right = this->right(); // Hack to make analysis work.
+      const auto& right = this->right(); // Hack to make analysis work.
       auto rhs = right->isaBinaryOpExpression();
       auto rightNeedsParens = rhs && sass_op_to_precedence(rhs->operand_) <= sass_op_to_precedence(operand_);
       if (rightNeedsParens) buffer << Character::$lparen;
@@ -377,7 +395,8 @@ namespace Sass {
   // Convert to string (only for debugging)
   sass::string VariableExpression::toString() const
   {
-    return "$" + name_.norm();
+    if (ns_.empty()) return "$" + name_.norm();
+    else return ns_ + ".$" + name_.norm();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -390,9 +409,21 @@ namespace Sass {
     expression_(expression)
   {}
 
+  ParenthesizedExpression::ParenthesizedExpression(
+    const SourceSpan& pstate,
+    Expression* expression) :
+    Expression(pstate),
+    expression_(expression)
+  {}
+
   // Convert to string (only for debugging)
   sass::string ParenthesizedExpression::toString() const {
     return "(" + expression_->toString() + ")";
+  }
+
+  sass::string ParenthesizedExpression::recommendation() const
+  {
+    return expression_->toString();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -403,6 +434,15 @@ namespace Sass {
     UnaryOpType optype,
     ExpressionObj operand) :
     Expression(std::move(pstate)),
+    optype_(optype),
+    operand_(operand)
+  {}
+
+  UnaryOpExpression::UnaryOpExpression(
+    const SourceSpan& pstate,
+    UnaryOpType optype,
+    ExpressionObj operand) :
+    Expression(pstate),
     optype_(optype),
     operand_(operand)
   {}
@@ -469,7 +509,7 @@ namespace Sass {
   sass::string InvocationExpression::toString() const
   {
     StringVector components;
-    for (auto positional : arguments_->positional()) {
+    for (auto& positional : arguments_->positional()) {
       components.emplace_back(positional->toString());
     }
     for (auto& name : arguments_->named()) {
@@ -503,7 +543,7 @@ namespace Sass {
 
 namespace Sass {
 
-  bool isMathOperator(SassOperator op)
+  static bool isMathOperator(SassOperator op)
   {
     if (op == MUL) return true;
     if (op == DIV) return true;
@@ -526,12 +566,25 @@ namespace Sass {
     return false;
   }
 
+  sass::string BinaryOpExpression::recommendation() const
+  {
+    if (operand_ == SassOperator::DIV) {
+      sass::string text("math.div(");
+      text += left_->recommendation();
+      text += ", ";
+      text += right_->recommendation();
+      text += ")";
+      return text;
+    }
+    return toString();
+  }
+
   bool ListExpression::isCalcSafe()
   {
     if (separator() != SASS_SPACE) return false;
     if (hasBrackets() == true) return false;
     if (size() < 2) return false;
-    for (auto asd : items()) {
+    for (auto& asd : items()) {
       if (!asd->isCalcSafe())
         return false;
     }

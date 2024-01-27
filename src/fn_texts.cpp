@@ -28,7 +28,7 @@ namespace Sass {
         return result;
       }
 
-      BUILT_IN_FN(unquote)
+      static BUILT_IN_FN(unquote)
       {
         String* string = arguments[0]->assertString(compiler, "string");
         if (!string->hasQuotes()) return string;
@@ -37,7 +37,7 @@ namespace Sass {
           string->pstate(), std::move(copy), false);
       }
 
-      BUILT_IN_FN(quote)
+      static BUILT_IN_FN(quote)
       {
         if (Color* col = arguments[0]->isaColor()) {
           if (!col->disp().empty()) {
@@ -53,7 +53,7 @@ namespace Sass {
           string->pstate(), std::move(copy), true);
       }
 
-      BUILT_IN_FN(toUpperCase)
+      static BUILT_IN_FN(toUpperCase)
       {
         String* string = arguments[0]->assertString(compiler, "string");
         return SASS_MEMORY_NEW(String, pstate,
@@ -61,7 +61,7 @@ namespace Sass {
           string->hasQuotes());
       }
 
-      BUILT_IN_FN(toLowerCase)
+      static BUILT_IN_FN(toLowerCase)
       {
         String* string = arguments[0]->assertString(compiler, "string");
         return SASS_MEMORY_NEW(String, pstate,
@@ -69,14 +69,14 @@ namespace Sass {
           string->hasQuotes());
       }
 
-      BUILT_IN_FN(length)
+      static BUILT_IN_FN(length)
       {
         String* string = arguments[0]->assertString(compiler, "string");
         size_t len = Unicode::codePointCount(string->value());
         return SASS_MEMORY_NEW(Number, pstate, (double)len);
       }
 
-      BUILT_IN_FN(insert)
+      static BUILT_IN_FN(insert)
       {
         String* string = arguments[0]->assertString(compiler, "string");
         String* insert = arguments[1]->assertString(compiler, "insert");
@@ -106,7 +106,7 @@ namespace Sass {
           string->hasQuotes());
       }
 
-      BUILT_IN_FN(index)
+      static BUILT_IN_FN(index)
       {
         String* string = arguments[0]->assertString(compiler, "string");
         String* substring = arguments[1]->assertString(compiler, "substring");
@@ -123,7 +123,7 @@ namespace Sass {
           (double)Unicode::codePointCount(str, c_index) + 1);
       }
 
-      BUILT_IN_FN(slice)
+      static BUILT_IN_FN(slice)
       {
         String* string = arguments[0]->assertString(compiler, "string");
         Number* beg = arguments[1]->assertNumber(compiler, "start-at");
@@ -163,7 +163,7 @@ namespace Sass {
 
       }
 
-      BUILT_IN_FN(split)
+      static BUILT_IN_FN(split)
       {
         String* string = arguments[0]->assertString(compiler, "string");
         String* separator = arguments[1]->assertString(compiler, "separator");
@@ -213,7 +213,7 @@ namespace Sass {
           std::move(results), SASS_COMMA, true);
       }
 
-      BUILT_IN_FN(uniqueId)
+      static BUILT_IN_FN(uniqueId)
       {
         sass::sstream ss; ss << "u"
           << std::setfill('0') << std::setw(8)

@@ -115,6 +115,8 @@ namespace Sass {
     // Reset unit without conversion factor
     void unit(const sass::string& unit);
 
+    sass::string unitSuggestion(const sass::string& name, const sass::string unit = "") const;
+
     // Returns true if empty
     bool isUnitless() const;
 

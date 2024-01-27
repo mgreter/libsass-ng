@@ -5,8 +5,6 @@
 /*****************************************************************************/
 #include "ast_selectors.hpp"
 
-#include "debugger.hpp"
-
 namespace Sass {
 
 
@@ -34,10 +32,6 @@ namespace Sass {
     const SourceSpan& pstate)
   {
 
-    for (auto qwe : complexes) {
-      //std::cerr << "- IN " << qwe->inspect() << "\n";
-    }
-
     sass::vector<SimpleSelectorObj> unifiedBase;
     SelectorCombinatorObj leadingCombinator;
     SelectorCombinatorObj trailingCombinator;
@@ -49,11 +43,9 @@ namespace Sass {
           const SelectorCombinatorObj& lead
             = complex->getLeadingCombinator();
           if (leadingCombinator.isNull()) {
-            //std::cerr << "===== has leading " << lead->toString() << "\n";
             leadingCombinator = lead;
           }
           else if (!ObjEqualityFn(leadingCombinator, lead)) {
-          // else if (leadingCombinator != lead) {
             return {}; // Return empty list
           }
         }
@@ -65,7 +57,7 @@ namespace Sass {
       if (complex->size() == 0) continue;
       // Get last compound of current complex selector
       // This is the one that will connect to next lead
-      auto base = complex->last();
+      const auto& base = complex->last();
 
       //std::cerr << " base [" << base->inspect() << "]\n";
 
@@ -88,7 +80,7 @@ namespace Sass {
         unifiedBase = base->selector()->elements();
       }
       else {
-        for (auto simple : base->selector()->elements()) {
+        for (auto& simple : base->selector()->elements()) {
           //std::cerr << "Unify lhs : " << simple->inspect() << "\n";
           //std::cerr << "Unify rhs : " << unifiedBase[0]->inspect() << "\n";
           unifiedBase = simple->unify(unifiedBase);
@@ -99,15 +91,6 @@ namespace Sass {
     }
 
     // unifiedBase is nullptr, abort?
-
-    for (auto qwe : unifiedBase) {
-      // std::cerr << "- base " << qwe->inspect() << "\n";
-    }
-
-    for (auto qwe : complexes) {
-      // std::cerr << "- CPLX " << qwe->inspect() << "\n";
-    }
-
     sass::vector<ComplexSelectorObj> withoutBases;
     for (size_t i = 0; i < complexes.size(); i += 1) {
       if (complexes[i]->size() < 2) continue;
@@ -128,7 +111,7 @@ namespace Sass {
       trailing.push_back(trailingCombinator);
     CplxSelComponent* component = SASS_MEMORY_NEW(
       CplxSelComponent, pstate, std::move(trailing), compound);
-    ComplexSelector* base;
+    ComplexSelectorObj base;
     if (!leadingCombinator) base = SASS_MEMORY_NEW(ComplexSelector, pstate, {}, { component });
     else base = SASS_MEMORY_NEW(ComplexSelector, pstate, { leadingCombinator }, { component });
 
@@ -146,15 +129,7 @@ namespace Sass {
     }
     // lineBreak: complexes.any((complex) => complex.lineBreak));
 
-    for (auto qwe : weaving) {
-      //std::cerr << "- WEAVE " << qwe->inspect() << "\n";
-    }
-
-    auto rv = weave(weaving, false); // TODO
-
-    for (auto qwe : rv) {
-      //std::cerr << "+ WEAVED " << qwe->inspect() << "\n";
-    }
+    auto rv = weave27(weaving, false); // TODO
 
     return rv;
 
@@ -225,7 +200,7 @@ namespace Sass {
     sass::vector<SimpleSelectorObj> results;
     // results.reserve(rhs->size() + 1);
     bool addedThis = false;
-    for (auto simple : others) {
+    for (auto& simple : others) {
       // Make sure pseudo selectors always come last.
       if (!addedThis && simple->isaPseudoSelector()) {
         results.push_back(this);
@@ -299,8 +274,8 @@ namespace Sass {
     sass::vector<SimpleSelectorObj> results;
     // results.reserve(rhs->size() + 1);
     bool addedThis = false;
-    for (auto simple : compound) {
-      if (auto pseudo = simple->isaPseudoSelector()) {
+    for (const auto& simple : compound) {
+      if (const auto& pseudo = simple->isaPseudoSelector()) {
         if (pseudo->isPseudoElement()) {
           if (isPseudoElement()) return {};
           results.push_back(this);
@@ -439,7 +414,7 @@ namespace Sass {
     if (isUniversal()) {
       return unifyUniversal(compound);
     }
-    auto first = compound.front();
+    const auto& first = compound.front();
     if (first->isUniversal()) {
       return first->unify({ this });
     }
@@ -496,7 +471,7 @@ namespace Sass {
     // storing the results in `unified_complex_selectors`
     for (const ComplexSelectorObj& seq1 : elements()) {
       for (const ComplexSelectorObj& seq2 : rhs->elements()) {
-        if (SelectorList* unified = seq1->unifyList(seq2)) {
+        if (SelectorListObj unified = seq1->unifyList(seq2)) {
           selectors.insert(selectors.end(),
             unified->begin(), unified->end());
         }

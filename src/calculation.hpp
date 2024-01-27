@@ -4,11 +4,9 @@
 #ifndef SASS_CALCULATION_HPP
 #define SASS_CALCULATION_HPP
 
-#include "ast.hpp"
-#include "strings.hpp"
+#include "ast_callables.hpp"
 #include "exceptions.hpp"
-
-#include "debugger.hpp"
+#include "strings.hpp"
 
 #include <cmath>
 
@@ -107,8 +105,8 @@ namespace Sass {
     static Value* calc_acos(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
     static Value* calc_atan(Logger& logger, const SourceSpan& pstate, const ValueVector& argument);
 
-    static Value* calc_min(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-    static Value* calc_max(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+    static Value* calc_min(Logger& logger, const SourceSpan& pstate, const ValueVector& args, bool strict = false);
+    static Value* calc_max(Logger& logger, const SourceSpan& pstate, const ValueVector& args, bool strict = false);
 
     static Value* calc_clamp(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
     static Value* calc_hypot(Logger& logger, const SourceSpan& pstate, const ValueVector& args);

@@ -9,7 +9,22 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include "ast.hpp"
+
+#include "ast_callable.hpp"
+#include "ast_callables.hpp"
+#include "ast_containers.hpp"
+#include "ast_css.hpp"
+#include "ast_def_macros.hpp"
+#include "ast_expressions.hpp"
+#include "ast_fwd_decl.hpp"
+#include "ast_helpers.hpp"
+#include "ast_imports.hpp"
+#include "ast_nodes.hpp"
+#include "ast_selectors.hpp"
+#include "ast_statements.hpp"
+#include "ast_supports.hpp"
+#include "ast_values.hpp"
+
 #include "ast_fwd_decl.hpp"
 #include "extender.hpp"
 #include "extension.hpp"
@@ -62,7 +77,7 @@ inline std::string debug_dude(sass::vector<sass::vector<int>> vec) {
   std::stringstream out;
   out << "{";
   bool joinOut = false;
-  for (auto ct : vec) {
+  for (const auto& ct : vec) {
     if (joinOut) out << ", ";
     joinOut = true;
     out << "{";
@@ -363,12 +378,6 @@ inline std::string pstate_source_position(const SourceSpan& pstate)
   else {
     str << "[NOSRC]";
   }
-#ifdef DEBUG_SHARED_PTR
-  str << "x" << node->getRefCount() << ""
-    << " {#" << node->objId << "}"
-    << " " << node->getDbgFile()
-    << "@" << node->getDbgLine();
-#endif
   return str.str();
 }
 
@@ -396,21 +405,21 @@ inline std::string pstate_source_position(AstNode* node)
 
 inline void debug_block(ParentStatement* node, std::string ind)
 {
-  for (auto item : node->elements()) {
+  for (const auto& item : node->elements()) {
     debug_ast(item, ind);
   }
 }
 
 inline void debug_block(CssParentNode* node, std::string ind)
 {
-  for (auto item : node->elements()) {
+  for (const auto& item : node->elements()) {
     debug_ast(item, ind);
   }
 }
 
-inline void debug_block(Root* node, std::string ind)
+inline void debug_block(Stylesheet* node, std::string ind)
 {
-  for (auto item : node->elements()) {
+  for (const auto& item : node->elements()) {
     debug_ast(item, ind);
   }
 }
@@ -431,7 +440,7 @@ inline void debug_idxs(Env* env) {
     std::cerr << "|M:" << env->idxs->mixIdxs.size();
     std::cerr << "|F:" << env->idxs->fnIdxs.size();
     if (env->idxs->module) {
-      std::cerr << "|U:" << env->idxs->module->upstream.size();
+      std::cerr << "|U:" << env->idxs->module->upstream77.size();
       std::cerr << "|FV:" << env->idxs->module->mergedFwdVar.size();
       std::cerr << "|FM:" << env->idxs->module->mergedFwdMix.size();
       std::cerr << "|FF:" << env->idxs->module->mergedFwdFn.size();
@@ -444,12 +453,14 @@ inline void debug_idxs(Env* env) {
 
 }
 
+static bool embedding = false;
+
 inline void debug_ast(AstNode* node, std::string ind)
 {
-  if (node == 0) return;
+  if (node == nullptr) return;
   if (ind == "") std::cerr << "####################################################################\n";
-  if (Cast<Root>(node)) {
-    Root* root = Cast<Root>(node);
+  if (Cast<Stylesheet>(node)) {
+    Stylesheet* root = Cast<Stylesheet>(node);
     std::cerr << ind << "Root " << root;
     std::cerr << " (" << pstate_source_position(root) << ")";
     debug_idxs(root);
@@ -507,6 +518,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " [length:" << longToHex(selector->size()) << "]";
     std::cerr << " [weight:" << longToHex(selector->specificity()) << "]";
     // << (selector->hasInvisible() ? " [hasInvisible]" : " -")
+    std::cerr << (selector->hasLineBreak() ? " [hasLineBreak]" : " -");
     std::cerr << (selector->hasPreLineFeed() ? " [hasPreLineFeed]" : " -");
 
     // << (selector->has_placeholder() ? " [PLACEHOLDER]": " -")
@@ -514,16 +526,17 @@ inline void debug_ast(AstNode* node, std::string ind)
     // << (selector->has_real_parent_ref() ? " [real parent]" : " -")
     // << (selector->has_line_feed() ? " [line-feed]": " -")
     // << (selector->has_line_break() ? " [line-break]": " -")
-    std::cerr << " -- \n";
 
     if (selector->leadingCombinators().size() > 0) {
-      for (auto asd : selector->leadingCombinators()) {
+      for (const auto& asd : selector->leadingCombinators()) {
         ind += std::string(asd->toString().c_str());
         ind += " ";
       }
+      std::cerr << " [ " << ind << "]\n";
     }
     else {
       ind += "  ";
+      std::cerr << " []\n";
     }
 
 
@@ -668,6 +681,15 @@ inline void debug_ast(AstNode* node, std::string ind)
     // std::cerr << " <" << prettyprint(selector->pstate().token.ws_before()) << ">";
     std::cerr << std::endl;
   }
+  else if (Cast<CssParentSelector>(node)) {
+
+    CssParentSelector* selector = Cast<CssParentSelector>(node);
+    std::cerr << ind << "CssParentSelector [" << selector->name() << "] " << selector;
+    std::cerr << " (" << pstate_source_position(selector) << ")"
+      //  << (selector->hasInvisible() ? " [hasInvisible]" : " -")
+      << std::endl;
+
+  }
   else if (Cast<PlaceholderSelector>(node)) {
 
     PlaceholderSelector* selector = Cast<PlaceholderSelector>(node);
@@ -702,7 +724,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " (" << pstate_source_position(rule) << ")";
     debug_idxs(rule->module32());
     std::cerr << std::endl;
-    debug_ast(rule->root47(), ind + " =@ ");
+    if (embedding) debug_ast(rule->root47(), ind + " =@ ");
 
   }
   else if (Cast<UseRule>(node)) {
@@ -711,7 +733,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " (" << pstate_source_position(rule) << ")";
     debug_idxs(rule->module32());
     std::cerr << std::endl;
-    debug_ast(rule->root47(), ind + " =@ ");
+    if (embedding) debug_ast(rule->root47(), ind + " =@ ");
 
   }
   else if (Cast<UserDefinedCallable>(node)) {
@@ -741,10 +763,10 @@ inline void debug_ast(AstNode* node, std::string ind)
     CssMediaRule* rule = Cast<CssMediaRule>(node);
     std::cerr << ind << "CssMediaRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    for (auto item : rule->queries()) {
+    for (const auto& item : rule->queries()) {
       debug_ast(item, ind + "() ");
     }
-    for (auto item : rule->elements()) {
+    for (const auto& item : rule->elements()) {
       debug_ast(item, ind + " !! ");
     }
     debug_css_parent_node(rule, ind + " :: ");
@@ -788,7 +810,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << ind << "CssSupportsRule " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
     debug_ast(block->condition(), ind + " =@ ");
-    for (auto stmt : block->elements()) {
+    for (const auto& stmt : block->elements()) {
       debug_ast(stmt, ind + " <>");
     }
   }
@@ -935,7 +957,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     debug_idxs(block->module32());
     std::cerr << std::endl;
-    debug_ast(block->root47(), ind + " @ ");
+    if (embedding) debug_ast(block->root47(), ind + " @ ");
   }
   else if (Cast<ImportRule>(node)) {
     ImportRule* block = Cast<ImportRule>(node);
@@ -944,7 +966,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     // std::cerr << " [" << block->imp_path() << "] ";
     // std::cerr << " " << block->tabs();
     std::cerr << std::endl;
-    for (auto imp : block->elements()) debug_ast(imp, ind + "@: ");
+    for (const auto& imp : block->elements()) debug_ast(imp, ind + "@: ");
   }
   else if (Cast<AssignRule>(node)) {
     AssignRule* block = Cast<AssignRule>(node);
@@ -1078,7 +1100,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << std::endl;
     debug_ast(ruleset->selector(), ind + ">");
     // debug_ast(ruleset->interpolation(), ind + "#");
-    for (auto stmt : ruleset->elements()) {
+    for (const auto& stmt : ruleset->elements()) {
       debug_ast(stmt, ind + " !! ");
     }
     // debug_ast(ruleset, ind + " :: ");
@@ -1090,7 +1112,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " [" << expression->name().orig() << "]";
     std::cerr << " vidx(";
     bool join = false;
-    for (auto pidx : expression->vidxs()) {
+    for (const auto& pidx : expression->vidxs()) {
       if (join) std::cerr << ", ";
       std::cerr << pidx.toString();
       join = true;
@@ -1290,7 +1312,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     // std::cerr << " " << expression->concrete_type();
     // std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << std::endl;
-    for (const auto i : expression->elements()) { debug_ast(i, ind + " "); }
+    for (const InterpolantObj& i : expression->elements()) { debug_ast(i, ind + " "); }
   }
   else if (Cast<Expression>(node)) {
     Expression* expression = Cast<Expression>(node);
@@ -1339,7 +1361,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << ind << "Calculation " << calc;
     std::cerr << " (" << pstate_source_position(calc) << ")";
     std::cerr << std::endl;
-    for (auto asd : calc->arguments()) {
+    for (const auto& asd : calc->arguments()) {
       debug_ast(asd, ind + "  ");
     }
   }
@@ -1358,6 +1380,11 @@ inline void debug_ast(AstNode* node, std::string ind)
   if (ind == "") std::cerr << "####################################################################\n";
 }
 
+inline void debug_ast33(AstNode* node, bool embed_mods)
+{
+  RAII_FLAG(embedding, embed_mods);
+  debug_ast(node);
+}
 
 /*
 inline void debug_ast(const AstNode* node, std::string ind = ""* env = 0)

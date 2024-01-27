@@ -6,6 +6,7 @@
 #include "parser_expression.hpp"
 
 #include "character.hpp"
+#include "compiler.hpp"
 #include "utf8/checked.h"
 #include "ast_values.hpp"
 #include "ast_expressions.hpp"
@@ -17,7 +18,7 @@ namespace Sass {
   using namespace Character;
 
   void ExpressionParser::addOperator(SassOperator op, Offset& start) {
-	  if (parser.plainCss() && op != SassOperator::ASSIGN &&
+	  if (parser.parsingCss() && op != SassOperator::ASSIGN &&
       // These are allowed in calculations, so
       // we have to check them at evaluation time.
       op != SassOperator::ADD &&
@@ -43,8 +44,8 @@ namespace Sass {
     // ToDo: merge into one structure?
 	  operators.emplace_back(op);
     opstates.emplace_back(parser.scanner.relevantSpanFrom(start));
-    bool isSafe = Character::isWhitespace(parser.scanner.peekChar(-2));
-    isSafe &= Character::isWhitespace(parser.scanner.peekChar(0));
+    uint8_t isSafe = Character::isWhitespace(parser.scanner.peekChar(-2)) ? 1 : 0;
+    isSafe |= Character::isWhitespace(parser.scanner.peekChar(0)) ? 2 : 0;
     calcSafe.push_back(isSafe);
 
     // We started parsing with an operator
@@ -93,7 +94,7 @@ namespace Sass {
     singleExpression = parser.readSingleExpression();
   }
 
-  bool _isSlashOperand(Expression* expression) {
+  static bool _isSlashOperand(Expression* expression) {
     if (expression->isaNumberExpression()) return true;
     if (expression->isaFunctionExpression()) return true;
     if (auto* op = expression->isaBinaryOpExpression()) {
@@ -106,7 +107,7 @@ namespace Sass {
   {
     enum SassOperator op = operators.back();
     SourceSpan opstate = opstates.back();
-    bool isCalcSafe = calcSafe.back();
+    uint8_t isCalcSafe = calcSafe.back();
     // auto start(parser.scanner.offset);
     operators.pop_back();
     opstates.pop_back();
@@ -122,18 +123,35 @@ namespace Sass {
 
       singleExpression = SASS_MEMORY_NEW(BinaryOpExpression,
         SourceSpan::delta(left->pstate(), right->pstate()),
-        op, std::move(opstate), left, right, true, isCalcSafe);
+        op, std::move(opstate), left, right, true, isCalcSafe == 3);
 
     }
     else {
-      singleExpression = SASS_MEMORY_NEW(BinaryOpExpression,
-        SourceSpan::delta(left->pstate(), right->pstate()),
-        op, std::move(opstate), left, right, allowSlash = false, isCalcSafe);
-
+      SourceSpan pstate(SourceSpan::delta(left->pstate(), right->pstate()));
       if (op == SassOperator::ADD || op == SassOperator::SUB) {
-        // todo warn for deprecation
+        // Has only space on the left side?
+        // This is considered ambiguous
+        if (isCalcSafe == 1) {
+          sass::string opstr(sass_op_separator(op));
+          sass::string instr = op == SassOperator::ADD ?
+            "the plus sign (+)" : "the minus sign (-)";
+          sass::string text = "This operation is parsed as:\n\n";
+          text += "    " + left + " " + opstr + " " + right + "\n\n";
+          text += "but you may have intended it to mean:\n\n";
+          text += "    " + left + " (" + opstr + right + ")\n\n";
+          text += "Add a space after " + instr + " to clarify that ";
+          text += "it's meant to be a binary operation, or wrap ";
+          text += "it in parentheses to make it a unary operation.";
+          text += "\nThis will be an error in future versions of Sass.\n";
+          text += "\nMore info and automated migrator: https://sass-lang.com/d/strict-unary";
+          CallStackFrame frame(parser.compiler, pstate);
+          parser.compiler.addDeprecation(text,
+            opstate, Logger::WARN_NUMBER_PERCENT);
+        }
       }
-
+      singleExpression = SASS_MEMORY_NEW(BinaryOpExpression,
+        std::move(pstate), op, std::move(opstate), left, right,
+        allowSlash = false, isCalcSafe == 3);
     }
   }
 

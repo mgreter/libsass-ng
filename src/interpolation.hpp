@@ -179,7 +179,7 @@ namespace Sass {
       contents.emplace_back(expression);
     }
 
-    sass::string trailingString()
+    sass::string trailingString() const
     {
       return text.buffer;
     }

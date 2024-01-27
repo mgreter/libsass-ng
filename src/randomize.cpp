@@ -19,7 +19,7 @@ namespace Sass {
 
   // Read a truly random seed
   // This is probably expensive
-  uint32_t readHashSeed()
+  static uint32_t readHashSeed()
   {
     // Our hash seed
     uint32_t seed = 0;
@@ -85,7 +85,7 @@ namespace Sass {
 
   // Random number generator only needed in eval phase
   // This makes it safe to reset the hash seed before
-  std::mt19937& getRng()
+  static std::mt19937& getRng()
   {
     // Lets hope this is indeed thread safe (seed once)
     static std::mt19937 rng(getHashSeed());

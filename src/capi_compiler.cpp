@@ -9,6 +9,9 @@
 #include "compiler.hpp"
 #include "exceptions.hpp"
 
+
+#include "md5.hpp"
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
@@ -99,21 +102,21 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Main implementation (caller is wrapped in try/catch)
-  void _sass_compiler_parse(Compiler& compiler)
+  static void _sass_compiler_parse(Compiler& compiler)
   {
     compiler.parse();
   }
   // EO _sass_compiler_parse
 
   // Main implementation (caller is wrapped in try/catch)
-  void _sass_compiler_compile(Compiler& compiler)
+  static void _sass_compiler_compile(Compiler& compiler)
   {
     compiler.compile();
   }
   // EO _sass_compiler_compile
 
   // Main implementation (caller is wrapped in try/catch)
-  void _sass_compiler_render(Compiler& compiler)
+  static void _sass_compiler_render(Compiler& compiler)
   {
 
     // Bail out if we had any previous errors
@@ -161,7 +164,7 @@ namespace Sass {
   // EO _sass_compiler_render
 
   // Main implementation (caller is wrapped in try/catch)
-  void _sass_compiler_write_output(Compiler& compiler)
+  static void _sass_compiler_write_output(Compiler& compiler)
   {
 
     const char* path = compiler.output_path.c_str();
@@ -224,7 +227,7 @@ namespace Sass {
   // EO _sass_compiler_write_output
 
   // Main implementation (caller is wrapped in try/catch)
-  void _sass_compiler_write_srcmap(Compiler& compiler)
+  static void _sass_compiler_write_srcmap(Compiler& compiler)
   {
     // Write to srcmap only if no errors occurred
     if (compiler.error.status != 0) return;
@@ -245,7 +248,7 @@ namespace Sass {
 
   }
 
-  void _sass_compiler_add_custom_function(Compiler& compiler, struct SassFunction* function)
+  static void _sass_compiler_add_custom_function(Compiler& compiler, struct SassFunction* function)
   {
     compiler.registerCustomFunction(function);
   }
@@ -259,7 +262,7 @@ namespace Sass {
 
   #ifdef _MSC_VER
   // Helper function to filter how to handle exceptions
-  int filter(unsigned int code, struct _EXCEPTION_POINTERS* ep)
+  static int filter(unsigned int code, struct _EXCEPTION_POINTERS* ep)
   {
     // Handle exceptions we can't handle otherwise
     // Because these are not regular C++ exceptions
@@ -280,7 +283,7 @@ namespace Sass {
   }
 
   // Convert exception codes to strings
-  const char* seException(unsigned int code)
+  static const char* seException(unsigned int code)
   {
     switch (code) {
     case EXCEPTION_ACCESS_VIOLATION:         return "EXCEPTION_ACCESS_VIOLATION";
@@ -366,7 +369,7 @@ extern "C" {
   // Release all memory allocated with the compiler
   void ADDCALL sass_delete_compiler(struct SassCompiler* compiler)
   {
-    delete& Compiler::unwrap(compiler);
+    delete &Compiler::unwrap(compiler);
     #ifdef DEBUG_SHARED_PTR
     RefCounted::dumpMemLeaks();
     #endif

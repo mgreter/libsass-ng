@@ -11,11 +11,11 @@
 
 namespace Sass {
 
-  Preloader::Preloader(Eval& eval, Root* root) :
+  Preloader::Preloader(Eval& eval, Stylesheet* root) :
     eval(eval),
     root(root),
     compiler(eval.compiler),
-    modctx(eval.modctx42),
+    modctx21(eval._stylesheet),
     wconfig(eval.wconfig),
     idxs(root->idxs)
   {}
@@ -28,11 +28,26 @@ namespace Sass {
     acceptRoot(root);
   }
 
-  void Preloader::acceptRoot(Root* sheet)
+  void Preloader::acceptRoot(Stylesheet* sheet)
   {
     if (sheet && !sheet->empty()) {
-      RAII_MODULE(modules, root);
-      RAII_PTR(Root, modctx, sheet);
+      //RAII_MODULE(modules, root);
+//StylesheetObj asd = sheet;
+// No idea why this is required!?
+      RAII_PTR(Stylesheet, modctx21, sheet);
+      RAII_PTR(EnvRefs, idxs, sheet->idxs);
+      ImportStackFrame isf(compiler, sheet->import);
+      compiler.varRoot.stack.push_back(sheet->idxs);
+      for (auto& it : sheet->elements()) it->accept(this);
+      compiler.varRoot.stack.pop_back();
+    }
+  }
+
+  void Preloader::acceptImport(Stylesheet* sheet)
+  {
+    if (sheet && !sheet->empty()) {
+      //RAII_MODULE(modules, root);
+      //RAII_PTR(Stylesheet, modctx21, sheet);
       RAII_PTR(EnvRefs, idxs, sheet->idxs);
       ImportStackFrame isf(compiler, sheet->import);
       compiler.varRoot.stack.push_back(sheet->idxs);
@@ -52,27 +67,32 @@ namespace Sass {
 
   void Preloader::visitUseRule(UseRule* rule)
   {
-    callStackFrame frame(compiler, {
+    CallStackFrame frame(compiler, {
       rule->pstate(), Strings::useRule });
-    acceptRoot(eval.loadModRule(rule));
-    eval.exposeUseRule(rule);
+    auto sheet = eval.loadModRule(rule);
+    // modctx->upstream77.push_back(sheet);
+    acceptRoot(sheet);
+    // eval.exposeUseRule(rule);
   }
 
   void Preloader::visitForwardRule(ForwardRule* rule)
   {
-    callStackFrame frame(compiler, {
+    CallStackFrame frame(compiler, {
       rule->pstate(), Strings::forwardRule });
-    acceptRoot(eval.loadModRule(rule));
-    eval.exposeFwdRule(rule);
+    auto sheet = eval.loadModRule(rule);
+    // modctx->upstream77.push_back(sheet);
+    acceptRoot(sheet);
+    // eval.exposeFwdRule(rule);
   }
 
   void Preloader::visitIncludeImport(IncludeImport* rule)
   {
-    callStackFrame frame(compiler, {
+    CallStackFrame frame(compiler, {
       rule->pstate(), Strings::importRule });
     // We could demux glob-stars here
     acceptRoot(eval.resolveIncludeImport(rule));
-    eval.exposeImpRule(rule);
+   //eval.exposeImpRule1(rule);
+    // debug_ast(rule);
   }
 
   void Preloader::visitAssignRule(AssignRule* rule)
@@ -173,7 +193,7 @@ namespace Sass {
     RAII_PTR(EnvRefs, idxs, rule->idxs);
     auto& vars(rule->variables());
     for (size_t i = 0; i < vars.size(); i += 1) {
-      idxs->varIdxs.insert({ vars[i], (uint32_t)i });
+      //  idxs->varIdxs.insert({ vars[i], (uint32_t)i });
     }
     compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
@@ -183,7 +203,7 @@ namespace Sass {
   void Preloader::visitForRule(ForRule* rule)
   {
     RAII_PTR(EnvRefs, idxs, rule->idxs);
-    idxs->varIdxs.insert({ rule->varname(), 0 });
+    //idxs->varIdxs.insert({ rule->varname(), 0 });
     compiler.varRoot.stack.push_back(rule->idxs);
     for (auto& it : rule->elements()) it->accept(this);
     compiler.varRoot.stack.pop_back();

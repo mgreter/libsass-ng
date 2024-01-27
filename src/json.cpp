@@ -223,7 +223,7 @@ static int utf8_validate_cz(const char *s)
 /* Validate a null-terminated UTF-8 string. */
 static bool utf8_validate(const char *s)
 {
-  int len;
+  int len = 0;
 
   for (; *s != 0; s += len) {
     len = utf8_validate_cz(s);
@@ -445,7 +445,7 @@ void json_delete(JsonNode *node)
       case JSON_ARRAY:
       case JSON_OBJECT:
       {
-        JsonNode *child, *next;
+        JsonNode *child, *next = nullptr;
         for (child = node->children.head; child != NULL; child = next) {
           next = child->next;
           json_delete(child);
@@ -722,7 +722,7 @@ static bool parse_value(const char **sp, JsonNode **out)
       return false;
 
     default: {
-      double num;
+      double num = 0.0;
       if (parse_number(&s, out ? &num : NULL)) {
         if (out)
           *out = json_mknumber(num);
@@ -838,7 +838,7 @@ bool parse_string(const char **sp, char **out)
 {
   const char *s = *sp;
   SB sb = { 0, 0, 0 };
-  char throwaway_buffer[4];
+  char throwaway_buffer[4]{};
     /* enough space for a UTF-8 character */
   char *b;
 

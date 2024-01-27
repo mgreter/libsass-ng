@@ -43,7 +43,7 @@ namespace Sass {
     // naturally ordered from lowest to highest precedence.
     sass::vector<enum SassOperator> operators;
     sass::vector<SourceSpan> opstates;
-    sass::vector<bool> calcSafe;
+    sass::vector<uint8_t> calcSafe;
 
     // The left-hand sides of [operators]. `operands[n]`
     // is the left-hand side of `operators[n]`.

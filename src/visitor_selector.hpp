@@ -29,6 +29,7 @@ namespace Sass {
     virtual T visitPseudoSelector(PseudoSelector* pseudo) = 0;
     virtual T visitSelectorList(SelectorList* list) = 0;
     virtual T visitTypeSelector(TypeSelector* type) = 0;
+    virtual T visitCssParentSelector(CssParentSelector* type) = 0;
     // The following two types have been optimized out in libsass
     // virtual T visitParentSelector(ParentSelector* parent) = 0;
     // virtual T visitUniversalSelector(UniversalSelector* universal) = 0;

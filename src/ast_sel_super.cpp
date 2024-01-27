@@ -37,7 +37,7 @@ namespace Sass {
   // Returns all pseudo selectors in [compound] that have
   // a selector argument, and that have the given [name].
   /////////////////////////////////////////////////////////////////////////
-  sass::vector<PseudoSelectorObj> _selectorPseudoArgs(
+  static sass::vector<PseudoSelectorObj> _selectorPseudoArgs(
     const CompoundSelector* compound, const sass::string& name, bool isClass = true)
   {
     sass::vector<PseudoSelectorObj> rv;
@@ -59,7 +59,7 @@ namespace Sass {
   // That is, whether [simple1] matches every element that
   // [simple2] matches, as well as possibly additional elements.
   /////////////////////////////////////////////////////////////////////////
-  bool simpleIsSuperselector(
+  static bool simpleIsSuperselector(
     const SimpleSelector* simple1,
     const SimpleSelector* simple2)
   {
@@ -101,7 +101,8 @@ namespace Sass {
   // That is, whether [simple] matches every element that
   // [compound] matches, as well as possibly additional elements.
   /////////////////////////////////////////////////////////////////////////
-  bool simpleIsSuperselectorOfCompound(
+  /*
+  static bool simpleIsSuperselectorOfCompound(
     const SimpleSelector* simple,
     const CompoundSelector* compound)
   {
@@ -112,11 +113,12 @@ namespace Sass {
     }
     return false;
   }
+  */
   // EO simpleIsSuperselectorOfCompound
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-  bool typeIsSuperselectorOfCompound(
+  static bool typeIsSuperselectorOfCompound(
     const TypeSelector* type,
     const CompoundSelector* compound)
   {
@@ -131,7 +133,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-  bool idIsSuperselectorOfCompound(
+  static bool idIsSuperselectorOfCompound(
     const IDSelector* id,
     const CompoundSelector* compound)
   {
@@ -146,7 +148,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-  bool pseudoIsSuperselectorOfPseudo(
+  static bool pseudoIsSuperselectorOfPseudo(
     const PseudoSelector* pseudo1,
     const PseudoSelector* pseudo2,
     const ComplexSelectorObj& parent
@@ -163,7 +165,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-  bool pseudoNotIsSuperselectorOfCompound(
+  static bool pseudoNotIsSuperselectorOfCompound(
     const PseudoSelector* pseudo1,
     const CompoundSelector* compound2,
     const ComplexSelectorObj& parent)
@@ -196,7 +198,7 @@ namespace Sass {
   // selectors with selector arguments, where we may need to know if the
   // parent selectors in the selector argument match [parents].
   /////////////////////////////////////////////////////////////////////////
-  bool _selectorPseudoIsSuperselector(
+  static bool _selectorPseudoIsSuperselector(
     const PseudoSelector* pseudo1,
     const CompoundSelector* compound2,
     // ToDo: is this really the most convenient way to do this?
@@ -204,7 +206,7 @@ namespace Sass {
     CplxSelComponentVector::const_iterator parents_to)
   {
 
-    auto selector1 = pseudo1->selector();
+    const auto& selector1 = pseudo1->selector();
 
     if (selector1 == nullptr) {
       throw ("Selector $pseudo1 must have a selector argument.");
@@ -218,13 +220,13 @@ namespace Sass {
       sass::vector<PseudoSelectorObj> pseudos =
         _selectorPseudoArgs(compound2, pseudo1->name());
 
-      for (auto selector2 : pseudos) {
+      for (auto& selector2 : pseudos) {
         if (selector1->isSuperselectorOf(selector2->selector())) {
           // std::cerr << ("---- true1\n");
           return true;
         }
       }
-      for (auto complex1 : selector1->elements()) {
+      for (auto& complex1 : selector1->elements()) {
         if (!complex1->leadingCombinators().empty()) continue;
         CplxSelComponentVector parents(parents_from, parents_to);
         parents.push_back(const_cast<CompoundSelector*>(compound2)->wrapInComponent({}));
@@ -292,7 +294,7 @@ namespace Sass {
 
     }
     else if (name == "nth-child" || name == "nth-last-child") {
-      for (auto simple2 : compound2->elements()) {
+      for (auto& simple2 : compound2->elements()) {
         if (const PseudoSelector* pseudo2 = simple2->isaPseudoSelector()) {
           if (pseudo1->name() != pseudo2->name()) continue;
           if (pseudo1->argument() != pseudo2->argument()) continue;
@@ -309,11 +311,11 @@ namespace Sass {
 
   /// If [compound] contains a pseudo-element, returns it and its index in
 /// [compound.components].
-  PseudoSelector* _findPseudoElementIndexed(const CompoundSelector* compound, size_t& n)
+  static PseudoSelector* _findPseudoElementIndexed(const CompoundSelector* compound, size_t& n)
   {
     for (size_t i = 0; i < compound->elements().size(); i++) {
-      auto simple = compound->elements()[i];
-      if (auto pseudo = simple->isaPseudoSelector()) {
+      const auto& simple = compound->elements()[i];
+      if (const auto& pseudo = simple->isaPseudoSelector()) {
         if (pseudo->isElement()) {
           n = i; return pseudo;
         }
@@ -327,7 +329,7 @@ namespace Sass {
 ///
 /// The [compound1] and [compound2] are expected to have efficient
 /// [Iterable.length] fields.
-  bool _compoundComponentsIsSuperselector(
+  static bool _compoundComponentsIsSuperselector(
     sass::vector<SimpleSelectorObj> compound1,
     sass::vector<SimpleSelectorObj> compound2,
     sass::vector<CplxSelComponentObj> parents)
@@ -343,10 +345,9 @@ namespace Sass {
           std::move(ns)));
     }
     auto bogus = SourceSpan::internal("FAKE");
-    return compoundIsSuperselector(
-      new CompoundSelector(bogus, std::move(compound1)),
-      new CompoundSelector(bogus, std::move(compound2)),
-      parents);
+    CompoundSelectorObj lhs(new CompoundSelector(bogus, std::move(compound1)));
+    CompoundSelectorObj rhs(new CompoundSelector(bogus, std::move(compound2)));
+    return compoundIsSuperselector(lhs, rhs, parents);
   }
 
 
@@ -360,59 +361,6 @@ namespace Sass {
   // know if the parent selectors in the selector argument match [parents].
   /////////////////////////////////////////////////////////////////////////
 
-  bool compoundIsSuperselector(
-    const CompoundSelector* compound1,
-    const CompoundSelector* compound2,
-    // ToDo: is this really the most convenient way to do this?
-    const CplxSelComponentVector::const_iterator parents_from,
-    const CplxSelComponentVector::const_iterator parents_to)
-  {
-    /*
-    size_t n1; size_t n2;
-    auto pseudo1 = _findPseudoElementIndexed(compound1, n1);
-    auto pseudo2 = _findPseudoElementIndexed(compound2, n2);
-
-    if (pseudo1 && pseudo2) {
-      pseudo1->isSuperselector
-      // return pseudo1->isSuperselector(pseudo2) &&
-      //   _compoundComponentsIsSuperselector(compound1.components.take(index1),
-      //     compound2.components.take(index2), parents: parents) &&
-      //   _compoundComponentsIsSuperselector(
-      //     compound1.components.skip(index1 + 1),
-      //     compound2.components.skip(index2 + 1),
-      //     parents: parents);
-    }
-    else if (pseudo1 || pseudo2) {
-      return false;
-    }
-    */
-
-    // Every selector in [compound1.components] must have
-    // a matching selector in [compound2.components].
-    for (const SimpleSelector* simple1 : compound1->elements()) {
-      const PseudoSelector* pseudo1 = simple1->isaPseudoSelector();
-      if (pseudo1 && pseudo1->selector()) {
-        if (!_selectorPseudoIsSuperselector(pseudo1, compound2, parents_from, parents_to)) {
-          return false;
-        }
-      }
-      else if (!simpleIsSuperselectorOfCompound(simple1, compound2)) {
-        return false;
-      }
-    }
-    // [compound1] can't be a superselector of a selector
-    // with pseudo-elements that [compound2] doesn't share.
-    for (const SimpleSelector* simple2 : compound2->elements()) {
-      const PseudoSelector* pseudo2 = simple2->isaPseudoSelector();
-      if (pseudo2 && pseudo2->isPseudoElement() && pseudo2->selector() == nullptr) {
-        if (!simpleIsSuperselectorOfCompound(pseudo2, compound1)) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-  // EO compoundIsSuperselector
 
   /////////////////////////////////////////////////////////////////////////
   // Returns whether [compound1] is a superselector of [compound2].
@@ -452,10 +400,10 @@ namespace Sass {
 
     // Every selector in [compound1.components] must have a matching selector in
 // [compound2.components].
-    for (auto simple1 : compound1->elements()) {
+    for (auto& simple1 : compound1->elements()) {
       // std::cerr << "Go check " << simple1->inspect() << "\n";
       // if (simple1 case PseudoSelector(selector: _ ? )) {
-      auto pseudo = simple1->isaPseudoSelector();
+      const auto& pseudo = simple1->isaPseudoSelector();
       if (pseudo && pseudo->selector() != nullptr) {
         // std::cerr << "-- Check another pseudo inner\n";
         if (!_selectorPseudoIsSuperselector(pseudo, compound2,
@@ -495,7 +443,7 @@ namespace Sass {
   }
 
 
-  bool _compatibleWithPreviousCombinator(SelectorCombinator* previous,
+  static bool _compatibleWithPreviousCombinator(SelectorCombinator* previous,
     const CplxSelComponentVector& parents)
   {
     if (parents.empty()) return true;
@@ -510,7 +458,7 @@ namespace Sass {
 
     for (auto& component : parents) {
       if (!component->combinators().empty()) {
-        auto first = component->combinators().front();
+        const auto& first = component->combinators().front();
         if (first->isFollowingSibling()) continue;
         if (first->isNextSibling()) continue;
       }
@@ -523,7 +471,7 @@ namespace Sass {
   /// Returns whether [combinator1] is a supercombinator of [combinator2].
 ///
 /// That is, whether `X combinator1 Y` is a superselector of `X combinator2 Y`.
-  bool _isSupercombinator2(
+  static bool _isSupercombinator2(
     SelectorCombinator* combinator1,
     SelectorCombinator* combinator2)
   {
@@ -541,7 +489,7 @@ namespace Sass {
     return asd->toString();
   }
 
-  bool _isSupercombinator(
+  static bool _isSupercombinator(
     SelectorCombinator* combinator1,
     SelectorCombinator* combinator2)
   {
@@ -608,7 +556,7 @@ namespace Sass {
         return false;
       }
 
-      auto component1 = complex1[i1];
+      const auto& component1 = complex1[i1];
 
       if (component1->combinators().size() > 1) {
         // std::cerr << "invalid combinators\n";
@@ -620,7 +568,7 @@ namespace Sass {
           complex2.begin() + i2,
           complex2.end() - 1);
 
-        for (auto p : parents) {
+        for (auto& p : parents) {
           if (p->combinators().size() > 1) {
             // std::cerr << "invalid parent\n";
             return false;
@@ -645,7 +593,7 @@ namespace Sass {
       CplxSelComponentVector parents; // nullable?
       while (true && endOfSubselector < complex2.size()) {
         // std::cerr << "Get from complex2 size " << complex2.size() << " at " << endOfSubselector << "\n";
-        auto component2 = complex2[endOfSubselector];
+        const auto& component2 = complex2[endOfSubselector];
         if (component2->combinators().size() > 1) return false;
 
         // std::cerr << "+ check comp super2 " <<
@@ -682,7 +630,7 @@ namespace Sass {
         // std::cerr << "End of subselector 2\n";
         break;
       }
-      auto component2 = complex2[endOfSubselector];
+      const auto& component2 = complex2[endOfSubselector];
       auto combinator1 = frontOrNull(component1->combinators());
       auto combinator2 = frontOrNull(component2->combinators());
 
@@ -706,7 +654,7 @@ namespace Sass {
           // *exclusively* contain subcombinators of `~`.
           // bool isEverySuper = true;
           for (size_t i3 = i2; i3 < complex2.size() - 1; i3++) {
-            auto component = complex2[i3];
+            const auto& component = complex2[i3];
             if (!_isSupercombinator(combinator1, component->combinators().front())) {
               // std::cerr << "Not a supercombinator2\n";
               return false;
@@ -771,7 +719,7 @@ namespace Sass {
   // That is, whether an item in [list] matches every element that
   // [complex] matches, as well as possibly additional elements.
   /////////////////////////////////////////////////////////////////////////
-  bool listHasSuperslectorForComplex(
+  static bool listHasSuperslectorForComplex(
     sass::vector<ComplexSelectorObj> list,
     ComplexSelectorObj complex)
   {
@@ -838,13 +786,13 @@ namespace Sass {
     if (auto pseudo = other->isaPseudoSelector()) {
       if (pseudo->isClass()) {
         // std::cerr << ("Test inner pseudo\n");
-        auto list = pseudo->selector();
+        const auto& list = pseudo->selector();
         if (list == nullptr) return false;
 
         if (isSubselectorPseudo(pseudo->normalized())) {
-          for (auto complex : list->elements()) {
+          for (auto& complex : list->elements()) {
             if (complex->empty()) continue;
-            for (auto simple : complex->last()->selector()->elements()) {
+            for (auto& simple : complex->last()->selector()->elements()) {
               if (!isSuperselectorAF(simple)) {
                 return false;
               }
@@ -882,7 +830,7 @@ namespace Sass {
   bool PseudoSelector::isSuperselectorAF(SimpleSelector* other) const
   {
     // std::cerr << ("Pseudo::isSuper\n");
-    auto selector = this->selector();
+    const auto& selector = this->selector();
     if (selector == nullptr) return PtrObjEqualityFn((SimpleSelector*)this, other);
     if (auto pseudo = other->isaPseudoSelector()) {
       if (isElement() &&
@@ -901,7 +849,7 @@ namespace Sass {
   {
     if (SimpleSelector::isSuperselectorAF(other)) return true;
 
-    auto selector = this->selector();
+    const auto& selector = this->selector();
     if (selector == nullptr) return this == other;
     if (other->isaPseudoSelector() &&
       isElement() &&

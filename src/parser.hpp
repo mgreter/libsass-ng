@@ -31,9 +31,9 @@ namespace Sass {
     Compiler& compiler;
 
     // Alias into context
-    Root*& modctx;
+    Stylesheet*& modctx;
 
-    sass::vector<Root*> modules;
+    sass::vector<Stylesheet*> modules;
 
     // Alias into context
     WithConfig*& wconfig;
@@ -107,12 +107,14 @@ namespace Sass {
     virtual void scanLoudComment();
 
     // Consumes and ignores a silent (Sass-style) comment.
-    virtual void scanSilentComment();
+    virtual bool scanSilentComment();
 
     // Consumes a plain CSS identifier. If [unit] is `true`, this 
     // doesn't parse a `-` followed by a digit. This ensures that 
     // `1px-2px` parses as subtraction rather than the unit `px-2px`.
     sass::string readIdentifier(bool unit = false);
+
+    StringToken readIdentifierToken(bool unit = false);
 
     // Consumes a chunk of a plain CSS identifier after the name start.
     sass::string identifierBody();
@@ -185,7 +187,7 @@ namespace Sass {
 
     // Returns whether the scanner is immediately before a sequence
     // of characters that could be part of a plain CSS identifier body.
-    bool lookingAtIdentifierBody();
+    bool lookingAtIdentifierBody() const;
 
     // Consumes an identifier if its name exactly matches [text].
     bool scanIdentifier(const char* text, bool sensitive = false);

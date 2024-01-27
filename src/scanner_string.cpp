@@ -186,18 +186,18 @@ namespace Sass {
 
   // If the string has not been fully consumed,
   // this throws a [FormatException].
-  void StringScanner::expectDone()
+  void StringScanner::expectDone() const
   {
     if (isDone()) return;
     SourceSpan span(rawSpan());
-    callStackFrame frame(logger, span);
+    CallStackFrame frame(logger, span);
     throw Exception::ParserException(
       logger, "expected no more input.");
   }
 
   // Returns whether or not [pattern] matches at the current position
   // of the string. This doesn't move the scan pointer forward.
-  bool StringScanner::matches(const sass::string& pattern)
+  bool StringScanner::matches(const sass::string& pattern) const
   {
     const char* cur = position;
     for (char chr : pattern) {
@@ -212,7 +212,7 @@ namespace Sass {
   // Returns the substring of [string] between [start] and [end].
   // Unlike [String.substring], [end] defaults to [position]
   // rather than the end of the string.
-  sass::string StringScanner::substring(const char* start, const char* end)
+  sass::string StringScanner::substring(const char* start, const char* end) const
   {
     if (end == nullptr) end = position;
     return sass::string(start, end);
@@ -224,7 +224,7 @@ namespace Sass {
     const sass::string& name) const
   {
     SourceSpan span(relevantSpan());
-    callStackFrame frame(logger, span);
+    CallStackFrame frame(logger, span);
     sass::string msg("expected " + name + ".");
     throw Exception::ParserException(logger, msg);
   }
@@ -235,7 +235,7 @@ namespace Sass {
     const BackTraces& traces,
     const SourceSpan& pstate) const
   {
-    callStackFrame frame(logger, pstate);
+    CallStackFrame frame(logger, pstate);
     throw Exception::ParserException(traces, message);
   }
 

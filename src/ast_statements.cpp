@@ -31,7 +31,7 @@ namespace Sass {
   {
     // Populate config map from vector
     // Duplicate entries are overwritten
-    for (auto cfgvar : configs) {
+    for (const WithConfigVar& cfgvar : configs) {
       config[cfgvar.name] = cfgvar;
     }
   }
@@ -39,10 +39,10 @@ namespace Sass {
   void WithConfig::finalize(Logger& logger)
   {
     // Check if everything was consumed
-    for (auto cfgvar : config) {
+    for (const auto& cfgvar : config) {
       if (cfgvar.second.wasAssigned == false) {
         if (cfgvar.second.isGuarded41 == false) {
-          callStackFrame csf(logger, cfgvar.second.pstate);
+          CallStackFrame csf(logger, cfgvar.second.pstate);
           throw Exception::RuntimeException(logger, "$" +
             cfgvar.second.name + " was not declared "
             "with !default in the @used module.");
@@ -74,8 +74,13 @@ namespace Sass {
         // Found an unguarded value
         if (!varcfg->second.isGuarded41) {
           if (!varcfg->second.isNull()) {
+            #ifdef USE_TSL_HOPSCOTCH
+            varcfg.value().wasAssigned = true;
+            return &varcfg.value();
+            #else
             varcfg->second.wasAssigned = true;
             return &varcfg->second;
+            #endif 
           }
         }
       }
@@ -106,8 +111,13 @@ namespace Sass {
       // Then try to find the named item
       auto varcfg = withcfg->config.find(key);
       if (varcfg != withcfg->config.end()) {
+        #ifdef USE_TSL_HOPSCOTCH
+        varcfg.value().wasAssigned = true;
+        if (!guarded) guarded = &varcfg.value();
+        #else
         varcfg->second.wasAssigned = true;
         if (!guarded) guarded = &varcfg->second;
+        #endif
       }
       // Should we apply some prefixes
       if (!withcfg->prefix.empty()) {
@@ -135,7 +145,7 @@ namespace Sass {
     const SourceSpan& pstate,
     StatementVector&& children,
     EnvRefs* idxs) :
-    Statement(std::move(pstate)),
+    Statement(pstate),
     Vectorized<Statement>(std::move(children)),
     Env(idxs)
   {}
@@ -377,6 +387,7 @@ namespace Sass {
   IncludeRule::IncludeRule(
     SourceSpan&& pstate,
     const EnvKey& name,
+    SourceSpan&& span,
     const sass::string& ns,
     CallableArguments* arguments,
     ContentBlock* content) :
@@ -384,6 +395,7 @@ namespace Sass {
     arguments_(arguments),
     ns_(ns),
     name_(name),
+    span_(span),
     content_(content)
   {}
 

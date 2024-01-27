@@ -13,21 +13,23 @@
 #include "ast_selectors.hpp"
 #include "fn_utils.hpp"
 
-#include "debugger.hpp"
-
 namespace Sass {
 
   // Import some namespaces
   using namespace Charcode;
   using namespace Character;
 
-  sass::string PrintNumber(double nr, const OutputOptions& outopt) {
+  sass::string Inspect::PrintNumber(double nr, const OutputOptions& outopt) {
+
 
     // Avoid streams
-    char buf[255];
-    snprintf(buf, 255,
+    char buf[1024];
+
+    snprintf(buf, 1024,
       outopt.nr_sprintf,
       nr);
+
+
 
     // Operate from behind
     char* end = buf;
@@ -109,7 +111,7 @@ namespace Sass {
     // check if char is utf8 character
     auto asd = utf8::internal::sequence_length(it);
     if (asd > 1) {
-      uint32_t code_point;
+      uint32_t code_point = 0;
       /*auto foo =*/ utf8::internal::validate_next(it, end, code_point);
       if (code_point >= 0xE000 && code_point <= 0xF8FF) {
         append_char($backslash);
@@ -227,7 +229,7 @@ namespace Sass {
     append_token("@media", node);
     append_mandatory_space();
     bool joinIt = false;
-    for (auto query : node->queries()) {
+    for (const auto& query : node->queries()) {
       if (joinIt) {
         append_comma_separator();
         append_optional_space();
@@ -243,7 +245,7 @@ namespace Sass {
   {
     SelectorListObj s = node->selector();
 
-    if (!s || s->empty()) return;
+//    if (!s || s->empty()) return;
     if (!node || node->isInvisibleCss()) return;
 
     // if (output_style() == SASS_STYLE_NESTED) {
@@ -533,6 +535,12 @@ namespace Sass {
     write_string(selector->name());
   }
 
+  void Inspect::visitCssParentSelector(CssParentSelector* parent)
+  {
+    flush_schedules();
+    append_token("&", parent);
+  }
+
   void Inspect::visitAttributeSelector(AttributeSelector* attribute)
   {
     append_string("[");
@@ -666,7 +674,7 @@ namespace Sass {
   void Inspect::visitPseudoSelector(PseudoSelector* pseudo)
   {
 
-    if (auto sel = pseudo->selector()) {
+    if (SelectorList* sel = pseudo->selector()) {
       if (pseudo->name() == "not") {
         if (sel->empty()) {
           return;
@@ -697,6 +705,7 @@ namespace Sass {
           visitSelectorList(pseudo->selector());
         }
         in_comma_array = was_comma_array;
+        scheduled_space = 0;
         append_string(")");
       }
     }
@@ -739,6 +748,7 @@ namespace Sass {
     in_comma_array = was_comma_array;
     // probably ruby sass equivalent of element_needs_parens
     if (!in_declaration && in_comma_array) {
+      scheduled_space = 0;
       append_string(")");
     }
   }
@@ -752,7 +762,7 @@ namespace Sass {
 
   // Returns whether [value] needs parentheses as an
   // element in a list with the given [separator].
-  bool _elementNeedsParens(SassSeparator separator, const Value* value) {
+  static bool _elementNeedsParens(SassSeparator separator, const Value* value) {
     if (const List * list = value->isaList()) {
       if (list->size() < 2) return false;
       if (list->hasBrackets()) return false;
@@ -769,7 +779,7 @@ namespace Sass {
     return false;
   }
 
-  sass::string _separatorString(SassSeparator separator, bool compressed) {
+  static sass::string _separatorString(SassSeparator separator, bool compressed) {
     switch (separator) {
     case SASS_SPACE:
       return " ";
@@ -880,7 +890,8 @@ namespace Sass {
     parentheses_opened = true;
     Callable* fn = value->callable();
     // Function names are safe to quote!
-    append_token("\""+ fn->name() + "\"", fn);
+    if (fn == nullptr) append_string("NULL");
+    else append_token("\""+ fn->name() + "\"", fn);;
     append_string(")");
   }
 
@@ -892,7 +903,7 @@ namespace Sass {
     append_token(value->value() ? "true" : "false", value);
   }
 
-  bool is_hex_doublet(double n)
+  static bool is_hex_doublet(double n)
   {
     return n == 0x00 || n == 0x11 || n == 0x22 || n == 0x33 ||
       n == 0x44 || n == 0x55 || n == 0x66 || n == 0x77 ||
@@ -900,7 +911,7 @@ namespace Sass {
       n == 0xCC || n == 0xDD || n == 0xEE || n == 0xFF;
   }
 
-  bool is_color_doublet(double r, double g, double b)
+  static bool is_color_doublet(double r, double g, double b)
   {
     return is_hex_doublet(r) && is_hex_doublet(g) && is_hex_doublet(b);
   }
@@ -914,7 +925,7 @@ namespace Sass {
     if (color->parsed() && !color->isaColorHwba()) { //&& color->a() < 1
 
       if (color->disp().empty()) {
-        double epsilon = std::pow(0.1, outopt.precision);
+        // double epsilon = std::pow(0.1, outopt.precision);
         if (ColorHsla* hsla = color->isaColorHsla()) {
           if (hsla->a() >= 1) {
             ss << "hsl(";
@@ -1097,12 +1108,11 @@ namespace Sass {
 
   void Inspect::visitCalculation(Calculation* value)
   {
-    // if (output_style() == SASS_STYLE_TO_CSS) return;
     append_string(value->name());
     append_string("(");
     parentheses_opened = true;
     bool first = true;
-    for (auto node : value->arguments()) {
+    for (AstNode* node : value->arguments()) {
       if (node == nullptr) continue;
       if (!first) {
         append_comma_separator();
@@ -1317,33 +1327,7 @@ namespace Sass {
       return;
     }
 
-    // Avoid streams
-    char buf[255];
-    snprintf(buf, 255,
-      outopt.nr_sprintf,
-      value->value());
-
-    // Operate from behind
-    char* end = buf;
-
-    // Move to last position
-    while (*end != 0) ++end;
-    if (end != buf) end--;
-    // Delete trailing zeros
-    while (*end == '0') {
-      *end = 0;
-      end--;
-    }
-    // Delete trailing decimal separator
-    if (*end == '.') *end = 0;
-
-    // Some final cosmetics
-    if (buf[0] == '-' && buf[1] == '0' && buf[2] == 0) {
-      buf[0] = '0'; buf[1] = 0;
-    }
-
-    // add unit now
-    sass::string res(buf);
+    sass::string res = PrintNumber(value->value(), outopt);
 
     if (true)
     {

@@ -11,7 +11,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Returns whether or not [compound] contains a `::root` selector.
   /////////////////////////////////////////////////////////////////////////
-  bool hasRoot(const CompoundSelector* compound)
+  /*
+  static bool hasRoot(const CompoundSelector* compound)
   {
     for (const SimpleSelector* simple : compound->elements()) {
       if (const PseudoSelector* pseudo = simple->isaPseudoSelector()) {
@@ -22,9 +23,10 @@ namespace Sass {
     }
     return false;
   }
+  */
   // EO hasRoot
 
-  bool hasRootish(const CompoundSelector* compound)
+  static bool hasRootish(const CompoundSelector* compound)
   {
     for (const SimpleSelector* simple : compound->elements()) {
       if (const PseudoSelector* pseudo = simple->isaPseudoSelector()) {
@@ -44,7 +46,7 @@ namespace Sass {
   // Returns whether a [CompoundSelector] may contain only
   // one simple selector of the same type as [simple].
   /////////////////////////////////////////////////////////////////////////
-  bool isUnique(const SimpleSelector* simple)
+  static bool isUnique(const SimpleSelector* simple)
   {
     if (simple->isaIDSelector()) return true;
     if (const PseudoSelector* pseudo = simple->isaPseudoSelector()) {
@@ -59,7 +61,7 @@ namespace Sass {
   // produce a valid combined selector. This is necessary when both
   // selectors contain the same unique simple selector, such as an ID.
   /////////////////////////////////////////////////////////////////////////
-  bool mustUnify(
+  static bool mustUnify(
     const CplxSelComponentVector& complex1,
     const CplxSelComponentVector& complex2)
   {
@@ -94,7 +96,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Helper function used by `weaveParents`
   /////////////////////////////////////////////////////////////////////////
-  bool cmpGroups(
+  static bool cmpGroups(
     const CplxSelComponentVector& group1,
     const CplxSelComponentVector& group2,
     CplxSelComponentVector& select)
@@ -144,9 +146,6 @@ namespace Sass {
     auto q1 = SASS_MEMORY_NEW(ComplexSelector, span, std::move(comp1));
     auto q2 = SASS_MEMORY_NEW(ComplexSelector, span, std::move(comp2));
     auto unified = _unifyComplex({ q2, q1 }, span);
-    for (auto q : unified) {
-      // std::cerr << "_weaveParents => " << q->toString() << "\n";
-    }
     if (unified.size() == 1) {
       select = unified[0]->elements();
     }
@@ -169,7 +168,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Helper function used by `weaveParents`
   /////////////////////////////////////////////////////////////////////////
-  bool cmpChunkForEmptySequence(
+  static bool cmpChunkForEmptySequence(
     const sass::vector<CplxSelComponentVector>& seq,
     const CplxSelComponentVector& group)
   {
@@ -180,7 +179,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Helper function used by `weaveParents`
   /////////////////////////////////////////////////////////////////////////
-  bool cmpChunkForParentSuperselector(
+  static bool cmpChunkForParentSuperselector(
     const sass::vector<CplxSelComponentVector>& seq,
     const CplxSelComponentVector& group)
   {
@@ -240,19 +239,11 @@ namespace Sass {
   // If the first element of [queue] has a `::root`
   // selector, removes and returns that element.
   /////////////////////////////////////////////////////////////////////////
-  CplxSelComponentObj getFirstIfRoot(CplxSelComponentVector& queue) {
-    if (queue.empty()) return {};
-    CplxSelComponent* first = queue.front();
-    if (CompoundSelector* sel = first->selector()) {
-      if (!hasRoot(sel)) return {};
-      queue.erase(queue.begin());
-      return first;
-    }
-    return {};
-  }
+  // static CplxSelComponentObj getFirstIfRoot(CplxSelComponentVector& queue) {
+  // }
   // EO getFirstIfRoot
 
-  CplxSelComponentObj _firstIfRootish(CplxSelComponentVector& queue) {
+  static CplxSelComponentObj _firstIfRootish(CplxSelComponentVector& queue) {
     if (queue.empty()) return {};
     CplxSelComponent* first = queue.front();
     if (CompoundSelector* sel = first->selector()) {
@@ -273,12 +264,12 @@ namespace Sass {
   // contains two adjacent [ComplexSelector]s. For example,
   // `(A B > C D + E ~ > G)` is grouped into `[(A) (B > C) (D + E ~ > G)]`.
   /////////////////////////////////////////////////////////////////////////
-  sass::vector<CplxSelComponentVector> groupSelectors(
+  static sass::vector<CplxSelComponentVector> groupSelectors(
     const CplxSelComponentVector& components)
   {
     sass::vector<CplxSelComponentVector> groups;
     CplxSelComponentVector group;
-    for (auto component : components) {
+    for (const auto& component : components) {
       group.push_back(component);
       if (component->combinators().empty()) {
         groups.emplace_back(std::move(group));
@@ -298,7 +289,8 @@ namespace Sass {
   // If there are no combinators to be merged, returns an empty list.
   // If the combinators can't be merged, returns `null`.
   /////////////////////////////////////////////////////////////////////////
-  bool mergeInitialCombinators(
+  /*
+  static bool mergeInitialCombinators(
     CplxSelComponentVector& components1,
     CplxSelComponentVector& components2,
     CplxSelComponentVector& result)
@@ -334,6 +326,7 @@ namespace Sass {
     return false;
 
   }
+  */
   // EO mergeInitialCombinators
 
 
@@ -373,7 +366,7 @@ namespace Sass {
       hasLineBreak_ || forceLineBreak);
   }
 
-  sass::vector<ComplexSelectorObj> weave(
+  sass::vector<ComplexSelectorObj> weave27(
     const sass::vector<ComplexSelectorObj>& complexes,
     bool forceLineBreak)
   {
@@ -423,15 +416,7 @@ namespace Sass {
 
     if (complexes.empty()) return complexes;
 
-    for (auto qwe : complexes) {
-      for (auto qwe2 : qwe->elements()) {
-        // std::cerr << "weaving [" << qwe2->inspecter() << "]\n";
-      }
-    }
-
     if (complexes.size() == 1) {
-      auto complex = complexes.front();
-      // Force line breaks if required
       return complexes;
     }
 
@@ -447,10 +432,6 @@ namespace Sass {
          // prefix->concatenate(complex);
         }
         continue;
-      }
-
-      for (auto asd : prefixes) {
-        // std::cerr << "weaver : " << asd->inspect() << "\n";
       }
 
       // CplxSelComponentVector parents(complex);
@@ -483,7 +464,7 @@ namespace Sass {
   // EO weave
 
 
-  bool _mergeLeadingCombinators(
+  static bool _mergeLeadingCombinators(
     const SelectorCombinatorVector& combinators1,
     const SelectorCombinatorVector& combinators2,
     SelectorCombinatorVector& result)
@@ -534,12 +515,12 @@ namespace Sass {
   // elements matched by `A X` and all elements matched by `B X`. Some `AB_i`
   // are elided to reduce the size of the output.
   /////////////////////////////////////////////////////////////////////////
-  CompoundSelector* unifyCompound(
+  static CompoundSelector* unifyCompound(
     CompoundSelector* compound1,
     CompoundSelector* compound2)
   {
     auto result = compound2->elements();
-    for (auto simple : compound1->elements()) {
+    for (const auto& simple : compound1->elements()) {
       // std::cerr << "==== unifyCompound [" << simple->inspect() << "][" << compound2->inspect() << "]\n";
       auto unified = simple->unify(result);
       if (unified.empty()) return nullptr;
@@ -551,7 +532,7 @@ namespace Sass {
   }
 
 
-  bool _mergeTrailingCombinators(const SourceSpan& span,
+  static bool _mergeTrailingCombinators(const SourceSpan& span,
     CplxSelComponentVector& components1, CplxSelComponentVector& components2,
     sass::vector<sass::vector<CplxSelComponentVector>>& result)
   {
@@ -568,8 +549,8 @@ namespace Sass {
     if (combinators1.empty() && combinators2.empty()) return true;
     if (combinators1.size() > 1 || combinators2.size() > 1) return false;
 
-    auto first1 = combinators1.empty() ? nullptr : combinators1.front();
-    auto first2 = combinators2.empty() ? nullptr : combinators2.front();
+    const auto& first1 = combinators1.empty() ? nullptr : combinators1.front();
+    const auto& first2 = combinators2.empty() ? nullptr : combinators2.front();
 
     // if (first1 == nullptr) std::cerr << " first1 null\n";
     // else std::cerr << " first1 " << first1->toString() << "\n";
@@ -579,8 +560,8 @@ namespace Sass {
     if (first1 != nullptr && first2 != nullptr)
     {
       if (first1->isFollowingSibling() && first2->isFollowingSibling()) {
-        auto component1 = components1.back();
-        auto component2 = components2.back();
+        const auto& component1 = components1.back();
+        const auto& component2 = components2.back();
         components1.pop_back(); // consumed
         components2.pop_back(); // consumed
         if (component1->selector()->isSuperselectorOf(component2->selector())) {
@@ -603,8 +584,8 @@ namespace Sass {
         // std::cerr << "Merge case 1\n";
       }
       else if (first1->isFollowingSibling() && first2->isNextSibling()) {
-        auto next = components2.back();
-        auto following = components1.back();
+        const auto& next = components2.back();
+        const auto& following = components1.back();
         components1.pop_back(); // consumed
         components2.pop_back(); // consumed
 
@@ -630,8 +611,8 @@ namespace Sass {
         // std::cerr << "Merge case 2a\n";
       }
       else if (first1->isNextSibling() && first2->isFollowingSibling()) {
-        auto next = components1.back();
-        auto following = components2.back();
+        const auto& next = components1.back();
+        const auto& following = components2.back();
         components1.pop_back(); // consumed
         components2.pop_back(); // consumed
 
@@ -668,10 +649,10 @@ namespace Sass {
       }
       else if (first1->combinator() == first2->combinator()) {
 
-        auto lst1 = components1.back();
+        const auto& lst1 = components1.back();
         components1.pop_back();
 
-        auto lst2 = components2.back();
+        const auto& lst2 = components2.back();
         components2.pop_back();
 
         auto unified = unifyCompound(
@@ -698,7 +679,7 @@ namespace Sass {
       //std::cerr << "combinatorComponents " << combinatorComponents->inspecter() << "\n";
 
       if (first1->isChild()) {
-        if (descendantComponents > 0 && descendantComponents->selector()->isSuperselectorOf(combinatorComponents->selector())) {
+        if (descendantComponents && descendantComponents->selector()->isSuperselectorOf(combinatorComponents->selector())) {
           components2.pop_back();
         }
       }
@@ -711,7 +692,7 @@ namespace Sass {
       auto descendantComponents = backOrNull(components1);
       auto combinatorComponents = backOrNull(components2);
       if (first2->isChild()) {
-        if (descendantComponents > 0 && descendantComponents->selector()->isSuperselectorOf(combinatorComponents->selector())) {
+        if (descendantComponents && descendantComponents->selector()->isSuperselectorOf(combinatorComponents->selector())) {
           components1.pop_back();
         }
       }
@@ -721,13 +702,6 @@ namespace Sass {
     }
     else {
       return false;
-    }
-
-    for (auto f1 : components1) {
-      // std::cerr << "final trail merge 1 " << f1->inspecter() << "\n";
-    }
-    for (auto f2 : components2) {
-      // std::cerr << "final trail merge 2 " << f2->inspecter() << "\n";
     }
 
     return _mergeTrailingCombinators(span, components1, components2, result);;
@@ -929,8 +903,6 @@ namespace Sass {
     // _mergeLeadingCombinators must report success or not
     if (rs1 == false) return {};
 
-    // for (SelectorCombinator* asd : lead) { std::cerr << "merged lead " << asd->toString() << "\n"; }
-
     if (base->empty()) throw "Need base";
 
     CplxSelComponentVector leads;
@@ -939,46 +911,14 @@ namespace Sass {
     CplxSelComponentVector queue1(prefix->begin(), prefix->end());
     CplxSelComponentVector queue2(base->begin(), base->end() - 1);
 
-    for (auto g1 : queue1) {
-      //std::cerr << "q1: " << g1->inspecter() << "\n";
-    }
-    for (auto g2 : queue2) {
-      //std::cerr << "q2: " << g2->inspecter() << "\n";
-    }
-
-
-    // sass::vector<sass::vector<CplxSelComponentVector>> trails;
-
     sass::vector<sass::vector<CplxSelComponentVector>> trails;
     bool ok = _mergeTrailingCombinators(
       base->pstate(), queue1, queue2, trails);
 
     if (ok == false) return {};
 
-    for (auto g2 : queue2) {
-      //std::cerr << "after q2: " << g2->inspecter() << "\n";
-    }
-
-
     // list comes out in reverse order for performance
     std::reverse(trails.begin(), trails.end());
-
-    for (auto as : trails) {
-      //std::cerr << "---\n";
-      for (auto bs : as) {
-        //std::cerr << "{{{\n";
-        for (auto cs : bs) {
-          //std::cerr << "merged trail " << cs->toString() << "\n";
-        }
-        //std::cerr << "}}}\n";
-      }
-    }
-
-
-    //    std::cerr << "======= OK\n";
-    // if (!mergeInitialCombinators(queue1, queue2, leads)) return {};
-    // if (!mergeFinalCombinators(queue1, queue2, trails)) return {};
-
 
     // Make sure there's at most one `:root` in the output.
     // Note: does not yet do anything in libsass (no root selector)
@@ -1014,27 +954,10 @@ namespace Sass {
     // The main array to store our choices that will be permutated
     sass::vector<sass::vector<CplxSelComponentVector>> choices;
 
-    // append initial combinators
-//    choices.push_back({ std::move(leads) });
-
-    // std::cerr << "---- start lcs\n";
-
-    // std::reverse(groups2.begin(), groups2.end());
-
     sass::vector<CplxSelComponentVector> LCS =
       lcs<CplxSelComponentVector>(groups1, groups2, cmpGroups);
 
-    //std::cerr << "---- got lcs:\n";
-
-    for (auto g2 : LCS) {
-      for (auto g : g2) {
-        //std::cerr << "lcs: " << g->inspecter() << "\n";
-      }
-    }
-
-    //std::cerr << "---- EO lcs: !!!!!!!\n";
-
-    for (auto group : LCS) {
+    for (const auto& group : LCS) {
 
       // Create junks from groups1 and groups2
       sass::vector<sass::vector<CplxSelComponentVector>>
@@ -1057,19 +980,6 @@ namespace Sass {
 
     }
 
-    //// std::cerr << "============================== HERE\n";
-
-    for (auto g1 : groups1) {
-      for (auto g : g1) {
-        //std::cerr << "g1: " << g->inspecter() << "\n";
-      }
-    }
-    for (auto g2 : groups2) {
-      for (auto g : g2) {
-        //std::cerr << "g2: " << g->inspecter() << "\n";
-      }
-    }
-
     // Create junks from groups1 and groups2
     sass::vector<sass::vector<CplxSelComponentVector>>
       chunks = getChunks<CplxSelComponentVector>(
@@ -1087,44 +997,19 @@ namespace Sass {
     choices.erase(std::remove_if(choices.begin(), choices.end(), checkForEmptyChild
       <sass::vector<CplxSelComponentVector>>), choices.end());
 
-    for (auto g2 : choices) {
-      //std::cerr << "---\n";
-      for (auto g3 : g2) {
-        //std::cerr << "[[[\n";
-        for (auto g : g3) {
-          //std::cerr << "- choice: " << g->inspecter() << "\n";
-        }
-        //std::cerr << "]]]\n";
-      }
-    }
-
     auto perm = permutate(choices);
 
-    for (auto g2 : perm) {
-      for (auto g3 : g2) {
-        for (auto g : g3) {
-          //std::cerr << "+ path: " << g->inspecter() << "\n";
-        }
-      }
-    }
-
     sass::vector<ComplexSelectorObj> foobar;
-    for (auto path : perm) {
+    for (const auto& path : perm) {
       CplxSelComponentVector comps;
-      for (auto compis : path) {
-        for (auto compa : compis) {
+      for (const auto& compis : path) {
+        for (const auto& compa : compis) {
           comps.push_back(compa);
         }
       }
       auto cply = SASS_MEMORY_NEW(ComplexSelector, base->pstate(),
         lead, std::move(comps));
       foobar.push_back(cply);
-    }
-
-    // permutate all possible paths through selectors
-    // auto qwe = flattenInner(perm);
-    for (auto g : foobar) {
-      //std::cerr << "flat: " << g->inspect() << "\n";
     }
 
     return foobar;

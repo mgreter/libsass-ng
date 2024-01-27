@@ -18,6 +18,12 @@ namespace Sass {
     AstNode(ptr)
   {}
 
+  bool CssNode::isInvisibleOtherThanBogusCombinators() const
+  {
+    IsCssInvisibleVisitor visitor(false, false);
+    return const_cast<CssNode*>(this)->accept(&visitor);
+  }
+
   bool CssNode::isInvisible() const
   {
     IsCssInvisibleVisitor visitor(true, false);
@@ -45,7 +51,8 @@ namespace Sass {
     CssNodeVector&& children) :
     CssNode(pstate),
     Vectorized(std::move(children)),
-    parent_(parent)
+    parent_(parent),
+    fromPlainCss_(false)
   {}
   
   CssParentNode::CssParentNode(
@@ -53,11 +60,13 @@ namespace Sass {
     bool childless) :
     CssNode(ptr),
     Vectorized(ptr, childless),
-    parent_(ptr->parent_)
+    parent_(ptr->parent_),
+    fromPlainCss_(ptr->fromPlainCss_)
   {}
 
   // Adds [node] as a child of the given [parent]. The parent
   // is copied unless it's the latter most child of its parent.
+  // ToDo: clean up the messy logic once it proven to work correct
   void CssParentNode::addChildAt(CssParentNode* child, bool outOfOrder)
   {
     // Check if we have a valid parent
@@ -79,9 +88,39 @@ namespace Sass {
             // dart calls this out to the parent
             const CssNode* sibling = *it;
             if (!sibling->isInvisibleCss()) {
+
+
+              // Second case shouldn't make a copy, since
+              // it is the last child on the parent
+
+              bool lastInGrandParent = false;
+
+              if (parent()->size()) {
+                if (auto grand = parent()->last()->isaCssParentNode()) {
+                  if (grand->equalsIgnoringChildren(this)) {
+                    lastInGrandParent = true;
+                  }
+                }
+              }
+
               // Retain and append copy of parent
-              auto copy = SASS_MEMORY_RESECT(this);
-              parent()->addChildAt(copy, false);
+
+              auto copy = this;
+              if (!lastInGrandParent) {
+                copy = SASS_MEMORY_RESECT(this);
+                parent()->addChildAt(copy, false);
+              }
+              else {
+                const auto& foo = parent()->last();
+                if (auto grand = foo->isaCssParentNode()) {
+                  // std::cerr << "Use last child\n";
+                  copy = grand;
+                }
+                else {
+                  copy = SASS_MEMORY_RESECT(this);
+                  parent()->addChildAt(copy, false);
+                }
+              }
               copy->elements_.push_back(child);
               child->parent(copy);
               return;
@@ -98,7 +137,7 @@ namespace Sass {
 
   bool CssParentNode::isInvisibleCss() const
   {
-    for (auto child : elements()) {
+    for (auto& child : elements()) {
       if (!child->isInvisibleCss()) {
         return false;
       }
@@ -133,6 +172,11 @@ namespace Sass {
       ptr, childless)
   {}
 
+  bool CssRoot::equalsIgnoringChildren(CssNode* other) const
+  {
+    return other->isaCssRoot() != nullptr;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -143,6 +187,11 @@ namespace Sass {
     text_(text)
   {}
 
+  bool CssString::operator==(const CssString & rhs) const
+  {
+    return text_ == rhs.text_;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -152,6 +201,11 @@ namespace Sass {
     AstNode(pstate),
     texts_(std::move(texts))
   {}
+
+  bool CssStringList::operator==(const CssStringList & rhs) const
+  {
+    return texts_ == rhs.texts_;
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -180,6 +234,16 @@ namespace Sass {
     value_(ptr->value_),
     isChildless_(ptr->isChildless_)
   {}
+
+  bool CssAtRule::equalsIgnoringChildren(CssNode * other) const
+  {
+    if (const CssAtRule* rule = other->isaCssAtRule()) {
+      return ObjEqualityFn(name_, rule->name_)
+        && ObjEqualityFn(value_, rule->value_)
+        && isChildless_ == rule->isChildless_;
+    }
+    return false;
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -271,6 +335,14 @@ namespace Sass {
     selector_(ptr->selector_)
   {}
 
+  bool CssKeyframeBlock::equalsIgnoringChildren(CssNode * other) const
+  {
+    if (const CssKeyframeBlock* kframe = other->isaCssKeyframeBlock()) {
+      return ObjEqualityFn(selector_, kframe->selector_);
+    }
+    return false;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -310,6 +382,14 @@ namespace Sass {
     return true;
   }
 
+  bool CssStyleRule::equalsIgnoringChildren(CssNode* other) const
+  {
+    if (const CssStyleRule* rule = other->isaCssStyleRule()) {
+      return ObjEqualityFn(selector_, rule->selector_);
+    }
+    return false;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -332,6 +412,14 @@ namespace Sass {
     condition_(ptr->condition_)
   {}
 
+  bool CssSupportsRule::equalsIgnoringChildren(CssNode * other) const
+  {
+    if (const CssSupportsRule* rule = other->isaCssSupportsRule()) {
+      return ObjEqualityFn(condition_, rule->condition_);
+    }
+    return false;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   // A plain CSS `@media` rule after it has been evaluated.
   /////////////////////////////////////////////////////////////////////////
@@ -340,12 +428,12 @@ namespace Sass {
   CssMediaRule::CssMediaRule(
     const SourceSpan& pstate,
     CssParentNode* parent,
-    const CssMediaQueryVector& queries,
+    CssMediaQueryVector* queries,
     CssNodeVector&& children) :
     CssParentNode(
       pstate, parent,
       std::move(children)),
-    queries_(queries)
+    queries2_(queries)
   {}
 
   // Copy constructor
@@ -354,12 +442,18 @@ namespace Sass {
     bool childless) :
     CssParentNode(
       ptr, childless),
-    queries_(ptr->queries_)
+    queries2_(ptr->queries2_)
   {}
 
   // Used by Extension::assertCompatibleMediaContext
   bool CssMediaRule::operator== (const CssMediaRule& rhs) const {
-    return queries_ == rhs.queries_;
+    return PtrObjEqualityFn<CssMediaQueryVector>(queries2_, rhs.queries2_);
+  }
+  bool CssMediaRule::equalsIgnoringChildren(CssNode* rhs) const
+  {
+    if (const CssMediaRule* other = rhs->isaCssMediaRule())
+      return PtrObjEqualityFn<CssMediaQueryVector>(queries2_, other->queries2_);
+    else return false;
   }
   // EO operator==
 
@@ -456,6 +550,11 @@ namespace Sass {
           return SASS_MEMORY_NEW(CssMediaQuery, pstate(), "");
         }
         // Otherwise we can't merge them
+        // std::cerr << "NOT REPRESENTABLE 2\n";
+        return nullptr;
+      }
+      else if (thisMatchesAll || otherMatchesAll) {
+        // std::cerr << "NOT REPRESENTABLE 3\n";
         return nullptr;
       }
       // We established that types differ

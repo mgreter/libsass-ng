@@ -23,7 +23,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // This should be thread-safe
-  static std::hash<void*> ptrHasher;
+  // static std::hash<void*> ptrHasher;
   static std::hash<bool> boolHasher;
   //static std::hash<double> doubleHasher;
   static std::hash<SassFnSig> fnHasher;
@@ -88,11 +88,11 @@ namespace Sass {
     overloads_(overloads)
   {
     size_t size = 0;
-    for (auto fn : overloads) {
+    for (const SassFnPair& fn : overloads) {
       size = std::max(size,
         fn.first->maxArgs());
     }
-    for (auto fn : overloads) {
+    for (const SassFnPair& fn : overloads) {
       fn.first->maxArgs(size);
     }
   }
@@ -101,7 +101,7 @@ namespace Sass {
   const SassFnPair& BuiltInCallables::callbackFor(
     const ArgumentResults& evaluated)
   {
-    for (SassFnPair& pair : overloads_) {
+    for (const SassFnPair& pair : overloads_) {
       if (pair.first->matches(evaluated)) {
         return pair;
       }
@@ -124,7 +124,7 @@ namespace Sass {
     if (hash_ == 0) {
       hash_start(hash_, typeid(BuiltInCallables).hash_code());
       hash_combine(hash_, stringHasher(envkey_.norm()));
-      for (const auto& pair : overloads_) {
+      for (const SassFnPair& pair : overloads_) {
         hash_combine(hash_, fnHasher(pair.second));
         hash_combine(hash_, pair.first->hash());
       }
@@ -225,8 +225,8 @@ namespace Sass {
     SourceSpan&& pstate,
     sass::vector<ArgumentObj>&& arguments,
     EnvKey&& restArg) :
-    hash_(0), // calc on demand
     AstNode(std::move(pstate)),
+    hash_(0), // calc on demand
     arguments_(std::move(arguments)),
     restArg_(std::move(restArg)),
     maxArgs_(arguments_.size())
@@ -468,7 +468,7 @@ namespace Sass {
     sass::string text(envkey_.orig());
     text += "(";
     bool joiner = false;
-    for (auto arg : arguments->positional()) {
+    for (const Expression* arg : arguments->positional()) {
       if (joiner) text += ", ";
       text += arg->toString();
       joiner = true;

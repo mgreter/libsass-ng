@@ -5,6 +5,8 @@
 
 #include "eval.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
 
 
@@ -18,8 +20,8 @@ namespace Sass {
     // Note: this logic is largely duplicated in
     // _EvaluateVisitor._verifyCompatibleNumbers and most changes here should
     // also be reflected there.
-    for (auto arg : args) {
-      if (Number* nr = dynamic_cast<Number*>(arg.ptr())) {
+    for (const Value* arg : args) {
+      if (const Number* nr = arg->isaNumber()) {
         if (nr->isValidCssUnit() == false) {
           throw Exception::IncompatibleCalcValue(
             logger, *arg, nr->pstate());
@@ -28,9 +30,9 @@ namespace Sass {
     }
 
     for (unsigned int i = 0; i < args.size() - 1; i++) {
-      if (Number* nr1 = dynamic_cast<Number*>(args[i].ptr())) {
+      if (const Number* nr1 = args[i]->isaNumber()) {
         for (unsigned int j = i + 1; j < args.size(); j++) {
-          if (Number* nr2 = dynamic_cast<Number*>(args[j].ptr())) {
+          if (const Number* nr2 = args[j].ptr()->isaNumber()) {
             // if (number1.hasPossiblyCompatibleUnits(number2)) continue;
             if (nr1->hasPossiblyCompatibleUnits(nr2, strict)) continue;
             throw Exception::UnitMismatch(logger, nr1, nr2);
@@ -44,8 +46,8 @@ namespace Sass {
     // Note: this logic is largely duplicated in
     // _EvaluateVisitor._verifyCompatibleNumbers and most changes here should
     // also be reflected there.
-    for (auto arg : args) {
-      if (Number* nr = dynamic_cast<Number*>(arg)) {
+    for (AstNode* arg : args) {
+      if (const Number* nr = dynamic_cast<Number*>(arg)) {
         if (nr->isValidCssUnit() == false) {
           throw Exception::IncompatibleCalcValue(
             logger, *arg, nr->pstate());
@@ -54,9 +56,9 @@ namespace Sass {
     }
 
     for (unsigned int i = 0; i < args.size() - 1; i++) {
-      if (Number* nr1 = dynamic_cast<Number*>(args[i])) {
+      if (const Number* nr1 = dynamic_cast<Number*>(args[i])) {
         for (unsigned int j = i + 1; j < args.size(); j++) {
-          if (Number* nr2 = dynamic_cast<Number*>(args[j])) {
+          if (const Number* nr2 = dynamic_cast<Number*>(args[j])) {
             // if (number1.hasPossiblyCompatibleUnits(number2)) continue;
             if (nr1->hasPossiblyCompatibleUnits(nr2, strict)) continue;
             throw Exception::UnitMismatch(logger, nr1, nr2);
@@ -138,6 +140,15 @@ namespace Sass {
     auto* number = dynamic_cast<Number*>(simplified.ptr());
     if (number == nullptr) return SASS_MEMORY_NEW(
       Calculation, pstate, str_abs, { simplified });
+    if (number->hasUnit("%")) {
+      logger.addDeprecation(
+        "Passing percentage units to the global abs() function is deprecated.\n"
+        "In the future, this will emit a CSS abs() function to be resolved by the browser.\n"
+        "To preserve current behavior: math.abs(" + number->inspect() + ")\n"
+        "To emit a CSS abs() now: abs(#{" + number->inspect() + "})\n"
+        "More info: https://sass-lang.com/d/abs-percent",
+        number->pstate(), Logger::WARN_ABS_PERCENT);
+    }
     auto result = std::abs(number->value());
     return SASS_MEMORY_NEW(Number, number->pstate(), result, number);
   }
@@ -337,7 +348,8 @@ namespace Sass {
           }
           throw Exception::UnitMismatch(logger, dividend_nr, modulus_nr);
         }
-        NumberObj result = Cast<Number>(dividend_nr->modulo(modulus_nr, logger, pstate));
+        ValueObj rv = dividend_nr->modulo(modulus_nr, logger, pstate);
+        NumberObj result = rv->isaNumber();
         double div = dividend_nr->value(), mod = modulus_nr->value();
         if (std::signbit(div) == std::signbit(mod)) return result.detach();
         if (std::isinf(mod)) return dividend_nr.detach();
@@ -399,7 +411,7 @@ namespace Sass {
   /// This automatically simplifies the calculation, so it may return a
   /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
   /// can determine that the calculation will definitely produce invalid CSS.
-  Value* Calculation32::calc_min(Logger& logger, const SourceSpan& pstate, const ValueVector& args)
+  Value* Calculation32::calc_min(Logger& logger, const SourceSpan& pstate, const ValueVector& args, bool strict)
   {
     if (args.empty()) throw Exception::MustHaveArguments(logger, str_min);
     sass::vector<AstNodeObj> simplified(args.size());
@@ -424,7 +436,7 @@ namespace Sass {
             pstate, str_min, std::move(simplified));
         }
       }
-      Number* nr = val->assertNumber(logger, str_empty);
+      Number* nr = strict ? val->assertNumber(logger, str_empty) : val->isaNumber();
       if (nr == nullptr) {
         _verifyCompatibleNumbers3(logger, pstate, args);
         return SASS_MEMORY_NEW(Calculation,
@@ -455,7 +467,7 @@ namespace Sass {
   /// This automatically simplifies the calculation, so it may return a
   /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
   /// can determine that the calculation will definitely produce invalid CSS.
-  Value* Calculation32::calc_max(Logger& logger, const SourceSpan& pstate, const ValueVector& args)
+  Value* Calculation32::calc_max(Logger& logger, const SourceSpan& pstate, const ValueVector& args, bool strict)
   {
    // std::cerr << "==== Execute max\n";
     if (args.empty()) throw Exception::MustHaveArguments(logger, str_max);
@@ -480,7 +492,7 @@ namespace Sass {
             pstate, str_max, std::move(simplified));
         }
       }
-      Number* nr = val->assertNumber(logger, str_empty);
+      Number* nr = strict ? val->assertNumber(logger, str_empty) : val->isaNumber();
       if (nr == nullptr) {
         _verifyCompatibleNumbers3(logger, pstate, args);
         return SASS_MEMORY_NEW(Calculation,
@@ -702,6 +714,11 @@ namespace Sass {
       _verifyCompatibleNumbers2(logger, pstate, { left, right }, true);
       // std::cerr << "Numbers are verified\n";
 
+      // Implement unary simplification
+      if (rnr && rnr->value() < 0) {
+        rnr->value(rnr->value() * -1);
+        op = op == ADD ? SUB : ADD;
+      }
 
       return SASS_MEMORY_NEW(CalcOperation,
         pstate, op, lhs.ptr(), rhs.ptr());
@@ -907,9 +924,9 @@ namespace Sass {
     AstNodeObj arg_x = x ? x->simplify(logger) : nullptr;
     // _verifyLength(args, 2);
     if (Number* nr_y = Cast<Number>(arg_y)) {
-      if (!nr_y->isValidCssUnit()) throw Exception::IncompatibleCalcValue(logger, *nr_y, y->pstate());
+      if (!nr_y->isValidCssUnit()) throw Exception::IncompatibleCalcValue(logger, *nr_y, nr_y->pstate());
       if (Number* nr_x = Cast<Number>(arg_x)) {
-        if (!nr_x->isValidCssUnit()) throw Exception::IncompatibleCalcValue(logger, *nr_x, x->pstate());
+        if (!nr_x->isValidCssUnit()) throw Exception::IncompatibleCalcValue(logger, *nr_x, nr_x->pstate());
         if (!(unit_percent == nr_y || unit_percent == nr_x)) {
           double factor = nr_x->getUnitConversionFactor(nr_y);
           if (factor != 0) return SASS_MEMORY_NEW(Number, pstate,
@@ -942,7 +959,7 @@ namespace Sass {
       if (auto str_number = dynamic_cast<String*>(arg_0.ptr())) {
         return SASS_MEMORY_NEW(Calculation, node->pstate(), str_round, { str_number });
       }
-      callStackFrame frame(logger, arg_0->pstate());
+      CallStackFrame frame(logger, arg_0->pstate());
       throw Exception::SassScriptException("Single argument " +
         arg_0->toString() + " expected to be simplifiable.",
         logger, arg_0->pstate()
@@ -1042,14 +1059,14 @@ namespace Sass {
             "round", { rest, arg_1, arg_2 });
         }
         else {
-          callStackFrame frame(logger, strategy->pstate());
+          CallStackFrame frame(logger, strategy->pstate());
           throw Exception::SassScriptException(method +
             " must be either nearest, up, down or to-zero.",
             logger, strategy->pstate());
         }
       }
       else if (arguments[0] != nullptr) {
-        callStackFrame frame(logger, arguments[0]->pstate());
+        CallStackFrame frame(logger, arguments[0]->pstate());
         throw Exception::SassScriptException(arguments[0]->toCss() +
           " must be either nearest, up, down or to-zero.",
           logger, arguments[0]->pstate());

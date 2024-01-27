@@ -16,7 +16,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(length)
+      static BUILT_IN_FN(length)
       {
         return SASS_MEMORY_NEW(Number,
           arguments[0]->pstate(),
@@ -25,7 +25,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(nth)
+      static BUILT_IN_FN(nth)
       {
         Value* list = arguments[0];
         Value* index = arguments[1];
@@ -34,7 +34,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(setNth)
+      static BUILT_IN_FN(setNth)
       {
         Value* input = arguments[0];
         Value* index = arguments[1];
@@ -44,7 +44,7 @@ namespace Sass {
             index, compiler, "n");
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (eval.assigne && eval.assigne->ptr() == input && input->refcount < AssignableRefCount) {
+        if (eval.assigne && eval.assigne->ptr() == input && input->refcount < SassAssignableRefCount) {
           if (List* lst = input->isaList()) {
             lst->set(idx, arguments[2]);
             return lst;
@@ -60,7 +60,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(join)
+      static BUILT_IN_FN(join)
       {
         Value* list1 = arguments[0];
         Value* list2 = arguments[1];
@@ -102,7 +102,7 @@ namespace Sass {
         }
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (eval.assigne && eval.assigne->ptr() == list2 && list2->refcount < AssignableRefCount) {
+        if (eval.assigne && eval.assigne->ptr() == list2 && list2->refcount < SassAssignableRefCount) {
           if (List* lst = list2->isaList()) {
             lst->separator(separator);
             lst->hasBrackets(bracketed);
@@ -124,7 +124,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(append)
+      static BUILT_IN_FN(append)
       {
         Value* list = arguments[0]->assertValue(compiler, "list");
         Value* value = arguments[1]->assertValue(compiler, "val");
@@ -150,7 +150,7 @@ namespace Sass {
         }
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (eval.assigne && eval.assigne->ptr() == list && list->refcount < AssignableRefCount) {
+        if (eval.assigne && eval.assigne->ptr() == list && list->refcount < SassAssignableRefCount) {
           if (List* lst = list->isaList()) {
             lst->separator(separator);
             lst->append(value);
@@ -170,7 +170,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(zip)
+      static BUILT_IN_FN(zip)
       {
         size_t shortest = sass::string::npos;
         sass::vector<ValueVector> lists;
@@ -204,7 +204,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(index)
+      static BUILT_IN_FN(index)
       {
         Value* value = arguments[1];
         size_t index = arguments[0]->indexOf(value);
@@ -219,7 +219,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(separator)
+      static BUILT_IN_FN(separator)
       {
         return SASS_MEMORY_NEW(String, arguments[0]->pstate(),
           std::move(arguments[0]->separator() == SASS_COMMA ? "comma" :
@@ -228,7 +228,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(isBracketed)
+      static BUILT_IN_FN(isBracketed)
       {
         return SASS_MEMORY_NEW(Boolean, pstate,
           arguments[0]->hasBrackets());
@@ -236,7 +236,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(slash)
+      static BUILT_IN_FN(slash)
       {
 
         if (arguments[0]->lengthAsList() < 2) {

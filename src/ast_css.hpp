@@ -41,6 +41,8 @@ namespace Sass {
     virtual void accept(CssVisitor<void>* visitor) override = 0;
     virtual bool accept(CssVisitor<bool>* visitor) override = 0;
 
+    bool isInvisibleOtherThanBogusCombinators() const;
+
     virtual bool isInvisible() const;
 
     // Return if node should be printed (to be specialized).
@@ -58,10 +60,15 @@ namespace Sass {
     // void tabs(size_t tabs) const { }
 
     // Declare up-casting methods
+    DECLARE_ISA_CASTER(CssComment);
+    DECLARE_ISA_CASTER(CssImport);
+    DECLARE_ISA_CASTER(CssRoot);
     DECLARE_ISA_CASTER(CssAtRule);
     DECLARE_ISA_CASTER(CssMediaRule);
     DECLARE_ISA_CASTER(CssStyleRule);
+    DECLARE_ISA_CASTER(CssKeyframeBlock);
     DECLARE_ISA_CASTER(CssSupportsRule);
+    DECLARE_ISA_CASTER(CssParentNode);
   };
   // EO CssNode
 
@@ -77,6 +84,7 @@ namespace Sass {
     // This must be a pointer to avoid circular references
     // Means it has a possibility of being a dangling pointer
     ADD_PROPERTY(CssParentNode*, parent);
+    ADD_PROPERTY(bool, fromPlainCss);
 
   public:
 
@@ -111,11 +119,28 @@ namespace Sass {
         parent_->bubbleThrough(stopAtMediaRule) : this;
     }
 
+    // Helper function to bubble through parents
+    CssParentNode* bubbleThroughCss()
+    {
+      return parent_ && (parent_->isaCssStyleRule() || parent_->isaCssRoot()) ?
+        parent_->bubbleThroughCss() : this;
+    }
+
+    /// Returns whether [this] is equal to [other], ignoring their child nodes.
+    virtual bool equalsIgnoringChildren(CssNode* other) const { return this == other; }
+
     // virtual CssNode* produce() const override;
 
 
     // Declare up-casting methods
+    DECLARE_ISA_CASTER(CssRoot);
     DECLARE_ISA_CASTER(CssAtRule);
+    DECLARE_ISA_CASTER(CssMediaRule);
+    DECLARE_ISA_CASTER(CssStyleRule);
+    DECLARE_ISA_CASTER(CssKeyframeBlock);
+    DECLARE_ISA_CASTER(CssSupportsRule);
+    // Define isaCssAtRule up-cast function
+    IMPLEMENT_ISA_CASTER(CssParentNode);
   };
   // EO CssParentNode
 
@@ -138,6 +163,9 @@ namespace Sass {
 
     bool empty() const { return text_.empty(); }
 
+    // Check if two instances are considered equal
+    bool operator== (const CssString& rhs) const;
+
   };
   // EO CssString
 
@@ -157,6 +185,9 @@ namespace Sass {
     CssStringList(
       const SourceSpan& pstate,
       StringVector&& texts);
+
+    // Check if two instances are considered equal
+    bool operator== (const CssStringList& rhs) const;
 
   };
   // EO CssStringList
@@ -182,6 +213,7 @@ namespace Sass {
     bool accept(CssVisitor<bool>* visitor) override final {
       return visitor->visitCssComment(this);
     }
+    IMPLEMENT_ISA_CASTER(CssComment);
   };
   // EO CssComment
 
@@ -254,6 +286,7 @@ namespace Sass {
       return visitor->visitCssImport(this);
     }
 
+    IMPLEMENT_ISA_CASTER(CssImport);
   };
   // EO CssImport
 
@@ -292,9 +325,12 @@ namespace Sass {
     }
 
     CssRoot* copy(SASS_MEMORY_ARGS bool childless) const override final {
-      return SASS_MEMORY_NEW_DBG(CssRoot, this);
+      return SASS_MEMORY_NEW_DBG(CssRoot, this, childless);
     }
 
+    bool equalsIgnoringChildren(CssNode* other) const override final;
+
+    IMPLEMENT_ISA_CASTER(CssRoot);
   };
   // EO CssRoot
 
@@ -350,7 +386,17 @@ namespace Sass {
     }
 
     CssAtRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
-      return SASS_MEMORY_NEW_DBG(CssAtRule, this);
+      return SASS_MEMORY_NEW_DBG(CssAtRule, this, childless);
+    }
+
+    bool equalsIgnoringChildren(CssNode* other) const override final;
+
+    CssAtRule* produce() override final {
+      CssAtRuleObj copy = SASS_MEMORY_NEW(CssAtRule, this, false);
+      for (CssNode* child : elements_) {
+        copy->append(child->produce());
+      }
+      return copy.detach();
     }
 
     // Define isaCssAtRule up-cast function
@@ -395,9 +441,12 @@ namespace Sass {
     }
 
     CssKeyframeBlock* copy(SASS_MEMORY_ARGS bool childless) const override final {
-      return SASS_MEMORY_NEW_DBG(CssKeyframeBlock, this);
+      return SASS_MEMORY_NEW_DBG(CssKeyframeBlock, this, childless);
     }
 
+    bool equalsIgnoringChildren(CssNode* other) const override final;
+
+    IMPLEMENT_ISA_CASTER(CssKeyframeBlock);
   };
   // EO CssKeyframeBlock
 
@@ -410,6 +459,7 @@ namespace Sass {
 
     ADD_CONSTREF(SelectorListObj, selector);
     ADD_CONSTREF(SelectorListObj, original98);
+    // ADD_CONSTREF(bool, fromPlainCss);
 
   public:
 
@@ -446,7 +496,7 @@ namespace Sass {
       }
       return SASS_MEMORY_NEW(CssStyleRule,
         pstate_, parent_,
-        original98_->produce(),
+        original98_ ? original98_->produce() : nullptr,
         std::move(copy));
     }
 
@@ -454,6 +504,8 @@ namespace Sass {
     CssStyleRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(CssStyleRule, this, childless);
     }
+
+    bool equalsIgnoringChildren(CssNode* other) const override final;
 
     // Define isaCssStyleRule up-cast function
     IMPLEMENT_ISA_CASTER(CssStyleRule);
@@ -498,6 +550,8 @@ namespace Sass {
     CssSupportsRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(CssSupportsRule, this, childless);
     }
+
+    bool equalsIgnoringChildren(CssNode* other) const override final;
 
     // Define isaCssSupportsRule up-cast function
     IMPLEMENT_ISA_CASTER(CssSupportsRule);
@@ -577,14 +631,23 @@ namespace Sass {
   private:
 
     // The queries for this rule (this is never empty).
-    ADD_CONSTREF(Vectorized<CssMediaQuery>, queries);
+    ADD_CONSTREF(CssMediaQueryVectorObj, queries2);
+
 
   public:
+
+    CssMediaQueryVector& queries() {
+      return *queries2_;
+    }
+
+    const CssMediaQueryVector& queries() const {
+      return *queries2_;
+    }
 
     // Value constructor
     CssMediaRule(const SourceSpan& pstate,
       CssParentNode* parent,
-      const CssMediaQueryVector& queries,
+      CssMediaQueryVector* queries,
       CssNodeVector&& children = {});
 
     // Copy constructor
@@ -594,7 +657,7 @@ namespace Sass {
 
     // Check if we or any children are invisible
     bool isInvisibleCss() const override final {
-      return queries_.empty() ||
+      return queries2_.isNull() || queries2_->empty() ||
         CssParentNode::isInvisibleCss();
     }
 
@@ -622,6 +685,8 @@ namespace Sass {
     CssMediaRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(CssMediaRule, this, childless);
     }
+
+    bool equalsIgnoringChildren(CssNode* other) const override final;
 
     // Define isaCssMediaRule up-cast function
     IMPLEMENT_ISA_CASTER(CssMediaRule);

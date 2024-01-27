@@ -26,14 +26,14 @@ namespace Sass {
         if (double factor = number->getUnitConversionFactor(radiants)) {
           return number->value() * factor;
         }
-        callStackFrame csf(compiler, number->pstate());
+        CallStackFrame csf(compiler, number->pstate());
         throw Exception::RuntimeException(compiler, "$" + vname +
           ": Expected " + number->inspect() + " to be an angle.");
       }
 
       /*******************************************************************/
 
-      BUILT_IN_FN(round)
+      static BUILT_IN_FN(round)
       {
         Number* number = arguments[0]->assertNumber(compiler, "number");
         return SASS_MEMORY_NEW(Number, pstate,
@@ -43,14 +43,14 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(ceil)
+      static BUILT_IN_FN(ceil)
       {
         Number* number = arguments[0]->assertNumber(compiler, "number");
         return SASS_MEMORY_NEW(Number, pstate,
           std::ceil(number->value()),
           number->unit());
       }
-      BUILT_IN_FN(fnClamp)
+      static BUILT_IN_FN(fnClamp)
       {
 
         Number* min = arguments[0]->assertNumber(compiler, "min");
@@ -74,7 +74,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(floor)
+      static BUILT_IN_FN(floor)
       {
         Number* number = arguments[0]->assertNumber(compiler, "number");
         return SASS_MEMORY_NEW(Number, pstate,
@@ -84,15 +84,24 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(abs)
+      static BUILT_IN_FN(abs)
       {
         Number* number = arguments[0]->assertNumber(compiler, "number");
+        if (number->hasUnit("%")) {
+          compiler.addDeprecation(
+            "Passing percentage units to the global abs() function is deprecated.\n"
+            "In the future, this will emit a CSS abs() function to be resolved by the browser.\n"
+            "To preserve current behavior: math.abs(" + number->inspect() + ")\n"
+            "To emit a CSS abs() now: abs(#{" + number->inspect() + "})\n"
+            "More info: https://sass-lang.com/d/abs-percent",
+            number->pstate(), Logger::WARN_ABS_PERCENT);
+        }
         return SASS_MEMORY_NEW(Number, pstate,
           std::abs(number->value()),
           number->unit());
       }
 
-      BUILT_IN_FN(fnHypot)
+      static BUILT_IN_FN(fnHypot)
       {
         sass::vector<Number*> numbers;
         for (Value* value : arguments[0]->start()) {
@@ -104,8 +113,8 @@ namespace Sass {
             "At least one argument must be passed.");
         }
 
-        auto numeratorUnits = numbers[0]->numerators;
-        auto denominatorUnits = numbers[0]->denominators;
+        // const auto& numeratorUnits = numbers[0]->numerators;
+        // const auto& denominatorUnits = numbers[0]->denominators;
         auto subtotal = 0.0;
         for (size_t i = 0; i < numbers.size(); i++) {
           auto& number = numbers[i];
@@ -131,7 +140,7 @@ namespace Sass {
 
       }
 
-      BUILT_IN_FN(fnLog)
+      static BUILT_IN_FN(fnLog)
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
         if (number->hasUnits()) {
@@ -154,23 +163,27 @@ namespace Sass {
           std::log(number->value()) / std::log(base->value()));
       }
 
-      BUILT_IN_FN(fnDiv)
+      static BUILT_IN_FN(fnDiv)
       {
         Number* number1 = arguments[0]->isaNumber();
         Number* number2 = arguments[1]->isaNumber();
 
-        if (number1 == nullptr || number2 == nullptr) {
-          // callStackFrame csf(compiler, arguments[0]->pstate());
+        if (number1 == nullptr) {
+          // CallStackFrame csf(compiler, arguments[0]->pstate());
           compiler.printWarning("math.div() will only support number arguments in a future release.\n"
-            "Use list.slash() instead for a slash separator.", pstate, Logger::WARN_MATH_DIV);
+            "Use list.slash() instead for a slash separator.", arguments[0]->pstate(), Logger::WARN_MATH_DIV);
           // compiler.addWarning();
          }
+        else if (number2 == nullptr) {
+          compiler.printWarning("math.div() will only support number arguments in a future release.\n"
+            "Use list.slash() instead for a slash separator.", arguments[1]->pstate(), Logger::WARN_MATH_DIV);
+        }
 
         return arguments[0]->dividedBy(arguments[1], compiler, pstate);
 
       }
 
-      BUILT_IN_FN(fnPow)
+      static BUILT_IN_FN(fnPow)
       {
 
         auto base = arguments[0]->assertNumber(compiler, "base");
@@ -194,7 +207,7 @@ namespace Sass {
 
       }
 
-      BUILT_IN_FN(fnSqrt)
+      static BUILT_IN_FN(fnSqrt)
       {
         auto number = arguments[0]->assertNumber(compiler, "number");
         if (number->hasUnits()) {
@@ -208,13 +221,13 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(max)
+      static BUILT_IN_FN(max)
       {
         ValueVector foobar;
         for (Value* value : arguments[0]->start()) {
           foobar.push_back(value);
         }
-        return Calculation32::calc_max(compiler, pstate, foobar);
+        return Calculation32::calc_max(compiler, pstate, foobar, true);
         Number* max = nullptr;
         for (Value* value : arguments[0]->start()) {
           Number* number = value->assertNumber(compiler, "");
@@ -231,13 +244,13 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(min)
+      static BUILT_IN_FN(min)
       {
         ValueVector foobar;
         for (Value* value : arguments[0]->start()) {
           foobar.push_back(value);
         }
-        return Calculation32::calc_min(compiler, pstate, foobar);
+        return Calculation32::calc_min(compiler, pstate, foobar, true);
 
         Number* min = nullptr;
         for (Value* value : arguments[0]->start()) {
@@ -255,7 +268,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(random)
+      static BUILT_IN_FN(random)
       {
         if (arguments[0]->isNull()) {
           return SASS_MEMORY_NEW(Number, pstate,
@@ -275,7 +288,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(unit)
+      static BUILT_IN_FN(unit)
       {
         Number* number = arguments[0]->assertNumber(compiler, "number");
         sass::string copy(number->unit());
@@ -284,7 +297,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(isUnitless)
+      static BUILT_IN_FN(isUnitless)
       {
         Number* number = arguments[0]->assertNumber(compiler, "number");
         return SASS_MEMORY_NEW(Boolean, pstate, !number->hasUnits());
@@ -292,7 +305,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(percentage)
+      static BUILT_IN_FN(percentage)
       {
         Number* number = arguments[0]->assertNumber(compiler, "number");
         number->assertUnitless(compiler, "number");
@@ -302,7 +315,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(compatible)
+      static BUILT_IN_FN(compatible)
       {
         Number* n1 = arguments[0]->assertNumber(compiler, "number1");
         Number* n2 = arguments[1]->assertNumber(compiler, "number2");
@@ -318,7 +331,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnCos)
+      static BUILT_IN_FN(fnCos)
       {
         // if (arguments.size() > 1) throw Exception::TooManyArguments(compiler, arguments.size(), 1);
         // else if (arguments.size() < 1) throw Exception::MissingArgument(compiler, str_angle);
@@ -339,7 +352,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnSin)
+      static BUILT_IN_FN(fnSin)
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
@@ -348,7 +361,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnTan)
+      static BUILT_IN_FN(fnTan)
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         // double asymptoteInterval = 0.5 * PI; double tanPeriod = 2.0 * PI;
@@ -358,7 +371,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnACos)
+      static BUILT_IN_FN(fnACos)
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
         if (number->hasUnits()) {
@@ -371,7 +384,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnASin)
+      static BUILT_IN_FN(fnASin)
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
         if (number->hasUnits()) {
@@ -384,7 +397,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnATan)
+      static BUILT_IN_FN(fnATan)
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
         if (number->hasUnits()) {
@@ -397,7 +410,7 @@ namespace Sass {
 
       /*******************************************************************/
 
-      BUILT_IN_FN(fnATan2)
+      static BUILT_IN_FN(fnATan2)
       {
         auto y = arguments[0]->assertNumber(compiler, "y");
         auto x = arguments[1]->assertNumber(compiler, "x");
@@ -438,7 +451,7 @@ namespace Sass {
             std::numeric_limits<double>().epsilon())));
         module.addVariable(key_min_number, ctx.createBuiltInVariable(key_min_number,
           SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
-            std::numeric_limits<double>().min())));
+            std::numeric_limits<double>().denorm_min())));
         module.addVariable(key_max_number, ctx.createBuiltInVariable(key_max_number,
           SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
             std::numeric_limits<double>().max())));

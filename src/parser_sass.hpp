@@ -58,11 +58,11 @@ namespace Sass {
     SassIndentType indentType = SassIndentType::AUTO;
 
     // Some helper function to do the most generic queries
-    bool useTabIndentation() { return indentType == SassIndentType::TABS; }
-    bool useSpaceIndentation() { return indentType == SassIndentType::SPACES; }
+    bool useTabIndentation() const { return indentType == SassIndentType::TABS; }
+    bool useSpaceIndentation() const { return indentType == SassIndentType::SPACES; }
 
     // Whether this is a plain CSS stylesheet.
-    bool plainCss() const override final { return false; }
+    bool parsingCss() const override final { return false; }
 
     // Whether this is parsing the indented syntax.
     bool isIndented() const override final { return true; };

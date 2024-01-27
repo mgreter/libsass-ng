@@ -12,8 +12,9 @@
 namespace Sass {
 
   // Default constructor
-  Logger::Logger(bool colors, bool unicode, int precision, size_t columns) :
-    epsilon(std::pow(0.1, precision + 1)),
+  Logger::Logger(bool colors, bool unicode, int precision, size_t columns, SassOutputStyle style) :
+    OutputOptions(style, precision),
+    // epsilon(std::pow(0.1, precision + 1)),
     columns(columns),
     support_colors(colors),
     support_unicode(unicode)
@@ -55,10 +56,10 @@ namespace Sass {
   // EO setLogColumns
 
   // Precision for numbers to be printed
-  void Logger::setPrecision(int precision)
-  {
-    epsilon = std::pow(0.1, precision + 1);
-  }
+  //void Logger::setPrecision(int precision)
+  //{
+  //  epsilon = std::pow(0.1, precision + 1);
+  //}
   // EO setPrecision
 
   // Write warning header to error stream
@@ -85,31 +86,44 @@ namespace Sass {
 
     size_t current = 0;
     sass::string word;
+    size_t spacing = 0;
 
     while (in >> word) {
       if (current + word.size() > width) {
         os << STRMLF;
+        spacing = 0;
         current = 0;
       }
-      os << word << ' ';
-      current += word.size() + 1;
+      while (spacing > 0) {
+        spacing -= 1;
+        current += 1;
+        os << ' ';
+      }
+      os << word; // << ' ';
+      current += word.size();
       while (Character::isNewline(in.peek())) {
         if (in.peek() == '\n') {
           os << STRMLF;
+          spacing = 0;
           current = 0;
         }
         in.ignore(1);
       }
       // Check if new line starts with white-space
       while (Character::isSpaceOrTab(in.peek())) {
+        spacing += 1;
         in.ignore(1);
-        // Preserve if we have multiple white-space
-        if (Character::isSpaceOrTab(in.peek())) os << ' ';
-        while (Character::isSpaceOrTab(in.peek())) {
-          in.ignore(1);
-          os << ' ';
-        }
       }
+      // Catch case when we have " \n";
+      // Or force coders to be careful!?
+      // while (Character::isNewline(in.peek())) {
+      //   if (in.peek() == '\n') {
+      //     os << STRMLF;
+      //     spacing = 0;
+      //     current = 0;
+      //   }
+      //   in.ignore(1);
+      // }
     }
     if (current != 0) {
       os << STRMLF;
@@ -142,7 +156,7 @@ namespace Sass {
   void Logger::printWarning(const sass::string& message, const SourceSpan& pstate, enum WarningType type, bool deprecation)
   {
 
-    callStackFrame frame(*this, pstate);
+    CallStackFrame frame(*this, pstate);
 
     if (reported[type]) {
       if (type != WARN_RULE) {
@@ -447,7 +461,7 @@ namespace Sass {
 
   // Helper function for `printSourceSpan` to split lines to be printed
   void Logger::splitLine(sass::string line, size_t lhs_len, size_t mid_len,
-    size_t columns, sass::string& lhs, sass::string& mid, sass::string& rhs)
+    size_t columns, sass::string& lhs, sass::string& mid, sass::string& rhs) const
   {
 
     // Get the ellipsis character(s) either in unicode or ASCII
@@ -468,10 +482,12 @@ namespace Sass {
     size_t rhs_len = line_len - lhs_len - mid_len;
 
     // Prepare iterators for left side of highlighted string
-    auto lhs_beg = line.begin(), lhs_end = lhs_beg;
+    sass::string::iterator lhs_beg = line.begin();
+    sass::string::iterator lhs_end = lhs_beg;
     utf8::advance(lhs_end, lhs_len, line_end);
     // Prepare iterators for right side of highlighted string
-    auto rhs_beg = lhs_end, rhs_end = line.end();
+    sass::string::iterator rhs_beg = lhs_end;
+    sass::string::iterator rhs_end = line.end();
     utf8::advance(rhs_beg, mid_len, line_end);
 
     // Create substring of each part
@@ -504,8 +520,10 @@ namespace Sass {
       size_t rhs_size = size_t(std::floor(0.5 * (mid_len - shorten)));
       // Prepare iterators for later substring operation
       auto lhs_start = mid.begin(), rhs_stop = mid.end();
-      auto lhs_stop = lhs_start; utf8::advance(lhs_stop, lhs_size, rhs_stop);
-      auto rhs_start = lhs_stop; utf8::advance(rhs_start, shorten, rhs_stop);
+      sass::string::iterator lhs_stop = lhs_start;
+      utf8::advance(lhs_stop, lhs_size, rhs_stop);
+      sass::string::iterator rhs_start = lhs_stop;
+      utf8::advance(rhs_start, shorten, rhs_stop);
       // Recreate shortened middle (highlight) part
       mid = sass::string(lhs_start, lhs_stop) +
         ellipsis + sass::string(rhs_start, rhs_stop);

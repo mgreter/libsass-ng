@@ -11,8 +11,10 @@
 #include "stylesheet.hpp"
 #include "ast_values.hpp"
 #include "ast_selectors.hpp"
+#include "expr_to_calc.hpp"
 #include "parser_selector.hpp"
 #include "parser_at_root_query.hpp"
+#include "inspect.hpp"
 
 namespace Sass {
 
@@ -46,6 +48,11 @@ namespace Sass {
     text_(text)
   {}
 
+  sass::string ItplString::toString() const
+  {
+    return text_;
+  }
+
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
 
@@ -58,6 +65,13 @@ namespace Sass {
       append(interpolation);
     }
   }
+
+  Interpolation::Interpolation(
+    const SourceSpan& pstate,
+    sass::vector<InterpolantObj>&& itpls) :
+    AstNode(pstate),
+    Vectorized(std::move(itpls))
+  {}
 
   // If this contains no interpolated expressions, returns its text contents.
   const sass::string& Interpolation::getPlainString() const
@@ -96,18 +110,26 @@ namespace Sass {
   sass::string Interpolation::toString() const
   {
     StringVector parts;
-    for (auto& part : elements_) {
-      if (String* str = part->isaString()) {
+    for (const Interpolant* part : elements_) {
+      if (const String* str = part->isaString()) {
         parts.push_back(str->value());
       }
-      else if (ItplString* str = part->isaItplString()) {
+      else if (const ItplString* str = part->isaItplString()) {
         parts.push_back(str->text());
       }
-      else if (Value* str = part->isaValue()) {
+      else if (const Value* str = part->isaValue()) {
         parts.push_back(str->inspect());
       }
-      else if (Expression* ex = part->isaExpression()) {
-        parts.push_back(ex->toString());
+      else if (const Expression* ex = part->isaExpression()) {
+        if (const StringExpression* strex = ex->isaStringExpression()) {
+          parts.push_back("#{" + strex->toString() + "}");
+        }
+        else {
+          parts.push_back(ex->toString());
+        }
+      }
+      else {
+        throw "not implemented";
       }
     }
     return StringUtils::join(parts, "");
@@ -119,6 +141,22 @@ namespace Sass {
   Expression::Expression(SourceSpan&& pstate)
     : Interpolant(std::move(pstate))
   {}
+
+  Expression::Expression(const SourceSpan& pstate)
+    : Interpolant(pstate)
+  {}
+
+  FunctionExpressionObj Expression::toCalc()
+  {
+    static ExpressionToCalc visitor;
+    return SASS_MEMORY_NEW(FunctionExpression, pstate(), "calc", SASS_MEMORY_NEW(
+      CallableArguments, pstate(), { this->accept(&visitor) }, {}), "");
+  }
+
+  sass::string Expression::recommendation() const
+  {
+    return toString();
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -325,7 +363,7 @@ namespace Sass {
   // The SassScript `>` operation.
   bool Value::greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " > " + other->inspect() + "\".",
@@ -336,7 +374,7 @@ namespace Sass {
   // The SassScript `>=` operation.
   bool Value::greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " >= " + other->inspect() + "\".",
@@ -347,7 +385,7 @@ namespace Sass {
   // The SassScript `<` operation.
   bool Value::lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " < " + other->inspect() + "\".",
@@ -358,7 +396,7 @@ namespace Sass {
   // The SassScript `<=` operation.
   bool Value::lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " <= " + other->inspect() + "\".",
@@ -369,7 +407,7 @@ namespace Sass {
   // The SassScript `*` operation.
   Value* Value::times(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " * " + other->inspect() + "\".",
@@ -380,7 +418,7 @@ namespace Sass {
   // The SassScript `%` operation.
   Value* Value::modulo(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " % " + other->inspect() + "\".",
@@ -391,7 +429,7 @@ namespace Sass {
   // The SassScript `rem` operation.
   Value* Value::remainder(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    callStackFrame csf(logger, pstate);
+    CallStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(
       "Undefined operation \"" + inspect()
       + " % " + other->inspect() + "\".",
@@ -419,7 +457,7 @@ namespace Sass {
         str->hasQuotes());
     }
     else if (other->isaCalculation()) {
-      callStackFrame csf(logger, pstate);
+      CallStackFrame csf(logger, pstate);
       throw Exception::SassScriptException(
         "Undefined operation \"" + inspect()
         + " + " + other->inspect() + "\".",
@@ -436,7 +474,7 @@ namespace Sass {
   Value* Value::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaCalculation()) {
-      callStackFrame csf(logger, pstate);
+      CallStackFrame csf(logger, pstate);
       throw Exception::SassScriptException(
         "Undefined operation \"" + inspect()
         + " - " + other->inspect() + "\".",
@@ -495,7 +533,7 @@ namespace Sass {
   // Assert and return a color or throws if incompatible
   const Color* Value::assertColor(Logger& logger, const sass::string& name) const
   {
-    callStackFrame csf(logger, pstate());
+    CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a color.",
       logger, pstate(), name);
@@ -504,7 +542,7 @@ namespace Sass {
   // Assert and return a function or throws if incompatible
   Function* Value::assertFunction(Logger& logger, const sass::string& name)
   {
-    callStackFrame csf(logger, pstate());
+    CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a function reference.",
       logger, pstate(), name);
@@ -513,7 +551,7 @@ namespace Sass {
   // Assert and return a map or throws if incompatible
   Map* Value::assertMap(Logger& logger, const sass::string& name)
   {
-    callStackFrame csf(logger, pstate());
+    CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a map.",
       logger, pstate(), name);
@@ -522,7 +560,7 @@ namespace Sass {
   // Assert and return a number or throws if incompatible
   Number* Value::assertNumber(Logger& logger, const sass::string& name)
   {
-    callStackFrame csf(logger, pstate());
+    CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a number.",
       logger, pstate(), name);
@@ -538,7 +576,7 @@ namespace Sass {
   // Assert and return a string or throws if incompatible
   String* Value::assertString(Logger& logger, const sass::string& name)
   {
-    callStackFrame csf(logger, pstate());
+    CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a string.",
       logger, pstate(), name);
@@ -562,7 +600,7 @@ namespace Sass {
   // Assert and return an argument list or throws if incompatible
   ArgumentList* Value::assertArgumentList(Logger& logger, const sass::string& name)
   {
-    callStackFrame csf(logger, pstate());
+    CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not an argument list.",
       logger, pstate(), name);
@@ -571,7 +609,7 @@ namespace Sass {
   // Assert and return a calculation value or throws if incompatible
   Calculation* Value::assertCalculation(Logger& logger, const sass::string& name)
   {
-    callStackFrame csf(logger, pstate());
+    CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a calculation.",
       logger, pstate(), name);
@@ -580,7 +618,7 @@ namespace Sass {
   // Assert and return a mixin value or throws if incompatible
   Mixin* Value::assertMixin(Logger& logger, const sass::string& name)
   {
-    callStackFrame csf(logger, pstate());
+    CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
       inspect() + " is not a mixin reference.",
       logger, pstate(), name);
@@ -590,10 +628,17 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Return normalized index for vector from overflow-able sass index
-  size_t Value::sassIndexToListIndex(Value* sassIndex, Logger& logger, const sass::string& name)
+  size_t Value::sassIndexToListIndex(Value* sassIndex, Logger& logger, const sass::string& name) const
   {
-    long index = sassIndex->assertNumber(logger, name)
-      ->assertInt(logger, name);
+    Number* nr = sassIndex->assertNumber(logger, name);
+    if (nr->hasUnits()) {
+      logger.addDeprecation("$" + name + ": "
+        "Passing a number with unit " + nr->unit2() + " is deprecated.\n"
+        "\nTo preserve current behavior: " + nr->unitSuggestion(name) + "\n"
+        "\nMore info: https://sass-lang.com/d/function-units",
+        nr->pstate(), Logger::WARN_FN_UNITS);
+    }
+    long index = nr->assertInt(logger, name);
     if (index == 0) throw Exception::SassScriptException(
       "List index may not be 0.", logger, sassIndex->pstate(), name);
     size_t size = lengthAsList();
@@ -618,7 +663,7 @@ namespace Sass {
   // (without the `$`). It's used for error reporting.
   SelectorList* Value::assertSelector(Compiler& compiler, const sass::string& name, bool allowParent) const
   {
-    callStackFrame frame(compiler, pstate());
+    CallStackFrame frame(compiler, pstate());
     sass::string text(getSelectorString(compiler, name));
     SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, pstate(), std::move(text));
     SelectorParser parser(compiler, source, allowParent);
@@ -636,7 +681,7 @@ namespace Sass {
   /// (without the `$`). It's used for error reporting.
   CompoundSelector* Value::assertCompoundSelector(Compiler& compiler, const sass::string& name, bool allowParent) const
   {
-    callStackFrame frame(compiler, pstate());
+    CallStackFrame frame(compiler, pstate());
     sass::string text(getSelectorString(compiler, name));
     SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, pstate(), std::move(text));
     SelectorParser parser(compiler, source, allowParent);
@@ -659,9 +704,9 @@ namespace Sass {
       if (list->empty()) return false;
       sass::vector<sass::string> result;
       if (list->separator() == SASS_COMMA) {
-        for (auto complex : list->elements()) {
-          List* cplxLst = complex->isaList();
-          String* cplxStr = complex->isaString();
+        for (const Value* complex : list->elements()) {
+          const List* cplxLst = complex->isaList();
+          const String* cplxStr = complex->isaString();
           if (cplxStr) { result.emplace_back(cplxStr->value()); }
           else if (cplxLst && cplxLst->separator() == SASS_SPACE) {
             sass::string string = complex->getSelectorString(logger);
@@ -675,8 +720,8 @@ namespace Sass {
         return false;
       }
       else {
-        for (auto compound : list->elements()) {
-          String* cmpdStr = compound->isaString();
+        for (const Value* compound : list->elements()) {
+          const String* cmpdStr = compound->isaString();
           if (cmpdStr) result.emplace_back(cmpdStr->value());
           else return false;
         }
@@ -780,29 +825,46 @@ namespace Sass {
 
   AstNode* AstNode::simplify(Logger& logger)
   {
-    callStackFrame frame(logger, pstate());
+    CallStackFrame frame(logger, pstate());
     throw Exception::SassScriptException(logger, pstate(),
       "Unexpected calculation argument " + toString());
   }
 
   sass::string AstNode::toString() const
   {
-    if (auto itpl = dynamic_cast<const Interpolation*>(this)) {
+    if (const Interpolation* itpl = dynamic_cast<const Interpolation*>(this)) {
       return itpl->toString();
     }
-    else if (auto value = dynamic_cast<const Value*>(this)) {
+    else if (const ItplString* itps = dynamic_cast<const ItplString*>(this)) {
+      return itps->toString();
+    }
+    else if (const Value* value = dynamic_cast<const Value*>(this)) {
       return value->inspect();
     }
-    else if (auto expression = dynamic_cast<const Expression*>(this)) {
+    else if (const Expression* expression = dynamic_cast<const Expression*>(this)) {
       return expression->toString();
     }
-    else if (auto selector = dynamic_cast<const Selector*>(this)) {
+    else if (const Selector* selector = dynamic_cast<const Selector*>(this)) {
       return selector->inspect();
     }
-    else if (auto value = dynamic_cast<const CplxSelComponent*>(this)) {
+    else if (const CplxSelComponent* value = dynamic_cast<const CplxSelComponent*>(this)) {
       return value->inspecter();
     }
-    return str_empty;
+    else if (const CssMediaRule* value = dynamic_cast<const CssMediaRule*>(this)) {
+      sass::string txt;
+      for (const CssMediaQuery* query : value->queries()) {
+        for (const auto& f : query->features()) {
+          txt += f + ", ";
+        }
+      }
+      return txt;
+    }
+    else if (const CssStyleRule* style = dynamic_cast<const CssStyleRule*>(this)) {
+      if (style->selector() != nullptr)
+        return style->selector()->toString();
+      else return typeid(*this).name();
+    }
+    return typeid(*this).name();
   }
 
   /////////////////////////////////////////////////////////////////////////

@@ -48,6 +48,8 @@ namespace Sass {
     double _fabs_ = fabs(number - 0.5);
     double _fmod_ = fmod(_fabs_, 1.0);
     return fuzzyEquals(_fmod_, 0.5, epsilon);
+    // double rounded = std::round(number);
+    // return fuzzyEquals(number, rounded, epsilon);
   }
 
   // Rounds [number] to the nearest integer.

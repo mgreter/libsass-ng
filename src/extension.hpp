@@ -11,6 +11,7 @@
 #include "ast_fwd_decl.hpp"
 #include "ast_selectors.hpp"
 #include "backtrace.hpp"
+#include "extender.hpp"
 
 namespace Sass {
 
@@ -38,7 +39,7 @@ namespace Sass {
 
     // The media query context to which this extend is restricted,
     // or `null` if it can apply within any context.
-    CssMediaRuleObj mediaContext;
+    CssMediaQueryVectorObj mediaContext;
 
     // Value constructor
     Extender(
@@ -46,7 +47,7 @@ namespace Sass {
       ComplexSelector* extender,
       size_t specificity,
       bool isOriginal,
-      CssMediaRuleObj media = {}) :
+      CssMediaQueryVector* media = {}) :
       pstate(pstate),
       selector(extender),
       specificity(specificity),
@@ -64,7 +65,7 @@ namespace Sass {
 
     // Asserts that the [mediaContext] for a selector is 
     // compatible with the query context for this extender.
-    void assertCompatibleMediaContext(CssMediaRuleObj mediaContext, BackTraces& traces) const;
+    void assertCompatibleMediaContext(CssMediaQueryVector* mediaContext, BackTraces& traces) const;
 
   };
 
@@ -99,7 +100,7 @@ namespace Sass {
 
     // The media query context to which this extend is restricted,
     // or `null` if it can apply within any context.
-    CssMediaRuleObj mediaContext;
+    CssMediaQueryVectorObj mediaContext;
 
     // Creates a one-off extension that's not intended to be modified over time.
     // If [specificity] isn't passed, it defaults to `extender.maxSpecificity`.
@@ -107,7 +108,7 @@ namespace Sass {
       const SourceSpan& pstate,
       ComplexSelectorObj& extender,
       const SimpleSelectorObj& target,
-      const CssMediaRuleObj& mediaContext = {},
+      CssMediaQueryVector* mediaContext = {},
       bool isOptional = false,
       bool isOriginal = true);
 
@@ -122,9 +123,21 @@ namespace Sass {
 
     // Asserts that the [mediaContext] for a selector is 
     // compatible with the query context for this extender.
-    void assertCompatibleMediaContext(CssMediaRuleObj mediaContext, BackTraces& traces) const;
+    void assertCompatibleMediaContext(CssMediaQueryVector* mediaContext, BackTraces& traces) const;
 
     Extension* withExtender(ComplexSelectorObj& newExtender) const;
+
+
+    // Our imlementation for merged extensions
+    // Simply re-use left with ourselves
+    // Just add optional right hand side
+    ExtensionObj merged;
+
+    bool IsMerged() const { return !merged.isNull(); }
+
+    // ToDo: use iterator?
+    void AddAllTo(ExtSet& list);
+    void EraseAllFrom(ExtSet& list);
 
   };
 

@@ -10,8 +10,6 @@
 #include "ast_selectors.hpp"
 #include "scanner_string.hpp"
 
-#include "debugger.hpp"
-
 namespace Sass {
 
   // Import some namespaces
@@ -61,22 +59,26 @@ namespace Sass {
   SelectorList* SelectorParser::readSelectorList()
   {
     Offset start(scanner.offset);
-    const char* previousLine = scanner.position;
+    // const char* previousLine = scanner.position;
+    size_t previousLine = scanner.offset.line;
     sass::vector<ComplexSelectorObj> items;
-    items.emplace_back(readComplexSelector());
+    items.emplace_back(readComplexSelector(start));
 
     scanWhitespace();
     while (scanner.scanChar($comma)) {
       scanWhitespace();
+      start = scanner.offset;
       uint8_t next = scanner.peekChar();
       if (next == $comma) continue;
       if (scanner.isDone()) break;
 
-      bool lineBreak = scanner.hasLineBreak(previousLine); // ToDo
+      // bool lineBreak = scanner.hasLineBreak(previousLine); // ToDo
+      bool lineBreak = scanner.offset.line != previousLine;
+      if (lineBreak) previousLine = scanner.offset.line;
       //bool lineBreak = scanner.position != previousLine;
       //if (lineBreak) previousLine = scanner.position;
       // std::cerr << "With line break " << lineBreak << "\n";
-      auto sel = readComplexSelector(lineBreak);
+      auto sel = readComplexSelector(start, lineBreak);
       items.emplace_back(sel);
     }
 
@@ -86,12 +88,14 @@ namespace Sass {
   // EO readSelectorList
 
   // Consumes a complex selector.
-  ComplexSelector* SelectorParser::readComplexSelector(bool lineBreak)
+  ComplexSelector* SelectorParser::readComplexSelector(Offset start, bool lineBreak)
   {
+
+    //std::cerr << " complex selector " << scanner.position << "\n";
 
     uint8_t next;
 
-    Offset start(scanner.offset);
+    // Offset start(scanner.offset);
     Offset offset(scanner.offset);
     Offset pcomb(scanner.offset);
     // CplxSelComponentVector complex;
@@ -159,7 +163,7 @@ namespace Sass {
           }
           lastCompound = readCompoundSelector();
           combinators.clear(); // restart them
-          if (scanner.peekChar() == $ampersand) {
+          if (scanner.peekChar() == $ampersand && !plainCss) {
             error(
               "\"&\" may only used at the beginning of a compound selector.",
               scanner.rawSpan());
@@ -176,7 +180,12 @@ namespace Sass {
 
   endOfLoop:
 
-    if (lastCompound != nullptr) {
+    if (!combinators.empty() && plainCss) {
+      error(
+        "expected selector.",
+        scanner.rawSpan());
+    }
+    else if (lastCompound != nullptr) {
       components.push_back(SASS_MEMORY_NEW(CplxSelComponent,
         scanner.rawSpanFrom(offset), // from inner offset
         std::move(combinators), // add postfix combinators
@@ -191,10 +200,11 @@ namespace Sass {
     }
 
     ComplexSelector* selector = SASS_MEMORY_NEW(ComplexSelector,
-      scanner.rawSpanFrom(start),
+      scanner.relevantSpanFrom(start),
       std::move(prefixes),
       std::move(components));
     selector->hasPreLineFeed(lineBreak);
+    selector->hasLineBreak(lineBreak);
 
     // std::cerr << "parsing " << scanner.startpos << "\n";
     // std::cerr << "parsed result => " << selector->inspect() << "\n";
@@ -209,6 +219,7 @@ namespace Sass {
   // Consumes a compound selector.
   CompoundSelector* SelectorParser::readCompoundSelector()
   {
+/*
     // Note: libsass uses a flag on the compound selector to
     // signal that it contains a real parent reference.
     // dart-sass uses ParentSelector with a suffix.
@@ -216,8 +227,24 @@ namespace Sass {
     CompoundSelectorObj compound = SASS_MEMORY_NEW(CompoundSelector,
       scanner.relevantSpan());
 
-    if (scanner.scanChar($ampersand)) {
-      if (!allowParent) {
+    SimpleSelectorObj simple = readSimpleSelector(allowParent);
+    if (!simple.isNull()) compound->append(simple);
+
+    while (isSimpleSelectorStart(scanner.peekChar(), plainCss)) {
+      SimpleSelectorObj simple = readSimpleSelector(plainCss);
+      if (!simple.isNull()) compound->append(simple);
+    }
+    */
+    // Note: libsass uses a flag on the compound selector to
+    // signal that it contains a real parent reference.
+    // dart-sass uses ParentSelector with a suffix.
+    Offset start(scanner.offset);
+    CompoundSelectorObj compound = SASS_MEMORY_NEW(CompoundSelector,
+      scanner.relevantSpan());
+
+    if (!plainCss && scanner.scanChar($ampersand)) {
+      // scanner.readChar();
+  if (!allowParent) {
         error(
           "Parent selectors aren't allowed here.",
           scanner.rawSpanFrom(start));
@@ -236,10 +263,12 @@ namespace Sass {
       if (!simple.isNull()) compound->append(simple);
     }
 
-    while (isSimpleSelectorStart(scanner.peekChar())) {
-      SimpleSelectorObj simple = readSimpleSelector(false);
+    while (isSimpleSelectorStart(scanner.peekChar(), plainCss)) {
+      SimpleSelectorObj simple = readSimpleSelector(plainCss);
       if (!simple.isNull()) compound->append(simple);
     }
+
+
 
     compound->pstate(scanner.rawSpanFrom(start));
     return compound.detach();
@@ -265,8 +294,8 @@ namespace Sass {
     else if (next == $percent)
     {
       PlaceholderSelectorObj selector(readPlaceholderSelector());
-      if (!allowPlaceholder) {
-        error("Placeholder selectors aren't allowed here.",
+      if (plainCss) {
+        error("Placeholder selectors aren't allowed in plain CSS.",
           scanner.rawSpanFrom(start));
       }
       return selector.detach();
@@ -276,12 +305,20 @@ namespace Sass {
     }
     else if (next == $ampersand)
     {
+      if (plainCss) {
+        return readCssParentSelector();
+      }
+      else {
+        // readParentSelector logic is in readCompoundSelector
+        scanner.readChar();
+        // scanWhitespace();
       if (!allowParent) {
         error(
           "Parent selectors aren't allowed here.",
           scanner.rawSpanFrom(start));
       }
       return {};
+    }
     }
     else {
       return readTypeOrUniversalSelector();
@@ -458,7 +495,7 @@ namespace Sass {
     if (element) {
       if (isSelectorPseudoElement(unvendored)) {
         selector = readSelectorList();
-        for (auto complex : selector->elements()) {
+        for (const auto& complex : selector->elements()) {
           complex->chroots(true);
         }
       }
@@ -469,7 +506,7 @@ namespace Sass {
     else if (isSelectorPseudoClass(unvendored)) {
       RAII_FLAG(allowParent, true);
       selector = readSelectorList();
-      for (auto complex : selector->elements()) {
+      for (const auto& complex : selector->elements()) {
         complex->chroots(true);
       }
     }
@@ -608,6 +645,20 @@ namespace Sass {
         std::move(nameOrNamespace), true);
     }
 
+  }
+
+  CssParentSelector* SelectorParser::readCssParentSelector()
+  {
+    Offset start(scanner.offset);
+    scanner.expectChar($ampersand);
+    if (lookingAtIdentifierBody()) {
+      SourceSpan pstate(scanner.relevantSpanFrom(start));
+      // Dart-sass seems to parse it anyway
+      sass::string body(identifierBody());
+      error("Parent selectors can't have suffixes in plain CSS.", pstate);
+    }
+    return SASS_MEMORY_NEW(CssParentSelector,
+      scanner.relevantSpanFrom(start));
   }
   // EO readTypeOrUniversalSelector
 

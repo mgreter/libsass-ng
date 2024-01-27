@@ -10,6 +10,149 @@ namespace Sass {
   // Base class/container for AST nodes that should behave like vectors.
   /////////////////////////////////////////////////////////////////////////
 
+
+
+  template <typename V>
+  class Vectorized2 {
+
+  protected:
+
+    typedef SharedPtr<V> T;
+    typedef Vectorized2 Klass;
+
+    // The main underlying container
+    sass::vector<T> elements_;
+
+    // Hash is only calculated once and afterwards the value
+    // must not be mutated, which is the case with how sass
+    // works, although we must be a bit careful not to alter
+    // any value that has already been added to a set or map.
+    // Must create a copy if you need to alter such an object.
+    mutable size_t hash_ = 0;
+
+  public:
+
+    // Reserve constructor
+    Vectorized2(size_t s = 0)
+    {
+      elements_.reserve(s);
+    }
+
+    // Copy constructor from other Vectorized
+    Vectorized2(const Vectorized2<V>* vec, bool childless = false)
+    {
+      if (!childless) {
+        hash_ = vec->hash_;
+        elements_ = vec->elements_;
+      }
+    }
+
+    // Copy constructor from other base vector
+    Vectorized2(const Vectorized2<V>& vec, bool childless = false)
+    {
+      if (!childless) {
+        hash_ = vec.hash_;
+        elements_ = vec.elements_;
+      }
+    }
+
+    // Copy constructor from other base vector
+    Vectorized2(const sass::vector<T>& vec, bool childless = false)
+    {
+      if (!childless) {
+        elements_ = vec;
+      }
+    }
+
+    // Move constructor from other base Vectorized2
+    Vectorized2(Vectorized2<T>&& vec, bool childless = false)
+    {
+      if (!childless) {
+        hash_ = vec.hash_;
+        elements_ = std::move(vec.elements_);
+      }
+    }
+
+    // Move constructor from other base vector
+    Vectorized2(sass::vector<T>&& vec, bool childless = false)
+    {
+      if (!childless) {
+        elements_ = std::move(vec);
+      }
+    }
+
+    // Copy constructor from other base Vectorized2
+    Vectorized2<V>& operator=(const Vectorized2<V>& other)
+    {
+      this->hash_ = other.hash_;
+      this->elements_ = other.elements_;
+      return *this;
+    }
+
+    // Copy constructor from other base vector
+    Vectorized2<V>& operator=(const sass::vector<T>& other)
+    {
+      this->hash_ = 0;
+      this->elements_ = other;
+      return *this;
+    }
+
+    // Move constructor from other base Vectorized2
+    Vectorized2<V>& operator=(Vectorized2<V>&& other) noexcept
+    {
+      this->hash_ = other.hash_;
+      this->elements_ = std::move(other.elements_);
+      return *this;
+    }
+
+    // Move constructor from other base vector
+    Vectorized2<V>& operator=(sass::vector<T>&& other)
+    {
+      this->hash_ = 0;
+      this->elements_ = std::move(other);
+      return *this;
+    }
+
+    // Some simple method delegations
+    void clear() { return elements_.clear(); }
+    size_t size() const { return elements_.size(); }
+    void reserve(size_t n) { return elements_.reserve(n); }
+    bool empty() const { return elements_.empty(); }
+
+    // Check underlying containers for equality
+    bool operator== (const Vectorized2<V>& rhs) const
+    {
+      // Abort early if sizes do not match
+      if (size() != rhs.size()) return false;
+      // Abort early if hashes exist and don't match
+      if (hash_ && rhs.hash_ && hash_ != rhs.hash_) return false;
+      // Otherwise test each node for object equality in order
+      return std::equal(begin(), end(), rhs.begin(), ObjEqualityFn<T>);
+    }
+
+    // Derive unequal operator from equality check
+    bool operator!= (const Vectorized2<V>& rhs) const
+    {
+      return !(*this == rhs);
+    }
+
+    // Explicitly request all elements as a real sass::vector
+    // You are responsible to make a copy if needed
+    // Note: since this returns the real object, we can't
+    // Note: guarantee that the hash will not get out of sync
+    sass::vector<T>& elements() { hash_ = 0;  return elements_; }
+    const sass::vector<T>& elements() const { return elements_; }
+
+
+    typename sass::vector<T>::iterator end() { return elements_.end(); }
+    typename sass::vector<T>::iterator begin() { return elements_.begin(); }
+    typename sass::vector<T>::const_iterator end() const { return elements_.end(); }
+    typename sass::vector<T>::const_iterator begin() const { return elements_.begin(); }
+
+  };
+
+
+
   template <typename V>
   class Vectorized {
 
@@ -96,7 +239,7 @@ namespace Sass {
     }
 
     // Move constructor from other base Vectorized
-    Vectorized<V>& operator=(Vectorized<V>&& other)
+    Vectorized<V>& operator=(Vectorized<V>&& other) noexcept
     {
       this->hash_ = other.hash_;
       this->elements_ = std::move(other.elements_);
@@ -295,7 +438,7 @@ namespace Sass {
     {
       if (hash_ == 0) {
         hash_start(hash_, typeid(Vectorized<V>).hash_code());
-        for (auto child : elements_) {
+        for (auto& child : elements_) {
           hash_combine(hash_, child->hash());
         }
       }
@@ -306,8 +449,15 @@ namespace Sass {
     typename sass::vector<T>::iterator begin() { return elements_.begin(); }
     typename sass::vector<T>::const_iterator end() const { return elements_.end(); }
     typename sass::vector<T>::const_iterator begin() const { return elements_.begin(); }
-    typename sass::vector<T>::iterator erase(typename sass::vector<T>::iterator el) { return elements_.erase(el); }
-    typename sass::vector<T>::const_iterator erase(typename sass::vector<T>::const_iterator el) { return elements_.erase(el); }
+    typename sass::vector<T>::iterator erase(typename sass::vector<T>::iterator el) { hash_ = 0; return elements_.erase(el); }
+    typename sass::vector<T>::const_iterator erase(typename sass::vector<T>::const_iterator el) { hash_ = 0; return elements_.erase(el); }
+    typename sass::vector<T>::iterator erase(typename sass::vector<T>::iterator beg, typename sass::vector<T>::iterator end) { hash_ = 0; return elements_.erase(beg, end); }
+    typename sass::vector<T>::const_iterator erase(typename sass::vector<T>::const_iterator beg, typename sass::vector<T>::const_iterator end) { hash_ = 0; return elements_.erase(beg, end); }
+    typename sass::vector<T>::iterator insert(typename sass::vector<T>::iterator el, typename sass::vector<T>::iterator beg, typename sass::vector<T>::iterator end) { hash_ = 0; return elements_.insert(beg, end); }
+    typename sass::vector<T>::const_iterator insert(typename sass::vector<T>::iterator el, typename sass::vector<T>::const_iterator beg, typename sass::vector<T>::const_iterator end) { hash_ = 0; return elements_.insert(beg, end); }
+
+    typename sass::vector<T>::iterator prepend(typename sass::vector<T>::iterator from, typename sass::vector<T>::iterator to) { hash_ = 0; return elements_.insert(begin(), from, to); }
+    typename sass::vector<T>::iterator append(typename sass::vector<T>::iterator from, typename sass::vector<T>::iterator to) { hash_ = 0; return elements_.insert(end(), from, to); }
 
   };
 
@@ -393,6 +543,11 @@ namespace Sass {
       return elements_.find(key);
     }
 
+    void insert(typename ordered_map_type::iterator from, typename ordered_map_type::iterator to)
+    {
+      elements_.insert(from, to);
+    }
+
     void insert(std::pair<K, T>&& kv)
     {
       elements_.insert(kv);
@@ -408,7 +563,7 @@ namespace Sass {
       insert(std::make_pair(key, val));
     }
 
-    void insertOrSet(std::pair<K, T>& kv)
+    void insertOrSet(const std::pair<K, T>& kv)
     {
       auto exists = elements_.find(kv.first);
       if (exists == elements_.end()) {
@@ -438,14 +593,14 @@ namespace Sass {
 
     sass::vector<K> keys() const {
       sass::vector<T> list;
-      for (auto kv : elements_) {
+      for (auto& kv : elements_) {
         list.emplace_back(kv.first);
       }
       return list;
     }
     sass::vector<T> values() const {
       sass::vector<T> list;
-      for (auto kv : elements_) {
+      for (auto& kv : elements_) {
         list.emplace_back(kv.second);
       }
       return list;
@@ -455,7 +610,7 @@ namespace Sass {
     {
       if (hash_ == 0) {
         hash_start(hash_, typeid(this).hash_code());
-        for (auto kv : elements_) {
+        for (auto& kv : elements_) {
           hash_combine(hash_, kv.first->hash());
           hash_combine(hash_, kv.second->hash());
         }

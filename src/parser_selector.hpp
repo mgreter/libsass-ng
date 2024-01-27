@@ -22,18 +22,18 @@ namespace Sass {
     // Whether this parser allows the parent selector `&`.
     bool allowParent;
 
-    // Whether this parser allows placeholder selectors beginning with `%`.
-    bool allowPlaceholder;
+    // Whether to parse the selector as plain CSS.
+    bool plainCss;
 
     // Value constructor
     SelectorParser(
       Compiler& context,
       SourceDataObj source,
       bool allowParent = true,
-      bool allowPlaceholder = true) :
+      bool plainCss = false) :
       Parser(context, source),
       allowParent(allowParent),
-      allowPlaceholder(allowPlaceholder)
+      plainCss(plainCss)
     {}
 
     // Parse content into selector list
@@ -54,7 +54,7 @@ namespace Sass {
     SelectorList* readSelectorList();
 
     // Consumes a complex selector.
-    ComplexSelector* readComplexSelector(bool lineBreak = false);
+    ComplexSelector* readComplexSelector(Offset start, bool lineBreak = false);
 
     // Consumes a compound selector.
     CompoundSelector* readCompoundSelector();
@@ -88,6 +88,8 @@ namespace Sass {
 
     // Consumes a type of universal (simple) selector.
     SimpleSelector* readTypeOrUniversalSelector();
+
+    CssParentSelector* readCssParentSelector();
 
   };
 

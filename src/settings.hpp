@@ -109,10 +109,20 @@
 #define SASS_OPTIMIZE_SELF_ASSIGN
 
 // Number of references until we can safely self assign.
-// Set to a zero to practically disable this feature.
-#ifndef AssignableRefCount
-#define AssignableRefCount 3
+// Set it to zero to practically disable this feature.
+// Seems shaky, but gives good improvements and works.
+// Specially helps in tight loops with control vars.
+#ifndef SassAssignableRefCount
+#define SassAssignableRefCount 3
 #endif
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+// When defined we will force to calculate the hash for comparisons
+// If disabled, we check if hashes are there and use them voluntarily
+// Helps if we keep comparing the same items for equality (seen 5%)
+#define SASS_FORCE_CMP_HASH
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////

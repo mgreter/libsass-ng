@@ -31,8 +31,6 @@
 #include "plugins.hpp"
 #include "file.hpp"
 
-#include "debugger.hpp"
-
 #include <cstring>
 #include <csignal>
 #ifdef _MSC_VER
@@ -47,8 +45,8 @@ namespace Sass {
       delete mod.second;
     }
     #ifdef DEBUG_MSVC_CRT_MEM
-    _CrtMemState state;
-    _CrtMemState delta;
+    _CrtMemState state{};
+    _CrtMemState delta{};
     _CrtMemCheckpoint(&state);
     if (_CrtMemDifference(&delta, &memState, &state))
       _CrtMemDumpStatistics(&delta);
@@ -144,7 +142,7 @@ namespace Sass {
   // parse root block from includes (Move to compiler)
   CssRootObj Compiler::compileRoot(bool plainCss)
   {
-    RootObj root = sheet;
+    StylesheetObj root = sheet;
     if (root == nullptr) return {};
 
     #ifdef DEBUG_SHARED_PTR
@@ -159,19 +157,15 @@ namespace Sass {
 
     Eval eval(*this, *this, plainCss);
 
-    // root->extender = SASS_MEMORY_NEW(ExtensionStore, ExtensionStore::NORMAL, eval.logger);
-
     //debug_ast(root);
-
-    CssRootObj compiled = eval.acceptRoot2(root);
+    CssRootObj compiled;
+    {
+      ImportStackFrame iframe(eval.compiler, root->import);
+      eval.visitStylesheet(root);
+      compiled = eval._combineCss(root);
+    }
 
     // debug_ast(compiled, "== ");
-
-    // Extension unsatisfied;
-    // // check that all extends were used
-    // if (root->checkForUnsatisfiedExtends3(unsatisfied)) {
-    //   // throw Exception::UnsatisfiedExtend(*this, unsatisfied);
-    // }
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
@@ -203,7 +197,7 @@ namespace Sass {
   {
     // Create the emitter object
     Output emitter(*this);
-    emitter.reserve(1024 * 1024); // 1MB
+    emitter.reserve(262144); // 256K
     emitter.in_declaration = false;
     // Start the render process
     if (compiled != nullptr) {
@@ -239,7 +233,7 @@ namespace Sass {
   // EO renderSrcMapLink
 
   // Memory returned by this function must be freed by caller via `sass_free_c_string`
-  char* Compiler::renderEmbeddedSrcMap(const SourceMap& source_map)
+  char* Compiler::renderEmbeddedSrcMap(const SourceMap& source_map) const
   {
     // Source map json must already be there
     if (srcmap == nullptr) return nullptr;
@@ -464,7 +458,7 @@ namespace Sass {
               if (import.syntax == SASS_IMPORT_AUTO)
                 import.syntax = SASS_IMPORT_SCSS;
               ImportStackFrame iframe(*this, &import);
-              Root* sheet = registerImport(&import);
+              Stylesheet* sheet = registerImport(&import);
               // Add a dynamic import to the import rule
               auto inc = SASS_MEMORY_NEW(IncludeImport,
                 pstate, ctx_path, path_key, &import);
@@ -502,7 +496,7 @@ namespace Sass {
               // We made sure exactly one entry was found, load its content
               if (ImportObj loaded = loadImport(resolved[0])) {
                 ImportStackFrame iframe(*this, loaded);
-                Root* sheet = registerImport(loaded);
+                Stylesheet* sheet = registerImport(loaded);
                 const sass::string& url(resolved[0].abs_path);
                 auto inc = SASS_MEMORY_NEW(IncludeImport,
                   pstate, ctx_path, url, &import);
@@ -624,7 +618,7 @@ namespace Sass {
     const sass::vector<std::pair<const sass::string, SassFnSig>>& overloads)
   {
     SassFnPairs pairs;
-    for (auto overload : overloads) {
+    for (const auto& overload : overloads) {
       EnvRoot root(*this);
       SourceDataObj source = SASS_MEMORY_NEW(SourceString,
         "sass://signature", "(" + overload.first + ")");
@@ -701,9 +695,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Invoke parser according to import format
-  RootObj Compiler::parseSource(ImportObj import)
+  StylesheetObj Compiler::parseSource(ImportObj import)
   {
-    Root* root = nullptr;
+    Stylesheet* root = nullptr;
     if (import->syntax == SASS_IMPORT_CSS)
     {
       CssParser parser(*this, import->source);
@@ -725,7 +719,7 @@ namespace Sass {
 
   // Parse the import (updates syntax flag if AUTO was set)
   // Results will be stored at `sheets[source->getAbsPath()]`
-  Root* Compiler::registerImport(ImportObj import)
+  Stylesheet* Compiler::registerImport(ImportObj import)
   {
 
     SassImportSyntax& format(import->syntax);
@@ -761,7 +755,7 @@ namespace Sass {
     }
 
     // Invoke correct parser according to format
-    RootObj stylesheet = parseSource(import);
+    StylesheetObj stylesheet = parseSource(import);
 
     // Put the parsed stylesheet into the map
     sheets.insert({ abs_path, stylesheet });
@@ -770,7 +764,7 @@ namespace Sass {
       stylesheet->import = import;
     }
 
-    stylesheet->extender = SASS_MEMORY_NEW(ExtensionStore, ExtensionStore::NORMAL, *this);
+    stylesheet->extender52 = SASS_MEMORY_NEW(ExtensionStore, ExtensionStore::NORMAL, *this);
     // std::cerr << "!! Create import store " << abs_path  << " => " << stylesheet->extender.ptr() << "\n";
 
     // Return pointer, it is already managed
@@ -797,7 +791,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Root* Compiler::parseRoot(ImportObj import)
+  Stylesheet* Compiler::parseRoot(ImportObj import)
   {
 
     // Insert ourself onto the sources cache
@@ -813,7 +807,7 @@ namespace Sass {
 
     // load and register import
     ImportStackFrame iframe(*this, import);
-    Root* sheet = registerImport(import);
+    Stylesheet* sheet = registerImport(import);
 
     #ifdef DEBUG_SHARED_PTR
     // Disable reference tracking
@@ -849,7 +843,7 @@ namespace Sass {
       if (std::strcmp(parent->getAbsPath(), source->getAbsPath()) == 0) {
         // make path relative to the current directory
         sass::string msg("An @import loop has been found:");
-        // callStackFrame frame(compiler, import->pstate());
+        // CallStackFrame frame(compiler, import->pstate());
         for (size_t n = i; n < stack.size() - 1; ++n) {
           msg += "\n    " + sass::string(File::abs2rel(stack[n]->source->getAbsPath(), CWD(), CWD())) +
             " imports " + sass::string(File::abs2rel(stack[n + 1]->source->getAbsPath(), CWD(), CWD()));
@@ -996,7 +990,7 @@ namespace Sass {
   // Update precision and epsilon etc.
   void Compiler::setPrecision(int precision)
   {
-    Logger::setPrecision(precision);
+    // Logger::setPrecision(precision);
     OutputOptions::setPrecision(precision);
   }
 

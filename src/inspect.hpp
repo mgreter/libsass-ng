@@ -27,6 +27,8 @@ namespace Sass {
 
   public:
 
+    static sass::string PrintNumber(double nr, const OutputOptions& outopt);
+
     // Whether quoted strings should be emitted with quotes.
     bool quotes;
 
@@ -44,12 +46,13 @@ namespace Sass {
     void renderQuotedString(const sass::string& text, uint8_t quotes = 0);
     void renderUnquotedString(const sass::string& text);
 
-    bool _tryPrivateUseCharacter(uint8_t chr);
+    // bool _tryPrivateUseCharacter(uint8_t chr);
 
     /////////////////////////////////////////////////////////////////////////
     // Implement Selector Visitors
     /////////////////////////////////////////////////////////////////////////
 
+    virtual void visitCssParentSelector(CssParentSelector* parent) override;
     virtual void visitAttributeSelector(AttributeSelector* sel) override;
     virtual void visitClassSelector(ClassSelector* sel) override;
     virtual void visitComplexSelector(ComplexSelector* sel) override;

@@ -10,35 +10,18 @@
 
 namespace Sass {
 
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  StackTraces convertTraces(BackTraces traces)
-  {
-    // This will trigger StackTrace constructor
-    // Copies necessary stuff from BackTrace
-    return { traces.begin(), traces.end() };
-  }
-
   StringVector getKeyVector(
     const ValueFlatMap& names)
   {
     StringVector keys;
-    for (auto it : names) {
+    for (const auto& it : names) {
       keys.push_back(it.first.orig());
     }
     return keys;
   }
 
-  StringVector getKeyVector(
-    const ExpressionFlatMap& names)
-  {
-    StringVector keys;
-    for (auto it : names) {
-      keys.push_back(it.first.orig());
-    }
-    return keys;
-  }
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   sass::string pluralize(
     const sass::string& singular,
@@ -170,7 +153,7 @@ namespace Sass {
       msg = "Duplicate key."; // dart-sass keeps it simple ...
     }
 
-    sass::string formatMixedParamGroups(const sass::string& first, const StringVector& others)
+    static sass::string formatMixedParamGroups(const sass::string& first, const StringVector& others)
     {
       // RGB HWB
       sass::string msg(first);
@@ -180,7 +163,7 @@ namespace Sass {
       return msg;
     }
 
-    sass::string formatUnknownNamedArgument(const StringVector& names)
+    static sass::string formatUnknownNamedArgument(const StringVector& names)
     {
       sass::string msg("No ");
       msg += pluralize(Strings::argument, names.size());
@@ -190,7 +173,7 @@ namespace Sass {
       return msg;
     }
 
-    sass::string formatTooFewArguments(size_t given, size_t expected) {
+    static sass::string formatTooFewArguments(size_t given, size_t expected) {
       sass::ostream msg;
       msg << expected << " ";
       msg << pluralize("argument", expected);
@@ -200,9 +183,9 @@ namespace Sass {
       return msg.str();
     }
 
-    sass::string formatTooFewArguments(const ExpressionFlatMap& given, const Sass::EnvKeySet& expected) {
+    static sass::string formatTooFewArguments(const ExpressionFlatMap& given, const Sass::EnvKeySet& expected) {
       StringVector superfluous;
-      for (auto pair : given) {
+      for (const auto& pair : given) {
         if (expected.count(pair.first) == 0) {
           superfluous.emplace_back(pair.first.orig());
         }
@@ -211,18 +194,7 @@ namespace Sass {
         toSentence(superfluous, "or", "$") + ".";
     }
 
-    sass::string formatTooFewArguments(const ValueFlatMap& given, const Sass::EnvKeySet& expected) {
-      StringVector superfluous;
-      for (auto pair : given) {
-        if (expected.count(pair.first) == 0) {
-          superfluous.emplace_back(pair.first.orig());
-        }
-      }
-      return "No argument named " +
-        toSentence(superfluous, "or", "$") + ".";
-    }
-
-    sass::string formatTooFewArguments(const ValueFlatMap& superfluous) {
+    static sass::string formatTooFewArguments(const ValueFlatMap& superfluous) {
       return "No argument named " +
         toSentence(getKeyVector(superfluous), "or", "$") + ".";
     }
@@ -240,7 +212,7 @@ namespace Sass {
       : RuntimeException(traces, formatTooFewArguments(superflous))
     {}
 
-    sass::string formatTooManyArguments(size_t given, size_t expected) {
+    static sass::string formatTooManyArguments(size_t given, size_t expected) {
       sass::ostream msg;
       msg << "Only " << expected << " ";
       msg << pluralize("argument", expected);
@@ -250,9 +222,9 @@ namespace Sass {
       return msg.str();
     }
 
-    sass::string formatTooManyArguments(const ExpressionFlatMap& given, const Sass::EnvKeySet& expected) {
+    static sass::string formatTooManyArguments(const ExpressionFlatMap& given, const Sass::EnvKeySet& expected) {
       StringVector superfluous;
-      for (auto pair : given) {
+      for (const auto& pair : given) {
         if (expected.count(pair.first) == 0) {
           superfluous.emplace_back(pair.first.orig());
         }
@@ -261,18 +233,18 @@ namespace Sass {
         toSentence(superfluous, "or", "$") + ".";
     }
 
-    sass::string formatTooManyArguments(const ValueFlatMap& given, const Sass::EnvKeySet& expected) {
-      StringVector superfluous;
-      for (auto pair : given) {
-        if (expected.count(pair.first) == 0) {
-          superfluous.emplace_back(pair.first.orig());
-        }
-      }
-      return "No argument named " +
-        toSentence(superfluous, "or", "$") + ".";
-    }
+    // static sass::string formatTooManyArguments(const ValueFlatMap& given, const Sass::EnvKeySet& expected) {
+    //   StringVector superfluous;
+    //   for (const auto& pair : given) {
+    //     if (expected.count(pair.first) == 0) {
+    //       superfluous.emplace_back(pair.first.orig());
+    //     }
+    //   }
+    //   return "No argument named " +
+    //     toSentence(superfluous, "or", "$") + ".";
+    // }
 
-    sass::string formatTooManyArguments(const ValueFlatMap& superfluous) {
+    static sass::string formatTooManyArguments(const ValueFlatMap& superfluous) {
       return "No argument named " +
         toSentence(getKeyVector(superfluous), "or", "$") + ".";
     }
@@ -453,7 +425,7 @@ namespace Sass {
   {
     bool joiner = false;
     msg += pluralize("Argument", superfluous.size());
-    for (auto kv : superfluous)
+    for (const auto& kv : superfluous)
     {
       if (joiner) msg = ",";
       msg += " $" + kv.first.norm();

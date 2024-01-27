@@ -18,6 +18,8 @@
 /////////////////////////////////////////////
 namespace Sass {
 
+  class ModRule;
+
   // Forward declare
   class EnvKey;
   class EnvRef;
@@ -27,6 +29,7 @@ namespace Sass {
 
   class Module;
   class ExtensionStore;
+  class Extender;
   class Extension;
   class BuiltInMod;
   class WithConfig;
@@ -45,7 +48,7 @@ namespace Sass {
   class SourceItpl;
 
   class AstNode;
-  class Root;
+  class Stylesheet;
 
   class Callable;
   class UserDefinedCallable;
@@ -179,6 +182,7 @@ namespace Sass {
 
 
   class PlaceholderSelector;
+  class CssParentSelector;
   class TypeSelector;
   class ClassSelector;
   class IDSelector;
@@ -211,7 +215,7 @@ namespace Sass {
 
   IMPL_MEM_OBJ(AstNode);
   IMPL_MEM_OBJ(Statement);
-  IMPL_MEM_OBJ(Root);
+  IMPL_MEM_OBJ(Stylesheet);
   IMPL_MEM_OBJ(StyleRule);
   IMPL_MEM_OBJ(MediaRule);
 
@@ -323,6 +327,7 @@ namespace Sass {
   IMPL_MEM_OBJ(TypeSelector);
   IMPL_MEM_OBJ(ClassSelector);
   IMPL_MEM_OBJ(IDSelector);
+  IMPL_MEM_OBJ(CssParentSelector);
   IMPL_MEM_OBJ(AttributeSelector);
   IMPL_MEM_OBJ(PseudoSelector);
 
@@ -342,12 +347,32 @@ namespace Sass {
   typedef sass::vector<ValueObj> ValueVector;
   typedef sass::vector<CssNodeObj> CssNodeVector;
   typedef sass::vector<CssParentNodeObj> CssParentVector;
-  typedef sass::vector<CssMediaQueryObj> CssMediaQueryVector;
-  typedef sass::vector<CssMediaRuleObj> CssMediaVector;
+  // typedef sass::vector<CssMediaQueryObj> CssMediaQueryVector;
   typedef sass::vector<SelectorListObj> SelectorLists;
   typedef sass::vector<StatementObj> StatementVector;
   typedef sass::vector<ExpressionObj> ExpressionVector;
   typedef std::unordered_set<sass::string> StringSet;
+
+  class CssMediaQueryVector : public sass::vector<CssMediaQueryObj>, public RefCounted {
+  public:
+    CssMediaQueryVector();
+    CssMediaQueryVector(const sass::vector<CssMediaQueryObj>& queries);
+    CssMediaQueryVector(sass::vector<CssMediaQueryObj>&& queries);
+
+    // Check underlying containers for equality
+    bool operator== (const sass::vector<CssMediaQueryObj>& rhs) const;
+
+    // Derive unequal operator from equality check
+    bool operator!= (const sass::vector<CssMediaQueryObj>& rhs) const
+    {
+      return !(*this == rhs);
+    }
+
+  };
+
+  IMPL_MEM_OBJ(CssMediaQueryVector);
+
+  typedef sass::vector<CssMediaQueryVectorObj> CssMediaVector;
 
   class Eval;
   class Logger;
