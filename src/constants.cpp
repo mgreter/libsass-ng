@@ -89,19 +89,19 @@ namespace Sass {
 
     namespace Math {
 
-      const double M_E = 2.71828182845904523536; // e
-      const double M_LOG2E = 1.44269504088896340736; // log2(e)
-      const double M_LOG10E = 0.434294481903251827651; // log10(e)
-      const double M_LN2 = 0.693147180559945309417; // ln(2)
-      const double M_LN10 = 2.30258509299404568402; // ln(10)
-      const double M_PI = 3.14159265358979323846; // pi
-      const double M_PI_2 = 1.57079632679489661923; // pi/2
-      const double M_PI_4 = 0.785398163397448309616; // pi/4
-      const double M_1_PI = 0.318309886183790671538; // 1/pi
-      const double M_2_PI = 0.636619772367581343076; // 2/pi
-      const double M_2_SQRTPI = 1.12837916709551257390; // 2/sqrt(pi)
-      const double M_SQRT2 = 1.41421356237309504880; // sqrt(2)
-      const double M_SQRT1_2 = 0.707106781186547524401; // 1/sqrt(2)
+      const double C_E = 2.71828182845904523536; // e
+      const double C_LOG2E = 1.44269504088896340736; // log2(e)
+      const double C_LOG10E = 0.434294481903251827651; // log10(e)
+      const double C_LN2 = 0.693147180559945309417; // ln(2)
+      const double C_LN10 = 2.30258509299404568402; // ln(10)
+      const double C_PI = 3.14159265358979323846; // pi
+      const double C_PI_2 = 1.57079632679489661923; // pi/2
+      const double C_PI_4 = 0.785398163397448309616; // pi/4
+      const double C_1_PI = 0.318309886183790671538; // 1/pi
+      const double C_2_PI = 0.636619772367581343076; // 2/pi
+      const double C_2_SQRTPI = 1.12837916709551257390; // 2/sqrt(pi)
+      const double C_SQRT2 = 1.41421356237309504880; // sqrt(2)
+      const double C_SQRT1_2 = 0.707106781186547524401; // 1/sqrt(2)
       const double RAD_TO_DEG = 57.295779513082320876798154814105;
 
     }

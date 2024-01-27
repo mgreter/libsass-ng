@@ -1570,8 +1570,8 @@ namespace Sass {
         // assert(!nod_visitCalculationExpressione.hasQuotes);
         sass::string text(inner->text()->getPlainString());
         StringUtils::makeLowerCase(text);
-        if (text == str_pi) return SASS_MEMORY_NEW(Number, inner->pstate(), Constants::Math::M_PI);
-        else if (text == str_e) return SASS_MEMORY_NEW(Number, inner->pstate(), Constants::Math::M_E);
+        if (text == str_pi) return SASS_MEMORY_NEW(Number, inner->pstate(), Constants::Math::C_PI);
+        else if (text == str_e) return SASS_MEMORY_NEW(Number, inner->pstate(), M_E);
         else if (text == str_infinity) return SASS_MEMORY_NEW(Number, inner->pstate(), std::numeric_limits<double>::infinity());
         else if (text == str_neg_infinity) return SASS_MEMORY_NEW(Number, inner->pstate(), -std::numeric_limits<double>::infinity());
         else if (text == str_nan) return SASS_MEMORY_NEW(Number, inner->pstate(), std::numeric_limits<double>::quiet_NaN());

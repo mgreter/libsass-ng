@@ -98,19 +98,19 @@ namespace Sass
 
     namespace Math
     {
-      extern const double M_E;
-      extern const double M_LOG2E;
-      extern const double M_LOG10E;
-      extern const double M_LN2;
-      extern const double M_LN10;
-      extern const double M_PI;
-      extern const double M_PI_2;
-      extern const double M_PI_4;
-      extern const double M_1_PI;
-      extern const double M_2_PI;
-      extern const double M_2_SQRTPI;
-      extern const double M_SQRT2;
-      extern const double M_SQRT1_2;
+      extern const double C_E2;
+      extern const double C_LOG2E;
+      extern const double C_LOG10E;
+      extern const double C_LN2;
+      extern const double C_LN10;
+      extern const double C_PI;
+      extern const double C_PI_2;
+      extern const double C_PI_4;
+      extern const double C_1_PI;
+      extern const double C_2_PI;
+      extern const double C_2_SQRTPI;
+      extern const double C_SQRT2;
+      extern const double C_SQRT1_2;
       extern const double RAD_TO_DEG;
     }
 
