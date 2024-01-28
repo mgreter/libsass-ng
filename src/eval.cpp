@@ -1524,7 +1524,7 @@ namespace Sass {
       auto currentNode = node->items()[i];
 
       if (auto op = currentNode->isaUnaryOpExpression()) {
-        auto foo = op->optype();
+        // auto foo = op->optype();
         if ((op->optype() != UnaryOpType::PLUS) || (op->optype() != UnaryOpType::MINUS)) continue;
         throw Exception::OpNotCalcSafe(traces, op);
       }
@@ -1571,7 +1571,7 @@ namespace Sass {
         sass::string text(inner->text()->getPlainString());
         StringUtils::makeLowerCase(text);
         if (text == str_pi) return SASS_MEMORY_NEW(Number, inner->pstate(), Constants::Math::C_PI);
-        else if (text == str_e) return SASS_MEMORY_NEW(Number, inner->pstate(), M_E);
+        else if (text == str_e) return SASS_MEMORY_NEW(Number, inner->pstate(), Constants::Math::C_E);
         else if (text == str_infinity) return SASS_MEMORY_NEW(Number, inner->pstate(), std::numeric_limits<double>::infinity());
         else if (text == str_neg_infinity) return SASS_MEMORY_NEW(Number, inner->pstate(), -std::numeric_limits<double>::infinity());
         else if (text == str_nan) return SASS_MEMORY_NEW(Number, inner->pstate(), std::numeric_limits<double>::quiet_NaN());

@@ -343,9 +343,9 @@ void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
   if (getopt->compiler.state) return;
   if (getopt->arguments.empty()) return;
   size_t want_size = getopt->arguments.size();
-  size_t requires = getopt->arguments.size();
+  size_t requiring = getopt->arguments.size();
   for (const auto& arg : getopt->arguments) {
-    if (arg.optional) requires -= 1;
+    if (arg.optional) requiring -= 1;
   }
   size_t have_size = getopt->args.size();
   for (size_t i = 0; i < have_size; i += 1) {
@@ -363,7 +363,7 @@ void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
       getopt->arguments[i].cb(getopt, getopt->args[i].c_str());
     }
   }
-  for (size_t i = have_size; i < requires; i += 1) {
+  for (size_t i = have_size; i < requiring; i += 1) {
     sass::sstream strm;
     sass::string value(getopt->arguments[i].name);
     StringUtils::makeReplace(value, "'", "\\'");

@@ -934,7 +934,7 @@ namespace Sass {
     //std::cerr << "extend complex [" << complex->inspect() << "]\n";
 
     //std::cerr << "_extendComplex\n";
-    bool addedToExtendedNotExpanded = false;
+    // bool addedToExtendedNotExpanded = false;
     sass::vector<ComplexSelectorObj> result;
     sass::vector<sass::vector<ComplexSelectorObj>> extendedNotExpanded;
     bool isOriginal = originals.find(complex) != originals.end();
@@ -975,7 +975,7 @@ namespace Sass {
           // Note: dart-sass checks for null!?
           if (!extendedNotExpanded.empty()) {
             //std::cerr << "ADD 2\n";
-            addedToExtendedNotExpanded = true;
+            // addedToExtendedNotExpanded = true;
             extendedNotExpanded.push_back(extended);
             // for (size_t n = 0; n < i; n++) {
             //     extendedNotExpanded.push_back({
@@ -994,19 +994,19 @@ namespace Sass {
               complex->leadingCombinators(), components,
               complex->hasLineBreak());
             //std::cerr << "ADD 3 [" << s->inspect() << "]\n";
-            addedToExtendedNotExpanded = true;
+            // addedToExtendedNotExpanded = true;
             extendedNotExpanded = { {
               s
             }, extended };
           }
           else if (complex->leadingCombinators().empty()) {
             //std::cerr << "ADD 4 " << VecToString2(extended) << "\n";
-            addedToExtendedNotExpanded = true;
+            // addedToExtendedNotExpanded = true;
             extendedNotExpanded = { extended }; //.emplace_back(extended);
           }
           else {
             //std::cerr << "ADD 5\n";
-            addedToExtendedNotExpanded = true;
+            // addedToExtendedNotExpanded = true;
             sass::vector<ComplexSelectorObj> add;
             for (auto newComplex : extended) {
               if (newComplex->leadingCombinators().empty() ||
@@ -1403,7 +1403,7 @@ namespace Sass {
       result.push_back(ext.second->extender);
     }
 
-    return std::move(result);
+    return result;
   }
   // EO extendWithoutPseudo
 

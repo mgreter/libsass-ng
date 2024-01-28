@@ -98,7 +98,7 @@ namespace Sass
 
     namespace Math
     {
-      extern const double C_E2;
+      extern const double C_E;
       extern const double C_LOG2E;
       extern const double C_LOG10E;
       extern const double C_LN2;

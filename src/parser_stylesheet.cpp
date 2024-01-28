@@ -1387,7 +1387,7 @@ namespace Sass {
     Offset start(scanner.offset);
     StringScannerState state(scanner.state());
     auto name = readInterpolatedIdentifier();
-    assert(name.asPlain != "not");
+    //assert(name.asPlain != "not");
 
     if (!scanner.scanChar($lparen)) {
       scanner.backtrack(state);
@@ -1958,7 +1958,7 @@ namespace Sass {
           error("Duplicate argument.",
             expression->pstate());
         }
-        auto ex = readExpressionUntilComma(!mixin);
+        ExpressionObj ex = readExpressionUntilComma(!mixin);
         named[var->name()] = ex;
       }
       else if (scanner.scanChar($dot)) {

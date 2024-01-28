@@ -1290,7 +1290,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     // std::cerr << " " << expression->concrete_type();
     // std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << std::endl;
-    for (const auto i : expression->elements()) { debug_ast(i, ind + " "); }
+    for (const InterpolantObj& i : expression->elements()) { debug_ast(i, ind + " "); }
   }
   else if (Cast<Expression>(node)) {
     Expression* expression = Cast<Expression>(node);

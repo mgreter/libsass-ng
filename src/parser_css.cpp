@@ -219,7 +219,7 @@ namespace Sass {
     Offset start(scanner.offset);
     scanner.expectChar($lparen);
     scanWhitespace();
-    Expression* expression = readExpressionUntilComma();
+    ExpressionObj expression = readExpressionUntilComma();
     scanner.expectChar($rparen);
     return SASS_MEMORY_NEW(ParenthesizedExpression,
       scanner.relevantSpanFrom(start), expression);

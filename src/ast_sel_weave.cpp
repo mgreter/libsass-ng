@@ -698,7 +698,7 @@ namespace Sass {
       //std::cerr << "combinatorComponents " << combinatorComponents->inspecter() << "\n";
 
       if (first1->isChild()) {
-        if (descendantComponents != nullptr && descendantComponents->selector()->isSuperselectorOf(combinatorComponents->selector())) {
+        if (descendantComponents && descendantComponents->selector()->isSuperselectorOf(combinatorComponents->selector())) {
           components2.pop_back();
         }
       }
@@ -711,7 +711,7 @@ namespace Sass {
       auto descendantComponents = backOrNull(components1);
       auto combinatorComponents = backOrNull(components2);
       if (first2->isChild()) {
-        if (descendantComponents != nullptr && descendantComponents->selector()->isSuperselectorOf(combinatorComponents->selector())) {
+        if (descendantComponents && descendantComponents->selector()->isSuperselectorOf(combinatorComponents->selector())) {
           components1.pop_back();
         }
       }

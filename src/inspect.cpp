@@ -914,7 +914,7 @@ namespace Sass {
     if (color->parsed() && !color->isaColorHwba()) { //&& color->a() < 1
 
       if (color->disp().empty()) {
-        double epsilon = std::pow(0.1, outopt.precision);
+        // double epsilon = std::pow(0.1, outopt.precision);
         if (ColorHsla* hsla = color->isaColorHsla()) {
           if (hsla->a() >= 1) {
             ss << "hsl(";

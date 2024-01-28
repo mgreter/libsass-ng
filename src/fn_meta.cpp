@@ -68,11 +68,11 @@ namespace Sass {
         const sass::vector<AstNodeObj>& args(calculation->arguments());
         ValueVector values; // args.size()
 
-        for (auto arg : args) {
+        for (auto& arg : args) {
           if (auto* value = arg->isaValue()) {
             if (auto* calcop = value->isaCalcOperation()) {
               values.push_back(SASS_MEMORY_NEW(String,
-                value->pstate(), value->toString(), false));
+                calcop->pstate(), calcop->toString(), false));
             }
             else {
               values.push_back(value);
@@ -100,7 +100,7 @@ namespace Sass {
         ArgumentList* argumentList = arguments[0]->assertArgumentList(compiler, Sass::Strings::args);
         const ValueFlatMap& keywords = argumentList->keywords();
         MapObj map = SASS_MEMORY_NEW(Map, arguments[0]->pstate());
-        for (auto kv : keywords) {
+        for (auto& kv : keywords) {
           sass::string key = kv.first.norm(); // .substr(1);
           // Util::ascii_normalize_underscore(key);
           // Wrap string key into a sass value

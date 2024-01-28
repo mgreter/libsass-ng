@@ -183,7 +183,8 @@ namespace Sass {
 
   Value* Calculation::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (auto str = other->isaString()) return Value::plus(other, logger, pstate);
+    if (auto str = other->isaString())
+      return Value::plus(str, logger, pstate);
     callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(logger, pstate,
       "Undefined operation \"" + toCss() + " + " + other->toCss() + "\".");
@@ -191,7 +192,8 @@ namespace Sass {
 
   Value* Calculation::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (auto str = other->isaString()) return Value::minus(other, logger, pstate);
+    if (auto str = other->isaString())
+      return Value::minus(str, logger, pstate);
     callStackFrame csf(logger, pstate);
     throw Exception::SassScriptException(logger, pstate,
       "Undefined operation \"" + toCss() + " - " + other->toCss() + "\".");
