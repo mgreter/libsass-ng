@@ -1131,7 +1131,8 @@ namespace Sass {
       right = rhs->accept(this);
       return left->modulo(right,
         logger, node->pstate());
-    //case SassOperator::ASSIGN:
+    case SassOperator::ASSIGN:
+      return nullptr;
     //  throw "Assign not implemented";
     }
     // Satisfy compiler
@@ -1847,7 +1848,7 @@ namespace Sass {
       }
 
     }
-    catch (Exception::UnitMismatch ex) {
+    catch (Exception::UnitMismatch& ex) {
       sass::vector<AstNode*> foo;
       for (auto qwe : arguments) {
         foo.push_back(qwe);
@@ -2621,7 +2622,7 @@ namespace Sass {
         root->addChildAt(outerCopy, false);
       }
 
-      CssParentNodeObj newParent = innerCopy == nullptr ? root : innerCopy;
+      CssParentNode* newParent = innerCopy == nullptr ? root.ptr() : innerCopy;
 
       RAII_FLAG(inKeyframes, inKeyframes);
       RAII_FLAG(inUnknownAtRule, inUnknownAtRule);
