@@ -1525,7 +1525,7 @@ namespace Sass {
 
       if (auto op = currentNode->isaUnaryOpExpression()) {
         // auto foo = op->optype();
-        if ((op->optype() != UnaryOpType::PLUS) || (op->optype() != UnaryOpType::MINUS)) continue;
+        if ((op->optype() != UnaryOpType::PLUS) && (op->optype() != UnaryOpType::MINUS)) continue;
         throw Exception::OpNotCalcSafe(traces, op);
       }
       else if (auto nr = currentNode->isaNumberExpression()) {

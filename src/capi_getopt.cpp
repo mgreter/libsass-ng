@@ -656,6 +656,7 @@ extern "C" {
     /* enum: style */ sass_getopt_register_option(getopt, 't', "style", "Set output style (nested, expanded, compact or compressed).", false, "STYLE", false, style_options, getopt_set_output_style);
     /* enum: format */ sass_getopt_register_option(getopt, 'f', "format", "Set explicit input syntax (scss, sass, css or auto).", false, "SYNTAX", true, format_options, getopt_set_input_format);
     /* path */ sass_getopt_register_option(getopt, 'I', "include-path", "Add include path to look for imports.", false, "PATH", false, nullptr, getopt_add_include_path);
+    /* path */ sass_getopt_register_option(getopt, '\0', "load-path", "Add include path to look for imports.", false, "PATH", false, nullptr, getopt_add_include_path);
     /* path */ sass_getopt_register_option(getopt, 'P', "plugin-path", "Add plugin path to auto load plugins.", false, "PATH", false, nullptr, getopt_load_plugins);
     /* enum: mode */ sass_getopt_register_option(getopt, 'm', "sourcemap", "Set how to create and emit source mappings.", false, "TYPE", true, srcmap_options, getopt_set_srcmap_mode);
     /* bool */ sass_getopt_register_option(getopt, '\0', "sourcemap-file-urls", "Emit absolute file:// urls in includes array.", true, nullptr, true, nullptr, getopt_set_srcmap_file_urls);

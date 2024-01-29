@@ -96,7 +96,7 @@ namespace Sass {
     }
 
     // Move constructor from other base Vectorized
-    Vectorized<V>& operator=(Vectorized<V>&& other)
+    Vectorized<V>& operator=(Vectorized<V>&& other) noexcept
     {
       this->hash_ = other.hash_;
       this->elements_ = std::move(other.elements_);

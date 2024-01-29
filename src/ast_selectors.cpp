@@ -950,7 +950,7 @@ namespace Sass {
       SelectorCombinatorVector merged(leadingCombinators_);
       merged.insert(merged.end(), combinators.begin(), combinators.end());
       return SASS_MEMORY_NEW(ComplexSelector, pstate_,
-        std::move(combinators), std::move(components));
+        combinators, std::move(components));
     }
     else {
       // SelectorCombinatorVector merged(elements_.back()->combinators());

@@ -48,7 +48,7 @@ namespace Sass {
     WithConfig*& wconfig;
 
     // The extend handler
-    ExtensionStore* extender2;
+    ExtensionStore* extender2 = nullptr;
 
   public:
 
@@ -58,7 +58,7 @@ namespace Sass {
     void _extendModules(sass::vector<Root*> sortedModules);
 
 
-    CssParentNode* current;
+    CssParentNode* current = nullptr;
     CssMediaVector mediaStack;
     SelectorLists originalStack;
     SelectorLists selectorStack;

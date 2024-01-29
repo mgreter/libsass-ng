@@ -907,9 +907,9 @@ namespace Sass {
     AstNodeObj arg_x = x ? x->simplify(logger) : nullptr;
     // _verifyLength(args, 2);
     if (Number* nr_y = Cast<Number>(arg_y)) {
-      if (!nr_y->isValidCssUnit()) throw Exception::IncompatibleCalcValue(logger, *nr_y, y->pstate());
+      if (!nr_y->isValidCssUnit()) throw Exception::IncompatibleCalcValue(logger, *nr_y, nr_y->pstate());
       if (Number* nr_x = Cast<Number>(arg_x)) {
-        if (!nr_x->isValidCssUnit()) throw Exception::IncompatibleCalcValue(logger, *nr_x, x->pstate());
+        if (!nr_x->isValidCssUnit()) throw Exception::IncompatibleCalcValue(logger, *nr_x, nr_x->pstate());
         if (!(unit_percent == nr_y || unit_percent == nr_x)) {
           double factor = nr_x->getUnitConversionFactor(nr_y);
           if (factor != 0) return SASS_MEMORY_NEW(Number, pstate,

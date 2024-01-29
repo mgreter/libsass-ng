@@ -135,7 +135,7 @@ namespace Sass {
     const SourceSpan& pstate,
     StatementVector&& children,
     EnvRefs* idxs) :
-    Statement(std::move(pstate)),
+    Statement(pstate),
     Vectorized<Statement>(std::move(children)),
     Env(idxs)
   {}

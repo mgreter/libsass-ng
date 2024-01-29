@@ -91,8 +91,11 @@ namespace Sass {
         os << STRMLF;
         current = 0;
       }
-      os << word << ' ';
+      os << word; // << ' ';
       current += word.size() + 1;
+      if (!Character::isNewline(in.peek())) {
+        os << ' ';
+      }
       while (Character::isNewline(in.peek())) {
         if (in.peek() == '\n') {
           os << STRMLF;
@@ -104,7 +107,9 @@ namespace Sass {
       while (Character::isSpaceOrTab(in.peek())) {
         in.ignore(1);
         // Preserve if we have multiple white-space
-        if (Character::isSpaceOrTab(in.peek())) os << ' ';
+        if (Character::isSpaceOrTab(in.peek())) {
+          os << ' ';
+        }
         while (Character::isSpaceOrTab(in.peek())) {
           in.ignore(1);
           os << ' ';

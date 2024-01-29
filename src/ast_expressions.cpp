@@ -117,8 +117,8 @@ namespace Sass {
     sass::string&& text,
     bool hasQuotes) :
     Expression(std::move(pstate)),
-    text_(SASS_MEMORY_NEW(Interpolation, pstate,
-      SASS_MEMORY_NEW(String, pstate, std::move(text)))),
+    text_(SASS_MEMORY_NEW(Interpolation, pstate_,
+      SASS_MEMORY_NEW(String, pstate_, std::move(text)))),
     hasQuotes_(hasQuotes)
   {}
 

@@ -294,7 +294,7 @@ namespace Sass {
     if (buffer().empty()) {
       scheduled_space = true;
     }
-    else if (!isspace(buffer().back())) {
+    else if (!isWhitespace(buffer().back())) {
       scheduled_space = true;
     }
   }
@@ -302,7 +302,10 @@ namespace Sass {
   void Emitter::append_optional_space()
   {
     if ((output_style() != SASS_STYLE_COMPRESSED) && wbuf.buffer.size()) {
-      if (scheduled_delimiter || !isspace(buffer().back())) {
+      // char back = buffer().back();
+      // unsigned char foo = (unsigned char)back;
+      // std::cerr << "BACK IS " << back << "\n";
+      if (scheduled_delimiter || !isWhitespace(buffer().back())) {
         //if (buffer().back() != $lparen) // breaks escape sequences
         {
           if (!parentheses_opened)
