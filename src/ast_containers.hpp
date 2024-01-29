@@ -295,7 +295,7 @@ namespace Sass {
     {
       if (hash_ == 0) {
         hash_start(hash_, typeid(Vectorized<V>).hash_code());
-        for (auto child : elements_) {
+        for (auto& child : elements_) {
           hash_combine(hash_, child->hash());
         }
       }
@@ -438,14 +438,14 @@ namespace Sass {
 
     sass::vector<K> keys() const {
       sass::vector<T> list;
-      for (auto kv : elements_) {
+      for (auto& kv : elements_) {
         list.emplace_back(kv.first);
       }
       return list;
     }
     sass::vector<T> values() const {
       sass::vector<T> list;
-      for (auto kv : elements_) {
+      for (auto& kv : elements_) {
         list.emplace_back(kv.second);
       }
       return list;
@@ -455,7 +455,7 @@ namespace Sass {
     {
       if (hash_ == 0) {
         hash_start(hash_, typeid(this).hash_code());
-        for (auto kv : elements_) {
+        for (auto& kv : elements_) {
           hash_combine(hash_, kv.first->hash());
           hash_combine(hash_, kv.second->hash());
         }

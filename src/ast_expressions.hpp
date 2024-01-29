@@ -530,6 +530,16 @@ namespace Sass {
       bool allowSlash = false,
       bool isCalcSafe = true);
 
+    // Value constructor
+    BinaryOpExpression(
+      const SourceSpan& pstate,
+      SassOperator operand,
+      const SourceSpan& opstate,
+      Expression* lhs,
+      Expression* rhs,
+      bool allowSlash = false,
+      bool isCalcSafe = true);
+
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitBinaryOpExpression(this);

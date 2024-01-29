@@ -146,7 +146,7 @@ namespace Sass {
 
     // Returns the plain text before the interpolation, or the empty string.
     const sass::string& getInitialPlain() const;
-
+     
     // Wrap interpolation within a string expression
     StringExpression* wrapInStringExpression();
 
@@ -162,14 +162,18 @@ namespace Sass {
   // exist primarily to be evaluated and returned.
   //////////////////////////////////////////////////////////////////////
 
-  class Expression : public Interpolant,
+  class Expression : public Interpolant/*,
     public ExpressionVisitable<Value*>,
-    public ExpressionVisitable<Expression*>
+    public ExpressionVisitable<Expression*>*/
   {
   public:
 
     // Value constructor
     Expression(SourceSpan&& pstate);
+    Expression(const SourceSpan& pstate);
+
+    virtual Value* accept(ExpressionVisitor<Value*>* visitor) = 0;
+    virtual Expression* accept(ExpressionVisitor<Expression*>* visitor) = 0;
 
     // C++ does not consider return type for function overloading
     // Therefore we need to differentiate by the function name

@@ -249,7 +249,7 @@ namespace Sass {
       }
     }
 
-    T* ptr() const {
+    inline T* ptr() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.size() && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
@@ -258,7 +258,7 @@ namespace Sass {
       return node;
     }
 
-    T* operator->() const {
+    inline T* operator->() const {
       #ifdef DEBUG_SHARED_PTR
       if (node && node->deleted.size() && node->deleted.count(node->objId) == 1) {
         std::cerr << "ACCESSING DELETED " << node << "\n";
@@ -267,11 +267,11 @@ namespace Sass {
       return node;
     }
 
-    operator T* () const { return ptr(); }
-    operator T& () const { return *ptr(); }
-    T& operator* () const { return *ptr(); };
+    inline operator T* () const { return ptr(); }
+    inline operator T& () const { return *ptr(); }
+    inline T& operator* () const { return *ptr(); };
 
-    bool isNull() const { return node == nullptr; }
+    inline bool isNull() const { return node == nullptr; }
 
   protected:
 
@@ -301,7 +301,7 @@ namespace Sass {
       }
       #endif
     }
-    void incRefCount() noexcept {
+    inline void incRefCount() noexcept {
       if (node == nullptr) return;
       node->refcount &= UNSET_DETACHED_BITMASK;
       ++node->refcount;

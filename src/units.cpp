@@ -361,8 +361,8 @@ namespace Sass {
     denominators.clear();
 
     // recreate sorted units vectors
-    for (auto kv : exponents) {
-      int &exponent = kv.second;
+    for (auto& kv : exponents) {
+      int exponent = kv.second;
       while (exponent > 0 && exponent --)
         numerators.emplace_back(kv.first);
       while (exponent < 0 && exponent ++)
@@ -559,8 +559,8 @@ namespace Sass {
   // Meaning we don't know to convert it
   bool Units::isCustomUnit() const
   {
-    for (auto n : numerators) if (isaCustomUnit(n)) return true;
-    for (auto d : denominators) if (isaCustomUnit(d)) return true;
+    for (auto& n : numerators) if (isaCustomUnit(n)) return true;
+    for (auto& d : denominators) if (isaCustomUnit(d)) return true;
     return false;
   }
   // EO isCustomUnit

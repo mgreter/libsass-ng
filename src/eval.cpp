@@ -135,18 +135,49 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Value* Eval::withoutSlash(ValueObj value) {
+  inline Value* Eval::withoutSlash2(ValueObj value) {
     if (value == nullptr) return value;
     Number* number = value->isaNumber();
-    if (number && number->hasAsSlash()) {
-      logger.addDeprecation("Using / for division is deprecated and will be removed " 
-        "in LibSass 4.1.0.\n\nRecommendation: math.div(" + number->lhsAsSlash()->inspect() +
-        ", " + number->rhsAsSlash()->inspect() + ")\n\nMore info and automated migrator: "
-        "https://sass-lang.com/d/slash-div", value->pstate(), Logger::WARN_MATH_DIV);
+    if (number) {
+      // Only numbers can have delayed slashes
+      if (number->hasAsSlash()) {
+        logger.addDeprecation("Using / for division is deprecated and will be removed "
+          "in LibSass 4.1.0.\n\nRecommendation: math.div(" + number->lhsAsSlash()->inspect() +
+          ", " + number->rhsAsSlash()->inspect() + ")\n\nMore info and automated migrator: "
+          "https://sass-lang.com/d/slash-div", value->pstate(), Logger::WARN_MATH_DIV);
+        ValueObj result = number->withoutSlash();
+        return result.detach();
+      }
     }
+    return value.detach();
+    // if (number) return number;
     // Make sure to collect all memory
-    ValueObj result = value->withoutSlash();
-    return result.detach();
+    //std::cerr << "Without Slash " << value->inspect() << "\n";
+    /// ValueObj result = value->withoutSlash();
+    /// return result.detach();
+  }
+
+
+  inline Value* Eval::withoutSlash3(Value* value) {
+    if (value == nullptr) return value;
+    Number* number = value->isaNumber();
+    if (number) {
+      // Only numbers can have delayed slashes
+      if (number->hasAsSlash()) {
+        logger.addDeprecation("Using / for division is deprecated and will be removed "
+          "in LibSass 4.1.0.\n\nRecommendation: math.div(" + number->lhsAsSlash()->inspect() +
+          ", " + number->rhsAsSlash()->inspect() + ")\n\nMore info and automated migrator: "
+          "https://sass-lang.com/d/slash-div", value->pstate(), Logger::WARN_MATH_DIV);
+        ValueObj result = number->withoutSlash();
+        return result.detach();
+      }
+    }
+    return value;
+    // if (number) return number;
+    // Make sure to collect all memory
+    //std::cerr << "Without Slash " << value->inspect() << "\n";
+    /// ValueObj result = value->withoutSlash();
+    /// return result.detach();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -340,7 +371,7 @@ namespace Sass {
     }
 
     for (ValueObj& arg : positional) {
-      arg = withoutSlash(arg);
+      arg = withoutSlash3(arg);
     }
 
     // Now execute the built-in function
@@ -701,15 +732,17 @@ namespace Sass {
     positional.reserve(arguments->positional().size() + 1);
     for (const auto& arg : arguments->positional())
     {
-      ValueObj result(arg->accept(this));
-      positional.emplace_back(withoutSlash(result));
+      Value* result(arg->accept(this));
+      if (result->isaNumber())
+      result = withoutSlash3(result);
+      positional.emplace_back(result);
     }
 
     // Collect named args by evaluating input arguments
     for (const auto& kv : arguments->named()) {
-      ValueObj result(kv.second->accept(this));
+      Value* result(kv.second->accept(this));
       named.insert(std::make_pair(kv.first,
-        withoutSlash(result)));
+        withoutSlash3(result)));
     }
 
     // Abort if we don't take any restargs
@@ -721,7 +754,7 @@ namespace Sass {
 
     // Evaluate the variable expression (
     ValueObj result = arguments->restArg()->accept(this);
-    ValueObj rest = withoutSlash(result);
+    ValueObj rest = withoutSlash3(result);
 
     SassSeparator separator = SASS_UNDEF;
 
@@ -1216,8 +1249,8 @@ namespace Sass {
     ValueObj rv = condition ? condition->accept(this) : nullptr;
     Expression* ex = rv && rv->isTruthy() ? ifTrue : ifFalse;
     if (ex == nullptr) return nullptr;
-    ValueObj result(ex->accept(this));
-    return withoutSlash(result);
+    Value* result(ex->accept(this));
+    return withoutSlash3(result);
   }
 
   Value* Eval::visitParenthesizedExpression(ParenthesizedExpression* ex)
@@ -1363,7 +1396,7 @@ namespace Sass {
     // $a: 0; @for $i from 1 through 3 { @debug $a; $a: $i; } @debug $a
     // $b: 0; a { @for $i from 1 through 3 { @debug $b; $b: $i; } @debug $b }
     for (const EnvRef& vidx : variable->vidxs()) {
-      auto& value = compiler.varRoot.getVariable(vidx);
+      ValueObj& value = compiler.varRoot.getVariable(vidx);
       if (value != nullptr) return value->withoutSlash();
     }
 
@@ -3202,7 +3235,7 @@ namespace Sass {
           compiler.varRoot.setVariable({ vidx, 0 }, variable, false);
         }
         else {
-          value = withoutSlash(value);
+          value = withoutSlash3(value);
           compiler.varRoot.setVariable({ vidx, 0 }, key, false);
           compiler.varRoot.setVariable({ vidx, 1 }, value, false);
         }
@@ -3282,8 +3315,8 @@ namespace Sass {
 
   Value* Eval::visitReturnRule(ReturnRule* rule)
   {
-    ValueObj result(rule->value()->accept(this));
-    return withoutSlash(result);
+    Value* result(rule->value()->accept(this));
+    return withoutSlash3(result);
   }
 
   Value* Eval::visitSilentComment(SilentComment* c)

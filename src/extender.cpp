@@ -456,7 +456,7 @@ namespace Sass {
     // std::cerr << "add selector " << selector->inspect() << "\n";
 
     if (!selector->isInvisible()) {
-      for (auto complex : selector->elements()) {
+      for (auto& complex : selector->elements()) {
         originals.insert(complex);
       }
     }
@@ -488,9 +488,9 @@ namespace Sass {
   {
     if (list.isNull() || list->empty()) return;
     // std::cerr << "Reg selector " << rule.ptr() << " - " << rule->inspect() << " => " << list->inspect() << "\n";
-    for (auto complex : list->elements()) {
-      for (auto component : complex->elements()) {
-        if (auto compound = component->selector()) {
+    for (auto& complex : list->elements()) {
+      for (auto& component : complex->elements()) {
+        if (auto& compound = component->selector()) {
           for (const SimpleSelectorObj& simple : compound->elements()) {
             // Creating this structure can take up to 5%
             if (auto ph = simple->isaPlaceholderSelector()) {
@@ -781,7 +781,7 @@ namespace Sass {
       mapAddAll(sourceSpecificity, extensionStore->sourceSpecificity);
 
       auto& extensions = extensionStore->extensionsBySimpleSelector;
-      for (auto extension : extensions) {
+      for (auto& extension : extensions) {
         auto& target = extension.first;
         auto& newSources = extension.second;
 
@@ -1688,7 +1688,7 @@ namespace Sass {
   size_t ExtensionStore::maxSourceSpecificity(const CompoundSelectorObj& compound) const
   {
     size_t specificity = 0;
-    for (auto simple : compound->elements()) {
+    for (auto& simple : compound->elements()) {
       size_t src = maxSourceSpecificity(simple);
       specificity = std::max(specificity, src);
     }

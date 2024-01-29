@@ -354,7 +354,7 @@ namespace Sass {
 
     // Get value instance by stack index reference
     // Just converting and returning reference to array offset
-    ValueObj& getVariable(const EnvRef& vidx);
+    inline ValueObj& getVariable(const EnvRef& vidx);
     ValueObj& getModVar(const uint32_t offset);
 
     // Get function instance by stack index reference

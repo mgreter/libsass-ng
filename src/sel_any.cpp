@@ -23,7 +23,7 @@ namespace Sass {
 
   bool AnySelectorVisitor::visitComplexSelector(ComplexSelector* complex)
   {
-    for (auto cmpd : complex->elements()) {
+    for (auto& cmpd : complex->elements()) {
       if (cmpd->selector() == nullptr) continue;
       if (cmpd->selector()->accept(this)) return true;
     }
@@ -32,7 +32,7 @@ namespace Sass {
 
   bool AnySelectorVisitor::visitCompoundSelector(CompoundSelector* compound)
   {
-    for (auto comp : compound->elements())
+    for (auto& comp : compound->elements())
       if (comp->accept(this)) return true;
     return false;
   }
@@ -55,7 +55,7 @@ namespace Sass {
 
   bool AnySelectorVisitor::visitSelectorList(SelectorList* list)
   {
-    for (auto cplx : list->elements())
+    for (auto& cplx : list->elements())
       if (cplx->accept(this)) return true;
     return false;
   }

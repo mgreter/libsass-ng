@@ -151,7 +151,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasVar = false;
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
@@ -177,7 +177,7 @@ namespace Sass {
 
         bool hasVar = false;
         auto parent = compiler.getCurrentModule();
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->varIdxs.count(variable->value()) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
@@ -214,7 +214,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->fnIdxs.count(variable->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -251,7 +251,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->mixIdxs.count(variable->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -378,7 +378,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
         bool hasFn = false;
-        for (auto global : parent->forwards) {
+        for (auto& global : parent->forwards) {
           if (global->mixIdxs.count(name->value()) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
@@ -468,7 +468,7 @@ namespace Sass {
             throw Exception::RuntimeException(compiler, "There is "
               "no module with namespace \"" + ns->value() + "\".");
           }
-          for (auto entry : refs->varIdxs) {
+          for (auto& entry : refs->varIdxs) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef vidx(refs, entry.second);
@@ -476,7 +476,7 @@ namespace Sass {
               varRoot.getVariable(vidx) });
           }
           if (root)
-          for (auto entry : root->mergedFwdVar) {
+          for (auto& entry : root->mergedFwdVar) {
             auto name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef vidx(entry.second);

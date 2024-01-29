@@ -385,13 +385,13 @@ namespace Sass {
 		AstNode* simplify(Logger& logger) override final { return this; }
 
     // Check if we have delayed value info
-    bool hasAsSlash() {
+    inline bool hasAsSlash() const {
       return !lhsAsSlash_.isNull()
         && !rhsAsSlash_.isNull();
     }
 
     // Check if number matches [unit]
-    bool hasUnit(const sass::string& unit) const {
+    inline bool hasUnit(const sass::string& unit) const {
       return numerators.size() == 1 &&
         denominators.empty() &&
         numerators.front() == unit;

@@ -88,11 +88,11 @@ namespace Sass {
     overloads_(overloads)
   {
     size_t size = 0;
-    for (auto fn : overloads) {
+    for (auto& fn : overloads) {
       size = std::max(size,
         fn.first->maxArgs());
     }
-    for (auto fn : overloads) {
+    for (auto& fn : overloads) {
       fn.first->maxArgs(size);
     }
   }
@@ -468,7 +468,7 @@ namespace Sass {
     sass::string text(envkey_.orig());
     text += "(";
     bool joiner = false;
-    for (auto arg : arguments->positional()) {
+    for (auto& arg : arguments->positional()) {
       if (joiner) text += ", ";
       text += arg->toString();
       joiner = true;

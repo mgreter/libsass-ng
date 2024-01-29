@@ -104,7 +104,7 @@ namespace Sass {
 
   bool CssParentNode::isInvisibleCss() const
   {
-    for (auto child : elements()) {
+    for (auto& child : elements()) {
       if (!child->isInvisibleCss()) {
         return false;
       }

@@ -113,7 +113,7 @@ namespace Sass {
         // libsass/variable-scoping/defaults-global-null
         // This check may not be needed, but we create a
         // superfluous variable slot in the scope
-        for (auto fwds : rframe->forwards) {
+        for (auto& fwds : rframe->forwards) {
           auto it = fwds->varIdxs.find(a->variable());
           if (it != fwds->varIdxs.end()) {
             EnvRef vidx(it->second);
@@ -157,7 +157,7 @@ namespace Sass {
         a->variable(), a->ns(), a->is_global()));
       assigne = &compiler.varRoot.getVariable(a->vidx());
       if (!result) result = a->value()->accept(this);
-      if (result) result = withoutSlash(result);
+      if (result) result = withoutSlash3(result);
       compiler.varRoot.setVariable(
         a->vidx(),
         result,
@@ -180,7 +180,7 @@ namespace Sass {
       }
 
       if (!result) result = a->value()->accept(this);
-      if (result) result = withoutSlash(result);
+      if (result) result = withoutSlash3(result);
 
       if (auto frame = compiler.getCurrentScope()) {
         a->vidx(frame->setModVar(
@@ -580,7 +580,7 @@ namespace Sass {
     if (intoRoot) {
 
       // Check if we push the same stuff twice
-      for (auto fwd : modFrame->forwards) {
+      for (auto& fwd : modFrame->forwards) {
 
         // if (idxs == fwd) continue;
 

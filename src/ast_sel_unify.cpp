@@ -34,7 +34,7 @@ namespace Sass {
     const SourceSpan& pstate)
   {
 
-    for (auto qwe : complexes) {
+    for (auto& qwe : complexes) {
       //std::cerr << "- IN " << qwe->inspect() << "\n";
     }
 
@@ -88,7 +88,7 @@ namespace Sass {
         unifiedBase = base->selector()->elements();
       }
       else {
-        for (auto simple : base->selector()->elements()) {
+        for (auto& simple : base->selector()->elements()) {
           //std::cerr << "Unify lhs : " << simple->inspect() << "\n";
           //std::cerr << "Unify rhs : " << unifiedBase[0]->inspect() << "\n";
           unifiedBase = simple->unify(unifiedBase);
@@ -100,11 +100,11 @@ namespace Sass {
 
     // unifiedBase is nullptr, abort?
 
-    for (auto qwe : unifiedBase) {
+    for (auto& qwe : unifiedBase) {
       // std::cerr << "- base " << qwe->inspect() << "\n";
     }
 
-    for (auto qwe : complexes) {
+    for (auto& qwe : complexes) {
       // std::cerr << "- CPLX " << qwe->inspect() << "\n";
     }
 
@@ -146,13 +146,13 @@ namespace Sass {
     }
     // lineBreak: complexes.any((complex) => complex.lineBreak));
 
-    for (auto qwe : weaving) {
+    for (auto& qwe : weaving) {
       //std::cerr << "- WEAVE " << qwe->inspect() << "\n";
     }
 
     auto rv = weave(weaving, false); // TODO
 
-    for (auto qwe : rv) {
+    for (auto& qwe : rv) {
       //std::cerr << "+ WEAVED " << qwe->inspect() << "\n";
     }
 
@@ -225,7 +225,7 @@ namespace Sass {
     sass::vector<SimpleSelectorObj> results;
     // results.reserve(rhs->size() + 1);
     bool addedThis = false;
-    for (auto simple : others) {
+    for (auto& simple : others) {
       // Make sure pseudo selectors always come last.
       if (!addedThis && simple->isaPseudoSelector()) {
         results.push_back(this);
@@ -299,8 +299,8 @@ namespace Sass {
     sass::vector<SimpleSelectorObj> results;
     // results.reserve(rhs->size() + 1);
     bool addedThis = false;
-    for (auto simple : compound) {
-      if (auto pseudo = simple->isaPseudoSelector()) {
+    for (const auto& simple : compound) {
+      if (const auto& pseudo = simple->isaPseudoSelector()) {
         if (pseudo->isPseudoElement()) {
           if (isPseudoElement()) return {};
           results.push_back(this);

@@ -130,15 +130,15 @@ namespace Sass {
   {
     using namespace Character;
     bool containsDoubleQuote = false;
-    for (auto item : text_->elements()) {
-      if (auto str = item->isaString()) { // Ex
+    for (auto& item : text_->elements()) {
+      if (const auto& str = item->isaString()) { // Ex
         const auto& value = str->value();
         for (size_t i = 0; i < value.size(); i++) {
           if (value[i] == $apos) return $quote;
           if (value[i] == $quote) containsDoubleQuote = true;
         }
       }
-      else if (auto str = item->isaItplString()) { // Ex
+      else if (const auto& str = item->isaItplString()) { // Ex
         const auto& value = str->text();
         for (size_t i = 0; i < value.size(); i++) {
           if (value[i] == $apos) return $quote;
@@ -319,6 +319,24 @@ namespace Sass {
     isCalcSafeOp_(isCalcSafeOp)
   {}
 
+  BinaryOpExpression::BinaryOpExpression(
+    const SourceSpan& pstate,
+    SassOperator operand,
+    const SourceSpan& opstate,
+    Expression* lhs,
+    Expression* rhs,
+    bool allowSlash,
+    bool isCalcSafeOp) :
+    Expression(pstate),
+    operand_(operand),
+    opstate_(opstate),
+    left_(lhs),
+    right_(rhs),
+    allowsSlash_(allowSlash),
+    warned_(false),
+    isCalcSafeOp_(isCalcSafeOp)
+  {}
+
   // Convert to string (only for debugging)
   sass::string BinaryOpExpression::toString() const
   {
@@ -469,7 +487,7 @@ namespace Sass {
   sass::string InvocationExpression::toString() const
   {
     StringVector components;
-    for (auto positional : arguments_->positional()) {
+    for (auto& positional : arguments_->positional()) {
       components.emplace_back(positional->toString());
     }
     for (auto& name : arguments_->named()) {
@@ -531,7 +549,7 @@ namespace Sass {
     if (separator() != SASS_SPACE) return false;
     if (hasBrackets() == true) return false;
     if (size() < 2) return false;
-    for (auto asd : items()) {
+    for (auto& asd : items()) {
       if (!asd->isCalcSafe())
         return false;
     }

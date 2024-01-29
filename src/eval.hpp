@@ -30,7 +30,8 @@ namespace Sass {
 
     Value* doDivision(Value* left, Value* right, BinaryOpExpression* node, Logger& logger, SourceSpan pstate);
 
-    Value* withoutSlash(ValueObj value);
+    inline Value* withoutSlash2(ValueObj value);
+    inline Value* withoutSlash3(Value* value);
 
     // Some references
     Logger& logger;

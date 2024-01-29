@@ -287,13 +287,13 @@ namespace Sass {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (!name.isPrivate()) {
-        for (auto fwds : current->forwards) {
-          auto fwd = fwds->mixIdxs.find(name);
+        for (const auto& fwds : current->forwards) {
+          const auto& fwd = fwds->mixIdxs.find(name);
           if (fwd != fwds->mixIdxs.end()) {
             return { fwds, fwd->second };
           }
           if (Module* mod = fwds->module) {
-            auto fwd = mod->mergedFwdMix.find(name);
+            const auto& fwd = mod->mergedFwdMix.find(name);
             if (fwd != mod->mergedFwdMix.end()) {
               return { fwd->second };
             }
@@ -301,7 +301,7 @@ namespace Sass {
         }
       }
       if (current->isImport) continue;
-      auto it = current->mixIdxs.find(name);
+      const auto& it = current->mixIdxs.find(name);
       if (it != current->mixIdxs.end()) {
         return { current, it->second };
       }
@@ -320,13 +320,13 @@ namespace Sass {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
       if (!name.isPrivate()) {
-        for (auto fwds : current->forwards) {
-          auto fwd = fwds->fnIdxs.find(name);
+        for (const auto& fwds : current->forwards) {
+          const auto& fwd = fwds->fnIdxs.find(name);
           if (fwd != fwds->fnIdxs.end()) {
             return { fwds, fwd->second };
           }
           if (Module* mod = fwds->module) {
-            auto fwd = mod->mergedFwdFn.find(name);
+            const auto& fwd = mod->mergedFwdFn.find(name);
             if (fwd != mod->mergedFwdFn.end()) {
               return { fwd->second };
             }
@@ -334,7 +334,7 @@ namespace Sass {
         }
       }
       if (current->isImport) continue;
-      auto it = current->fnIdxs.find(name);
+      const auto& it = current->fnIdxs.find(name);
       if (it != current->fnIdxs.end()) {
         return { current, it->second };
       }
@@ -352,8 +352,8 @@ namespace Sass {
   {
     for (const EnvRefs* current = this; current; current = current->pscope)
     {
-      for (auto fwds : current->forwards) {
-        auto fwd = fwds->varIdxs.find(name);
+      for (const auto& fwds : current->forwards) {
+        const auto& fwd = fwds->varIdxs.find(name);
         if (fwd != fwds->varIdxs.end()) {
           if (name.isPrivate()) {
             throw Exception::ParserException(root.compiler,
@@ -363,7 +363,7 @@ namespace Sass {
           return { fwds, fwd->second };
         }
         if (Module* mod = fwds->module) {
-          auto fwd = mod->mergedFwdVar.find(name);
+          const auto& fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             if (name.isPrivate()) {
               throw Exception::ParserException(root.compiler,
@@ -401,14 +401,14 @@ namespace Sass {
         }
       }
       if (name.isPrivate()) continue;
-      for (auto fwds : current->forwards) {
-        auto fwd = fwds->varIdxs.find(name);
+      for (const auto& fwds : current->forwards) {
+        const auto& fwd = fwds->varIdxs.find(name);
         if (fwd != fwds->varIdxs.end()) {
           vidxs.emplace_back(EnvRef{
             fwds, fwd->second });
         }
         if (Module* mod = fwds->module) {
-          auto fwd = mod->mergedFwdVar.find(name);
+          const auto& fwd = mod->mergedFwdVar.find(name);
           if (fwd != mod->mergedFwdVar.end()) {
             vidxs.emplace_back(EnvRef{
               fwd->second });
@@ -426,8 +426,8 @@ namespace Sass {
       root.setModVar(it->second, value, guarded, pstate);
       return { it->second };
     }
-    for (auto fwds : forwards) {
-      auto it = fwds->varIdxs.find(name);
+    for (const auto& fwds : forwards) {
+      const auto it = fwds->varIdxs.find(name);
       if (it != fwds->varIdxs.end()) {
         root.setModVar(it->second, value, guarded, pstate);
         return { it->second };
