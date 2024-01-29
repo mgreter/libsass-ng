@@ -75,6 +75,8 @@ namespace Sass {
 
     bool isInvisible() const;
 
+    void assertNotBogus(Logger& logger, const sass::string& name);
+
     // To be implemented by specialization
     virtual size_t hash() const = 0;
     virtual unsigned long specificity() const = 0;
@@ -998,8 +1000,6 @@ namespace Sass {
     mutable unsigned long minSpecificity_ = 0xFFFFFFFF;
 
   public:
-
-    SelectorList* assertNotBogus(const sass::string& name);
 
     // Value move constructor
     SelectorList(

@@ -135,14 +135,14 @@ namespace Sass {
       BUILT_IN_FN(extend)
       {
         SelectorListObj selector = arguments[0]->
-          assertSelector(compiler, "selector")
-          ->assertNotBogus("selector");
+          assertSelector(compiler, "selector");
+        selector->assertNotBogus(compiler, "selector");
         SelectorListObj target = arguments[1]->
-          assertSelector(compiler, "extendee")
-          ->assertNotBogus("extendee");
+          assertSelector(compiler, "extendee");
+        target->assertNotBogus(compiler, "extendee");
         SelectorListObj source = arguments[2]->
-          assertSelector(compiler, "extender")
-          ->assertNotBogus("extender");
+          assertSelector(compiler, "extender");
+        source->assertNotBogus(compiler, "extender");
         SelectorListObj result = ExtensionStore::extend(selector, source, target, compiler);
         if (result.isNull()) return SASS_MEMORY_NEW(Null, pstate);
         return result->toValue();
@@ -151,14 +151,14 @@ namespace Sass {
       BUILT_IN_FN(replace)
       {
         SelectorListObj selector = arguments[0]->
-          assertSelector(compiler, "selector")
-          ->assertNotBogus("selector");
+          assertSelector(compiler, "selector");
+        selector->assertNotBogus(compiler, "selector");
         SelectorListObj target = arguments[1]->
-          assertSelector(compiler, "original")
-          ->assertNotBogus("original");
+          assertSelector(compiler, "original");
+        target->assertNotBogus(compiler, "original");
         SelectorListObj source = arguments[2]->
-          assertSelector(compiler, "replacement")
-          ->assertNotBogus("replacement");
+          assertSelector(compiler, "replacement");
+        source->assertNotBogus(compiler, "replacement");
         SelectorListObj result = ExtensionStore::replace(selector, source, target, compiler);
         if (result.isNull()) return SASS_MEMORY_NEW(Null, pstate);
         return result->toValue();
@@ -168,8 +168,10 @@ namespace Sass {
       {
         SelectorListObj selector1 = arguments[0]->
           assertSelector(compiler, "selector1");
+        selector1->assertNotBogus(compiler, "selector1");
         SelectorListObj selector2 = arguments[1]->
           assertSelector(compiler, "selector2");
+        selector2->assertNotBogus(compiler, "selector2");
         //std::cerr << "selector1 " << selector1->inspect() << "\n";
         //std::cerr << "selector2 " << selector2->inspect() << "\n";
         SelectorListObj result = selector1->unifyWith(selector2);
@@ -180,12 +182,12 @@ namespace Sass {
       BUILT_IN_FN(isSuper)
       {
         SelectorListObj sel_sup = arguments[0]
-          ->assertSelector(compiler, "super")
-          ->assertNotBogus("super");
+          ->assertSelector(compiler, "super");
+        sel_sup->assertNotBogus(compiler, "super");
           
         SelectorListObj sel_sub = arguments[1]
-          ->assertSelector(compiler, "sub")
-          ->assertNotBogus("super");
+          ->assertSelector(compiler, "sub");
+        sel_sub->assertNotBogus(compiler, "super");
         bool result = sel_sup->isSuperselectorOf(sel_sub);
         return SASS_MEMORY_NEW(Boolean, pstate, result);
       }

@@ -18,6 +18,12 @@ namespace Sass {
     AstNode(ptr)
   {}
 
+  bool CssNode::isInvisibleOtherThanBogusCombinators() const
+  {
+    IsCssInvisibleVisitor visitor(false, false);
+    return const_cast<CssNode*>(this)->accept(&visitor);
+  }
+
   bool CssNode::isInvisible() const
   {
     IsCssInvisibleVisitor visitor(true, false);

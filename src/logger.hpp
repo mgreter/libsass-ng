@@ -37,7 +37,10 @@ namespace Sass {
       WARN_DOUBLE_PARENT,
       WARN_STRING_CALL,
       WARN_MOZ_DOC,
-      WARN_RULE
+      WARN_RULE,
+      WARN_SEL_USELESS,
+      WARN_SEL_ERROR,
+      WARN_SEL_BOGUS,
     };
 
     // Epsilon for precision

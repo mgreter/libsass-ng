@@ -163,7 +163,8 @@ namespace Sass {
   //////////////////////////////////////////////////////////////////////
 
   class Expression : public Interpolant,
-    public ExpressionVisitable<Value*>
+    public ExpressionVisitable<Value*>,
+    public ExpressionVisitable<Expression*>
   {
   public:
 

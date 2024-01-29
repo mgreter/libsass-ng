@@ -77,6 +77,26 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+  /*
+  FunctionExpression* Eval::expressionToCalc(Expression* expression)
+  {
+
+    ExpressionVector args;
+
+    for (auto )
+
+    return SASS_MEMORY_NEW(FunctionExpression, expression->pstate(), "calc",
+      SASS_MEMORY_NEW(CallableArguments, expression->pstate(), std::move(args), {}));
+  }
+    FunctionExpression(
+      "calc",
+      ArgumentInvocation(
+        [expression.accept(const _MakeExpressionCalculationSafe())],
+        const{},
+        expression.span),
+      expression.span);
+
+      */
 
   // Helper function for the division
   Value* Eval::doDivision(Value* left, Value* right,
@@ -94,6 +114,12 @@ namespace Sass {
         // return result.detach();
       }
       else {
+
+        logger.addDeprecation("Using / for division outside of calc() is deprecated and "
+          "will be removed in LibSass 4.1.0.\n\nRecommendation: math.div(" + left->inspect() +
+          ", " + right->inspect() + ") or calc(" + node->toString() + ")\n\n"
+          "More info and automated migrator : https://sass-lang.com/d/slash-div",
+          pstate, Logger::WARN_MATH_DIV);
 
         // ToDo: deprecation warning
 
@@ -2245,9 +2271,6 @@ namespace Sass {
       SelectorListObj slist = interpolationToSelector(node->interpolation(), plainCss);
       // std::cerr << "GOTACH [" << slist->inspect() << "]\n";
       slist = slist->resolveParentSelectors(selector(), traces, !atRootExcludingStyleRule);
-      if (slist->inspect() == "a b") {
-        // std::cerr << "Still fails\n";
-      }
       // std::cerr << "VISIT [" << slist->inspect() << "]\n";
       // slist = slist->produce();
       // Append new selector list to the stack
@@ -2291,12 +2314,37 @@ namespace Sass {
       // Reset specific flag (not in an at-rule)
       RAII_FLAG(atRootExcludingStyleRule, false);
 
-      // if (!rule.isInvisibleOtherThanBogusCombinators) {
-      for (auto complex : slist->elements()) {
+      if (!child->isInvisibleOtherThanBogusCombinators()) {
+        for (auto complex : slist->elements()) {
+          if (!complex->isBogusStrict()) continue;
+
+          if (complex->isUseless()) {
+            logger.addDeprecation("The selector " + complex->inspect() + " "
+              "is invalid CSS. It will be omitted from the generated CSS.\n"
+              "This will be an error in LibSass 4.1.0.\n\n"
+              "More info: https://sass-lang.com/d/bogus-combinators",
+              complex->pstate(), Logger::WARN_SEL_USELESS);
+          }
+          else if (!complex->leadingCombinators().empty()) {
+            logger.addDeprecation("The selector " + complex->inspect() + " "
+              "is invalid CSS. It will be omitted from the generated CSS.\n"
+              "This will be an error in LibSass 4.1.0.\n\n"
+              "More info: https://sass-lang.com/d/bogus-combinators",
+              complex->pstate(), Logger::WARN_SEL_ERROR);
+          }
+          else {
+            logger.addDeprecation("The selector " + complex->inspect() + " "
+              "is only valid for nesting and shouldn't\n"
+              "have children other than style rules.\n"
+              "This will be an error in LibSass 4.1.0.\n\n"
+              "More info: https://sass-lang.com/d/bogus-combinators",
+              complex->pstate(), Logger::WARN_SEL_BOGUS);
+          }
+
        // if (!complex->isBogusStrict()) continue;
         //std::cerr << "Bogus detected!!!!!!!!!!\n";
+        }
       }
-      // }
 
       // debug_ast(node);
       // Visit the remaining items at child

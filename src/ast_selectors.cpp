@@ -68,9 +68,15 @@ namespace Sass {
     return const_cast<Selector*>(this)->accept(&visitor);
   }
 
-  SelectorList* SelectorList::assertNotBogus(const sass::string& name)
+  void Selector::assertNotBogus(Logger& logger, const sass::string& name)
   {
-    return this;
+    if (isBogusStrict()) {
+      sass::string msg = name.empty() ? "" : "$" + name + ": ";
+      msg += inspect() + " is not valid CSS.\n";
+      msg += "This will be an error in LibSass 4.1.0.\n\n";
+      msg += "More info: https://sass-lang.com/d/bogus-combinators";
+      logger.addDeprecation(msg, pstate(), Logger::WARN_SEL_BOGUS);
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////

@@ -37,6 +37,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitSelectorExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitSelectorExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
@@ -74,6 +77,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitValueExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitValueExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return false; }
@@ -105,6 +111,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitNullExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitNullExpression(this);
     }
 
@@ -140,6 +149,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitColorExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitColorExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return false; }
@@ -173,6 +185,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitNumberExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitNumberExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return true; }
@@ -204,6 +219,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitBooleanExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitBooleanExpression(this);
     }
 
@@ -259,6 +277,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitStringExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitStringExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
@@ -296,6 +317,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitSupportsExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitSupportsExpression(this);
     }
 
@@ -338,6 +362,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitMapExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitMapExpression(this);
     }
 
@@ -401,6 +428,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitListExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitListExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
@@ -436,6 +466,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitUnaryOpExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitUnaryOpExpression(this);
     }
 
@@ -501,6 +534,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitBinaryOpExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitBinaryOpExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
@@ -549,6 +585,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitVariableExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitVariableExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return true; }
@@ -580,6 +619,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitParenthesizedExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitParenthesizedExpression(this);
     }
 
@@ -651,6 +693,9 @@ namespace Sass {
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitItplFnExpression(this);
     }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+      return visitor->visitItplFnExpression(this);
+    }
 
     // Return if expression can be used in calculations
     bool isCalcSafe() override final { return true; }
@@ -675,6 +720,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitIfExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitIfExpression(this);
     }
 
@@ -718,6 +766,9 @@ namespace Sass {
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+      return visitor->visitFunctionExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
       return visitor->visitFunctionExpression(this);
     }
 
