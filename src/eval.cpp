@@ -2541,7 +2541,7 @@ namespace Sass {
   CssParentNode* Eval::_trimIncluded(CssParentVector& nodes)
   {
 
-    auto _root = getRoot();
+    CssParentNodeObj _root = getRoot();
     if (nodes.empty()) return _root;
 
     auto parent = current;
@@ -2557,10 +2557,10 @@ namespace Sass {
       parent = parent->parent();
     }
 
-    if (parent != _root) return _root;
-    auto& root = nodes[innermostContiguous];
+    if (parent != _root) return _root.detach();
+    auto root = nodes[innermostContiguous];
     nodes.resize(innermostContiguous);
-    return root;
+    return root.detach();
 
   }
 
@@ -2597,7 +2597,7 @@ namespace Sass {
       }
       parent = parent->parent();
     }
-    auto root = _trimIncluded(included);
+    CssParentNodeObj root = _trimIncluded(included);
 
     if (root == orgParent) {
       acceptChildrenAt(root, node);
@@ -2621,7 +2621,7 @@ namespace Sass {
         root->addChildAt(outerCopy, false);
       }
 
-      auto newParent = innerCopy == nullptr ? root : innerCopy;
+      CssParentNodeObj newParent = innerCopy == nullptr ? root : innerCopy;
 
       RAII_FLAG(inKeyframes, inKeyframes);
       RAII_FLAG(inUnknownAtRule, inUnknownAtRule);
