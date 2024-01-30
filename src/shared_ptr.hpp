@@ -273,6 +273,11 @@ namespace Sass {
 
     inline bool isNull() const { return node == nullptr; }
 
+    operator sass::string() const {
+      if (node == nullptr) return "null";
+      else return node->toString();
+    }
+
   protected:
 
     // ##__declspec(noinline)
@@ -337,6 +342,18 @@ namespace Sass {
 
   // Comparison operators, based on:
   // https://en.cppreference.com/w/cpp/memory/unique_ptr/operator_cmp
+
+  // Helper for string concatenation
+  template<typename T>
+  sass::string operator+ (const char* lhs, const SharedPtr<T>& rhs) {
+    return std::move(lhs + (sass::string)rhs);
+  }
+
+  // Helper for string concatenation
+  template<typename T>
+  sass::string operator+ (const sass::string& lhs, const SharedPtr<T>& rhs) {
+    return std::move(lhs + (sass::string)rhs);
+  }
 
 }  // namespace Sass
 

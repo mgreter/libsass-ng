@@ -340,7 +340,7 @@ namespace Sass {
   // Convert to string (only for debugging)
   sass::string BinaryOpExpression::toString() const
   {
-    if (operand_ == SassOperator::DIV) {
+    if (false && operand_ == SassOperator::DIV) {
       sass::sstream buffer;
       buffer << "math.div(";
       auto left = this->left(); // Hack to make analysis work.
@@ -408,9 +408,21 @@ namespace Sass {
     expression_(expression)
   {}
 
+  ParenthesizedExpression::ParenthesizedExpression(
+    const SourceSpan& pstate,
+    Expression* expression) :
+    Expression(pstate),
+    expression_(expression)
+  {}
+
   // Convert to string (only for debugging)
   sass::string ParenthesizedExpression::toString() const {
     return "(" + expression_->toString() + ")";
+  }
+
+  sass::string ParenthesizedExpression::recommendation() const
+  {
+    return expression_->toString();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -421,6 +433,15 @@ namespace Sass {
     UnaryOpType optype,
     ExpressionObj operand) :
     Expression(std::move(pstate)),
+    optype_(optype),
+    operand_(operand)
+  {}
+
+  UnaryOpExpression::UnaryOpExpression(
+    const SourceSpan& pstate,
+    UnaryOpType optype,
+    ExpressionObj operand) :
+    Expression(pstate),
     optype_(optype),
     operand_(operand)
   {}
@@ -542,6 +563,19 @@ namespace Sass {
         || right()->isCalcSafe();
     }
     return false;
+  }
+
+  sass::string BinaryOpExpression::recommendation() const
+  {
+    if (operand_ == SassOperator::DIV) {
+      sass::string text("math.div(");
+      text += left_->recommendation();
+      text += ", ";
+      text += right_->recommendation();
+      text += ")";
+      return text;
+    }
+    return toString();
   }
 
   bool ListExpression::isCalcSafe()

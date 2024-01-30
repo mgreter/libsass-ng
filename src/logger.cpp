@@ -85,35 +85,32 @@ namespace Sass {
 
     size_t current = 0;
     sass::string word;
+    size_t spacing = 0;
 
     while (in >> word) {
       if (current + word.size() > width) {
         os << STRMLF;
+        spacing = 0;
         current = 0;
       }
-      os << word; // << ' ';
-      current += word.size() + 1;
-      if (!Character::isNewline(in.peek())) {
+      while (spacing > 0) {
+        spacing -= 1;
         os << ' ';
       }
+      os << word; // << ' ';
+      current += word.size();
       while (Character::isNewline(in.peek())) {
         if (in.peek() == '\n') {
           os << STRMLF;
+          spacing = 0;
           current = 0;
         }
         in.ignore(1);
       }
       // Check if new line starts with white-space
       while (Character::isSpaceOrTab(in.peek())) {
+        spacing += 1;
         in.ignore(1);
-        // Preserve if we have multiple white-space
-        if (Character::isSpaceOrTab(in.peek())) {
-          os << ' ';
-        }
-        while (Character::isSpaceOrTab(in.peek())) {
-          in.ignore(1);
-          os << ' ';
-        }
       }
     }
     if (current != 0) {

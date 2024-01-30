@@ -762,18 +762,15 @@ namespace Sass {
           CallableArguments, pstate, ExpressionVector{}, {}, restArg, kwdRest);
 
         if (String * str = function->isaString()) {
-          sass::string name = str->value();
           compiler.addDeprecation(
-            "Passing a string to call() is deprecated and will be illegal in LibSass 4.1.0.\n"
-            "Use call(get-function(" + str->inspect() + ")) instead.",
+            "Passing a string to call() is deprecated and will be illegal in LibSass 5.0.0.\n"
+            "\nRecommendation: call(get-function(" + str->inspect() + "))",
             str->pstate(), Logger::WARN_STRING_CALL);
-
           InterpolationObj itpl = SASS_MEMORY_NEW(Interpolation, pstate);
           itpl->append(SASS_MEMORY_NEW(String, pstate, sass::string(str->value())));
           FunctionExpressionObj expression = SASS_MEMORY_NEW(
             FunctionExpression, pstate, str->value(), invocation);
           return eval.acceptFunctionExpression(expression);
-
         }
 
         Function* fn = function->assertFunction(compiler, "function");

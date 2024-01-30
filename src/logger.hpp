@@ -32,6 +32,7 @@ namespace Sass {
       WARN_NUMBER_ARG,
       WARN_NUMBER_PERCENT,
       WARN_GLOBAL_ASSIGN,
+      WARN_GLOBAL_ASSIGN_ROOT,
       WARN_COLOR_ITPL,
       WARN_EMPTY_SELECTOR,
       WARN_DOUBLE_PARENT,
@@ -39,8 +40,10 @@ namespace Sass {
       WARN_MOZ_DOC,
       WARN_RULE,
       WARN_SEL_USELESS,
+      WARN_SEL_USELESS_EXTEND,
       WARN_SEL_ERROR,
       WARN_SEL_BOGUS,
+      WARN_ELSEIF,
     };
 
     // Epsilon for precision

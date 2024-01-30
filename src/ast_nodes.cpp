@@ -11,6 +11,7 @@
 #include "stylesheet.hpp"
 #include "ast_values.hpp"
 #include "ast_selectors.hpp"
+#include "expr_to_calc.hpp"
 #include "parser_selector.hpp"
 #include "parser_at_root_query.hpp"
 
@@ -46,6 +47,11 @@ namespace Sass {
     text_(text)
   {}
 
+  sass::string ItplString::toString() const
+  {
+    return text_;
+  }
+
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
 
@@ -58,6 +64,13 @@ namespace Sass {
       append(interpolation);
     }
   }
+
+  Interpolation::Interpolation(
+    const SourceSpan& pstate,
+    sass::vector<InterpolantObj>&& itpls) :
+    AstNode(pstate),
+    Vectorized(std::move(itpls))
+  {}
 
   // If this contains no interpolated expressions, returns its text contents.
   const sass::string& Interpolation::getPlainString() const
@@ -107,7 +120,15 @@ namespace Sass {
         parts.push_back(str->inspect());
       }
       else if (Expression* ex = part->isaExpression()) {
-        parts.push_back(ex->toString());
+        if (StringExpression* strex = ex->isaStringExpression()) {
+          parts.push_back("#{" + strex->toString() + "}");
+        }
+        else {
+          parts.push_back(ex->toString());
+        }
+      }
+      else {
+        throw "not implemented";
       }
     }
     return StringUtils::join(parts, "");
@@ -123,6 +144,18 @@ namespace Sass {
   Expression::Expression(const SourceSpan& pstate)
     : Interpolant(pstate)
   {}
+
+  FunctionExpressionObj Expression::toCalc()
+  {
+    static ExpressionToCalc visitor;
+    return SASS_MEMORY_NEW(FunctionExpression, pstate(), "calc", SASS_MEMORY_NEW(
+      CallableArguments, pstate(), { this->accept(&visitor) }, {}), "");
+  }
+
+  sass::string Expression::recommendation() const
+  {
+    return toString();
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -793,6 +826,9 @@ namespace Sass {
   {
     if (auto itpl = dynamic_cast<const Interpolation*>(this)) {
       return itpl->toString();
+    }
+    else if (auto itps = dynamic_cast<const ItplString*>(this)) {
+      return itps->toString();
     }
     else if (auto value = dynamic_cast<const Value*>(this)) {
       return value->inspect();

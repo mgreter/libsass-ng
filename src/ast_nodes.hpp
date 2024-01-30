@@ -123,6 +123,8 @@ namespace Sass {
     ItplString(const SourceSpan& pstate, const sass::string& text);
     Type getType() const override final { return LiteralInterpolant; }
 
+    sass::string toString() const;
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ItplString);
   };
@@ -140,6 +142,10 @@ namespace Sass {
     // Value constructor
     Interpolation(const SourceSpan& pstate,
       Interpolant* interpolant = nullptr);
+
+    // Value constructor
+    Interpolation(const SourceSpan& pstate,
+      sass::vector<InterpolantObj>&& itpls);
 
     // // If this contains no interpolated expressions, returns its text contents.
     const sass::string& getPlainString() const;
@@ -180,11 +186,17 @@ namespace Sass {
     // Basically the same as `ExpressionVisitable<bool>`
     virtual bool isCalcSafe() = 0;
 
+    FunctionExpressionObj toCalc();
+
+    virtual sass::string recommendation() const;
+
     // Needed here to avoid ambiguity from base-classes (issue seems gone)!??
     // virtual Value* accept(ExpressionVisitor<Value*>* visitor) override = 0;
 
     // Implementation for parent Interpolant interface
     Type getType() const override final { return ExpressionInterpolant; }
+
+    // operator sass::string() const { return toString(); }
 
     virtual sass::string toString() const = 0;
 

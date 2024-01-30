@@ -154,15 +154,15 @@ namespace Sass {
 
   // Get value instance by stack index reference
   // Just converting and returning reference to array offset
-  ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
-  {
-    if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
-      return intVariables[vidx.offset];
-    }
-    else {
-      return varStack[vidx.idxs->varOffset + vidx.offset];
-    }
-  }
+  //ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
+  //{
+  //  if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+  //    return intVariables[vidx.offset];
+  //  }
+  //  else {
+  //    return varStack[vidx.idxs->varOffset + vidx.offset];
+  //  }
+  //}
   // EO getVariable
 
   // Get function instance by stack index reference

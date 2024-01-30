@@ -284,6 +284,9 @@ namespace Sass {
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
 
+    // Convert to string (only for debugging)
+    sass::string toString() const override final;
+
   private:
 
     // find best quote_mark by detecting if the string contains any single
@@ -291,9 +294,6 @@ namespace Sass {
     // quote as quote_mark. Otherwise we check if the string contains any double
     // quotes, which will trigger the use of single quotes as best quote_mark.
     uint8_t findBestQuote() const;
-
-    // Convert to string (only for debugging)
-    sass::string toString() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(StringExpression);
@@ -464,6 +464,12 @@ namespace Sass {
       UnaryOpType optype,
       ExpressionObj operand);
 
+    // Value constructor
+    UnaryOpExpression(
+      const SourceSpan& pstate,
+      UnaryOpType optype,
+      ExpressionObj operand);
+
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitUnaryOpExpression(this);
@@ -551,6 +557,8 @@ namespace Sass {
     // Return if expression can be used in calculations
     bool isCalcSafe() override final;
 
+    sass::string recommendation() const override final;
+
     // Convert to string (only for debugging)
     sass::string toString() const override final;
 
@@ -627,6 +635,11 @@ namespace Sass {
       SourceSpan&& pstate,
       Expression* expression);
 
+    // Value constructor
+    ParenthesizedExpression(
+      const SourceSpan& pstate,
+      Expression* expression);
+
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {
       return visitor->visitParenthesizedExpression(this);
@@ -640,6 +653,8 @@ namespace Sass {
 
     // Convert to string (only for debugging)
     sass::string toString() const override final;
+
+    sass::string recommendation() const override final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ParenthesizedExpression);

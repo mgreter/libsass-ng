@@ -107,43 +107,19 @@ namespace Sass {
     // EO isMsFilterStart
 
 /// Prints a deprecation warning if [hue] has a unit other than `deg`.
-    void checkAngle(Logger& logger, const Number* angle, const sass::string& name)
+    static void checkAngle(Logger& logger, const Number* angle, const sass::string& name)
     {
-
       if (!angle->hasUnits() || angle->hasUnit("deg")) return;
-
-      sass::sstream message;
-      message << "$" << name << ": Passing a unit other than deg (";
-      message << angle->inspect() << ") is deprecated." << STRMLF;
-
-      if (angle->numerators.size() == 1 && angle->denominators.size() == 0 &&
-        get_unit_class(string_to_unit(angle->numerators[0])) == UnitClass::ANGLE)
-      {
-        double coerced = angle->getUnitConversionFactor(Strings::deg) * angle->value();
-        Number correct(angle->pstate(), coerced, "deg");
-        Number wrong(angle->pstate(), angle->value(), "deg");
-        message << "You're passing " << angle->inspect() << ", which is currently (incorrectly) converted to " << wrong.inspect() << "." << STRMLF;
-        message << "Soon, it will instead be correctly converted to " << correct.inspect() << "." << STRMLF << STRMLF;
-        message << "To preserve current behavior: $" << name << " * 1deg/1" << angle->numerators[0] << STRMLF;
-        message << "To migrate to new behavior: 0deg + $" << name << STRMLF;
-      }
-      else {
-        StringVector dif(angle->numerators);
-        StringVector mul(angle->denominators);
-        // ToDo: don't report percentage twice!?
-        for (auto& unit : mul) unit = " * 1" + unit;
-        for (auto& unit : dif) unit = " / 1" + unit;
-        message << STRMLF << "To preserve current behavior: $" << name
-          << StringUtils::join(mul, "") << StringUtils::join(dif, "") << STRMLF;
-      }
-
-      message << STRMLF << "See https://sass-lang.com/d/color-units" << STRMLF;
-      logger.addDeprecation(message.str(), angle->pstate(), Logger::WARN_ANGLE_CONVERT);
+      sass::string text = "$" + name + ": ";
+      text += "Passing a unit other than deg (" + angle->inspect() + ") is deprecated.\n";
+      text += "\nTo preserve current behavior: " + angle->unitSuggestion(name) + "\n";
+      text += "\nSee https://sass-lang.com/d/color-units";
+      logger.addDeprecation(text, angle->pstate(), Logger::WARN_ANGLE_CONVERT);
     }
 
     // Helper function for debugging
     // ToDo return EnvKey?
-    const sass::string& getColorArgName(
+    static const sass::string& getColorArgName(
       size_t idx, const sass::string& name)
     {
       switch (idx) {
@@ -156,7 +132,7 @@ namespace Sass {
     // EO getColorArgName
 
     // Return value that will render as-is in css
-    String* getFunctionString(
+    static String* getFunctionString(
       const sass::string& name,
       const SourceSpan& pstate,
       const ValueVector& arguments = {},
@@ -178,7 +154,7 @@ namespace Sass {
     }
     // EO getFunctionString
 
-    Value* parseColorChannels(
+    static Value* parseColorChannels(
       const sass::string& name,
       Value* channels,
       const SourceSpan& pstate,
@@ -910,6 +886,13 @@ namespace Sass {
 
       BUILT_IN_FN(fnInvert)
       {
+        if (arguments[0]->isaNumber()) {
+          compiler.addDeprecation("Passing a number (" +
+            arguments[0] + ") to color.invert() is deprecated.\n"
+            "\nRecommendation: grayscale(" + arguments[0] + ")",
+            arguments[0]->pstate(), Logger::WARN_NUMBER_ARG);
+        }
+
         if (isSpecialNumber(arguments[0])) {
           return getFunctionString(
             Strings::invert,
@@ -1210,11 +1193,10 @@ namespace Sass {
       BUILT_IN_FN(noGrayscale)
       {
         if (arguments[0]->isaNumber()) {
-          compiler.addWarning("Passing a number to "
-            "color.grayscale() is deprecated.\n\nRecommendation: "
-            "grayscale(" + arguments[0]->inspect() + ")",
-            arguments[0]->pstate(),
-            Logger::WARN_NUMBER_ARG);
+          compiler.addDeprecation("Passing a number (" +
+            arguments[0] + ") to color.grayscale() is deprecated.\n"
+            "\nRecommendation: grayscale(" + arguments[0] + ")",
+            arguments[0]->pstate(), Logger::WARN_NUMBER_ARG);
         }
         return grayscale(pstate, arguments, compiler, eval);
       }
@@ -1224,11 +1206,10 @@ namespace Sass {
       BUILT_IN_FN(noOpacity)
       {
         if (arguments[0]->isaNumber()) {
-          compiler.addWarning("Passing a number to "
-            "color.opacity() is deprecated.\n\nRecommendation: "
-            "opacity(" + arguments[0]->inspect() + ")",
-            arguments[0]->pstate(),
-            Logger::WARN_NUMBER_ARG);
+          compiler.addDeprecation("Passing a number (" +
+            arguments[0] + ") to color.opacity() is deprecated.\n"
+            "\nRecommendation: opacity(" + arguments[0] + ")",
+            arguments[0]->pstate(), Logger::WARN_NUMBER_ARG);
         }
         return opacity(pstate, arguments, compiler, eval);
       }

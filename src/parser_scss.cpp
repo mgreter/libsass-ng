@@ -5,6 +5,7 @@
 /*****************************************************************************/
 #include "parser_scss.hpp"
 
+#include "compiler.hpp"
 #include "character.hpp"
 #include "utf8/checked.h"
 
@@ -66,19 +67,18 @@ namespace Sass {
   // from before the corresponding `@if` was parsed.
   bool ScssParser::scanElse(size_t)
   {
+    // ToDo: can we move this after whitespace?
     StringScannerState start = scanner.state();
     scanWhitespace();
-    // StringScannerState beforeAt = scanner.state();
+    StringScannerState beforeAt = scanner.state();
     if (scanner.scanChar($at)) {
       if (scanIdentifier("else", true)) return true;
       if (scanIdentifier("elseif", true)) {
-        /*
-        logger.warn(
-          "@elseif is deprecated and will not be supported in future Sass versions.\n"
-          "Use "@else if" instead.",
-          span: scanner.spanFrom(beforeAt),
-          deprecation : true);
-        */
+        compiler.addDeprecation("@elseif is deprecated "
+          "and will not be supported in future Sass versions.\n"
+          "\nRecommendation: @else if",
+          scanner.relevantSpanFrom(beforeAt.offset),
+          Logger::WARN_ELSEIF);
         scanner.offset.column -= 2;
         scanner.position -= 2;
         return true;

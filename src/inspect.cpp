@@ -697,6 +697,7 @@ namespace Sass {
           visitSelectorList(pseudo->selector());
         }
         in_comma_array = was_comma_array;
+        scheduled_space = 0;
         append_string(")");
       }
     }
@@ -739,6 +740,7 @@ namespace Sass {
     in_comma_array = was_comma_array;
     // probably ruby sass equivalent of element_needs_parens
     if (!in_declaration && in_comma_array) {
+      scheduled_space = 0;
       append_string(")");
     }
   }

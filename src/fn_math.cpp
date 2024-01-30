@@ -159,12 +159,16 @@ namespace Sass {
         Number* number1 = arguments[0]->isaNumber();
         Number* number2 = arguments[1]->isaNumber();
 
-        if (number1 == nullptr || number2 == nullptr) {
+        if (number1 == nullptr) {
           // callStackFrame csf(compiler, arguments[0]->pstate());
           compiler.printWarning("math.div() will only support number arguments in a future release.\n"
-            "Use list.slash() instead for a slash separator.", pstate, Logger::WARN_MATH_DIV);
+            "Use list.slash() instead for a slash separator.", arguments[0]->pstate(), Logger::WARN_MATH_DIV);
           // compiler.addWarning();
          }
+        else if (number2 == nullptr) {
+          compiler.printWarning("math.div() will only support number arguments in a future release.\n"
+            "Use list.slash() instead for a slash separator.", arguments[1]->pstate(), Logger::WARN_MATH_DIV);
+        }
 
         return arguments[0]->dividedBy(arguments[1], compiler, pstate);
 

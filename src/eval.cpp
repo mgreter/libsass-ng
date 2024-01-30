@@ -105,58 +105,28 @@ namespace Sass {
     // bool allowSlash = node->allowsSlash();
     ValueObj result = left->dividedBy(right, logger, pstate);
     if (Number* rv = result->isaNumber()) {
-      if (left && right && node->allowsSlash()
-        && _operandAllowsSlash(node->left())
-        && _operandAllowsSlash(node->right()))
-      {
-        rv->lhsAsSlash(left->isaNumber());
-        rv->rhsAsSlash(right->isaNumber());
-        // return result.detach();
-      }
-      else {
-
-        logger.addDeprecation("Using / for division outside of calc() is deprecated and "
-          "will be removed in LibSass 4.1.0.\n\nRecommendation: math.div(" + left->inspect() +
-          ", " + right->inspect() + ") or calc(" + node->toString() + ")\n\n"
-          "More info and automated migrator : https://sass-lang.com/d/slash-div",
-          pstate, Logger::WARN_MATH_DIV);
-
-        // ToDo: deprecation warning
-
-        // return result.detach();
-        
-        // rv->lhsAsSlash({}); // reset
-        // rv->lhsAsSlash({}); // reset
-      }
+      if (left && right) {
+        if (node->allowsSlash()
+          && _operandAllowsSlash(node->left())
+          && _operandAllowsSlash(node->right()))
+        {
+          rv->lhsAsSlash(left->isaNumber());
+          rv->rhsAsSlash(right->isaNumber());
+        }
+        else {
+          sass::string msg = "Using / for division outside of calc() is ";
+          msg += "deprecated and will be removed in LibSass 5.0.0.\n\n";
+          msg += "Recommendation: " + node->recommendation() + " or " + node->toCalc() + "\n\n";
+          msg += "More info and automated migrator: https://sass-lang.com/d/slash-div";
+          logger.addDeprecation(msg, pstate, Logger::WARN_MATH_DIV);
+        }
+      } 
     }
     return result.detach();
   }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-
-  inline Value* Eval::withoutSlash2(ValueObj value) {
-    if (value == nullptr) return value;
-    Number* number = value->isaNumber();
-    if (number) {
-      // Only numbers can have delayed slashes
-      if (number->hasAsSlash()) {
-        logger.addDeprecation("Using / for division is deprecated and will be removed "
-          "in LibSass 4.1.0.\n\nRecommendation: math.div(" + number->lhsAsSlash()->inspect() +
-          ", " + number->rhsAsSlash()->inspect() + ")\n\nMore info and automated migrator: "
-          "https://sass-lang.com/d/slash-div", value->pstate(), Logger::WARN_MATH_DIV);
-        ValueObj result = number->withoutSlash();
-        return result.detach();
-      }
-    }
-    return value.detach();
-    // if (number) return number;
-    // Make sure to collect all memory
-    //std::cerr << "Without Slash " << value->inspect() << "\n";
-    /// ValueObj result = value->withoutSlash();
-    /// return result.detach();
-  }
-
 
   inline Value* Eval::withoutSlash3(Value* value) {
     if (value == nullptr) return value;
@@ -165,9 +135,9 @@ namespace Sass {
       // Only numbers can have delayed slashes
       if (number->hasAsSlash()) {
         logger.addDeprecation("Using / for division is deprecated and will be removed "
-          "in LibSass 4.1.0.\n\nRecommendation: math.div(" + number->lhsAsSlash()->inspect() +
-          ", " + number->rhsAsSlash()->inspect() + ")\n\nMore info and automated migrator: "
-          "https://sass-lang.com/d/slash-div", value->pstate(), Logger::WARN_MATH_DIV);
+          "in LibSass 5.0.0.\n\nRecommendation: " + number->recommendation() + "\n\n"
+          "More info and automated migrator: https://sass-lang.com/d/slash-div",
+          value->pstate(), Logger::WARN_MATH_DIV);
         ValueObj result = number->withoutSlash();
         return result.detach();
       }
@@ -426,6 +396,8 @@ namespace Sass {
     for (uint32_t i = 0; i < parameters.size(); i += 1) {
       // Errors if argument is missing or given twice
       ValueObj value = getParameter(results, i, parameters[i]);
+      // Check for deprecated division
+      value = withoutSlash3(value);
       // Set lexical variable on scope
       compiler.varRoot.setVariable({ idxs, i },
         value->withoutSlash(), false);
@@ -855,8 +827,8 @@ namespace Sass {
               msg << "as " << rgba->inspect() <<", which will likely produce invalid ";
               msg << "CSS. Always quote color names when using them as strings or map ";
               msg << "keys (for example, \"" << disp << "\"). If you really want to ";
-              msg << "use the color value, append it to an empty string first to avoid ";
-              msg << "this warning (for example, '\"\" + " << disp << "').";
+              msg << "use the color value, append it to an empty string to avoid ";
+              msg << "this warning (e.g. use '\"\" + " << disp << "').";
               logger.addWarning(msg.str(), itpl->pstate(), Logger::WARN_COLOR_ITPL);
             }
           }
@@ -1907,7 +1879,7 @@ namespace Sass {
       }
 
     }
-    catch (Exception::UnitMismatch& ex) {
+    catch (Exception::UnitMismatch&) {
       sass::vector<AstNode*> foo;
       for (auto qwe : arguments) {
         foo.push_back(qwe);
@@ -2347,29 +2319,42 @@ namespace Sass {
       // Reset specific flag (not in an at-rule)
       RAII_FLAG(atRootExcludingStyleRule, false);
 
+      // Visit the remaining items at child
+      ValueObj rv = acceptChildrenAt(child, node);
+
       if (!child->isInvisibleOtherThanBogusCombinators()) {
         for (auto complex : slist->elements()) {
           if (!complex->isBogusStrict()) continue;
 
           if (complex->isUseless()) {
-            logger.addDeprecation("The selector " + complex->inspect() + " "
-              "is invalid CSS. It will be omitted from the generated CSS.\n"
-              "This will be an error in LibSass 4.1.0.\n\n"
+            logger.addDeprecation("The selector \""
+                + complex + "\" is invalid CSS.\n"
+              "It will be omitted from the generated CSS.\n"
+              "This will be an error in LibSass 5.0.0.\n\n"
               "More info: https://sass-lang.com/d/bogus-combinators",
               complex->pstate(), Logger::WARN_SEL_USELESS);
           }
           else if (!complex->leadingCombinators().empty()) {
-            logger.addDeprecation("The selector " + complex->inspect() + " "
-              "is invalid CSS. It will be omitted from the generated CSS.\n"
-              "This will be an error in LibSass 4.1.0.\n\n"
+            logger.addDeprecation("The selector \""
+                + complex + "\" is invalid CSS.\n"
+              "This will be an error in LibSass 5.0.0.\n\n"
               "More info: https://sass-lang.com/d/bogus-combinators",
               complex->pstate(), Logger::WARN_SEL_ERROR);
           }
-          else {
-            logger.addDeprecation("The selector " + complex->inspect() + " "
-              "is only valid for nesting and shouldn't\n"
+          else if (complex->isBogusOtherThanLeadingCombinator()) {
+            logger.addDeprecation("The selector \"" + complex + "\" "
+              "is only valid for nesting and shouldn't "
               "have children other than style rules.\n"
-              "This will be an error in LibSass 4.1.0.\n\n"
+              "It will be omitted from the generated CSS.\n"
+              "This will be an error in LibSass 5.0.0.\n\n"
+              "More info: https://sass-lang.com/d/bogus-combinators",
+              complex->pstate(), Logger::WARN_SEL_BOGUS);
+          }
+          else {
+            logger.addDeprecation("The selector \"" + complex + "\" "
+              "is only valid for nesting and shouldn't "
+              "have children other than style rules.\n"
+              "This will be an error in LibSass 5.0.0.\n\n"
               "More info: https://sass-lang.com/d/bogus-combinators",
               complex->pstate(), Logger::WARN_SEL_BOGUS);
           }
@@ -2380,8 +2365,7 @@ namespace Sass {
       }
 
       // debug_ast(node);
-      // Visit the remaining items at child
-      return acceptChildrenAt(child, node);
+      return rv.detach();
     }
     else {
       std::cerr << "WHAT THE FUCK\n";
@@ -3150,6 +3134,27 @@ namespace Sass {
       callStackFrame csf(logger, e->pstate());
       throw Exception::RuntimeException(traces,
         "@extend may only be used within style rules.");
+    }
+
+    for (const auto& complex : readStyleRule->selector()->elements())
+    {
+      if (!complex->isBogusStrict()) continue;
+      if (complex->isUseless()) {
+        logger.addDeprecation("The selector \""
+          + complex + "\" is invalid CSS.\n"
+          "Therefore, it can't be an extender.\n"
+          "This will be an error in LibSass 5.0.0.\n\n"
+          "More info: https://sass-lang.com/d/bogus-combinators",
+          complex->pstate(), Logger::WARN_SEL_USELESS_EXTEND);
+      }
+      else {
+        logger.addDeprecation("The selector \""
+          + complex + "\" is invalid CSS.\n"
+          "Therefore, it shouldn't be an extender.\n"
+          "This will be an error in LibSass 5.0.0.\n\n"
+          "More info: https://sass-lang.com/d/bogus-combinators",
+          complex->pstate(), Logger::WARN_SEL_USELESS_EXTEND);
+      }
     }
 
     SelectorListObj slist = interpolationToSelector(

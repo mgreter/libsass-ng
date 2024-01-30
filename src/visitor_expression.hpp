@@ -48,23 +48,30 @@ namespace Sass {
 
   public:
 
-    virtual Expression* visitBinaryOpExpression(BinaryOpExpression*) override = 0;
-    virtual Expression* visitBooleanExpression(BooleanExpression*) override = 0;
-    virtual Expression* visitColorExpression(ColorExpression*) override = 0;
-    virtual Expression* visitItplFnExpression(ItplFnExpression*) override = 0;
-    virtual Expression* visitFunctionExpression(FunctionExpression*) override = 0;
-    virtual Expression* visitIfExpression(IfExpression*) override = 0;
-    virtual Expression* visitListExpression(ListExpression*) override = 0;
-    virtual Expression* visitMapExpression(MapExpression*) override = 0;
-    virtual Expression* visitNullExpression(NullExpression*) override = 0;
-    virtual Expression* visitNumberExpression(NumberExpression*) override = 0;
-    virtual Expression* visitParenthesizedExpression(ParenthesizedExpression*) override = 0;
-    virtual Expression* visitSelectorExpression(SelectorExpression*) override = 0;
-    virtual Expression* visitStringExpression(StringExpression*) override = 0;
-    virtual Expression* visitSupportsExpression(SupportsExpression*) override = 0;
-    virtual Expression* visitUnaryOpExpression(UnaryOpExpression*) override = 0;
-    virtual Expression* visitValueExpression(ValueExpression*) override = 0;
-    virtual Expression* visitVariableExpression(VariableExpression*) override = 0;
+    virtual Expression* visitBinaryOpExpression(BinaryOpExpression*) override;
+    virtual Expression* visitBooleanExpression(BooleanExpression*) override;
+    virtual Expression* visitColorExpression(ColorExpression*) override;
+    virtual Expression* visitItplFnExpression(ItplFnExpression*) override;
+    virtual Expression* visitFunctionExpression(FunctionExpression*) override;
+    virtual Expression* visitIfExpression(IfExpression*) override;
+    virtual Expression* visitListExpression(ListExpression*) override;
+    virtual Expression* visitMapExpression(MapExpression*) override;
+    virtual Expression* visitNullExpression(NullExpression*) override;
+    virtual Expression* visitNumberExpression(NumberExpression*) override;
+    virtual Expression* visitParenthesizedExpression(ParenthesizedExpression*) override;
+    virtual Expression* visitSelectorExpression(SelectorExpression*) override;
+    virtual Expression* visitStringExpression(StringExpression*) override;
+    virtual Expression* visitSupportsExpression(SupportsExpression*) override;
+    virtual Expression* visitUnaryOpExpression(UnaryOpExpression*) override;
+    virtual Expression* visitValueExpression(ValueExpression*) override;
+    virtual Expression* visitVariableExpression(VariableExpression*) override;
+
+    // Additional Helper (make virtual once we have a use for it)
+    CallableArguments* visitCallableArguments(const CallableArguments* args);
+
+    SupportsCondition* visitSupportsCondition(const SupportsCondition* args);
+
+    Interpolation* visitInterpolation(const Interpolation* condition);
 
   };
 

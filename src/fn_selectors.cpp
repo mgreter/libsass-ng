@@ -187,7 +187,7 @@ namespace Sass {
           
         SelectorListObj sel_sub = arguments[1]
           ->assertSelector(compiler, "sub");
-        sel_sub->assertNotBogus(compiler, "super");
+        sel_sub->assertNotBogus(compiler, "sub");
         bool result = sel_sup->isSuperselectorOf(sel_sub);
         return SASS_MEMORY_NEW(Boolean, pstate, result);
       }

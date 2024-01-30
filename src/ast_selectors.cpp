@@ -73,7 +73,7 @@ namespace Sass {
     if (isBogusStrict()) {
       sass::string msg = name.empty() ? "" : "$" + name + ": ";
       msg += inspect() + " is not valid CSS.\n";
-      msg += "This will be an error in LibSass 4.1.0.\n\n";
+      msg += "This will be an error in LibSass 5.0.0.\n\n";
       msg += "More info: https://sass-lang.com/d/bogus-combinators";
       logger.addDeprecation(msg, pstate(), Logger::WARN_SEL_BOGUS);
     }
@@ -125,6 +125,11 @@ namespace Sass {
   ComplexSelector* CplxSelComponent::wrapInComplex(SelectorCombinatorVector prefixes)
   {
     return SASS_MEMORY_NEW(ComplexSelector, pstate(), std::move(prefixes), { this });
+  }
+
+  ComplexSelector* CplxSelComponent::wrapInComplex(const SourceSpan& span, SelectorCombinatorVector prefixes)
+  {
+    return SASS_MEMORY_NEW(ComplexSelector, span, std::move(prefixes), { this });
   }
 
   ComplexSelector* CplxSelComponent::wrapInComplex2()
@@ -1092,6 +1097,7 @@ namespace Sass {
             leads, tails, implicit_parent);
 
         for (auto qwe : complexes) {
+          qwe->pstate(pstate());
           // std::cerr << "RESOL [" << qwe->inspect() << "]\n";
         }
 
@@ -1102,7 +1108,7 @@ namespace Sass {
       }
       else {
         // component->hasPreLineFeed(hasPreLineFeed());
-        selectors.push_back({ component->wrapInComplex(leadingCombinators_) });
+        selectors.push_back({ component->wrapInComplex(pstate(), leadingCombinators_) });
       }
     }
 

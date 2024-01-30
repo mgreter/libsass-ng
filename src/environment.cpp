@@ -135,16 +135,16 @@ namespace Sass {
         // Check if we are at the global scope
         if (compiler.varRoot.isGlobal()) {
           logger.addDeprecation(
-            "As of LibSass 4.1, !global assignments won't be able to declare new variables.\n"
-            "Since this assignment is at the root of the stylesheet, the !global"
+            "As of LibSass 5.0.0, !global assignments won't be able to declare new variables.\n"
+            "\nSince this assignment is at the root of the stylesheet, the !global"
             " flag is unnecessary and can safely be removed.",
             a->pstate(), Logger::WARN_GLOBAL_ASSIGN);
         }
         else {
           logger.addDeprecation(
-            "As of LibSass 4.1, !global assignments won't be able to declare new variables.\n"
-            "Consider adding `$" + a->variable().orig() + ": null` at the root of the stylesheet.",
-            a->pstate(), Logger::WARN_GLOBAL_ASSIGN);
+            "As of LibSass 5.0.0, !global assignments won't be able to declare new variables.\n"
+            "\nRecommendation: add `$" + a->variable().orig() + ": null` at the stylesheet root.",
+            a->pstate(), Logger::WARN_GLOBAL_ASSIGN_ROOT);
         }
 
       }

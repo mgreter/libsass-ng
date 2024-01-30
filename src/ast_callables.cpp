@@ -255,6 +255,7 @@ namespace Sass {
   CallableSignature* CallableSignature::parse(
     Compiler& context, SourceData* source)
   {
+    return SASS_MEMORY_NEW(CallableSignature, SourceSpan::internal("FAKE"), {}, {});
     ScssParser parser(context, source);
     return parser.parseArgumentDeclaration();
   }

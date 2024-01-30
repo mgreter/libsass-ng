@@ -766,6 +766,8 @@ namespace Sass {
 
     ComplexSelector* wrapInComplex(SelectorCombinatorVector);
 
+    ComplexSelector* wrapInComplex(const SourceSpan& pstate, SelectorCombinatorVector);
+
     // virtual CplxSelComponent* produce() = 0;
 
     // To be implemented by specialization

@@ -63,11 +63,12 @@ namespace Sass {
     Offset start(scanner.offset);
     const char* previousLine = scanner.position;
     sass::vector<ComplexSelectorObj> items;
-    items.emplace_back(readComplexSelector());
+    items.emplace_back(readComplexSelector(start));
 
     scanWhitespace();
     while (scanner.scanChar($comma)) {
       scanWhitespace();
+      start = scanner.offset;
       uint8_t next = scanner.peekChar();
       if (next == $comma) continue;
       if (scanner.isDone()) break;
@@ -76,7 +77,7 @@ namespace Sass {
       //bool lineBreak = scanner.position != previousLine;
       //if (lineBreak) previousLine = scanner.position;
       // std::cerr << "With line break " << lineBreak << "\n";
-      auto sel = readComplexSelector(lineBreak);
+      auto sel = readComplexSelector(start, lineBreak);
       items.emplace_back(sel);
     }
 
@@ -86,12 +87,12 @@ namespace Sass {
   // EO readSelectorList
 
   // Consumes a complex selector.
-  ComplexSelector* SelectorParser::readComplexSelector(bool lineBreak)
+  ComplexSelector* SelectorParser::readComplexSelector(Offset start, bool lineBreak)
   {
 
     uint8_t next;
 
-    Offset start(scanner.offset);
+    // Offset start(scanner.offset);
     Offset offset(scanner.offset);
     Offset pcomb(scanner.offset);
     // CplxSelComponentVector complex;
@@ -191,7 +192,7 @@ namespace Sass {
     }
 
     ComplexSelector* selector = SASS_MEMORY_NEW(ComplexSelector,
-      scanner.rawSpanFrom(start),
+      scanner.relevantSpanFrom(start),
       std::move(prefixes),
       std::move(components));
     selector->hasPreLineFeed(lineBreak);

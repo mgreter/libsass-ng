@@ -1306,17 +1306,11 @@ namespace Sass {
   const Number* Number::checkPercent(Logger& logger, const sass::string& name) const
   {
     if (!hasUnit("%")) {
-      sass::sstream msg;
-      StringVector dif(numerators);
-      StringVector mul(denominators);
-      // ToDo: don't report percentage twice!?
-      for (auto& unit : mul) unit = " * 1" + unit;
-      for (auto& unit : dif) unit = " / 1" + unit;
-      sass::string reunit(StringUtils::join(mul, "") + StringUtils::join(dif, ""));
-      msg << "$" << name << ": Passing a number without unit % (" << inspect() << ") is deprecated." << STRMLF;
-      msg << "To preserve current behavior: $" << name << reunit << " * 1%" << STRMLF;
-      auto add = msg.str();
-      logger.addDeprecation(add, pstate(), Logger::WARN_NUMBER_PERCENT);
+      sass::string txt = "$" + name + ": ";
+      txt += "Passing a number without unit % (" + inspect() + ") is deprecated.\n";
+      txt += "\nTo preserve current behavior: " + unitSuggestion(name, "%") + "\n";
+      txt += "\nMore info: https://sass-lang.com/d/function-units";
+      logger.addDeprecation(txt, pstate(), Logger::WARN_NUMBER_PERCENT);
     }
     return this;
   }
@@ -1356,6 +1350,19 @@ namespace Sass {
     copy->lhsAsSlash_.clear();
     copy->rhsAsSlash_.clear();
     return copy;
+  }
+
+  sass::string Number::recommendation() const
+  {
+    if (hasAsSlash()) {
+      sass::string text("math.div(");
+      text += lhsAsSlash_->recommendation();
+      text += ", ";
+      text += rhsAsSlash_->recommendation();
+      text += ")";
+      return text;
+    }
+    return inspect();
   }
 
   /////////////////////////////////////////////////////////////////////////

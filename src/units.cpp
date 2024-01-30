@@ -406,6 +406,29 @@ namespace Sass {
   }
   // EO unit
 
+  sass::string Units::unitSuggestion(const sass::string& name, const sass::string unit) const
+  {
+    sass::string text;
+    size_t iL = numerators.size();
+    size_t nL = denominators.size();
+    if (iL > 0) text += "calc(";
+    text += "$" + name;
+    for (size_t n = 0; n < nL; n += 1) {
+      text += " * 1";
+      text += denominators[n];
+    }
+    for (size_t i = 0; i < iL; i += 1) {
+      text += " / 1";
+      text += numerators[i];
+    }
+    if (!unit.empty()) {
+      text += " * 1";
+      text += unit;
+    }
+    if (iL > 0) text += ")";
+    return text;
+  }
+
   // Convert units to string
   const sass::string& Units::unit() const
   {

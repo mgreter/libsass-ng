@@ -354,7 +354,15 @@ namespace Sass {
 
     // Get value instance by stack index reference
     // Just converting and returning reference to array offset
-    inline ValueObj& getVariable(const EnvRef& vidx);
+    inline ValueObj& getVariable(const EnvRef& vidx)
+    {
+      if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+        return intVariables[vidx.offset];
+      }
+      else {
+        return varStack[vidx.idxs->varOffset + vidx.offset];
+      }
+    }
     ValueObj& getModVar(const uint32_t offset);
 
     // Get function instance by stack index reference

@@ -1763,8 +1763,8 @@ namespace Sass {
     if (needsDeprecationWarning) {
 
       compiler.addDeprecation(
-        "@-moz-document is deprecated and support will be removed from Sass in a future\n"
-        "release. For details, see http://bit.ly/moz-document.",
+        "@-moz-document is deprecated and support will be removed in LibSass 5.0.0.\n"
+        "For details, see http://bit.ly/moz-document.",
         atRule->pstate(), Logger::WARN_MOZ_DOC);
     }
 

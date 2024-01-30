@@ -54,7 +54,7 @@ namespace Sass {
     SelectorList* readSelectorList();
 
     // Consumes a complex selector.
-    ComplexSelector* readComplexSelector(bool lineBreak = false);
+    ComplexSelector* readComplexSelector(Offset start, bool lineBreak = false);
 
     // Consumes a compound selector.
     CompoundSelector* readCompoundSelector();

@@ -419,6 +419,8 @@ namespace Sass {
     // Implement delayed value fetcher
     Value* withoutSlash() override final;
 
+    sass::string recommendation() const;
+
     // Implement interface for base Value class
     size_t hash() const override final;
     enum SassValueType getTag() const override final { return SASS_NUMBER; }
