@@ -240,12 +240,26 @@ namespace Sass {
     while (scanner.scanChar($exclamation)) {
       sass::string flag = readIdentifier();
       if (flag == "default") {
+        if (guarded) {
+          compiler.addDeprecation(
+            "!default should only be written once for each variable.\n"
+            "This will be an error in LibSass 5.0.0.",
+            scanner.relevantSpanFrom(flagStart),
+            Logger::WARN_DUPE_VAR_FLAG);
+        }
         guarded = true;
       }
       else if (flag == "global") {
         if (!ns.empty()) {
           error("!global isn't allowed for variables in other modules.",
             scanner.relevantSpanFrom(flagStart));
+        }
+        else if (global) {
+          compiler.addDeprecation(
+            "!global should only be written once for each variable.\n"
+            "This will be an error in LibSass 5.0.0.",
+            scanner.relevantSpanFrom(flagStart),
+            Logger::WARN_DUPE_VAR_FLAG);
         }
         global = true;
       }

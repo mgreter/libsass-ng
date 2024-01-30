@@ -44,6 +44,8 @@ namespace Sass {
       WARN_SEL_ERROR,
       WARN_SEL_BOGUS,
       WARN_ELSEIF,
+      WARN_FN_UNITS,
+      WARN_DUPE_VAR_FLAG,
     };
 
     // Epsilon for precision
@@ -133,7 +135,8 @@ namespace Sass {
 
     // Default constructor
     Logger(bool colors = false, bool unicode = false,
-      int precision = SassDefaultPrecision, size_t columns = NPOS);
+      int precision = SassDefaultPrecision,
+      size_t columns = SassDefaultColumns);
 
     // Auto-detect if colors and unicode is supported
     // Mostly depending if a terminal is connected

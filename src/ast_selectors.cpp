@@ -1102,7 +1102,7 @@ namespace Sass {
         }
 
         // for (auto sel : complexes) { sel->hasPreLineFeed(hasPreLineFeed()); }
-        if (complexes.size() > 0) {
+        if (complexes.size() > 0) { // !leadingCombinators_.empty()
           selectors.emplace_back(complexes);
         }
       }
@@ -1110,6 +1110,10 @@ namespace Sass {
         // component->hasPreLineFeed(hasPreLineFeed());
         selectors.push_back({ component->wrapInComplex(pstate(), leadingCombinators_) });
       }
+    }
+
+    if (size() == 0 && !leadingCombinators_.empty()) {
+      selectors.push_back({ SASS_MEMORY_NEW(ComplexSelector, pstate_, leadingCombinators_, {}) });
     }
 
     // std::cerr << "permutate now\n";
@@ -1169,7 +1173,11 @@ namespace Sass {
       // Preserve component combinators
       for (size_t i = 0; i < resolved.size(); i++) {
         if (resolved[i]->size() == 0) {
-          std::cerr << "more weird edge case\n";
+          /*
+            a {b: c}
+            + {@extend a}
+          */
+          // std::cerr << "more weird edge case\n";
         }
         else {
           resolved[i]->elements().back() = SASS_MEMORY_NEW(CplxSelComponent, resolved[i]->elements().back().ptr());

@@ -114,10 +114,10 @@ namespace Sass {
           rv->rhsAsSlash(right->isaNumber());
         }
         else {
-          sass::string msg = "Using / for division outside of calc() is ";
-          msg += "deprecated and will be removed in LibSass 5.0.0.\n\n";
-          msg += "Recommendation: " + node->recommendation() + " or " + node->toCalc() + "\n\n";
-          msg += "More info and automated migrator: https://sass-lang.com/d/slash-div";
+          sass::string msg = "Using the division operator `/` outside of calc() is deprecated.";
+          msg += "\nThis will be removed in LibSass 5.0.0.\n";
+          msg += "\nRecommendation: " + node->recommendation() + " or " + node->toCalc() + "\n";
+          msg += "\nMore info and automated migrator: https://sass-lang.com/d/slash-div";
           logger.addDeprecation(msg, pstate, Logger::WARN_MATH_DIV);
         }
       } 
@@ -134,10 +134,11 @@ namespace Sass {
     if (number) {
       // Only numbers can have delayed slashes
       if (number->hasAsSlash()) {
-        logger.addDeprecation("Using / for division is deprecated and will be removed "
-          "in LibSass 5.0.0.\n\nRecommendation: " + number->recommendation() + "\n\n"
-          "More info and automated migrator: https://sass-lang.com/d/slash-div",
-          value->pstate(), Logger::WARN_MATH_DIV);
+        sass::string msg = "Using the division operator `/` is deprecated.";
+        msg += "\nThis will be removed in LibSass 5.0.0.\n";
+        msg += "\nRecommendation: " + number->recommendation() + "\n";
+        msg += "\nMore info and automated migrator: https://sass-lang.com/d/slash-div";
+        logger.addDeprecation(msg, value->pstate(), Logger::WARN_MATH_DIV);
         ValueObj result = number->withoutSlash();
         return result.detach();
       }
@@ -237,7 +238,9 @@ namespace Sass {
   {
     ArgumentResults results(_evaluateArguments(arguments));
     const SassFnPair& tuple(callable->callbackFor(results));
-    return _callBuiltInCallable(results, tuple, pstate);
+    ValueObj rv = _callBuiltInCallable(results, tuple, pstate);
+    rv = withoutSlash3(rv);
+    return rv.detach();
   }
   // EO _runBuiltInCallable
 
@@ -2343,7 +2346,7 @@ namespace Sass {
           }
           else if (complex->isBogusOtherThanLeadingCombinator()) {
             logger.addDeprecation("The selector \"" + complex + "\" "
-              "is only valid for nesting and shouldn't "
+              "is only valid for nesting\nIt shouldn't "
               "have children other than style rules.\n"
               "It will be omitted from the generated CSS.\n"
               "This will be an error in LibSass 5.0.0.\n\n"
@@ -2352,7 +2355,7 @@ namespace Sass {
           }
           else {
             logger.addDeprecation("The selector \"" + complex + "\" "
-              "is only valid for nesting and shouldn't "
+              "is only valid for nesting\nIt shouldn't "
               "have children other than style rules.\n"
               "This will be an error in LibSass 5.0.0.\n\n"
               "More info: https://sass-lang.com/d/bogus-combinators",

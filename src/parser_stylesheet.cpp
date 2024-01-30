@@ -3008,8 +3008,8 @@ namespace Sass {
 
     if (scanner.scanChar($ampersand)) {
       compiler.addWarning(
-        "In Sass, \"&&\" means two copies of the parent selector. You "
-        "probably want to use \"and\" instead.",
+        "In Sass, \"&&\" means two copies of the parent selector."
+        "\nYou probably want to use \"and\" instead.",
         scanner.relevantSpanFrom(start),
         Logger::WARN_DOUBLE_PARENT);
       scanner.offset.column -= 1;

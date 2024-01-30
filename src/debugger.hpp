@@ -514,16 +514,17 @@ inline void debug_ast(AstNode* node, std::string ind)
     // << (selector->has_real_parent_ref() ? " [real parent]" : " -")
     // << (selector->has_line_feed() ? " [line-feed]": " -")
     // << (selector->has_line_break() ? " [line-break]": " -")
-    std::cerr << " -- \n";
 
     if (selector->leadingCombinators().size() > 0) {
       for (auto asd : selector->leadingCombinators()) {
         ind += std::string(asd->toString().c_str());
         ind += " ";
       }
+      std::cerr << " [ " << ind << "]\n";
     }
     else {
       ind += "  ";
+      std::cerr << " []\n";
     }
 
 

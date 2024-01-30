@@ -629,8 +629,15 @@ namespace Sass {
   // Return normalized index for vector from overflow-able sass index
   size_t Value::sassIndexToListIndex(Value* sassIndex, Logger& logger, const sass::string& name)
   {
-    long index = sassIndex->assertNumber(logger, name)
-      ->assertInt(logger, name);
+    Number* nr = sassIndex->assertNumber(logger, name);
+    if (nr->hasUnits()) {
+      logger.addDeprecation("$" + name + ": "
+        "Passing a number with unit " + nr->unit2() + " is deprecated.\n"
+        "\nTo preserve current behavior: " + nr->unitSuggestion(name) + "\n"
+        "\nMore info: https://sass-lang.com/d/function-units",
+        nr->pstate(), Logger::WARN_FN_UNITS);
+    }
+    long index = nr->assertInt(logger, name);
     if (index == 0) throw Exception::SassScriptException(
       "List index may not be 0.", logger, sassIndex->pstate(), name);
     size_t size = lengthAsList();

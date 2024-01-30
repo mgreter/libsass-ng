@@ -395,7 +395,8 @@ namespace Sass {
   // Convert to string (only for debugging)
   sass::string VariableExpression::toString() const
   {
-    return "$" + name_.norm();
+    if (ns_.empty()) return "$" + name_.norm();
+    else return ns_ + ".$" + name_.norm();
   }
 
   /////////////////////////////////////////////////////////////////////////

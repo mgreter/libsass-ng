@@ -95,6 +95,7 @@ namespace Sass {
       }
       while (spacing > 0) {
         spacing -= 1;
+        current += 1;
         os << ' ';
       }
       os << word; // << ' ';
@@ -112,6 +113,16 @@ namespace Sass {
         spacing += 1;
         in.ignore(1);
       }
+      // Catch case when we have " \n";
+      // Or force coders to be careful!?
+      // while (Character::isNewline(in.peek())) {
+      //   if (in.peek() == '\n') {
+      //     os << STRMLF;
+      //     spacing = 0;
+      //     current = 0;
+      //   }
+      //   in.ignore(1);
+      // }
     }
     if (current != 0) {
       os << STRMLF;
