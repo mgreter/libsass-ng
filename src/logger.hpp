@@ -46,6 +46,7 @@ namespace Sass {
       WARN_ELSEIF,
       WARN_FN_UNITS,
       WARN_DUPE_VAR_FLAG,
+      WARN_ABS_PERCENT,
     };
 
     // Epsilon for precision

@@ -109,7 +109,8 @@ namespace Sass {
 /// Prints a deprecation warning if [hue] has a unit other than `deg`.
     static void checkAngle(Logger& logger, const Number* angle, const sass::string& name)
     {
-      if (!angle->hasUnits() || angle->hasUnit("deg")) return;
+     // if (!angle->hasUnits()) return;
+      if (angle->hasCompatibleUnits(unit_deg, false)) return;
       sass::string text = "$" + name + ": ";
       text += "Passing a unit other than deg (" + angle->inspect() + ") is deprecated.\n";
       text += "\nTo preserve current behavior: " + angle->unitSuggestion(name) + "\n";
@@ -857,12 +858,7 @@ namespace Sass {
       BUILT_IN_FN(invert)
       {
         const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
-
-        //if (isSpecialNumber(arguments[0])) {
-        //  return getFunctionString(
-        //    Strings::invert,
-        //    pstate, arguments);
-        //}
+        weight->checkPercent(compiler, Strings::weight);
         if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0]) /* or isSpecialValue*/) {
           // Allow only the value `100` or a percentage (unit == `% `)
           const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
@@ -1509,6 +1505,7 @@ namespace Sass {
         const Color* color1 = arguments[0]->assertColor(compiler, "color1");
         const Color* color2 = arguments[1]->assertColor(compiler, "color2");
         const Number* weight = arguments[2]->assertNumber(compiler, "weight");
+        weight->checkPercent(compiler, Strings::weight);
         return mixColors(color1, color2, weight, pstate, compiler);
       }
 
@@ -1776,6 +1773,7 @@ namespace Sass {
         ->assertHasUnits(logger, "%", Strings::blackness);
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
+      checkAngle(logger, h, Strings::hue);
       return SASS_MEMORY_NEW(ColorHwba, pstate,
         coerceToDeg(h),
         w->assertRange(0.0, 100.0, w, logger, Strings::whiteness),
