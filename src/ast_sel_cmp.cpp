@@ -69,10 +69,10 @@ namespace Sass {
 
   bool TypeSelector::operator== (const TypeSelector& rhs) const
   {
-    bool a = nsMatch(rhs);
-    bool b = name_ == rhs.name_;
-    return a && b;
-    return nsMatch(rhs) && name() == rhs.name();
+    // Match equality hard
+    return ns_ == rhs.ns_ &&
+      hasNs_ == rhs.hasNs_ &&
+      name_ == rhs.name_;
   }
 
   bool ClassSelector::operator== (const ClassSelector& rhs) const

@@ -17,6 +17,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // This should be thread-safe
+  static std::hash<void*> ptrHasher;
+  static std::hash<bool> boolHasher;
+  //static std::hash<double> doubleHasher;
+  static std::hash<SassFnSig> fnHasher;
+  //static std::hash<std::size_t> sizetHasher;
+  static std::hash<sass::string> stringHasher;
+  static std::hash<SassFunctionLambda> lambdaHasher;
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   Selector::Selector(
     const SourceSpan& pstate) :
     AstNode(pstate),
@@ -106,7 +118,7 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(this).hash_code());
-      hash_combine(hash_, name());
+      hash_combine(hash_, stringHasher(name_));
     }
     return hash_;
   }
@@ -180,7 +192,9 @@ namespace Sass {
     if (hash_ == 0) {
       hash_start(hash_, typeid(this).hash_code());
       hash_combine(hash_, SimpleSelector::hash());
-      if (hasNs_) hash_combine(hash_, ns());
+      hash_combine(hash_, stringHasher(name_));
+      hash_combine(hash_, boolHasher(hasNs_));
+      hash_combine(hash_, stringHasher(ns_));
     }
     return hash_;
   }
