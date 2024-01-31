@@ -711,6 +711,11 @@ namespace Sass {
       _verifyCompatibleNumbers2(logger, pstate, { left, right }, true);
       // std::cerr << "Numbers are verified\n";
 
+      // Implement unary simplification
+      if (rnr && rnr->value() < 0) {
+        rnr->value(rnr->value() * -1);
+        op = op == ADD ? SUB : ADD;
+      }
 
       return SASS_MEMORY_NEW(CalcOperation,
         pstate, op, lhs.ptr(), rhs.ptr());
