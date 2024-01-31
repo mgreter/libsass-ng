@@ -2788,6 +2788,24 @@ namespace Sass {
     return nullptr;
   }
 
+  bool Eval::BubbleMediaQuery(CssParentNode* node, CssMediaQueryVector& parsed) {
+    if (node->isaCssStyleRule()) return true; 
+    if (parsed.empty()) return false;
+    if (auto rule = node->isaCssMediaRule()) {
+      for (auto query : rule->queries()) {
+        if (std::find_if(parsed.begin(), parsed.end(),
+          [&](const CssMediaQueryObj& rhs) {
+            return ObjEqualityFn(query, rhs);
+          }) == parsed.end())
+        {
+          return false;
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
   Value* Eval::visitMediaRule(MediaRule* node)
   {
 
@@ -2803,10 +2821,12 @@ namespace Sass {
 
     MediaQueryParser parser(compiler, SASS_MEMORY_NEW(
       SourceItpl, state, std::move(str_mq)));
+
+    CssMediaQueryVector scoped2;
     CssMediaQueryVector parsed(parser.parse());
 
     CssMediaQueryVector mergedQueries
-    (mergeMediaQueries(mediaQueries, parsed));
+    (mergeMediaQueries(mediaQueries, parsed, scoped2));
 
     if (mergedQueries.empty()) {
       if (!mediaQueries.empty()) {
@@ -2818,7 +2838,17 @@ namespace Sass {
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
       node->pstate(), current, mergedQueries);
-    auto chroot = current->bubbleThrough(false);
+
+    // auto chroot = current->bubbleThrough(true);
+    auto chroot = current;
+
+
+    while (BubbleMediaQuery(chroot, scoped2)) {
+      if (!chroot->parent()) break;
+      chroot = chroot->parent();
+    }
+
+
     // addChildAt(chroot, css);
     chroot->addChildAt(css, false);
 
@@ -2980,7 +3010,8 @@ namespace Sass {
 
   CssMediaQueryVector Eval::mergeMediaQueries(
     const CssMediaQueryVector& lhs,
-    const CssMediaQueryVector& rhs)
+    const CssMediaQueryVector& rhs,
+    CssMediaQueryVector& scoped)
   {
     CssMediaQueryVector queries;
     for (const CssMediaQueryObj& query1 : lhs) {
@@ -2988,6 +3019,8 @@ namespace Sass {
         CssMediaQueryObj result(query1->merge(query2));
         if (result && !result->empty()) {
           queries.emplace_back(result);
+          scoped.push_back(query1);
+          scoped.push_back(query2);
         }
       }
     }

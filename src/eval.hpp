@@ -361,6 +361,7 @@ namespace Sass {
 
     Value* visitAtRootRule(AtRootRule* rule);
     Value* visitAtRule(AtRule* rule);
+    bool BubbleMediaQuery(CssParentNode* node, CssMediaQueryVector& parsed);
     Value* visitContentBlock(ContentBlock* rule);
     Value* visitContentRule(ContentRule* rule);
     Value* visitDebugRule(DebugRule* rule);
@@ -421,7 +422,8 @@ namespace Sass {
 
     CssParentNode* hoistStyleRule(CssParentNode* node);
 
-    CssMediaQueryVector mergeMediaQueries(const CssMediaQueryVector& lhs, const CssMediaQueryVector& rhs);
+    CssMediaQueryVector mergeMediaQueries(const CssMediaQueryVector& lhs, const CssMediaQueryVector& rhs,
+      CssMediaQueryVector& scoped);
 
 
 
