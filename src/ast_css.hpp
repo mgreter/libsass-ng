@@ -60,10 +60,13 @@ namespace Sass {
     // void tabs(size_t tabs) const { }
 
     // Declare up-casting methods
+    DECLARE_ISA_CASTER(CssRoot);
     DECLARE_ISA_CASTER(CssAtRule);
     DECLARE_ISA_CASTER(CssMediaRule);
     DECLARE_ISA_CASTER(CssStyleRule);
+    DECLARE_ISA_CASTER(CssKeyframeBlock);
     DECLARE_ISA_CASTER(CssSupportsRule);
+    DECLARE_ISA_CASTER(CssParentNode);
   };
   // EO CssNode
 
@@ -113,11 +116,21 @@ namespace Sass {
         parent_->bubbleThrough(stopAtMediaRule) : this;
     }
 
+    /// Returns whether [this] is equal to [other], ignoring their child nodes.
+    virtual bool equalsIgnoringChildren(CssNode* other) const { return this == other; }
+
     // virtual CssNode* produce() const override;
 
 
     // Declare up-casting methods
+    DECLARE_ISA_CASTER(CssRoot);
     DECLARE_ISA_CASTER(CssAtRule);
+    DECLARE_ISA_CASTER(CssMediaRule);
+    DECLARE_ISA_CASTER(CssStyleRule);
+    DECLARE_ISA_CASTER(CssKeyframeBlock);
+    DECLARE_ISA_CASTER(CssSupportsRule);
+    // Define isaCssAtRule up-cast function
+    IMPLEMENT_ISA_CASTER(CssParentNode);
   };
   // EO CssParentNode
 
@@ -140,6 +153,9 @@ namespace Sass {
 
     bool empty() const { return text_.empty(); }
 
+    // Check if two instances are considered equal
+    bool operator== (const CssString& rhs) const;
+
   };
   // EO CssString
 
@@ -160,6 +176,8 @@ namespace Sass {
       const SourceSpan& pstate,
       StringVector&& texts);
 
+    // Check if two instances are considered equal
+    bool operator== (const CssStringList& rhs) const;
   };
   // EO CssStringList
 
@@ -297,6 +315,9 @@ namespace Sass {
       return SASS_MEMORY_NEW_DBG(CssRoot, this);
     }
 
+    bool equalsIgnoringChildren(CssNode* other) const override final;
+
+    IMPLEMENT_ISA_CASTER(CssRoot);
   };
   // EO CssRoot
 
@@ -355,6 +376,8 @@ namespace Sass {
       return SASS_MEMORY_NEW_DBG(CssAtRule, this);
     }
 
+    bool equalsIgnoringChildren(CssNode* other) const override final;
+
     // Define isaCssAtRule up-cast function
     IMPLEMENT_ISA_CASTER(CssAtRule);
   };
@@ -400,6 +423,9 @@ namespace Sass {
       return SASS_MEMORY_NEW_DBG(CssKeyframeBlock, this);
     }
 
+    bool equalsIgnoringChildren(CssNode* other) const override final;
+
+    IMPLEMENT_ISA_CASTER(CssKeyframeBlock);
   };
   // EO CssKeyframeBlock
 
@@ -457,6 +483,8 @@ namespace Sass {
       return SASS_MEMORY_NEW_DBG(CssStyleRule, this, childless);
     }
 
+    bool equalsIgnoringChildren(CssNode* other) const override final;
+
     // Define isaCssStyleRule up-cast function
     IMPLEMENT_ISA_CASTER(CssStyleRule);
   };
@@ -500,6 +528,8 @@ namespace Sass {
     CssSupportsRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(CssSupportsRule, this, childless);
     }
+
+    bool equalsIgnoringChildren(CssNode* other) const override final;
 
     // Define isaCssSupportsRule up-cast function
     IMPLEMENT_ISA_CASTER(CssSupportsRule);
@@ -624,6 +654,8 @@ namespace Sass {
     CssMediaRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(CssMediaRule, this, childless);
     }
+
+    bool equalsIgnoringChildren(CssNode* other) const override final;
 
     // Define isaCssMediaRule up-cast function
     IMPLEMENT_ISA_CASTER(CssMediaRule);

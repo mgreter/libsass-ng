@@ -14,6 +14,7 @@
 #include "expr_to_calc.hpp"
 #include "parser_selector.hpp"
 #include "parser_at_root_query.hpp"
+#include "inspect.hpp"
 
 namespace Sass {
 
@@ -849,7 +850,19 @@ namespace Sass {
     else if (auto value = dynamic_cast<const CplxSelComponent*>(this)) {
       return value->inspecter();
     }
-    return str_empty;
+    else if (auto value = dynamic_cast<const CssMediaRule*>(this)) {
+      sass::string txt;
+      for (CssMediaQuery* query : value->queries()) {
+        for (auto f : query->features()) {
+          txt += f + ", ";
+        }
+      }
+      return txt;
+    }
+    else if (auto style = dynamic_cast<const CssStyleRule*>(this)) {
+      return style->selector()->toString();
+    }
+    return typeid(*this).name();
   }
 
   /////////////////////////////////////////////////////////////////////////

@@ -2830,6 +2830,8 @@ namespace Sass {
 
     if (mergedQueries.empty()) {
       if (!mediaQueries.empty()) {
+        // Skip rule when merged queries cancel each other
+        // E.g. `not print` and `print` will never match
         return nullptr;
       }
       mergedQueries = parsed;
@@ -2850,7 +2852,7 @@ namespace Sass {
 
 
     // addChildAt(chroot, css);
-    chroot->addChildAt(css, false);
+    chroot->addChildAt(css, true);
 
     RAII_PTR(CssParentNode, current, css);
     auto oldMediaQueries(std::move(mediaQueries));
@@ -2859,7 +2861,7 @@ namespace Sass {
 
     if (isInStyleRule()) {
       CssStyleRule* copy = SASS_MEMORY_RESECT(readStyleRule);
-      css->addChildAt(copy, false);
+      css->addChildAt(copy, true);
       acceptChildrenAt(copy, node->elements());
     }
     else {
