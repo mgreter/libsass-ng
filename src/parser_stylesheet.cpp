@@ -1951,7 +1951,7 @@ namespace Sass {
       ExpressionObj expression = readExpressionUntilComma(!mixin);
       if (expression == nullptr) {
         error("Expected expression.",
-          scanner.rawSpan());
+          scanner.rawSpanOrRelevant());
       }
       scanWhitespace();
       VariableExpression* var = expression->isaVariableExpression();
@@ -2031,7 +2031,7 @@ namespace Sass {
     // std::cerr << "---------- PARSE EXPRESSION\n";
 
     if (until != nullptr && (this->*until)()) {
-      SourceSpan span(scanner.rawSpan());
+      SourceSpan span(scanner.rawSpanOrRelevant());
       error("Expected expression.", span);
     }
 
@@ -2294,7 +2294,7 @@ namespace Sass {
         }
 
         if (ep.singleExpression == nullptr) {
-          SourceSpan span(scanner.rawSpan());
+          SourceSpan span(scanner.rawSpanOrRelevant());
           error("Expected expression.", span);
         }
 
@@ -2499,12 +2499,8 @@ namespace Sass {
       if (first != $nul && first >= 0x80) {
         return readIdentifierLike();
       }
-      if (scanner.peekChar() == 0)
-        error("Expected expression.",
-          scanner.relevantSpan());
-      else
-        error("Expected expression.",
-          scanner.rawSpan());
+      error("Expected expression.",
+        scanner.rawSpanOrRelevant());
       return nullptr;
     }
   }

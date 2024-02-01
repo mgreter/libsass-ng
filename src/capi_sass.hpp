@@ -120,6 +120,9 @@ namespace Sass {
     // Precision for fractional numbers
     int precision;
 
+    // Epsilon for fuzzy compare
+    // double epsilon;
+
     // Number format for sprintf.
     // Cached to speed up output.
     char nr_sprintf[32];
@@ -142,6 +145,7 @@ namespace Sass {
     {
       // Update sprintf format to match precision
       snprintf(nr_sprintf, 32, "%%.%df", precision);
+      // epsilon = 1.0 / pow(2.0, precision);
     }
 
   };

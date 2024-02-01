@@ -158,6 +158,14 @@ namespace Sass {
       return source ? source->adjustSourceSpan(pstate) : pstate;
     }
 
+    // Get a source span pointing to raw position
+    // Raw means whitespace may already be consumed
+    // Uses relveant span if end of file reached
+    inline SourceSpan rawSpanOrRelevant() const
+    {
+      return peekChar() == 0 ? relevantSpan() : rawSpan();
+    }
+
     // Get a source span pointing to last relevant position
     // Last relevant means whitespace is not yet parsed (word ending)
     inline SourceSpan relevantSpan() const // 161

@@ -17,17 +17,91 @@
 
 namespace Sass {
 
+
+  //______________________________________________________________________
+// Utility function converts an IEEE double precision number to a
+// fixed precision decimal format stored in a buffer.
+  static void tobuf(size_t max, unsigned int* len, char* buf,
+    double x, int decimals, double max_prec)
+  {
+    int    l_dec = 0, sign = x < 0;                // remember the sign
+    double q = pow(10, decimals);                // current mask
+    double i;                                       // Integer portion
+    double y = modf(x * q, &i) / q;                   // Fractional portion
+    double l_div = round(y * max_prec) / max_prec;      // significant digit
+    if (q <= max_prec)
+      l_dec = abs((int)round(l_div * 10 * q)) % 10;       // this decimal
+
+    if (l_dec) x = i / q;
+
+    if (fabs(x) > 0)                            // recurse while |x| > 0
+      tobuf(max, len, buf, x, decimals - 1, max_prec);
+    else {                                      // x == 0 - first digit
+      if (*len + 1 < max && sign) buf[(*len)++] = '-';
+      if (*len + 2 < max && decimals >= 0) {
+        buf[(*len)++] = '0';
+        buf[(*len)++] = '.';
+      }
+      while (*len + 1 < max && decimals-- > 0)
+        buf[(*len)++] = '0';
+    }
+    if (*len + 1 < max && decimals == 0)
+      buf[(*len)++] = '.';
+
+    // for first and subsequent digits, add the digit to the buffer
+    if (*len + 1 >= max) return;
+    buf[(*len)++] = '0' + l_dec;
+  }
+
+
+  //______________________________________________________________________
+  // Convert the value x to a decimal representation stored in a buffer
+  static unsigned int dbl2buf(size_t max, char* buf, double x, int decimals) {
+    const int DECIMALS = 15;                         // max significant digits
+      int    max_dec = DECIMALS - (int)(trunc(log10(fabs(x))) + 1);
+    double max_prec = pow(10, max_dec);             // magnitude for precision loss
+      unsigned int len = 0;                          // buffer length init
+
+    if (x != x) { strncpy(buf, "NAN", max); return 0; }
+    if ((x - x) != (x - x)) { strncpy(buf, "INF", max); return 0; }
+
+    tobuf(max, &len, buf, x, decimals - 1, max_prec); // fill in buffer
+    buf[len] = 0;                                   // terminate buffer
+    return len;                                     // return buffer length used
+  }
+
+
+
   // Import some namespaces
   using namespace Charcode;
   using namespace Character;
 
-  sass::string PrintNumber(double nr, const OutputOptions& outopt) {
+  sass::string Inspect::PrintNumber(double nr, const OutputOptions& outopt) {
+
 
     // Avoid streams
     char buf[255];
-    snprintf(buf, 255,
-      outopt.nr_sprintf,
-      nr);
+
+
+    //return sass::string(buf);
+
+    double nearby = std::nearbyint(nr);
+    if (FUZZY_EQUAL_INF(nr, nearby, output.eps)) {
+      dbl2buf(255, buf, nr, outopt.precision);
+      //  std::cerr << "looks like integer\n";
+    //  int exp = 0;
+    //  double asd = std::frexp(nearby, &exp);
+    //  dbl2buf(120, buf, nr, 12);
+    //  // std::cerr << "Number is " << (asd * pow(2, 80)) << "\n";
+    }
+    else {
+      snprintf(buf, 255,
+        outopt.nr_sprintf,
+        nr);
+    }
+
+
+
 
     // Operate from behind
     char* end = buf;
@@ -1319,33 +1393,7 @@ namespace Sass {
       return;
     }
 
-    // Avoid streams
-    char buf[255];
-    snprintf(buf, 255,
-      outopt.nr_sprintf,
-      value->value());
-
-    // Operate from behind
-    char* end = buf;
-
-    // Move to last position
-    while (*end != 0) ++end;
-    if (end != buf) end--;
-    // Delete trailing zeros
-    while (*end == '0') {
-      *end = 0;
-      end--;
-    }
-    // Delete trailing decimal separator
-    if (*end == '.') *end = 0;
-
-    // Some final cosmetics
-    if (buf[0] == '-' && buf[1] == '0' && buf[2] == 0) {
-      buf[0] = '0'; buf[1] = 0;
-    }
-
-    // add unit now
-    sass::string res(buf);
+    sass::string res = PrintNumber(value->value(), outopt);
 
     if (true)
     {

@@ -27,6 +27,8 @@ namespace Sass {
 
   public:
 
+    static sass::string PrintNumber(double nr, const OutputOptions& outopt);
+
     // Whether quoted strings should be emitted with quotes.
     bool quotes;
 

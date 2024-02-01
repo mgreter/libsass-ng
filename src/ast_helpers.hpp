@@ -24,6 +24,10 @@ namespace Sass {
   // will also check for the case when both numbers are infinite
   #define NEAR_EQUAL_INF(lhs, rhs) ((lhs == rhs) || (std::fabs(lhs - rhs) < NUMBER_EPSILON))
 
+  // macro to test if numbers are equal within a small error margin
+  // will also check for the case when both numbers are infinite
+  #define FUZZY_EQUAL_INF(lhs, rhs, eps) ((lhs == rhs) || (std::fabs(lhs - rhs) < eps))
+
   /////////////////////////////////////////////////////////////////////////#
   // We define various functions and functors here.
   // Functions satisfy the BinaryPredicate requirement
