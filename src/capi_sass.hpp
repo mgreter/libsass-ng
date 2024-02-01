@@ -121,7 +121,7 @@ namespace Sass {
     int precision;
 
     // Epsilon for fuzzy compare
-    // double epsilon;
+    double epsilon;
 
     // Number format for sprintf.
     // Cached to speed up output.
@@ -131,6 +131,7 @@ namespace Sass {
     void setPrecision(int precision)
     {
       this->precision = precision;
+      this->epsilon = pow(0.1, precision);
       // Update sprintf format to match precision
       snprintf(this->nr_sprintf, 32, "%%.%df", precision);
     }
@@ -143,9 +144,10 @@ namespace Sass {
       output_style(style),
       precision(precision)
     {
+      setPrecision(precision);
       // Update sprintf format to match precision
-      snprintf(nr_sprintf, 32, "%%.%df", precision);
-      // epsilon = 1.0 / pow(2.0, precision);
+      // snprintf(nr_sprintf, 32, "%%.%df", precision);
+      // epsilon = pow(0.1, precision);
     }
 
   };

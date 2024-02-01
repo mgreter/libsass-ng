@@ -21,7 +21,7 @@ namespace Sass {
   void print_wrapped(sass::string const& input, size_t width, sass::ostream& os);
 
   // The logger belongs to context
-  class Logger {
+  class Logger : public OutputOptions {
 
   public:
 
@@ -50,7 +50,7 @@ namespace Sass {
     };
 
     // Epsilon for precision
-    double epsilon;
+    // double epsilon;
 
     // warning buffers
     sass::ostream logstrm;
@@ -137,7 +137,8 @@ namespace Sass {
     // Default constructor
     Logger(bool colors = false, bool unicode = false,
       int precision = SassDefaultPrecision,
-      size_t columns = SassDefaultColumns);
+      size_t columns = SassDefaultColumns,
+      SassOutputStyle style = SASS_STYLE_NESTED);
 
     // Auto-detect if colors and unicode is supported
     // Mostly depending if a terminal is connected
@@ -152,7 +153,7 @@ namespace Sass {
     void setLogColumns(size_t columns = NPOS);
 
     // Precision for numbers to be printed
-    void setPrecision(int precision);
+    // void setPrecision(int precision);
 
     // Print a warning without any SourceSpan (used by @warn)
     void addWarning(const sass::string& message, enum WarningType);

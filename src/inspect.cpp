@@ -40,10 +40,10 @@ namespace Sass {
       if (*len + 1 < max && sign) buf[(*len)++] = '-';
       if (*len + 2 < max && decimals >= 0) {
         buf[(*len)++] = '0';
-        buf[(*len)++] = '.';
+        // buf[(*len)++] = '.';
       }
-      while (*len + 1 < max && decimals-- > 0)
-        buf[(*len)++] = '0';
+      // while (*len + 1 < max && decimals-- > 0)
+      //   buf[(*len)++] = '0';
     }
     if (*len + 1 < max && decimals == 0)
       buf[(*len)++] = '.';
@@ -76,32 +76,26 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
+
+
   sass::string Inspect::PrintNumber(double nr, const OutputOptions& outopt) {
 
 
     // Avoid streams
     char buf[255];
 
-
-    //return sass::string(buf);
-
-    double nearby = std::nearbyint(nr);
-    if (FUZZY_EQUAL_INF(nr, nearby, output.eps)) {
+    // Dart sass does this a bit weird, as it relies on
+    // number.toString, which uses scientific notation
+    // after a number has reached 10^20. Dart sass then
+    // bascially uses "common rounded" printf instead.
+    if (nr >= 1.0e20 || nr <= -1.0e20) {
       dbl2buf(255, buf, nr, outopt.precision);
-      //  std::cerr << "looks like integer\n";
-    //  int exp = 0;
-    //  double asd = std::frexp(nearby, &exp);
-    //  dbl2buf(120, buf, nr, 12);
-    //  // std::cerr << "Number is " << (asd * pow(2, 80)) << "\n";
     }
     else {
       snprintf(buf, 255,
         outopt.nr_sprintf,
         nr);
     }
-
-
-
 
     // Operate from behind
     char* end = buf;

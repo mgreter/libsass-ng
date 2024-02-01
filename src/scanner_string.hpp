@@ -163,7 +163,9 @@ namespace Sass {
     // Uses relveant span if end of file reached
     inline SourceSpan rawSpanOrRelevant() const
     {
-      return peekChar() == 0 ? relevantSpan() : rawSpan();
+      if (peekChar() == 0) return relevantSpan();
+      if (offset.line == relevant.line) return rawSpan();
+      return relevantSpan();
     }
 
     // Get a source span pointing to last relevant position

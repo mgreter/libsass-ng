@@ -996,7 +996,7 @@ namespace Sass {
   // Update precision and epsilon etc.
   void Compiler::setPrecision(int precision)
   {
-    Logger::setPrecision(precision);
+    // Logger::setPrecision(precision);
     OutputOptions::setPrecision(precision);
   }
 

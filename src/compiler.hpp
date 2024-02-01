@@ -25,7 +25,7 @@ namespace Sass {
   }
 
   // The main compiler context object holding config and results
-  class Compiler final : public OutputOptions, public Logger {
+  class Compiler final : public Logger {
 
   private:
 

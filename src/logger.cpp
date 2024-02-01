@@ -12,8 +12,9 @@
 namespace Sass {
 
   // Default constructor
-  Logger::Logger(bool colors, bool unicode, int precision, size_t columns) :
-    epsilon(std::pow(0.1, precision + 1)),
+  Logger::Logger(bool colors, bool unicode, int precision, size_t columns, SassOutputStyle style) :
+    OutputOptions(style, precision),
+    // epsilon(std::pow(0.1, precision + 1)),
     columns(columns),
     support_colors(colors),
     support_unicode(unicode)
@@ -55,10 +56,10 @@ namespace Sass {
   // EO setLogColumns
 
   // Precision for numbers to be printed
-  void Logger::setPrecision(int precision)
-  {
-    epsilon = std::pow(0.1, precision + 1);
-  }
+  //void Logger::setPrecision(int precision)
+  //{
+  //  epsilon = std::pow(0.1, precision + 1);
+  //}
   // EO setPrecision
 
   // Write warning header to error stream
