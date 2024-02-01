@@ -61,7 +61,8 @@ namespace Sass {
   SelectorList* SelectorParser::readSelectorList()
   {
     Offset start(scanner.offset);
-    const char* previousLine = scanner.position;
+    // const char* previousLine = scanner.position;
+    size_t previousLine = scanner.offset.line;
     sass::vector<ComplexSelectorObj> items;
     items.emplace_back(readComplexSelector(start));
 
@@ -73,7 +74,9 @@ namespace Sass {
       if (next == $comma) continue;
       if (scanner.isDone()) break;
 
-      bool lineBreak = scanner.hasLineBreak(previousLine); // ToDo
+      // bool lineBreak = scanner.hasLineBreak(previousLine); // ToDo
+      bool lineBreak = scanner.offset.line != previousLine;
+      if (lineBreak) previousLine = scanner.offset.line;
       //bool lineBreak = scanner.position != previousLine;
       //if (lineBreak) previousLine = scanner.position;
       // std::cerr << "With line break " << lineBreak << "\n";
@@ -196,6 +199,7 @@ namespace Sass {
       std::move(prefixes),
       std::move(components));
     selector->hasPreLineFeed(lineBreak);
+    selector->hasLineBreak(lineBreak);
 
     // std::cerr << "parsing " << scanner.startpos << "\n";
     // std::cerr << "parsed result => " << selector->inspect() << "\n";

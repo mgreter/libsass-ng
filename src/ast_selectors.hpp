@@ -607,7 +607,7 @@ namespace Sass {
     // line break before list separator
     ADD_CONSTREF(bool, hasPreLineFeed);
 
-    // line break after the selector
+    // line break after the selector?
     ADD_CONSTREF(bool, hasLineBreak);
 
     ADD_CONSTREF(SelectorCombinatorVector, leadingCombinators);

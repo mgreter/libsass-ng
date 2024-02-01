@@ -507,6 +507,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " [length:" << longToHex(selector->size()) << "]";
     std::cerr << " [weight:" << longToHex(selector->specificity()) << "]";
     // << (selector->hasInvisible() ? " [hasInvisible]" : " -")
+    std::cerr << (selector->hasLineBreak() ? " [hasLineBreak]" : " -");
     std::cerr << (selector->hasPreLineFeed() ? " [hasPreLineFeed]" : " -");
 
     // << (selector->has_placeholder() ? " [PLACEHOLDER]": " -")
