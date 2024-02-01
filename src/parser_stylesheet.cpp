@@ -126,6 +126,9 @@ namespace Sass {
       scanWhitespace();
       return readMixinRule(start);
 
+    case $rbrace:
+      error("unmatched \"}\".", scanner.rawSpan());
+
     default:
       if (inStyleRule || inUnknownAtRule || inMixin || inContentBlock) {
         return readDeclarationOrStyleRule();
