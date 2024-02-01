@@ -1175,6 +1175,8 @@ namespace Sass {
           }
           front->elements().push_back(tail);
         }
+        // Use span from last component
+        front->pstate(append[i]->pstate());
         // first->concat(items[i]);
       }
       // debug_ast(first, "resolved: ");
