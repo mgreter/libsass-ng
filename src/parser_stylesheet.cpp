@@ -2499,8 +2499,12 @@ namespace Sass {
       if (first != $nul && first >= 0x80) {
         return readIdentifierLike();
       }
-      error("Expected expression.",
-        scanner.rawSpan());
+      if (scanner.peekChar() == 0)
+        error("Expected expression.",
+          scanner.relevantSpan());
+      else
+        error("Expected expression.",
+          scanner.rawSpan());
       return nullptr;
     }
   }
