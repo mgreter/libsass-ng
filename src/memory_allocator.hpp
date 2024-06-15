@@ -7,6 +7,7 @@
 #include "memory_config.hpp"
 #include "settings.hpp"
 #include "MurmurHash2.hpp"
+#include "MurmurHash3.hpp"
 #include "randomize.hpp"
 
 #include <deque>
@@ -151,7 +152,7 @@ namespace std {
     inline size_t operator()(
       const sass::string& name) const
     {
-      return MurmurHash2(
+      return MurmurHash3(
         (void*)name.c_str(),
         (int)name.size(),
         Sass::getHashSeed());

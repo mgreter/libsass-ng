@@ -241,6 +241,7 @@ namespace Sass {
     }
     else {
       sass::string value(s->value());
+      // ToDo: avoid any cleanup
       trim_trailing_lines(value);
       append_token(value, s);
     }

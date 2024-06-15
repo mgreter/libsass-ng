@@ -98,7 +98,7 @@ namespace Sass {
     // EO erase(key)
 
     // Removes iterator's item from the map
-    void erase(iterator it)
+    void erase(const iterator& it)
     {
       items.erase(it);
     }
@@ -190,6 +190,14 @@ namespace Sass {
       }
       // Nothing inserted
       return false;
+    }
+    // EO insert
+
+    // Insert passed key/value pair
+    // ToDo: should return pair<it,bool>
+    bool insert(const K& k, const V& v)
+    {
+      return insert(std::make_pair<K, V>(k, v));
     }
     // EO insert
 

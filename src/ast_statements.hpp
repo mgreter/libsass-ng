@@ -15,7 +15,7 @@
 #include "ast_statements.hpp"
 #include "ast_css.hpp"
 #include "environment_cnt.hpp"
-#include "environment_stack.hpp"
+#include "environment.hpp"
 #include "file.hpp"
 
 namespace Sass {

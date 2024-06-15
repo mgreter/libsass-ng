@@ -23,6 +23,8 @@ can be called recursively. It is also vital for loops, like `@for` or `@each`.
 
 ## Overview
 
+ToDo: preloader phase is gone
+
 The whole process is split into two main phases. In order to correctly support
 `@import` we had to introduce the preloader phase, where all `@use`, `@forward` and
 `@import` rules are loaded first, before any evaluation happens. This ensures that

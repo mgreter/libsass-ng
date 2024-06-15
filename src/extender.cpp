@@ -28,25 +28,15 @@ namespace Sass {
   {
   }
 
-  ExtensionStore::ExtensionStore() :
-    mode(NORMAL),
-    traces(nullptr),
-    selectors54(),
-    extensionsByExtender(),
-    mediaContexts(),
-    sourceSpecificity(),
-    originals91()
-  {
-  }
-
   // extensionsWhereTarget((target) = > !originalSelectors.contains(target))
   void ExtensionStore::addNonOriginalSelectors(
     ExtSmplSelSet originalSelectors,
     ExtSet& unsatisfiedExtensions)
   {
-    for (auto& entry : extensionsBySimpleSelector) {
+    for (const auto& entry : extensionsBySimpleSelector) {
+      // Skip if entry is known in original selectors (by ptr)
       if (originalSelectors.count(entry.first)) continue;
-      for (auto& extension : entry.second) {
+      for (const auto& extension : entry.second) {
         // ToDo: check why we have this here!?
         if (extension.second->isOptional) continue;
         if (extension.second->target.isNull()) {
@@ -62,7 +52,6 @@ namespace Sass {
     ExtSmplSelSet originalSelectors,
     ExtSet& unsatisfiedExtensions)
   {
-    // Why is this not the same as when added?
     for (auto& entry : extensionsBySimpleSelector) {
       if (!originalSelectors.count(entry.first)) continue;
       for (auto& extension : entry.second) {
@@ -416,7 +405,7 @@ namespace Sass {
           existingExtensions->second, newExtensionsByTarget);
         // Seems only relevant for sass 4.0 modules
         if (!additionalExtensions.empty()) {
-          mapAddAll2(newExtensionsByTarget, additionalExtensions);
+          mapAddAllNested(newExtensionsByTarget, additionalExtensions);
         }
       }
     }

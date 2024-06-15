@@ -263,7 +263,7 @@ namespace Sass {
   // [names] aren't valid for this argument declaration.
   void CallableSignature::verify(
     size_t positional,
-    const ValueFlatMap& names,
+    ValueFlatMap* names,
     const SourceSpan& pstate,
     const BackTraces& traces) const
   {
@@ -272,7 +272,7 @@ namespace Sass {
     size_t namedUsed = 0;
     size_t iL = arguments_.size();
     while (i < std::min(positional, iL)) {
-      if (names.count(arguments_[i]->name()) == 1) {
+      if (names && names->count(arguments_[i]->name()) == 1) {
         throw Exception::RuntimeException(traces,
           "Argument $" + arguments_[i]->name().orig() +
           " name was passed both by position and by name.");
@@ -280,7 +280,7 @@ namespace Sass {
       i++;
     }
     while (i < iL) {
-      if (names.count(arguments_[i]->name()) == 1) {
+      if (names && names->count(arguments_[i]->name()) == 1) {
         namedUsed++;
       }
       else if (arguments_[i]->defval() == nullptr) {
@@ -303,10 +303,10 @@ namespace Sass {
         traces, strm.str());
     }
 
-    if (namedUsed < names.size()) {
-      ValueFlatMap unknownNames(names);
+    if (names && namedUsed < names->size()) {
+      ValueFlatMap* unknownNames = names;
       for (Argument* arg : arguments_) {
-        unknownNames.erase(arg->name());
+        unknownNames->erase(arg->name());
       }
       throw Exception::RuntimeException(
         traces, "No argument named $" +
@@ -325,11 +325,11 @@ namespace Sass {
     for (size_t i = 0, iL = arguments_.size(); i < iL; i++) {
       argument = arguments_[i];
       if (i < evaluated.positional().size()) {
-        if (evaluated.named().count(argument->name()) == 1) {
+        if (evaluated.hasNamed(argument->name())) {
           return false;
         }
       }
-      else if (evaluated.named().count(argument->name()) == 1) {
+      else if (evaluated.hasNamed(argument->name())) {
         namedUsed++;
       }
       else if (argument->defval().isNull()) {
@@ -338,7 +338,7 @@ namespace Sass {
     }
     if (!restArg_.empty()) return true;
     if (evaluated.positional().size() > arguments_.size()) return false;
-    if (namedUsed < evaluated.named().size()) return false;
+    if (evaluated.named() && namedUsed < evaluated.named()->size()) return false;
     return true;
   }
 
@@ -364,25 +364,41 @@ namespace Sass {
   CallableArguments::CallableArguments(
     const SourceSpan& pstate,
     ExpressionVector&& positional,
-    ExpressionFlatMap&& named,
+    ExpressionFlatMap* named,
     Expression* restArg,
     Expression* kwdRest) :
     AstNode(pstate),
     positional_(std::move(positional)),
-    named_(std::move(named)),
+    named_(named),
     restArg_(restArg),
     kwdRest_(kwdRest)
   {}
 
+  size_t CallableArguments::size() const
+  {
+    size_t count = positional_.size();
+    if (restArg_) {
+      if (const ListExpression* list = restArg_->isaListExpression())
+        count += list->size();
+      else if (!restArg_->isaMapExpression()) {
+        count += 1;
+      }
+    }
+    if (kwdRest_) {
+      //count += 1;
+    }
+    return count;
+  }
+
   CallableArguments::CallableArguments(
     SourceSpan&& pstate,
     ExpressionVector&& positional,
-    ExpressionFlatMap&& named,
+    ExpressionFlatMap* named,
     Expression* restArg,
     Expression* kwdRest) :
     AstNode(std::move(pstate)),
     positional_(std::move(positional)),
-    named_(std::move(named)),
+    named_(named),
     restArg_(restArg),
     kwdRest_(kwdRest)
   {}
@@ -391,7 +407,7 @@ namespace Sass {
   bool CallableArguments::isEmpty() const
   {
     return positional_.empty()
-      && named_.empty()
+      && hasNamed() == false
       && restArg_.isNull();
   }
   // EO isEmpty
@@ -401,17 +417,17 @@ namespace Sass {
 
   ArgumentResults::ArgumentResults(
     ValueVector&& positional,
-    ValueFlatMap&& named,
+    ValueFlatMap* named,
     SassSeparator separator) :
     positional_(std::move(positional)),
-    named_(std::move(named)),
+    named_(named),
     separator_(separator)
   {}
 
   ArgumentResults::ArgumentResults(
     ArgumentResults&& other) noexcept :
     positional_(std::move(other.positional_)),
-    named_(std::move(other.named_)),
+    named_(other.named_),
     separator_(other.separator_)
   {}
 
@@ -419,7 +435,7 @@ namespace Sass {
     ArgumentResults&& other) noexcept
   {
     positional_ = std::move(other.positional_);
-    named_ = std::move(other.named_);
+    named_ = other.named_;
     separator_ = other.separator_;
     return *this;
   }
@@ -460,7 +476,7 @@ namespace Sass {
   Value* PlainCssCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
   {
 
-    if (!arguments->named().empty() || arguments->kwdRest() != nullptr) {
+    if (arguments->hasNamed() || arguments->kwdRest() != nullptr) {
       throw Exception::RuntimeException(eval.compiler,
         "Plain CSS functions don't support keyword arguments.");
     }

@@ -1,3 +1,8 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+// Base class (reference counted) to hold loaded content (e.g. from files)
+/*****************************************************************************/
 #ifndef SASS_SOURCE_HPP
 #define SASS_SOURCE_HPP
 
@@ -11,15 +16,22 @@ namespace Sass {
 
   class SourceSpan;
 
-  // SourceData is the base class to hold loaded sass content.
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // SourceData is the base class to hold loaded content.
+  // Need to keep all the content around for error reporting
+  // ToDo: could use string views everywhere instead of copies
   class SourceData : public RefCounted
   {
   protected:
 
+    // Allow access for friend class to our privates
+    // Used to shim source when a part is interpolated
     friend class SourceItpl;
 
-    // Returns the number of lines. On the first call it will
-    // calculate the linefeed lookup table.
+    // Returns the number of lines. On the first call
+    // it will calculate the linefeed lookup table.
     virtual size_t countLines() = 0;
 
   public:
@@ -30,16 +42,17 @@ namespace Sass {
     // The source id is uniquely assigned
     virtual size_t getSrcIdx() const = 0;
 
-    // The source id is uniquely assigned
+    // Set source id (must be unqiue)
     virtual void setSrcIdx(size_t idx) = 0;
 
     // Return path as it was given for import
     virtual const char* getImpPath() const = 0;
 
-    // Return path as it was given for import
+    // Return path as it was resolved by importer
     virtual const char* getAbsPath() const = 0;
 
     // Return only the filename part
+    // ToDo: utilize base_name function
     const char* getFileName() const
     {
       const char* path = getImpPath();
@@ -75,8 +88,12 @@ namespace Sass {
     // Returns adjusted source span regarding interpolation.
     virtual SourceSpan adjustSourceSpan(SourceSpan& pstate) const;
 
+    // Declare wrapper to C-API structure
     CAPI_WRAPPER(SourceData, SassSource);
   };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }
 

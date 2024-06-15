@@ -1,12 +1,18 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+// Not much implementation here, as most of it is header only
+// Implements some rough debug/leak detection system (devs only)
+/*****************************************************************************/
+
 #include "shared_ptr.hpp"
 
 #ifdef DEBUG_SHARED_PTR
 #include "debugger.hpp"
 #include <iostream>
 #include <typeinfo>
-#endif
-
 #include "source.hpp"
+#endif
 
 namespace Sass {
 
@@ -37,7 +43,7 @@ namespace Sass {
   sass::vector<RefCounted*> RefCounted::all;
   std::unordered_set<size_t> RefCounted::deleted;
   size_t RefCounted::maxRefCount = 0;
-#endif
+  #endif
 
   bool RefCounted::taint = false;
   // size_t RefCounted::moves = 0;

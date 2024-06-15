@@ -10,7 +10,7 @@
 
 #include "ast_values.hpp"
 #include "ast_callables.hpp"
-#include "environment_stack.hpp"
+#include "environment.hpp"
 
 namespace Sass {
 

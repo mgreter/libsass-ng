@@ -117,7 +117,7 @@ namespace Sass {
     // Calculate only on demand
     size_t hash() const {
       if (_hash == 0) {
-        _hash = MurmurHash2(
+        _hash = MurmurHash3(
           (void*)_norm.c_str(),
           (int)_norm.size(),
           getHashSeed());
@@ -143,7 +143,7 @@ namespace Sass {
   struct hashString {
     inline size_t operator()(const sass::string& str) const
     {
-      return MurmurHash2(
+      return MurmurHash3(
         (void*)str.c_str(),
         (int)str.size(),
         getHashSeed());

@@ -32,17 +32,19 @@ struct SassError {
     status(0)
   {}
 
-  // Return json string to pass down-stream.
+  // Return json string to pass to downstream.
   // You must free the returned data yourself.
   // Do so by calling `sass_free_memory(ptr)`.
   char* getJson(bool include_sources) const;
 
   // Getter for error status as css
   // In order to show error in browser.
+  // ToDo: must memory be freed by caller?
   char* getCss() const;
 
   // Write error style-sheet so errors are shown
   // in the browser if the stylesheet is loaded.
+  // ToDo: is this safe from C perspective?
   void writeCss(std::ostream& css) const;
 
 };

@@ -1,3 +1,9 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+// Our long standing bread and butter (header only) debugger
+// Normally not included in any release compilation (devs only)
+/*****************************************************************************/
 #ifndef SASS_DEBUGGER_HPP
 #define SASS_DEBUGGER_HPP
 
@@ -763,8 +769,11 @@ inline void debug_ast(AstNode* node, std::string ind)
     CssMediaRule* rule = Cast<CssMediaRule>(node);
     std::cerr << ind << "CssMediaRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    for (const auto& item : rule->queries()) {
-      debug_ast(item, ind + "() ");
+    if (rule->queries() != nullptr)
+    {
+      for (const auto& item : *rule->queries()) {
+        debug_ast(item, ind + "() ");
+      }
     }
     for (const auto& item : rule->elements()) {
       debug_ast(item, ind + " !! ");
@@ -1128,7 +1137,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << std::endl;
     // std::cerr << ind << " positional: " << debug_vec(arguments->positional()) << "\n";
-    std::cerr << ind << " named: " << arguments->named().size() << "\n";
+    std::cerr << ind << " named: " << (arguments->hasNamed() ? arguments->named()->size() : 0) << "\n";
     // std::cerr << ind << " restArg: " << debug_vec(arguments->restArg()) << "\n";
     // std::cerr << ind << " kwdRest: " << debug_vec(arguments->kwdRest()) << "\n";
 
@@ -1220,9 +1229,9 @@ inline void debug_ast(AstNode* node, std::string ind)
       " [bracketed: " << expression->hasBrackets() << "] " <<
       " [hash: " << expression->hash() << "] " <<
       std::endl;
-    ValueFlatMap keywords = expression->keywords();
+    ValueFlatMap* keywords = expression->keywords();
     for (const auto& i : expression->elements()) { debug_ast(i, ind + " [] "); }
-    for (const auto& kv : keywords) { debug_ast(kv.second, ind + " " + kv.first.orig().c_str() + " "); }
+    if (keywords) for (const auto& kv : *keywords) { debug_ast(kv.second, ind + " " + kv.first.orig().c_str() + " "); }
   }
   else if (Cast<List>(node)) {
     List* expression = Cast<List>(node);

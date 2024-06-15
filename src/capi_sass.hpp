@@ -73,8 +73,6 @@
 // Include random seed
 #include "randomize.hpp"
 
-// #define USE_TSL_HOPSCOTCH
-
 // Include unordered map implementation
 #ifdef USE_TSL_HOPSCOTCH
 #include "tessil/hopscotch_map.h"

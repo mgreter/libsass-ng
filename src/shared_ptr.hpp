@@ -74,6 +74,7 @@ namespace Sass {
 
     // Copy object and zero children
     // The children array is empty
+    // Or whatever counts as children
     #define SASS_MEMORY_RESECT(obj) \
       ((obj)->copy(true)) \
 
@@ -84,16 +85,19 @@ namespace Sass {
 
   #endif
 
+  ///////////////////////////////////////////////////////////////////////////
   // RefCounted is the base class for all objects that can be stored as a shared object
   // It adds the reference counter and other values directly to the objects
   // This gives a slight overhead when directly used as a stack object, but has some
   // advantages for our code. It is safe to create two shared pointers from the same
-  // objects, as the "control block" is directly attached to it. This would lead
+  // object, as the "control block" is directly attached to it. This would lead
   // to undefined behavior with std::shared_ptr. This also avoids the need to
   // allocate additional control blocks and/or the need to dereference two
   // pointers on each operation. This can be optimized in `std::shared_ptr`
   // too by using `std::make_shared` (where the control block and the actual
   // object are allocated in one continuous memory block via one single call).
+  // ToDo: maybe add virtual `toString` as a requirement to mimic JS?
+  /////////////////////////////////////////////////////////////////////////
   class RefCounted {
 
    public:

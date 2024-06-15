@@ -4,7 +4,7 @@
 #ifndef SASS_EXPR_TO_CALC_HPP
 #define SASS_EXPR_TO_CALC_HPP
 
-#include "visitor_expression.hpp"
+#include "replace_expressions.hpp"
 
 namespace Sass {
 
@@ -16,12 +16,7 @@ namespace Sass {
   protected:
 
     virtual Expression* visitBinaryOpExpression(BinaryOpExpression* rule) override final;
-    virtual Expression* visitItplFnExpression(ItplFnExpression* rule) override final;
     virtual Expression* visitUnaryOpExpression(UnaryOpExpression* rule) override final;
-
-  public:
-
-    static FunctionExpression* sanitize(Expression* expr);
 
   };
 

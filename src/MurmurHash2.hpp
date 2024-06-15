@@ -4,7 +4,7 @@
 /* MurmurHash2 was written by Austin Appleby, and is placed in the public    */
 /* domain. The author hereby disclaims copyright to this source code.        */
 /*****************************************************************************/
-/* LibSass only needs MurmurHash2, so we made this header only               */
+/* LibSass only needs MurmurHash2 32bit, so we made this header only         */
 /*****************************************************************************/
 #ifndef SASS_MURMURHASH2_HPP
 #define SASS_MURMURHASH2_HPP
@@ -91,5 +91,4 @@ inline uint32_t MurmurHash2 ( const void * key, int len, uint32_t seed )
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
-#endif
-
+#endif // SASS_MURMURHASH2_HPP

@@ -10,8 +10,8 @@
 
 #include "fn_utils.hpp"
 #include "ast_nodes.hpp"
+#include "environment.hpp"
 #include "environment_key.hpp"
-#include "environment_stack.hpp"
 
 namespace Sass {
 
@@ -150,7 +150,7 @@ namespace Sass {
     // [names] aren't valid for this argument declaration.
     void verify(
       size_t positional,
-      const ValueFlatMap& names,
+      ValueFlatMap* names,
       const SourceSpan& pstate,
       const BackTraces& traces) const;
 
@@ -175,9 +175,9 @@ namespace Sass {
     // The arguments passed by position.
     ADD_CONSTREF(ExpressionVector, positional);
 
-    // The arguments passed by name.
-    ADD_CONSTREF(ExpressionFlatMap, named);
-    
+    // The arguments passed by name (optional).
+    ADD_CONSTREF(ExpressionFlatMapObj, named);
+
     // Optional rest argument (as in `$args...`).
     // Supports only one rest arg and it must be last.
     // ToDo: explain difference between restArg and kwdRest.
@@ -190,17 +190,29 @@ namespace Sass {
 
   public:
 
+    inline bool hasNamed() const {
+      return named_ && !named_->empty();
+    }
+
+    void addNamed(const EnvKey& key, Expression* value) {
+      if (!named_) named_ = SASS_MEMORY_NEW(ExpressionFlatMap);
+      (*named_)[key] = value;
+    }
+
+    size_t size() const;
+
+
     // Value move constructor
     CallableArguments(SourceSpan&& pstate,
       ExpressionVector&& positional,
-      ExpressionFlatMap&& named,
+      ExpressionFlatMap* named,
       Expression* restArgs = nullptr,
       Expression* kwdRest = nullptr);
 
     // Partial value move constructor
     CallableArguments(const SourceSpan& pstate,
       ExpressionVector&& positional,
-      ExpressionFlatMap&& named,
+      ExpressionFlatMap* named,
       Expression* restArgs = nullptr,
       Expression* kwdRest = nullptr);
 
@@ -225,22 +237,55 @@ namespace Sass {
     // A list implementation is often more efficient
     // We don't expect any function to have many arguments
     // Normally trade-off starts around 8 items in the list
-    ADD_REF(ValueFlatMap, named);
+    ADD_REF(ValueFlatMapObj, named);
 
     // Separator used for rest argument list, if any.
     ADD_CONSTREF(SassSeparator, separator);
 
   public:
 
+    inline bool hasNamed() const {
+      return named_ && !named_->empty();
+    }
+
+    inline bool hasNamed(const EnvKey& key) const {
+      return hasNamed() && named_->count(key);
+    }
+
+    void addNamed(const EnvKey& key, Value* value) {
+      if (!named_) named_ = SASS_MEMORY_NEW(ValueFlatMap);
+      (*named_)[key] = value;
+    }
+
+    void reserve(size_t size) {
+      positional_.reserve(size);
+    }
+
+
+    //void named_(ValueFlatMap&& map) {
+    //  forceNamed() == std::move(map);
+    //}
+
+    // void named_(const ValueFlatMap& map) {
+    //   forceNamed() == map;
+    // }
+
     // Value constructor
     ArgumentResults() :
       separator_(SASS_UNDEF)
     {};
 
+    // Preallocate constructor
+    ArgumentResults(size_t size) :
+      separator_(SASS_UNDEF)
+    {
+      positional_.reserve(size);
+    };
+
     // Value move constructor
     ArgumentResults(
       ValueVector&& positional,
-      ValueFlatMap&& named,
+      ValueFlatMap* named,
       SassSeparator separator);
 
     // Move constructor

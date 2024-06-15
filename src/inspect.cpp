@@ -19,8 +19,8 @@ namespace Sass {
   using namespace Charcode;
   using namespace Character;
 
-  sass::string Inspect::PrintNumber(double nr, const OutputOptions& outopt) {
-
+  sass::string Inspect::PrintNumber(double nr, const OutputOptions& outopt)
+  {
 
     // Avoid streams
     char buf[1024];
@@ -28,8 +28,6 @@ namespace Sass {
     snprintf(buf, 1024,
       outopt.nr_sprintf,
       nr);
-
-
 
     // Operate from behind
     char* end = buf;
@@ -50,7 +48,7 @@ namespace Sass {
       buf[0] = '0'; buf[1] = 0;
     }
 
-    // add unit now
+    // add units later
     return sass::string(buf);
 
   }
@@ -207,10 +205,7 @@ namespace Sass {
         append_char($backslash);
         break;
       default:
-        if (_tryPrivateUseCharacter(text.begin(), text.end(), i)) {
-          
-        }
-        else {
+        if (!_tryPrivateUseCharacter(text.begin(), text.end(), i)) {
           append_char(chr);
         }
         break;
@@ -222,20 +217,22 @@ namespace Sass {
   }
   // EO renderQuotedString
 
-
   void Inspect::visitCssMediaRule(CssMediaRule* node)
   {
     append_indentation();
     append_token("@media", node);
     append_mandatory_space();
     bool joinIt = false;
-    for (const auto& query : node->queries()) {
-      if (joinIt) {
-        append_comma_separator();
-        append_optional_space();
+    if (node->queries() != nullptr)
+    {
+      for (const auto& query : *node->queries()) {
+        if (joinIt) {
+          append_comma_separator();
+          append_optional_space();
+        }
+        acceptCssMediaQuery(query);
+        joinIt = true;
       }
-      acceptCssMediaQuery(query);
-      joinIt = true;
     }
     visitBlockStatements(node->elements());
   }
@@ -245,7 +242,6 @@ namespace Sass {
   {
     SelectorListObj s = node->selector();
 
-//    if (!s || s->empty()) return;
     if (!node || node->isInvisibleCss()) return;
 
     // if (output_style() == SASS_STYLE_NESTED) {
@@ -400,11 +396,9 @@ namespace Sass {
   // statements // visitCssStylesheet
   void Inspect::visitCssRoot(CssRoot* block)
   {
-
-    for (size_t i = 0, L = block->size(); i < L; ++i) {
-      auto& child = block->get(i);
-      if (_IsInvisible(block)) continue;
-      child->accept(this); // XX
+    if (_IsInvisible(block)) return;
+    for (const auto& child : block->elements()) {
+      child->accept(this);
     }
 
   }
@@ -412,37 +406,19 @@ namespace Sass {
   void Inspect::visitCssKeyframeBlock(CssKeyframeBlock* node)
   {
     if (node->selector()) {
-
-      const sass::vector<sass::string>& selector
+      const auto& selector
         = node->selector()->texts();
-
       if (!selector.empty()) {
         append_indentation();
         bool addComma = false;
-        for (sass::string sel : selector) {
-          if (addComma) {
-            append_comma_separator();
-          }
+        for (const sass::string& sel : selector) {
+          if (addComma) append_comma_separator();
           append_string(sel);
           addComma = true;
         }
       }
-
     }
-    // StringLiteralObj v2 = node->name2();
-    // 
-    // if (!v2.isNull()) {
-    //   append_indentation();
-    //   v2->accept(this);
-    // }
-    // 
-    // append_scope_opener();
-    // for (size_t i = 0, L = r->size(); i < L; ++i) {
-    //   Statement_Obj stm = r->get(i);
-    //   stm->accept(this);
-    //   if (i < L - 1) append_special_linefeed();
-    // }
-    // append_scope_closer();
+
     if (!node->isInvisibleCss()) {
       append_scope_opener();
       for (CssNode* child : node->elements()) {
@@ -484,18 +460,6 @@ namespace Sass {
       CssString* text(import->modifiers());
       append_token(text->text(), text);
     }
-    // if (!import->media().empty()) {
-    //   bool first = true;
-    //   append_mandatory_space();
-    //   for (CssMediaQueryObj query : import->media()) {
-    //     if (first == false) {
-    //       append_comma_separator();
-    //       append_optional_space();
-    //     }
-    //     acceptCssMediaQuery(query);
-    //     first = false;
-    //   }
-    // }
     add_close_mapping(import, true);
     append_delimiter();
   }
@@ -580,24 +544,17 @@ namespace Sass {
   void Inspect::visitComplexSelector(ComplexSelector* complex)
   {
     bool many = false;
-
-    // debug_ast(complex, "visit: ");
-
     // schedule_mapping(complex->last());
-
     for (SelectorCombinator* combinator : complex->leadingCombinators()) {
       visitSelectorCombinator(combinator);
       append_mandatory_space();
     }
-
     for (const CplxSelComponentObj& item : complex->elements()) {
       if (many) append_mandatory_space();
       visitSelectorComponent(item);
       many = true;
     }
-
     schedule_mapping(nullptr);
-
   }
 
   void Inspect::visitSelectorComponent(CplxSelComponent* comp)
@@ -615,10 +572,8 @@ namespace Sass {
 
     size_t position = wbuf.buffer.size();
 
-    if (compound->withExplicitParent()) {
-      if (inspect == true) {
-        append_string("&");
-      }
+    if (inspect && compound->withExplicitParent()) {
+      append_string("&");
     }
 
     for (const SimpleSelectorObj& item : compound->elements()) {
@@ -634,8 +589,8 @@ namespace Sass {
 
     // Add the post line break (from ruby sass)
     // Dart sass uses another logic for newlines
-    if (compound->hasPostLineBreak()) {
-      if (output_style() != SASS_STYLE_COMPACT) {
+    if (output_style() != SASS_STYLE_COMPACT) {
+      if (compound->hasPostLineBreak()) {
         append_optional_linefeed();
       }
     }
@@ -650,13 +605,6 @@ namespace Sass {
        case SelectorPrefix::FOLLOWING: append_string("~"); break;
      }
      append_optional_space();
-    //  // Add the post line break (from ruby sass)
-  //  // Dart sass uses another logic for newlines
-  //  // if (combinator->hasPostLineBreak()) {
-  //  //   if (output_style() != COMPACT) {
-  //  //     // append_optional_linefeed();
-  //  //   }
-  //  // }
   }
 
   void Inspect::visitIDSelector(IDSelector* id)
@@ -919,13 +867,14 @@ namespace Sass {
   // T visitColorRGBA(SassColor value);
   void Inspect::visitColor(Color* color)
   {
-    // output the final token
-    sass::sstream ss;
 
     if (color->parsed() && !color->isaColorHwba()) { //&& color->a() < 1
 
+      // output the final token
+      // is sass::string faster?
+      sass::sstream ss;
+
       if (color->disp().empty()) {
-        // double epsilon = std::pow(0.1, outopt.precision);
         if (ColorHsla* hsla = color->isaColorHsla()) {
           if (hsla->a() >= 1) {
             ss << "hsl(";
@@ -956,24 +905,23 @@ namespace Sass {
             ss << PrintNumber(clamp<double>(rgba->a(), 0, 1), outopt) << ")";
           }
         }
-        //else if (ColorHwba* hwba = color->isaColorHwba()) {
-        //  auto rgba = hwba->toRGBA();
-        //  if (rgba->a() >= 1) {
-        //    ss << "hwb(";
-        //    ss << round64(rgba->r(), epsilon) << ", ";
-        //    ss << round64(rgba->g(), epsilon) << ", ";
-        //    ss << round64(rgba->b(), epsilon) << ")";
-        //  }
-        //  else {
-        //    ss << "hwba(";
-        //    ss << round64(rgba->r(), epsilon) << ", ";
-        //    ss << round64(rgba->g(), epsilon) << ", ";
-        //    ss << round64(rgba->b(), epsilon) << ", ";
-        //    ss << clamp<double>(rgba->a(), 0, 1) << ")";
-        //  }
-        //}
+        // else if (ColorHwba* hwba = color->isaColorHwba()) {
+        //   auto rgba = hwba->toRGBA();
+        //   if (rgba->a() >= 1) {
+        //     ss << "hwb(";
+        //     ss << round64(rgba->r(), epsilon) << ", ";
+        //     ss << round64(rgba->g(), epsilon) << ", ";
+        //     ss << round64(rgba->b(), epsilon) << ")";
+        //   }
+        //   else {
+        //     ss << "hwba(";
+        //     ss << round64(rgba->r(), epsilon) << ", ";
+        //     ss << round64(rgba->g(), epsilon) << ", ";
+        //     ss << round64(rgba->b(), epsilon) << ", ";
+        //     ss << clamp<double>(rgba->a(), 0, 1) << ")";
+        //   }
+        // }
         append_token(ss.str(), color);
-        // append_token(color->toString(), color);
       }
       else {
         append_token(color->disp(), color);
@@ -1034,6 +982,9 @@ namespace Sass {
 
     if (compressed) name = "";
 
+    // output the final token
+    sass::sstream ss;
+
     // retain the originally specified color definition if unchanged
     if (name != "") {
       ss << name;
@@ -1067,9 +1018,6 @@ namespace Sass {
   }
   // EO visitColorRGBA
 
-  // T visitFunction(Function value);
-
-  // T visitMap(Map value);
   void Inspect::visitMap(Map* value)
   {
     if (value->empty()) {
@@ -1102,7 +1050,6 @@ namespace Sass {
   void Inspect::visitNull(Null* value)
   {
     if (output_style() == SASS_STYLE_TO_CSS) return;
-    // output the final token
     append_token("null", value);
   }
 
@@ -1170,14 +1117,8 @@ namespace Sass {
           );
         }
       }
-      // ToDo: implement cssize
-      //if (nr->isValidCssUnit() == false) {
-      //  throw std::runtime_error(
-      //    "isn't a valid CSS value");
-      //}
 
       if (std::isnan(nr->value())) {
-        // if (wrap) append_string("calc(");
         if (nr->value() < 0) {
           append_string("-NaN");
         }
@@ -1188,13 +1129,10 @@ namespace Sass {
           append_string(" * 1");
           _writeCalculationUnits(nr);
         }
-        // if (wrap) append_string(")");
-        //_writeCalculationUnits(nr);
         return;
       }
 
       if (std::isinf(nr->value())) {
-        // if (wrap) append_string("calc(");
         if (nr->value() < 0) {
           append_string("-infinity");
         }
@@ -1205,8 +1143,6 @@ namespace Sass {
           append_string(" * 1");
           _writeCalculationUnits(nr);
         }
-        // if (wrap) append_string(")");
-        //_writeCalculationUnits(nr);
         return;
       }
 

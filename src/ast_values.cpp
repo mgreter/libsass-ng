@@ -811,13 +811,16 @@ namespace Sass {
 
 
   // Copy constructor
-  Number::Number(const Number* ptr) :
+  Number::Number(const Number* ptr, bool childless) :
     Value(ptr),
     Units(ptr),
-    value_(ptr->value_),
-    lhsAsSlash_(ptr->lhsAsSlash_),
-    rhsAsSlash_(ptr->rhsAsSlash_)
-  {}
+    value_(ptr->value_)
+  {
+    if (childless == false) {
+      lhsAsSlash(ptr->lhsAsSlash_);
+      rhsAsSlash(ptr->rhsAsSlash_);
+    }
+  }
 
   /////////////////////////////////////////////////////////////////////////
   // Implement base value equality comparator
@@ -1395,6 +1398,17 @@ namespace Sass {
     return SASS_MEMORY_NEW(Number, pstate(), value() * factor, lhs);
   }
 
+  // ToDo: replace coerceToDeg/Rad
+  double Number::coerceToUnit(Logger& logger, const Units& units, const sass::string& vname) const
+  {
+    if (double factor = getUnitConversionFactor(unit_rad)) {
+      return value() * factor;
+    }
+    CallStackFrame csf(logger, pstate());
+    throw Exception::RuntimeException(logger, "$" + vname +
+      ": Expected " + inspect() + " to be an angle.");
+  }
+
   double Number::factorToUnits(const Units& units)
   {
     if (this->Units::operator==(units)) return 1;
@@ -1418,10 +1432,21 @@ namespace Sass {
       return this;
     }
     // Otherwise we need to make a copy first
-    Number* copy = SASS_MEMORY_COPY(this);
-    copy->lhsAsSlash_.clear();
-    copy->rhsAsSlash_.clear();
-    return copy;
+    return SASS_MEMORY_RESECT(this);
+  }
+
+  Number* Number::withoutSlash5()
+  {
+    if (!hasAsSlash()) return this;
+    // we are the only holder of this item
+    // therefore should be safe to alter it
+    if (this->refcount <= 1) {
+      lhsAsSlash_.clear();
+      rhsAsSlash_.clear();
+      return this;
+    }
+    // Otherwise we need to make a copy first
+    return SASS_MEMORY_RESECT(this);
   }
 
   sass::string Number::recommendation() const
@@ -1733,7 +1758,7 @@ namespace Sass {
     const SourceSpan& pstate,
     SassSeparator separator,
     const ValueVector& values,
-    const ValueFlatMap& keywords) :
+    ValueFlatMap* keywords) :
     List(pstate,
       values,
       separator,
@@ -1746,12 +1771,12 @@ namespace Sass {
     const SourceSpan& pstate,
     SassSeparator separator,
     ValueVector&& values,
-    ValueFlatMap&& keywords) :
+    ValueFlatMap* keywords) :
     List(pstate,
       std::move(values),
       separator,
       false),
-    _keywords(std::move(keywords)),
+    _keywords(keywords),
     _wereKeywordsAccessed(false)
   {}
 
@@ -1782,7 +1807,7 @@ namespace Sass {
     if (Vectorized<Value>::hash_ == 0) {
       hash_start(Value::hash_, typeid(ArgumentList).hash_code());
       hash_combine(Value::hash_, Vectorized<Value>::hash());
-      for (const auto& child : _keywords) {
+      if (_keywords) for (const auto& child : *_keywords) {
         hash_combine(Value::hash_, child.first.hash());
         hash_combine(Value::hash_, child.second->hash());
       }
@@ -1796,7 +1821,7 @@ namespace Sass {
   Map* ArgumentList::keywordsAsSassMap() const
   {
     Map* map = SASS_MEMORY_NEW(Map, pstate());
-    for (const auto& kv : _keywords) {
+    if (_keywords) for (const auto& kv : *_keywords) {
       String* keystr = SASS_MEMORY_NEW(
         String, kv.second->pstate(),
         sass::string(kv.first.orig()));

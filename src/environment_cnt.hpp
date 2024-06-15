@@ -36,17 +36,25 @@ namespace Sass {
     std::allocator<sass::string>
   >;
 
-  template<typename T>
   // Performance comparison on MSVC and bolt-bench:
   // tsl::hopscotch_map is 10% slower than Sass::FlatMap
   // std::unordered_map a bit faster than tsl::hopscotch_map
   // Sass::FlapMap is 10% faster than any other container
   // Note: only due to our very specific usage patterns!
-  using EnvKeyFlatMap = FlatMap<EnvKey, T>;
+  template<typename T> using EnvKeyFlatMap = FlatMap<EnvKey, T>;
 
   typedef sass::vector<EnvKey> EnvKeys;
-  typedef EnvKeyFlatMap<ValueObj> ValueFlatMap;
-  typedef EnvKeyFlatMap<ExpressionObj> ExpressionFlatMap;
+
+  class ValueFlatMap : public EnvKeyFlatMap<ValueObj>, public RefCounted {
+
+  };
+
+  class ExpressionFlatMap : public EnvKeyFlatMap<ExpressionObj>, public RefCounted {
+
+  };
+
+  IMPL_MEM_OBJ(ValueFlatMap);
+  IMPL_MEM_OBJ(ExpressionFlatMap);
 
   // Helper typedefs to test implementations
   // We seem to need order preserving at least for globals

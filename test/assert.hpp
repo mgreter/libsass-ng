@@ -5,7 +5,7 @@
 #include <vector>
 #include <iomanip>
 #include "../src/memory/allocator.hpp"
-#include "../src/offset.hpp"
+#include "../src/source_offset.hpp"
 
 sass::string escape_string(const sass::string& str) {
   sass::string out;

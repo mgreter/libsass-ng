@@ -1,277 +1,861 @@
-#include "fn_meta.hpp"
-
-#include <cstring>
-
-#include "eval.hpp"
-#include "compiler.hpp"
-#include "exceptions.hpp"
-#include "ast_values.hpp"
-#include "ast_callables.hpp"
-#include "ast_expressions.hpp"
-#include "string_utils.hpp"
-
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "environment.hpp"
-#include "preloader.hpp"
 
-#include "eval.hpp"
-#include "cssize.hpp"
-#include "sources.hpp"
-#include "compiler.hpp"
-#include "stylesheet.hpp"
-#include "exceptions.hpp"
-#include "ast_values.hpp"
-#include "ast_imports.hpp"
-#include "ast_selectors.hpp"
-#include "ast_callables.hpp"
-#include "ast_statements.hpp"
 #include "ast_expressions.hpp"
-#include "parser_selector.hpp"
-#include "parser_media_query.hpp"
-#include "parser_keyframe_selector.hpp"
-
-#include "parser_stylesheet.hpp"
-
-#include "compiler.hpp"
-#include "charcode.hpp"
-#include "charcode.hpp"
-#include "character.hpp"
-#include "color_maps.hpp"
-#include "exceptions.hpp"
-#include "source_span.hpp"
-#include "ast_imports.hpp"
-#include "ast_supports.hpp"
 #include "ast_statements.hpp"
-#include "ast_expressions.hpp"
-#include "parser_expression.hpp"
+#include "exceptions.hpp"
+#include "compiler.hpp"
 
 namespace Sass {
 
-  // Import some namespaces
-  using namespace Charcode;
-  using namespace Character;
-  using namespace StringUtils;
+  /////////////////////////////////////////////////////////////////////////
+  // Each parsed scope gets its own environment frame
+  /////////////////////////////////////////////////////////////////////////
 
+  const EnvRef nullidx{ 0xFFFFFFFF };
 
-
-
-  AssignRule* StylesheetParser::readVariableDeclarationWithoutNamespace(
-    const sass::string& ns, Offset start)
+  // The root is used for all runtime state
+  // Also contains parsed root scope stack
+  EnvRoot::EnvRoot(
+    Compiler& compiler) :
+    compiler(compiler),
+    idxs(new EnvRefs(
+      *this,  // root
+      nullptr,// pscope
+      false,  // isImport
+      true,   // isInternal
+      false)) // isSemiGlobal
   {
-
-    sass::string vname(variableName());
-
-    // std::cerr << "ASSIGN == RULE\n";
-
-    if (!ns.empty()) {
-      assertPublicIdentifier(vname, start);
-    }
-
-    EnvKey name(vname);
-
-    if (parsingCss()) {
-      error("Sass variables aren't allowed in plain CSS.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    scanner.expectChar($colon);
-    scanWhitespace();
-
-    ExpressionObj value = readExpression();
-
-    bool guarded = false;
-    bool global = false;
-
-    Offset flagStart(scanner.offset);
-    while (scanner.scanChar($exclamation)) {
-      sass::string flag = readIdentifier();
-      if (flag == "default") {
-        if (guarded) {
-          compiler.addDeprecation(
-            "!default should only be written once for each variable.\n"
-            "This will be an error in LibSass 5.0.0.",
-            scanner.relevantSpanFrom(flagStart),
-            Logger::WARN_DUPE_VAR_FLAG);
-        }
-        guarded = true;
-      }
-      else if (flag == "global") {
-        if (!ns.empty()) {
-          error("!global isn't allowed for variables in other modules.",
-            scanner.relevantSpanFrom(flagStart));
-        }
-        else if (global) {
-          compiler.addDeprecation(
-            "!global should only be written once for each variable.\n"
-            "This will be an error in LibSass 5.0.0.",
-            scanner.relevantSpanFrom(flagStart),
-            Logger::WARN_DUPE_VAR_FLAG);
-        }
-        global = true;
-      }
-      else {
-        error("Invalid flag name.",
-          scanner.relevantSpanFrom(flagStart));
-      }
-
-      scanWhitespace();
-      flagStart = scanner.offset;
-    }
-
-    expectStatementSeparator("variable declaration");
-
-    // Skip to optional global scope
-    EnvRefs* frame = global ?
-      compiler.varRoot.stack.front() :
-      compiler.varRoot.stack.back();
-
-    SourceSpan pstate(scanner.relevantSpanFrom(start));
-
-    bool hasVar = false;
-    auto chroot = frame;
-    while (chroot) {
-      if (ns.empty()) {
-        if (chroot->varIdxs.count(name)) {
-          hasVar = true;
-          break;
-        }
-      }
-      if (/*chroot->isImport || */chroot->isSemiGlobal) {
-        chroot = chroot->pscope;
-      }
-      else {
-        break;
-      }
-    }
-
-    AssignRule* declaration = SASS_MEMORY_NEW(AssignRule,
-      scanner.relevantSpanFrom(start),
-      name, ns,
-      {}, value, guarded, global);
-
-    if (ns.empty() && !hasVar) {
-      frame->createVariable(name);
-    }
-
-    return declaration;
+    varStack.reserve(256);
+    mixStack.reserve(128);
+    fnStack.reserve(256);
+    intVariables.reserve(256);
+    intMixin.reserve(128);
+    intFunction.reserve(256);
+    // Push onto our stack
+    compiler.envstack.push_back(this->idxs);
   }
-  // EO readVariableDeclarationWithoutNamespace
 
-  // Consumes a mixin declaration.
-  // [start] should point before the `@`.
-  MixinRule* StylesheetParser::readMixinRule(Offset start)
-  {
+  // Destructor
 
-    EnvRefs* frame = compiler.getCurrentScope();
-
-    EnvFrame local(compiler, false);
-    // Create space for optional content callable
-    // ToDo: check if this can be conditionally done?
-    local.idxs->createMixin(Keys::contentRule);
-    // var precedingComment = lastSilentComment;
-    // lastSilentComment = null;
-    StringToken name = readIdentifierToken();
-
-    if (StringUtils::startsWith(name.str, "--")) {
-      compiler.addDeprecation(
-        "Sass @mixin names beginning with -- are deprecated for forward-"
-        "compatibility with plain CSS mixins.\n"
-        "For details, see https://sass-lang.com/d/css-function-mixin",
-        name.pstate, Logger::WARN_DOUBLE_DASH_MIXIN);
+  EnvRoot::~EnvRoot() {
+    // Pop from stack
+    compiler.envstack.pop_back();
+    // Take care of scope pointers
+    for (EnvRefs* idx : scopes57) {
+      delete idx;
     }
+    // Delete our env
+    delete idxs;
+  }
 
-    scanWhitespace();
+  // Runtime check to see if we are currently in global scope
 
-    CallableSignatureObj arguments;
-    if (scanner.peekChar() == $lparen) {
-      arguments = parseArgumentDeclaration();
+  bool EnvRoot::isGlobal() const { return idxs->root.compiler.envstack.size() == 1; }
+  // EO EnvRoot ctor
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Value constructor
+  EnvFrame::EnvFrame(
+    Compiler& compiler,
+    bool isSemiGlobal,
+    bool isInternal,
+    bool isImport) :
+    stack55(compiler.envstack),
+    idxs(new EnvRefs(
+      compiler.varRoot,
+      compiler.envstack.back(),
+      isImport, isInternal, isSemiGlobal))
+  {
+    if (isInternal) {
+      // Lives in built-in scope
+      idxs->isInternal = true;
+    }
+    // Check and prevent stack smashing
+    if (stack55.size() > SassMaxNesting) {
+      throw Exception::RecursionLimitError();
+    }
+    // Push onto our stack
+    stack55.push_back(this->idxs);
+    // Account for allocated memory
+    idxs->root.scopes57.push_back(idxs);
+  }
+  // EO EnvFrame ctor
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Remove frame from stack on destruction
+  EnvFrame::~EnvFrame()
+  {
+    // Pop from stack
+    stack55.pop_back();
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  const EnvRefs* EnvRefs::nextScope() const
+  {
+    //return pscope;
+    return pscope;
+  }
+
+  // Register new variable on local stack
+  // Invoked mostly by stylesheet parser
+  EnvRef EnvRefs::createVariable(
+    const EnvKey& name)
+  {
+    if (isInternal) {
+      size_t offset = root.intVariables.size();
+      root.intVariables.resize(offset + 1);
+      varIdxs[name] = (uint32_t)offset;
+      return { (uint32_t)offset };
+    }
+    // Get local offset to new variable
+    size_t offset = varIdxs.size();
+    // Remember the variable name
+    varIdxs[name] = (uint32_t)offset;
+    // Return stack index reference
+    return { this, (uint32_t)offset };
+  }
+  // EO createVariable
+
+  // Register new function on local stack
+  // Mostly invoked by built-in functions
+  // Then invoked for custom C-API function
+  // Finally for every parsed function rule
+  EnvRef EnvRefs::createFunction(
+    const EnvKey& name, bool special)
+  {
+    if (isInternal) {
+      size_t offset = root.intFunction.size();
+      // ToDo: why is this here, very weird!
+      // if (!special)
+      // ToDo: store in n_functions to count
+      root.intFunction.resize(offset + 1);
+      // if (offset == 127) std::cerr << "Resized the fucker\n";
+      fnIdxs[name] = (uint32_t)offset;
+      return { (uint32_t)offset };
+    }
+    // Get local offset to new function
+    size_t offset = fnIdxs.size();
+    // Remember the function name
+    fnIdxs[name] = (uint32_t)offset;
+    // Return stack index reference
+    return { this, (uint32_t)offset };
+  }
+  // EO createFunction
+
+  // Register new mixin on local stack
+  // Only invoked for mixin rules
+  // But also for content blocks
+  EnvRef EnvRefs::createMixin(
+    const EnvKey& name)
+  {
+    if (isInternal) {
+      size_t offset = root.intMixin.size();
+      root.intMixin.resize(offset + 1);
+      mixIdxs[name] = (uint32_t)offset;
+      return { (uint32_t)offset };
+    }
+    // Get local offset to new mixin
+    size_t offset = mixIdxs.size();
+    // Remember the mixin name
+    mixIdxs[name] = (uint32_t)offset;
+    // Return stack index reference
+    return { this, (uint32_t)offset };
+  }
+  // EO createMixin
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Get value instance by stack index reference
+  // Just converting and returning reference to array offset
+  //ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
+  //{
+  //  if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+  //    return intVariables[vidx.offset];
+  //  }
+  //  else {
+  //    return varStack[vidx.idxs->varOffset + vidx.offset];
+  //  }
+  //}
+  // EO getVariable
+
+
+  // Get value instance by stack index reference
+  // Just converting and returning reference to array offset
+
+  static ValueObj qwe = SASS_MEMORY_NEW(Null, SourceSpan::internal("null"));
+
+  ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
+  {
+    if (!vidx.isValid()) {
+      std::cerr << " Trying to access invalid variable\n";
+      return qwe;
+    }
+    if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+      if (vidx.offset >= intVariables.size()) {
+        std::cerr << " Trying to access non existing variable " << vidx.offset << "\n";
+        return qwe;
+
+      }
+      //const ValueObj& val = intVariables[vidx.offset];
+      //if (val == nullptr) std::cerr << "Get variable at " << vidx.offset << " NULL\n";
+      //else std::cerr << "Get variable at " << vidx.offset << " " << val->toString() << "\n";
+      return intVariables[vidx.offset];
     }
     else {
-      // Dart-sass creates this one too
-      arguments = SASS_MEMORY_NEW(CallableSignature,
-        scanner.relevantSpan(), sass::vector<ArgumentObj>()); // empty declaration
+      //const ValueObj& val = varStack[vidx.idxs->varOffset + vidx.offset];
+      //if (val == nullptr) std::cerr << "Get variable at " << vidx.offset << " NULL\n";
+      //else std::cerr << "Get variable at " << vidx.offset << " " << val->toString() << "\n";
+      return varStack[vidx.idxs->varOffset + vidx.offset];
     }
-
-    if (inMixin || inContentBlock) {
-      error("Mixins may not contain mixin declarations.",
-        scanner.relevantSpanFrom(start));
-    }
-    else if (inControlDirective) {
-      error("Mixins may not be declared in control directives.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    RAII_FLAG(inMixin, true);
-    RAII_FLAG(mixinHasContent, false);
-
-    // while (frame->isImport) frame = frame->pscope;
-    EnvRef midx = frame->createMixin(name.str);
-    MixinRule* rule = withChildren<MixinRule>(
-      &StylesheetParser::readChildStatement,
-      start, name.str, arguments, local.idxs);
-    // Mixins can't be created in loops
-    // Must be on root, not even in @if
-    // Therefore this optimization is safe
-    rule->midx(midx);
-    // rule->cidx(cidx);
-    return rule;
   }
-  // EO _mixinRule
 
-  // Consumes a function declaration.
-  // [start] should point before the `@`.
-  FunctionRule* StylesheetParser::readFunctionRule(Offset start)
+  // Get function instance by stack index reference
+  // Just converting and returning reference to array offset
+  ValueObj& EnvRoot::getModVar(const uint32_t offset)
   {
-    // Variables should not be hoisted through
-    EnvRefs* parent = compiler.varRoot.stack.back();
-    EnvFrame local(compiler, false);
-
-    // var precedingComment = lastSilentComment;
-    // lastSilentComment = null;
-    Offset before(scanner.offset);
-    StringToken name = readIdentifierToken();
-
-    if (StringUtils::startsWith(name.str, "--")) {
-      compiler.addDeprecation(
-        "Sass @function names beginning with -- are deprecated for forward-"
-        "compatibility with plain CSS mixins.\n"
-        "For details, see https://sass-lang.com/d/css-function-mixin",
-        name.pstate, Logger::WARN_DOUBLE_DASH_MIXIN);
-    }
-
-    sass::string normalized(name.str);
-
-    scanWhitespace();
-
-    CallableSignatureObj arguments = parseArgumentDeclaration();
-
-    if (inMixin || inContentBlock) {
-      error("Mixins may not contain function declarations.",
-        scanner.relevantSpanFrom(start));
-    }
-    else if (inControlDirective) {
-      error("Functions may not be declared in control directives.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    sass::string fname(StringUtils::unvendor(name.str));
-    if (fname == "calc" || fname == "element" || fname == "expression" || fname == "url"
-      || fname == "and" || fname == "or" || fname == "not" || fname == "clamp") {
-      error("Invalid function name.",
-        scanner.relevantSpanFrom(start));
-    }
-
-    scanWhitespace();
-    FunctionRule* rule = withChildren<FunctionRule>(
-      &StylesheetParser::readFunctionRuleChild,
-      start, name.str, arguments, local.idxs);
-    // This is the weird parts correspondant
-    rule->fidx(parent->createFunction(name.str, true));
-    return rule;
+    return intVariables[offset];
   }
-  // EO readFunctionRule
+  // EO findFunction
 
-  
+  // Get function instance by stack index reference
+  // Just converting and returning reference to array offset
+  CallableObj& EnvRoot::getModFn(const uint32_t offset)
+  {
+    return intFunction[offset];
+  }
+  // EO findFunction
+
+  // Get function instance by stack index reference
+  // Just converting and returning reference to array offset
+  CallableObj& EnvRoot::getModMix(const uint32_t offset)
+  {
+    return intMixin[offset];
+  }
+  // EO findFunction
+
+  // Get function instance by stack index reference
+  // Just converting and returning reference to array offset
+  CallableObj& EnvRoot::getFunction(const EnvRef& fidx)
+  {
+    if (fidx.idxs == nullptr || fidx.idxs->isInternal) {
+      return intFunction[fidx.offset];
+    }
+    else {
+      return fnStack[size_t(fidx.idxs->fnOffset) + fidx.offset];
+    }
+  }
+  // EO findFunction
+
+  // Get mixin instance by stack index reference
+  // Just converting and returning reference to array offset
+  CallableObj& EnvRoot::getMixin(const EnvRef& midx)
+  {
+    if (midx.idxs == nullptr || midx.idxs->isInternal) {
+      return intMixin[midx.offset];
+    }
+    else {
+      return mixStack[size_t(midx.idxs->mixOffset) + midx.offset];
+    }
+  }
+  // EO getMixin
+
+  void EnvRoot::setModVar(const uint32_t offset, Value* value, bool guarded, const SourceSpan& pstate)
+  {
+    if (offset < privateVarOffset) {
+      CallStackFrame frame(compiler, pstate);
+      throw Exception::RuntimeException(compiler,
+        "Cannot modify built-in variable.");
+    }
+    ValueObj& slot(intVariables[offset]);
+    if (!guarded || !slot || slot->isaNull()) {
+      slot = value;
+    }
+  }
+
+  // Set items on runtime/evaluation phase via references
+  // Just converting reference to array offset and assigning
+  void EnvRoot::setVariable(const EnvRef& vidx, Value* value, bool guarded)
+  {
+    if (!vidx.isValid()) {
+      return;
+    }
+    if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+      //if (value == nullptr)std::cerr << "SET VARIABLE " << vidx.offset << " to NULL\n";
+      //else std::cerr << "SET VARIABLE " << vidx.offset << " to " << value->toString() << "\n";
+      ValueObj& slot(intVariables[vidx.offset]);
+      if (!guarded || !slot || slot->isaNull()) {
+        slot = value;
+      }
+    }
+    else {
+      //if (value == nullptr)std::cerr << "SET SCOPE VARIABLE " << vidx.offset << " to NULL\n";
+      //else std::cerr << "SET SCOPE VARIABLE " << vidx.offset << " to " << value->toString() << "\n";
+      if (vidx.idxs->varOffset == NPOS) return;
+      ValueObj& slot(varStack[vidx.idxs->varOffset + vidx.offset]);
+      if (slot == nullptr || guarded == false) slot = value;
+    }
+  }
+  // EO setVariable
+
+  // Set items on runtime/evaluation phase via references
+  // Just converting reference to array offset and assigning
+  void EnvRoot::setFunction(const EnvRef& fidx, UserDefinedCallable* value, bool guarded)
+  {
+    if (!fidx.isValid()) {
+      return;
+    }
+    if (fidx.idxs == nullptr || fidx.idxs->isInternal) {
+      if (!guarded || intFunction[fidx.offset] == nullptr)
+        if (value != nullptr) intFunction[fidx.offset] = value;
+    }
+    else {
+      if (fidx.idxs->fnOffset == NPOS) return;
+      CallableObj& slot(fnStack[fidx.idxs->fnOffset + fidx.offset]);
+      if (!guarded || !slot) slot = value;
+    }
+  }
+  // EO setFunction
+
+  // Set items on runtime/evaluation phase via references
+  // Just converting reference to array offset and assigning
+  void EnvRoot::setMixin(const EnvRef& midx, UserDefinedCallable* value, bool guarded)
+  {
+    if (!midx.isValid()) {
+      return;
+    }
+    if (midx.idxs == nullptr || midx.idxs->isInternal) {
+      if (!guarded || intMixin[midx.offset] == nullptr)
+        intMixin[midx.offset] = value;
+    }
+    else {
+      if (midx.idxs->mixOffset == NPOS) return;
+      CallableObj& slot(mixStack[midx.idxs->mixOffset + midx.offset]);
+      if (!guarded || !slot) slot = value;
+    }
+  }
+  // EO setMixin
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Get a function associated with the under [name].
+  // Will lookup from the last runtime stack scope.
+  // We will move up the runtime stack until we either
+  // find a defined function or run out of parent scopes.
+  EnvRef EnvRefs::findMixIdx(const EnvKey& named) const
+  {
+    EnvKey name(named);
+    for (const EnvRefs* current = this; current; current = current->nextScope())
+    {
+      if (!name.isPrivate()) {
+        for (auto it = current->forwards.rbegin();
+          it != current->forwards.rend(); it++)
+        {
+          const auto& fwds = *it;
+          const auto& fwd = fwds->mixIdxs.find(name);
+          if (fwd != fwds->mixIdxs.end()) {
+            return { fwds, fwd->second };
+          }
+          if (Module* mod = fwds->module) {
+            if (!mod->idxs->isImport) {
+              const auto& fwd = mod->mergedFwdMix.find(name);
+              if (fwd != mod->mergedFwdMix.end()) {
+                return { fwd->second };
+              }
+            }
+          }
+        }
+      }
+      // End of checking forwards
+      if (current->isImport) continue; // MIDSTREAM
+      const auto& it = current->mixIdxs.find(name);
+      if (it != current->mixIdxs.end()) {
+        return { current, it->second };
+      }
+      if (current->through != "") name =
+        EnvKey(current->through + name.norm());
+    }
+    return nullidx;
+  }
+  // EO findFunction
+
+
+  // Get a function associated with the under [name].
+  // Will lookup from the last runtime stack scope.
+  // We will move up the runtime stack until we either
+  // find a defined function or run out of parent scopes.
+  EnvRef EnvRefs::findFnIdx(const EnvKey& named) const
+  {
+    EnvKey name(named);
+    for (const EnvRefs* current = this; current; current = current->nextScope())
+    {
+      if (!name.isPrivate()) {
+        for (auto it = current->forwards.rbegin();
+          it != current->forwards.rend(); it++)
+        {
+          const auto& fwds = *it;
+          const auto& fwd = fwds->fnIdxs.find(name);
+          if (fwd != fwds->fnIdxs.end()) {
+            return { fwds, fwd->second };
+          }
+          if (Module* mod = fwds->module) {
+            if (!mod->idxs->isImport) {
+              const auto& fwd = mod->mergedFwdFn.find(name);
+              if (fwd != mod->mergedFwdFn.end()) {
+                return { fwd->second };
+              }
+            }
+          }
+        }
+      }
+      // End of checking forwards
+      if (current->isImport) continue; // MIDSTREAM
+      const auto& it = current->fnIdxs.find(name);
+      if (it != current->fnIdxs.end()) {
+        return { current, it->second };
+      }
+      if (current->through != "") name =
+        EnvKey(current->through + name.norm());
+    }
+    return nullidx;
+  }
+  // EO findFunction
+
+  // Get a value associated with the variable under [name].
+  // If [global] flag is given, the lookup will be in the root.
+  // Otherwise lookup will be from the last runtime stack scope.
+  // We will move up the runtime stack until we either find a 
+  // defined variable with a value or run out of parent scopes.
+  EnvRef EnvRefs::findVarIdx(const EnvKey& named) const
+  {
+    EnvKey name(named);
+    for (const EnvRefs* current = this; current; current = current->nextScope())
+    {
+      for (auto it = current->forwards.rbegin();
+        it != current->forwards.rend(); it++)
+      {
+        const auto& fwds = *it;
+        const auto& fwd = fwds->varIdxs.find(name);
+        if (fwd != fwds->varIdxs.end()) {
+          if (name.isPrivate()) {
+            throw Exception::ParserException(root.compiler,
+              "Private members can't be accessed "
+              "from outside their modules.");
+          }
+          return { fwds, fwd->second }; // SPECED
+        }
+        if (Module* mod = fwds->module) {
+          if (!mod->idxs->isImport) {
+            const auto& fwd = mod->mergedFwdVar.find(name);
+            if (fwd != mod->mergedFwdVar.end()) {
+              if (name.isPrivate()) {
+                throw Exception::ParserException(root.compiler,
+                  "Private members can't be accessed "
+                  "from outside their modules.");
+              }
+              return { fwd->second }; // SPECED
+            }
+          }
+        }
+      }
+      // End of checking forwards
+      if (current->isImport) continue; // MIDSTREAM
+      auto vit = current->varIdxs.find(name);
+      if (vit != current->varIdxs.end()) {
+        return { current, vit->second }; // SPECED
+      }
+      if (current->through != "") name =
+        EnvKey(current->through + name.norm());
+    }
+    return nullidx;
+  }
+  // EO findVarIdx
+
+  // Get a value associated with the variable under [name].
+  // If [global] flag is given, the lookup will be in the root.
+  // Otherwise lookup will be from the last runtime stack scope.
+  // We will move up the runtime stack until we either find a 
+  // defined variable with a value or run out of parent scopes.
+  void EnvRefs::findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& named) const
+  {
+    EnvKey name(named);
+    for (const EnvRefs* current = this; current; current = current->nextScope())
+    {
+      for (auto it = current->forwards.rbegin();
+        it != current->forwards.rend(); it++)
+      {
+        const auto& fwds = *it;
+        if (!name.isPrivate()) {
+          const auto& fwd = fwds->varIdxs.find(name);
+          if (fwd != fwds->varIdxs.end()) {
+            vidxs.emplace_back(fwds, fwd->second);
+          }
+          if (Module* mod = fwds->module) {
+            if (!mod->idxs->isImport)
+            {
+              const auto& fwd = mod->mergedFwdVar.find(name);
+              if (fwd != mod->mergedFwdVar.end()) {
+                vidxs.emplace_back(fwd->second);
+              }
+            }
+          }
+        }
+      }
+      if (current->isImport) continue; // MIDSTREAM
+      auto vit = current->varIdxs.find(name);
+      if (vit != current->varIdxs.end()) {
+        vidxs.emplace_back(current, vit->second);
+      }
+      if (current->through != "") name =
+        EnvKey(current->through + name.norm());
+    }
+    //std::cerr << "-----------------------------------------\n";
+  }
+  // EO getVariable
+
+  EnvRef EnvRefs::setModVar(const EnvKey& name, Value* value, bool guarded, const SourceSpan& pstate) const
+  {
+    auto it = varIdxs.find(name);
+    if (it != varIdxs.end()) {
+      root.setModVar(it->second, value, guarded, pstate);
+      return { it->second };
+    }
+    for (const auto& fwds : forwards) {
+      const auto it = fwds->varIdxs.find(name);
+      if (it != fwds->varIdxs.end()) {
+        root.setModVar(it->second, value, guarded, pstate);
+        return { it->second };
+      }
+    }
+    return nullidx;
+  }
+
+
+  bool EnvRefs::hasNameSpace(const sass::string& ns) const
+  {
+    for (const EnvRefs* current = this; current; current = current->nextScope())
+    {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
+      // Check if the namespace was registered
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      // auto fwd = it->second.first->varIdxs.find(name);
+      // if (fwd != it->second.first->varIdxs.end()) {
+      //   ValueObj& slot(root.getVariable({ 0xFFFFFFFF, fwd->second }));
+      //   return slot != nullptr;
+      // }
+      if (it->second.second) {
+        return it->second.second->isCompiled;
+      }
+      else {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  EnvRef EnvRefs::findVarIdx(const EnvKey& name, const sass::string& ns) const
+  {
+    for (const EnvRefs* current = this; current; current = current->nextScope())
+    {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      if (EnvRefs* idxs = it->second.first) {
+        auto it = idxs->varIdxs.find(name);
+        if (it != idxs->varIdxs.end()) {
+          // std::cerr << "FOUND SCOPED\n";
+          return { idxs, it->second };
+        }
+      }
+      if (Module* mod = it->second.second) {
+        auto fwd = mod->mergedFwdVar.find(name);
+        if (fwd != mod->mergedFwdVar.end()) {
+          EnvRef vidx{ fwd->second };
+          //std::cerr << "FOUND MERGED -- wrongly\n";
+          ValueObj& val = root.getVariable(vidx);
+          if (val != nullptr) return vidx;
+        }
+      }
+    }
+    return nullidx;
+  }
+
+
+  EnvRef EnvRefs::findMixIdx(const EnvKey& name, const sass::string& ns) const
+  {
+    for (const EnvRefs* current = this; current; current = current->nextScope())
+    {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      if (EnvRefs* idxs = it->second.first) {
+        auto it = idxs->mixIdxs.find(name);
+        if (it != idxs->mixIdxs.end()) {
+          return { idxs, it->second };
+        }
+      }
+      if (Module* mod = it->second.second) {
+        auto fwd = mod->mergedFwdMix.find(name);
+        if (fwd != mod->mergedFwdMix.end()) {
+          return { fwd->second };
+        }
+      }
+    }
+    return nullidx;
+  }
+
+  EnvRef EnvRefs::findFnIdx(const EnvKey& name, const sass::string& ns) const
+  {
+    for (const EnvRefs* current = this; current; current = current->nextScope())
+    {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      if (EnvRefs* idxs = it->second.first) {
+        auto it = idxs->fnIdxs.find(name);
+        if (it != idxs->fnIdxs.end()) {
+          return { idxs, it->second };
+        }
+      }
+      if (Module* mod = it->second.second) {
+        auto fwd = mod->mergedFwdFn.find(name);
+        if (fwd != mod->mergedFwdFn.end()) {
+          return { fwd->second };
+        }
+      }
+    }
+    return nullidx;
+  }
+
+  EnvRef EnvRoot::findVarIdx(const EnvKey& name, const sass::string& ns, bool global) const
+  {
+    if (compiler.envstack.empty()) return nullidx;
+    auto& frame = global ? compiler.envstack.front() : compiler.envstack.back();
+    if (ns.empty()) return frame->findVarIdx(name);
+    else return frame->findVarIdx(name, ns);
+  }
+
+  // Find a function reference for [name] within the current scope stack.
+  // If [ns] is not empty, we will only look within loaded modules.
+  EnvRef EnvRoot::findFnIdx(const EnvKey& name, const sass::string& ns) const
+  {
+    if (compiler.envstack.empty()) return nullidx;
+    if (ns.empty()) return compiler.envstack.back()->findFnIdx(name);
+    else return compiler.envstack.back()->findFnIdx(name, ns);
+  }
+
+  // Find a function reference for [name] within the current scope stack.
+  // If [ns] is not empty, we will only look within loaded modules.
+  EnvRef EnvRoot::findMixIdx(const EnvKey& name, const sass::string& ns) const
+  {
+    if (compiler.envstack.empty()) return nullidx;
+    if (ns.empty()) return compiler.envstack.back()->findMixIdx(name);
+    else return compiler.envstack.back()->findMixIdx(name, ns);
+  }
+
+  void EnvRoot::findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& name) const
+  {
+    if (compiler.envstack.empty()) return;
+    compiler.envstack.back()->findVarIdxs(vidxs, name);
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  EnvRef EnvRefs::setModVar(const EnvKey& name, const sass::string& ns, Value* value, bool guarded, const SourceSpan& pstate)
+  {
+    for (const EnvRefs* current = this; current; current = current->nextScope())
+    {
+      if (current->isImport) continue;
+      Module* mod = current->module;
+      if (mod == nullptr) continue;
+      // Check if the namespace was registered
+      auto it = mod->moduse.find(ns);
+      if (it == mod->moduse.end()) continue;
+      // We set forwarded vars first!
+      if (Module* mod = it->second.second) {
+        auto fwd = mod->mergedFwdVar.find(name);
+        if (fwd != mod->mergedFwdVar.end()) {
+          root.setModVar(fwd->second, value, guarded, pstate);
+          return { fwd->second };
+        }
+      }
+      if (EnvRefs* idxs = it->second.first) {
+        EnvRef vidx = idxs->setModVar(name, value, guarded, pstate);
+        if (vidx.isValid()) return vidx;
+      }
+    }
+    return nullidx;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Imports are transparent for variables, functions and mixins
+  // We always need to create entities inside the parent scope
+  bool EnvRef::isImport() const {
+    if (idxs == nullptr) return false;
+    return idxs->isImport;
+  }
+
+  // Flag if this scope is considered internal
+  bool EnvRef::isInternal() const {
+    if (idxs == nullptr) return false;
+    return idxs->isInternal;
+  }
+
+  // Rules like `@if`, `@for` etc. are semi-global (permeable).
+  // Assignments directly in those can bleed to the root scope.
+  bool EnvRef::isSemiGlobal() const {
+    if (idxs == nullptr) return false;
+    return idxs->isSemiGlobal;
+  }
+
+  // Set to true once we are compiled via use or forward
+  // An import does load the sheet, but does not compile it
+  // Compiling it means hard-baking the config vars into it
+  bool EnvRef::isCompiled() const {
+    if (idxs == nullptr) return false;
+    return idxs->isCompiled;
+  }
+
+  // Very small helper for debugging
+  sass::string EnvRef::toString() const
+  {
+    sass::sstream strm;
+    strm << offset;
+    return strm.str();
+  }
+  // EO toString
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+
+  // Put frame onto stack
+
+  EnvScope::EnvScope(EnvRoot& env, EnvRefs* idxs) :
+    env(env),
+    idxs(idxs),
+    oldVarOffset(0),
+    oldMixOffset(0),
+    oldFnOffset(0)
+  {
+
+    // The frame might be fully empty
+    // Meaning it no scoped items at all
+    if (idxs == nullptr) return;
+
+    if (!idxs->isInternal) {
+
+      // Check if we have scoped variables
+      if (idxs->varIdxs.size() != 0) {
+        // Get offset into variable vector
+        size_t oldVarSize = env.varStack.size();
+        // Remember previous frame "addresses"
+        oldVarOffset = idxs->varOffset;
+        // Update current frame offset address
+        idxs->varOffset = oldVarSize;
+        // Create space for variables in this frame scope
+        env.varStack.resize(oldVarSize + idxs->varIdxs.size());
+      }
+
+      // Check if we have scoped mixins
+      if (idxs->mixIdxs.size() != 0) {
+        // Get offset into mixin vector
+        size_t oldMixSize = env.mixStack.size();
+        // Remember previous frame "addresses"
+        oldMixOffset = idxs->mixOffset;
+        // Update current frame offset address
+        idxs->mixOffset = oldMixSize;
+        // Create space for mixins in this frame scope
+        env.mixStack.resize(oldMixSize + idxs->mixIdxs.size());
+      }
+
+      // Check if we have scoped functions
+      if (idxs->fnIdxs.size() != 0) {
+        // Get offset into function vector
+        size_t oldFnSize = env.fnStack.size();
+        // Remember previous frame "addresses"
+        oldFnOffset = idxs->fnOffset;
+        // Update current frame offset address
+        idxs->fnOffset = oldFnSize;
+        // Create space for functions in this frame scope
+        env.fnStack.resize(oldFnSize + idxs->fnIdxs.size());
+      }
+
+    }
+
+    // Push frame onto stack
+    // Mostly for dynamic lookups
+    env.compiler.envstack.push_back(idxs);
+
+  }
+
+  // Restore old state on destruction
+
+  EnvScope::~EnvScope()
+  {
+
+    // The frame might be fully empty
+    // Meaning it no scoped items at all
+    if (idxs == nullptr) return;
+
+    if (!idxs->isInternal) {
+
+      // Check if we had scoped variables
+      if (idxs->varIdxs.size() != 0) {
+        // Truncate variable vector
+        env.varStack.resize(
+          env.varStack.size()
+          - idxs->varIdxs.size());
+        // Restore old frame address
+        idxs->varOffset = oldVarOffset;
+      }
+
+      // Check if we had scoped mixins
+      if (idxs->mixIdxs.size() != 0) {
+        // Truncate existing vector
+        env.mixStack.resize(
+          env.mixStack.size()
+          - idxs->mixIdxs.size());
+        // Restore old frame address
+        idxs->mixOffset = oldMixOffset;
+      }
+
+      // Check if we had scoped functions
+      if (idxs->fnIdxs.size() != 0) {
+        // Truncate existing vector
+        env.fnStack.resize(
+          env.fnStack.size()
+          - idxs->fnIdxs.size());
+        // Restore old frame address
+        idxs->fnOffset = oldFnOffset;
+      }
+
+    }
+
+    // Pop frame from stack
+    env.compiler.envstack.pop_back();
+
+  }
 
 }

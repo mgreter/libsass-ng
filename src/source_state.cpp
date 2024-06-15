@@ -4,12 +4,12 @@
 #include "source_state.hpp"
 
 #include "source.hpp"
-#include "file.hpp"
 
 namespace Sass
 {
 
   /////////////////////////////////////////////////////////////////////////
+  // Part of SourceSpan (to store start and end position for spans)
   /////////////////////////////////////////////////////////////////////////
 
   // Regular value constructor
@@ -18,51 +18,47 @@ namespace Sass
     Offset position) :
     source(source),
     position(position)
-  {}
+  {
+    assert(source != nullptr);
+  }
 
-  // Return the attach source id
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Return via attach source id
   size_t SourceState::getSrcIdx() const
   {
     return source->getSrcIdx();
   }
 
-  // Return the requested import path
+  // Return via requested import path
   const char* SourceState::getImpPath() const
   {
     return source->getImpPath();
   }
 
-  // Return the resolved absolute path
+  // Return via resolved absolute path
   const char* SourceState::getAbsPath() const
   {
     return source->getAbsPath();
   }
 
-  // Return the resolved absolute path
+  // Return via resolved absolute path
   const char* SourceState::getFileName() const
   {
     return source->getFileName();
+  }
+
+  // Return via attached source
+  const char* SourceState::getContent() const
+  {
+    return source->content();
   }
 
   // Return the attached source
   SourceData* SourceState::getSource() const
   {
     return source.ptr();
-  }
-
-  // Return the attached source
-  const char* SourceState::getContent() const
-  {
-    return source->content();
-  }
-
-  // Either return path relative to cwd if path is
-  // inside cwd, otherwise return absolute path.
-  sass::string SourceState::getDebugPath() const
-  {
-    const char* path = getAbsPath();
-    sass::string rel_path(File::abs2rel(path, CWD(), CWD()));
-    return rel_path.substr(0, 3) == "../" ? path : rel_path;
   }
 
   /////////////////////////////////////////////////////////////////////////

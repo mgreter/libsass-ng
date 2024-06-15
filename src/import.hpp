@@ -6,6 +6,8 @@
 
 #include "file.hpp"
 
+#include "MurmurHash3.hpp"
+
 namespace Sass {
 
   // requested import
@@ -103,13 +105,13 @@ namespace std {
     {
       size_t hash = import.considerImports;
       Sass::hash_combine(hash,
-        MurmurHash2(
+        MurmurHash3(
           (void*)import.base_path.c_str(),
           (int)import.base_path.size(),
           Sass::getHashSeed()));
 
       Sass::hash_combine(hash,
-        MurmurHash2(
+        MurmurHash3(
           (void*)import.imp_path.c_str(),
           (int)import.imp_path.size(),
           Sass::getHashSeed()));

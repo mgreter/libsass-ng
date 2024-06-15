@@ -23,6 +23,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
 */
+/*****************************************************************************/
 
 #ifndef CCAN_JSON_HPP
 #define CCAN_JSON_HPP

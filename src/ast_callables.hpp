@@ -17,8 +17,8 @@
 #include "ast_callable.hpp"
 #include "ast_statements.hpp"
 #include "capi_function.hpp"
+#include "environment.hpp"
 #include "environment_key.hpp"
-#include "environment_stack.hpp"
 
 namespace Sass {
 

@@ -46,8 +46,6 @@ namespace Sass {
     void renderQuotedString(const sass::string& text, uint8_t quotes = 0);
     void renderUnquotedString(const sass::string& text);
 
-    // bool _tryPrivateUseCharacter(uint8_t chr);
-
     /////////////////////////////////////////////////////////////////////////
     // Implement Selector Visitors
     /////////////////////////////////////////////////////////////////////////

@@ -22,7 +22,6 @@
 #include "operation.hpp"
 #include "environment.hpp"
 #include "fn_utils.hpp"
-#include "environment_stack.hpp"
 
 #include "ordered-map/ordered_map.h"
 

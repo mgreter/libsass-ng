@@ -26,6 +26,8 @@ namespace Sass {
     virtual bool visitCssAtRule(CssAtRule* rule) override final;
     virtual bool visitCssComment(CssComment* rule) override final;
     virtual bool visitCssStyleRule(CssStyleRule* rule) override final;
+    virtual bool visitCssDeclaration(CssDeclaration* rule) override final;
+    virtual bool visitCssImport(CssImport* rule) override final;
 
   };
 

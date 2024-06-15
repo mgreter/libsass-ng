@@ -6,7 +6,7 @@
 
 #include <vector>
 #include "memory.hpp"
-#include "offset.hpp"
+#include "source_offset.hpp"
 
 namespace Sass {
 

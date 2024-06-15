@@ -11,10 +11,11 @@
 namespace Sass {
 
   StringVector getKeyVector(
-    const ValueFlatMap& names)
+    const ValueFlatMap* names)
   {
     StringVector keys;
-    for (const auto& it : names) {
+    if (names == nullptr) return keys;
+    for (const auto& it : *names) {
       keys.push_back(it.first.orig());
     }
     return keys;
@@ -183,9 +184,9 @@ namespace Sass {
       return msg.str();
     }
 
-    static sass::string formatTooFewArguments(const ExpressionFlatMap& given, const Sass::EnvKeySet& expected) {
+    static sass::string formatTooFewArguments(const ExpressionFlatMap* given, const Sass::EnvKeySet& expected) {
       StringVector superfluous;
-      for (const auto& pair : given) {
+      if (given) for (const auto& pair : *given) {
         if (expected.count(pair.first) == 0) {
           superfluous.emplace_back(pair.first.orig());
         }
@@ -194,7 +195,7 @@ namespace Sass {
         toSentence(superfluous, "or", "$") + ".";
     }
 
-    static sass::string formatTooFewArguments(const ValueFlatMap& superfluous) {
+    static sass::string formatTooFewArguments(const ValueFlatMap* superfluous) {
       return "No argument named " +
         toSentence(getKeyVector(superfluous), "or", "$") + ".";
     }
@@ -204,11 +205,11 @@ namespace Sass {
       : RuntimeException(traces, formatTooFewArguments(given, expected))
     {}
 
-    TooFewArguments::TooFewArguments(BackTraces traces, const ExpressionFlatMap& given, const Sass::EnvKeySet& expected)
+    TooFewArguments::TooFewArguments(BackTraces traces, const ExpressionFlatMap* given, const Sass::EnvKeySet& expected)
       : RuntimeException(traces, formatTooFewArguments(given, expected))
     {}
 
-    TooFewArguments::TooFewArguments(BackTraces traces, const ValueFlatMap& superflous)
+    TooFewArguments::TooFewArguments(BackTraces traces, const ValueFlatMap* superflous)
       : RuntimeException(traces, formatTooFewArguments(superflous))
     {}
 
@@ -222,9 +223,9 @@ namespace Sass {
       return msg.str();
     }
 
-    static sass::string formatTooManyArguments(const ExpressionFlatMap& given, const Sass::EnvKeySet& expected) {
+    static sass::string formatTooManyArguments(const ExpressionFlatMap* given, const Sass::EnvKeySet& expected) {
       StringVector superfluous;
-      for (const auto& pair : given) {
+      if (given) for (const auto& pair : *given) {
         if (expected.count(pair.first) == 0) {
           superfluous.emplace_back(pair.first.orig());
         }
@@ -233,7 +234,7 @@ namespace Sass {
         toSentence(superfluous, "or", "$") + ".";
     }
 
-    // static sass::string formatTooManyArguments(const ValueFlatMap& given, const Sass::EnvKeySet& expected) {
+    // static sass::string formatTooManyArguments(const ValueFlatMap* given, const Sass::EnvKeySet& expected) {
     //   StringVector superfluous;
     //   for (const auto& pair : given) {
     //     if (expected.count(pair.first) == 0) {
@@ -244,7 +245,7 @@ namespace Sass {
     //     toSentence(superfluous, "or", "$") + ".";
     // }
 
-    static sass::string formatTooManyArguments(const ValueFlatMap& superfluous) {
+    static sass::string formatTooManyArguments(const ValueFlatMap* superfluous) {
       return "No argument named " +
         toSentence(getKeyVector(superfluous), "or", "$") + ".";
     }
@@ -253,11 +254,11 @@ namespace Sass {
       : RuntimeException(traces, formatTooManyArguments(given, expected))
     {}
 
-    TooManyArguments::TooManyArguments(BackTraces traces, const ExpressionFlatMap& given, const Sass::EnvKeySet& expected)
+    TooManyArguments::TooManyArguments(BackTraces traces, const ExpressionFlatMap* given, const Sass::EnvKeySet& expected)
       : RuntimeException(traces, formatTooManyArguments(given, expected))
     {}
 
-    TooManyArguments::TooManyArguments(BackTraces traces, const ValueFlatMap& superflous)
+    TooManyArguments::TooManyArguments(BackTraces traces, const ValueFlatMap* superflous)
       : RuntimeException(traces, formatTooManyArguments(superflous))
     {}
 
@@ -282,7 +283,7 @@ namespace Sass {
       : RuntimeException(traces, "Argument $" + name.norm() + " name was passed both by position and by name.")
     {}
 
-    UnknownNamedArgument::UnknownNamedArgument(BackTraces traces, ValueFlatMap names)
+    UnknownNamedArgument::UnknownNamedArgument(BackTraces traces, ValueFlatMap* names)
       : RuntimeException(traces, formatUnknownNamedArgument(getKeyVector(names)))
     {
     }
@@ -420,19 +421,26 @@ namespace Sass {
   }
 
   DuplicateKeyArgument::DuplicateKeyArgument(
-    BackTraces traces, const ValueFlatMap& superfluous) :
+    BackTraces traces, const ValueFlatMap* superfluous) :
     RuntimeException(traces, str_empty)
   {
     bool joiner = false;
-    msg += pluralize("Argument", superfluous.size());
-    for (const auto& kv : superfluous)
+    if (superfluous == nullptr)
     {
-      if (joiner) msg = ",";
-      msg += " $" + kv.first.norm();
-      joiner = true;
+
     }
-    msg += pluralize(" was", superfluous.size(), " were");
-    msg += " passed both by position and by name.";
+    else
+    {
+      msg += pluralize("Argument", superfluous->size());
+      for (const auto& kv : *superfluous)
+      {
+        if (joiner) msg = ",";
+        msg += " $" + kv.first.norm();
+        joiner = true;
+      }
+      msg += pluralize(" was", superfluous->size(), " were");
+      msg += " passed both by position and by name.";
+    }
   }
 
   OpNotCalcSafe::OpNotCalcSafe(BackTraces traces, const BinaryOpExpression* op) :

@@ -5,8 +5,12 @@
 
 #include "sources.hpp"
 #include "ast_nodes.hpp"
+#include "file.hpp"
 
 namespace Sass {
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   // Regular value constructor
   SourceSpan::SourceSpan(
@@ -16,6 +20,9 @@ namespace Sass {
     SourceState(source, position),
     span(span)
   {}
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   // Create SourceSpan for internal things
   SourceSpan SourceSpan::internal(const char* label)
@@ -41,11 +48,29 @@ namespace Sass {
       lhs->pstate(), rhs->pstate());
   }
 
+  // Create new span from start to given length
+  // Assumes that there are no linefeeds within
   SourceSpan SourceSpan::first(uint32_t length) const
   {
     Offset offset; offset.column = length;
     return SourceSpan(source, position, offset);
   }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Either return path relative to cwd if path is
+  // inside cwd, otherwise return absolute path.
+  sass::string SourceSpan::getDebugPath() const
+  {
+    const char* path = getAbsPath();
+    // Convert (potential) absolute path to relative path
+    sass::string rel_path(File::abs2rel(path, CWD(), CWD()));
+    return StringUtils::startsWith(rel_path, "../", 3) ? path : rel_path;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   bool SourceSpan::operator==(const SourceSpan& rhs) const
   {
@@ -53,5 +78,8 @@ namespace Sass {
       && position == rhs.position
       && span == rhs.span;
   }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }

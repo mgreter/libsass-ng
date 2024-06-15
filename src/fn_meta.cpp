@@ -82,12 +82,6 @@ namespace Sass {
           }
         }
 
-        //std::transform(args.begin(), args.end(),
-        //  values.begin(), [&](AstNodeObj& arg) {
-        //    if (auto value = dynamic_cast<Value*>(arg.ptr())) return value;
-        //    //return (Value*)SASS_MEMORY_NEW(String, arg->pstate(), arg->toString(), false);
-        //    //return nullptr;
-        //  });
         return SASS_MEMORY_NEW(List, calculation->pstate(), std::move(values));
       }
 
@@ -96,9 +90,9 @@ namespace Sass {
       static BUILT_IN_FN(keywords)
       {
         ArgumentList* argumentList = arguments[0]->assertArgumentList(compiler, Sass::Strings::args);
-        const ValueFlatMap& keywords = argumentList->keywords();
+        const ValueFlatMap* keywords = argumentList->keywords();
         MapObj map = SASS_MEMORY_NEW(Map, arguments[0]->pstate());
-        for (auto& kv : keywords) {
+        if (keywords) for (const auto& kv : *keywords) {
           sass::string key = kv.first.norm(); // .substr(1);
           // Util::ascii_normalize_underscore(key);
           // Wrap string key into a sass value
@@ -113,18 +107,14 @@ namespace Sass {
 
       static BUILT_IN_FN(featureExists)
       {
-        String* feature = arguments[0]->assertString(compiler, "feature");
-        static const auto* const features =
-          new std::unordered_set<sass::string>{
-          "global-variable-shadowing",
-          "extend-selector-pseudoclass",
-          "units-level-3",
-          "at-error",
-          "custom-property"
-        };
-        sass::string name(feature->value());
-        return SASS_MEMORY_NEW(Boolean,
-          pstate, features->count(name) == 1);
+        const String* feature = arguments[0]->assertString(compiler, "feature");
+        const sass::string& name(feature->value());
+        return SASS_MEMORY_NEW(Boolean, pstate,
+          name == "global-variable-shadowing" ||
+          name == "extend-selector-pseudoclass" ||
+          name == "units-level-3" ||
+          name == "at-error" ||
+          name == "custom-property");
       }
 
       /*******************************************************************/
@@ -285,38 +275,12 @@ namespace Sass {
           // Create new mixin for content block
           // Prepares the content block to be called later
           // Content blocks of includes are like mixins themselves
-          // UserDefinedCallableObj cmixin;
-
-          // cmixin = SASS_MEMORY_NEW(UserDefinedCallable,
-          //   pstate, mixin->name(),
-          //   mixin->declaration(),
-          //   mixin->content());
-
-          // debug_ast(eval.content, "content: ");
-
           CallableDeclaration* ctblk = nullptr;
           if (eval.content) ctblk = eval.content->declaration();
           CallableArgumentsObj args = SASS_MEMORY_NEW(CallableArguments, pstate,
             {}, {}, SASS_MEMORY_NEW(ValueExpression, callable->pstate(), arglist));
           eval.applyMixin(pstate, mixin->name(), mixin, ctblk, args);
           return SASS_MEMORY_NEW(Boolean, pstate, false);
-          /*
-          auto oldm = eval.inMixin;
-          eval.inMixin = true;
-          auto oldc = eval.content;
-
-          eval.content = cmixin;
-
-          // Return value can be ignored, but memory must still be collected
-          auto rv = eval._runUserDefinedCallable(args, mixin, pstate);
-
-          eval.inMixin = oldm;
-          eval.content = oldc;
-
-          std::cerr << "Is user defined callable\n";
-          return SASS_MEMORY_NEW(Boolean, pstate, false);
-          */
-
         }
         else if (auto bc = callable->isaBuiltInCallable()) {
 
@@ -338,16 +302,6 @@ namespace Sass {
           std::cerr << "Is built in callable " << bc << "\n";
         }
         
-
-//        CallableSignature* sig = SASS_MEMORY_NEW(CallableSignature, pstate, sass::vector<ArgumentObj>());
-//        // CallableDeclaration* ctblk = eval.content->declaration();
-//        CallableDeclaration* ctblk = nullptr;
-//        Expression* rest = SASS_MEMORY_NEW(ValueExpression, pstate, arglist);
-//        CallableArgumentsObj args = SASS_MEMORY_NEW(CallableArguments, pstate, {}, {}, rest);
-//
-//
-        // eval.applyMixin(pstate, key_apply, callable, eval.content, args);
-
         return SASS_MEMORY_NEW(Boolean, pstate, false);
       }
 
@@ -667,15 +621,6 @@ namespace Sass {
         String* name = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* ns = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
 
-        //if (css && ns != nullptr) {
-        //  throw Exception::RuntimeException(compiler,
-        //    "$css and $module may not both be passed at once.");
-        //}
-        //
-        //if (css) {
-        //  return SASS_MEMORY_NEW(Function, pstate, "HABA"+name->value());
-        //}
-
         CallableObj callable;
 
         auto parent = compiler.getCurrentModule();
@@ -716,7 +661,6 @@ namespace Sass {
           }
         }
 
-
         if (callable == nullptr) {
           if (name->hasQuotes()) {
             throw
@@ -751,7 +695,7 @@ namespace Sass {
           ValueExpression, args->pstate(), args);
 
         ValueExpression* kwdRest = nullptr;
-        if (!args->keywords().empty()) {
+        if (args->keywords() && !args->keywords()->empty()) {
           Map* map = args->keywordsAsSassMap();
           kwdRest = SASS_MEMORY_NEW(
             ValueExpression, map->pstate(), map);
@@ -793,17 +737,10 @@ namespace Sass {
 
       static BUILT_IN_FN(loadCss)
       {
-
-       // std::cerr << "+++ in load css\n";
-
         String* url = arguments[0]->assertStringOrNull(compiler, Strings::url);
         MapObj withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
-
         eval.importCssModule(url, withMap, pstate);
-
-        //std::cerr << "+++ out load css\n";
-
-        return SASS_MEMORY_NEW(Null, SourceSpan::internal("[LOADCSS]")); // pstate leaks?
+        return SASS_MEMORY_NEW(Null, SourceSpan::internal("[LOADCSS]"));
       }
 
       /*******************************************************************/

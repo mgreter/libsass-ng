@@ -26,23 +26,23 @@ namespace Sass {
   typedef UnorderedSet<
     ExtensionObj,
     ObjPtrHash,
-    ObjPtrEquality
-    , Sass::Allocator<ExtensionObj>
+    ObjPtrEquality,
+    Sass::Allocator<ExtensionObj>
   > ExtSet;
 
   // This is special (ptrs!)
   typedef UnorderedSet<
     ComplexSelectorObj,
     ObjPtrHash,
-    ObjPtrEquality
-    , Sass::Allocator<ComplexSelectorObj>
+    ObjPtrEquality,
+    Sass::Allocator<ComplexSelectorObj>
   > ExtCplxSelSet;
 
   typedef UnorderedSet<
     ComplexSelectorObj,
     ObjHash,
-    ObjEquality
-    , Sass::Allocator<ComplexSelectorObj>
+    ObjEquality,
+    Sass::Allocator<ComplexSelectorObj>
   > ExtCplxSelSet2;
 
   typedef UnorderedSet<
@@ -65,10 +65,8 @@ namespace Sass {
     SimpleSelectorObj,
     ExtListSelSet,
     ObjHash,
-    ObjEquality
-    //, Sass::Allocator<SimpleSelectorObj>
-    //, Sass::Allocator<Sass::SharedPtr<Sass::SelectorList> >
-    , Sass::Allocator<std::pair<const SimpleSelectorObj, ExtListSelSet>>
+    ObjEquality,
+    Sass::Allocator<std::pair<const SimpleSelectorObj, ExtListSelSet>>
   > ExtSelMap; // selectors54
 
   typedef OrderedMap<
@@ -125,8 +123,6 @@ namespace Sass {
   public:
     ExtSelMap selectors54; // _selectors
 
-    void debug();
-
     /////////////////////////////////////////////////////////////////////////
     // A map from all extended simple selectors
     // to the sources of those extensions.
@@ -138,8 +134,6 @@ namespace Sass {
       // Simply check if anything was registered
       return extensionsBySimpleSelector.empty();
     }
-
-    sass::string toString();
 
     /////////////////////////////////////////////////////////////////////////
     // A map from all simple selectors in extenders to
@@ -196,7 +190,6 @@ namespace Sass {
     // [traces] are needed to throw errors.
     /////////////////////////////////////////////////////////////////////////
     ExtensionStore(ExtendMode mode, BackTraces& traces);
-    ExtensionStore();
 
     void addNonOriginalSelectors(ExtSmplSelSet originalSelectors, ExtSet& unsatisfiedExtensions);
     void delNonOriginalSelectors(ExtSmplSelSet originalSelectors, ExtSet& unsatisfiedExtensions);

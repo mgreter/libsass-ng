@@ -1,6 +1,10 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// Bread and butter functions for file reading and writing.
+// Mainly ported for windows and *nix flavors for now.
+// Inspired by perl module `File::Spec`
+/*****************************************************************************/
 #include "file.hpp"
 
 // Some functions are heavily inspired by Perl
@@ -35,9 +39,13 @@
 
 namespace Sass {
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // return the current directory
   // always with forward slashes
   // always with trailing slash
+  // always getting it from system
   extern sass::string get_pwd()
   {
     const size_t wd_len = 4096;
@@ -56,8 +64,9 @@ namespace Sass {
     if (pwd == NULL) throw Exception::OperationError("cwd gone missing");
     // Windows always returns utf16, convert to utf8
     sass::string cwd = Unicode::utf16to8(pwd);
-    //convert backslashes to forward slashes
-    replace(cwd.begin(), cwd.end(), '\\', '/');
+    // Convert backslashes to forward slashes
+    // Use low-level replace since ASCII only
+    std::replace(cwd.begin(), cwd.end(), '\\', '/');
     #endif
     if (cwd[cwd.length() - 1] != '/') cwd += '/';
     return cwd;
@@ -75,7 +84,7 @@ namespace Sass {
   {
     if (cwd == nullptr) {
       // Create object on the heap
-      cwd = new sass::string(get_pwd());
+      cwd = new sass::string();
     }
     // Assign to heap object
     *cwd = path;
@@ -83,7 +92,8 @@ namespace Sass {
   // EO extern set_cwd
 
   // Initialize current directory once
-  extern const sass::string& CWD() {
+  extern const sass::string& CWD()
+  {
     if (cwd == nullptr) {
       cwd = new sass::string(get_pwd());
     }
@@ -91,22 +101,29 @@ namespace Sass {
   }
   // EO extern CWD
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   namespace File {
 
     // test if path exists and is a file
     // takes optional cache map to improve performance
-    bool file_exists(const sass::string& path, const sass::string& CWD, std::unordered_map<sass::string, bool>& cache)
+    // ToDo: optimize stack memory usage (64kb for the resolved path)
+    bool file_exists(const sass::string& path, const sass::string& CWD,
+      std::unordered_map<sass::string, bool>& cache)
     {
+      sass::string abspath(join_paths(CWD, path));
       #ifdef _WIN32
         // windows unicode file-paths are encoded in utf16
-        sass::string abspath(join_paths(CWD, path));
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
-        auto it = cache.find(abspath);
-        if (it != cache.end()) {
-          return it->second;
-        }
+      #endif
+      auto it = cache.find(abspath);
+      if (it != cache.end()) {
+        return it->second;
+      }
+      #ifdef _WIN32
         wchar_t resolved[32768]{};
         sass::wstring wpath(Unicode::utf8to16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
@@ -116,17 +133,14 @@ namespace Sass {
         DWORD dwAttrib = GetFileAttributesW(resolved); // was 3%
         bool result = (dwAttrib != INVALID_FILE_ATTRIBUTES
           && (!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
-        cache[abspath] = result;
-        return result;
       #else
         struct stat st_buf;
-        sass::string abspath(join_paths(CWD, path));
         // euidaccess might be faster
         bool result = (stat (abspath.c_str(), &st_buf) == 0)
           && (!S_ISDIR (st_buf.st_mode));
-        cache[abspath] = result;
-        return result;
       #endif
+      cache[abspath] = result;
+      return result;
     }
 
     // return if given path is absolute
@@ -464,7 +478,7 @@ namespace Sass {
     // EO resolve_includes
 
     // Private helper function for find_file
-    StringVector _find_file(const sass::string& file, const sass::string& CWD, const StringVector paths, std::unordered_map<sass::string, bool>& cache)
+    static StringVector _find_file(const sass::string& file, const sass::string& CWD, const StringVector paths, std::unordered_map<sass::string, bool>& cache)
     {
       StringVector includes;
       for (const sass::string& path : paths) {
@@ -499,7 +513,6 @@ namespace Sass {
 
     // try to load the given filename
     // returned memory must be freed
-    // will auto convert .sass files
     char* slurp_file(const sass::string& path, const sass::string& CWD)
     {
       #ifdef _WIN32
@@ -529,8 +542,7 @@ namespace Sass {
         CloseHandle(hFile);
       #else
         // Read the file using `<cstdio>` instead of `<fstream>` for better portability.
-        // The `<fstream>` header initializes `<locale>` and this buggy in GCC4/5 with static linking.
-        // See:
+        // The `<fstream>` header initializes `<locale>` which is buggy in GCC4/5 with static linking.
         // https://www.spinics.net/lists/gcchelp/msg46851.html
         // https://github.com/sass/sassc-ruby/issues/128
         struct stat st;
@@ -576,5 +588,8 @@ namespace Sass {
 
   }
   // EO File namespace
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }

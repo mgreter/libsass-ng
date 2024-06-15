@@ -6,6 +6,7 @@
 #include <iomanip>
 #include "file.hpp"
 #include "source.hpp"
+#include "character.hpp"
 #include "utf8/checked.h"
 #include "string_utils.hpp"
 
@@ -595,15 +596,15 @@ namespace Sass {
     sass::vector<std::pair<sass::string, sass::string>> traced;
     for (size_t i = 0; i < traces.size(); i++) {
 
-      const StackTrace& trace = traces[i];
+      const Traced& trace = traces[i];
 
       // make path relative to the current directory
-      sass::string rel_path(File::abs2rel(trace.pstate.getAbsPath(), CWD(), CWD()));
+      sass::string rel_path(File::abs2rel(trace.getPstate().getAbsPath(), CWD(), CWD()));
 
       strm.str(sass::string());
       strm << rel_path << ' ';
-      strm << trace.pstate.getLine();
-      strm << ":" << trace.pstate.getColumn();
+      strm << trace.getPstate().getLine();
+      strm << ":" << trace.getPstate().getColumn();
 
       sass::string str(strm.str());
       max = std::max(max, str.length());
@@ -612,9 +613,9 @@ namespace Sass {
         traced.emplace_back(std::make_pair(
           str, last));
       }
-      else if (!traces[i - 1].name.empty()) {
-        last = traces[i - 1].name;
-        if (traces[i - 1].fn) last += "()";
+      else if (!traces[i - 1].getName().empty()) {
+        last = traces[i - 1].getName();
+        if (traces[i - 1].isFn()) last += "()";
         traced.emplace_back(std::make_pair(str, last));
       }
       else {
@@ -626,20 +627,20 @@ namespace Sass {
 
     i_beg = traces.size() - 1;
     i_end = sass::string::npos;
-    const StackTrace* prev = nullptr;
+    const Traced* prev = nullptr;
     for (size_t i = i_beg; i != i_end; i--) {
 
-      const StackTrace& trace = traces[i];
+      const Traced& trace = traces[i];
 
       // make path relative to the current directory
-      sass::string rel_path(File::abs2rel(trace.pstate.getAbsPath(), CWD(), CWD()));
+      sass::string rel_path(File::abs2rel(trace.getPstate().getAbsPath(), CWD(), CWD()));
 
       // skip functions on error cases (unsure why ruby sass does this)
       // if (trace.caller.substr(0, 6) == ", in f") continue;
 
       if (amount == sass::string::npos || amount > 0) {
         if (prev && *prev == trace) continue;
-        printSourceSpan(trace.pstate, os, support_unicode);
+        printSourceSpan(trace.getPstate(), os, support_unicode);
         if (amount > 0) --amount;
         prev = &trace;
       }

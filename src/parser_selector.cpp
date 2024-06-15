@@ -60,7 +60,7 @@ namespace Sass {
   {
     Offset start(scanner.offset);
     // const char* previousLine = scanner.position;
-    size_t previousLine = scanner.offset.line;
+    size_t previousLine = scanner.offset.getRawLine();
     sass::vector<ComplexSelectorObj> items;
     items.emplace_back(readComplexSelector(start));
 
@@ -73,8 +73,8 @@ namespace Sass {
       if (scanner.isDone()) break;
 
       // bool lineBreak = scanner.hasLineBreak(previousLine); // ToDo
-      bool lineBreak = scanner.offset.line != previousLine;
-      if (lineBreak) previousLine = scanner.offset.line;
+      bool lineBreak = scanner.offset.getRawLine() != previousLine;
+      if (lineBreak) previousLine = scanner.offset.getRawLine();
       //bool lineBreak = scanner.position != previousLine;
       //if (lineBreak) previousLine = scanner.position;
       // std::cerr << "With line break " << lineBreak << "\n";

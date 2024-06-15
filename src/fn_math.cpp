@@ -21,14 +21,12 @@ namespace Sass {
       /*******************************************************************/
 
       double coerceToRad(Number* number, Logger& compiler, const sass::string& vname) {
-        Units radiants("rad");
-        // if (std::isinf(number->value())) return number->value();
-        if (double factor = number->getUnitConversionFactor(radiants)) {
-          return number->value() * factor;
-        }
-        CallStackFrame csf(compiler, number->pstate());
-        throw Exception::RuntimeException(compiler, "$" + vname +
-          ": Expected " + number->inspect() + " to be an angle.");
+          if (double factor = number->getUnitConversionFactor(unit_rad)) {
+            return number->value() * factor;
+          }
+          CallStackFrame csf(compiler, number->pstate());
+          throw Exception::RuntimeException(compiler, "$" + vname +
+            ": Expected " + number->inspect() + " to be an angle.");
       }
 
       /*******************************************************************/
@@ -347,7 +345,7 @@ namespace Sass {
 
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
-          std::cos(coerceToRad(number, compiler, Strings::number)));
+          std::cos(number->coerceToUnit(compiler, unit_rad, Strings::number)));
       }
 
       /*******************************************************************/
@@ -356,7 +354,7 @@ namespace Sass {
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
-          std::sin(coerceToRad(number, compiler, Strings::number)));
+          std::sin(number->coerceToUnit(compiler, unit_rad, Strings::number)));
       }
 
       /*******************************************************************/
@@ -364,9 +362,8 @@ namespace Sass {
       static BUILT_IN_FN(fnTan)
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
-        // double asymptoteInterval = 0.5 * PI; double tanPeriod = 2.0 * PI;
         return SASS_MEMORY_NEW(Number, pstate,
-          std::tan(coerceToRad(number, compiler, Strings::number)));
+          std::tan(number->coerceToUnit(compiler, unit_rad, Strings::number)));
       }
 
       /*******************************************************************/

@@ -1,6 +1,9 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// Base css visitor going through all children until one returns true
+// Ensures all children are "true", used by `IsCssInvisibleVisitor`
+/*****************************************************************************/
 #include "sel_any.hpp"
 
 #include "ast_selectors.hpp"

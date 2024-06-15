@@ -12,8 +12,11 @@
 
 namespace Sass {
 
+  /////////////////////////////////////////////////////////////////////////
   namespace ColorNames
+  /////////////////////////////////////////////////////////////////////////
   {
+
     extern const char aliceblue[];
     extern const char antiquewhite[];
     extern const char cyan[];
@@ -163,9 +166,14 @@ namespace Sass {
     extern const char yellowgreen[];
     extern const char rebeccapurple[];
     extern const char transparent[];
+
   }
 
-  namespace Colors {
+  /////////////////////////////////////////////////////////////////////////
+  namespace Colors
+  /////////////////////////////////////////////////////////////////////////
+  {
+
     extern const ColorRgba aliceblue;
     extern const ColorRgba antiquewhite;
     extern const ColorRgba cyan;
@@ -315,11 +323,18 @@ namespace Sass {
     extern const ColorRgba yellowgreen;
     extern const ColorRgba rebeccapurple;
     extern const ColorRgba transparent;
+
   }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   const ColorRgba* name_to_color(const char*);
   const ColorRgba* name_to_color(const sass::string&);
   const char* color_to_name(const int);
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }
 

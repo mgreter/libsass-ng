@@ -9,7 +9,7 @@
 #include "ast_selectors.hpp"
 #include "visitor_css.hpp"
 #include "ast_statements.hpp"
-#include "environment_stack.hpp"
+#include "environment.hpp"
 // #include "ast_def_macros.hpp"
 
 namespace Sass {
@@ -630,19 +630,10 @@ namespace Sass {
   {
   private:
 
-    // The queries for this rule (this is never empty).
-    ADD_CONSTREF(CssMediaQueryVectorObj, queries2);
-
+    // Queries for this media rule (might be nullptr).
+    ADD_CONSTREF(CssMediaQueryVectorObj, queries);
 
   public:
-
-    CssMediaQueryVector& queries() {
-      return *queries2_;
-    }
-
-    const CssMediaQueryVector& queries() const {
-      return *queries2_;
-    }
 
     // Value constructor
     CssMediaRule(const SourceSpan& pstate,
@@ -657,7 +648,7 @@ namespace Sass {
 
     // Check if we or any children are invisible
     bool isInvisibleCss() const override final {
-      return queries2_.isNull() || queries2_->empty() ||
+      return queries_.isNull() || queries_->empty() ||
         CssParentNode::isInvisibleCss();
     }
 

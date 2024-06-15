@@ -3,23 +3,6 @@
 /*****************************************************************************/
 #include "eval.hpp"
 
-#include "cssize.hpp"
-#include "sources.hpp"
-#include "compiler.hpp"
-#include "stylesheet.hpp"
-#include "exceptions.hpp"
-#include "ast_values.hpp"
-#include "ast_imports.hpp"
-#include "ast_selectors.hpp"
-#include "ast_callables.hpp"
-#include "ast_statements.hpp"
-#include "ast_expressions.hpp"
-#include "parser_selector.hpp"
-#include "parser_media_query.hpp"
-#include "parser_keyframe_selector.hpp"
-
-#include "preloader.hpp"
-
 #include "character.hpp"
 #include "calculation.hpp"
 #include <limits>
@@ -112,7 +95,7 @@ namespace Sass {
   void Eval::visitCssMediaRule(CssMediaRule* node)
   {
 
-    CssMediaQueryVectorObj parsed(node->queries2());
+    CssMediaQueryVectorObj parsed(node->queries());
 
     bool bubbleQuery = true;
 
@@ -162,12 +145,10 @@ namespace Sass {
         "Style rules may not be used within keyframe blocks.");
     }
 
-    // var nest = !(_styleRule?.fromPlainCss ?? false);
     bool nest = !plainCss;
-
+    // var nest = !(_styleRule?.fromPlainCss ?? false);
     // bool nesting = current ? !current->fromPlainCss() : true;
 
-    const auto& originalSelector = css->selector();
     if (nest) {
       // Temporary fix
       SelectorListObj slist = css->selector();
@@ -184,18 +165,12 @@ namespace Sass {
         }
       }
 
-      // std::cerr << "EVAL FOR " << current->toString() << " => " << current->fromPlainCss() << "\n";
-
-      // std::cerr << "RESOLVING [" << slist->inspect() << "]\n";
       /*if (!nest)*/ slist = slist->resolveParentSelectors(original(), traces, !atRootExcludingStyleRule);
-      // std::cerr << "RESOLVED [" << slist->inspect() << "]\n";
-      //if (slist->size() == 2) exit(1);
-      // slist = slist->produce();
+
       // Append new selector list to the stack
       RAII_SELECTOR(selectorStack, slist/*->copy(false)*/);
       // The copy is needed for parent reference evaluation
       // dart-sass stores it as `originalSelector` member
-      // RAII_SELECTOR(originalStack, slist->produce());
       RAII_SELECTOR(originalStack, SASS_MEMORY_COPY(slist));
 
 
@@ -203,7 +178,6 @@ namespace Sass {
       else std::cerr << "no extension store\n";
       // check if selector must be extendable by downstream extends
 
-      // std::cerr << "ADD [" << slist->inspect() << "]\n";
       // Find the parent we should append to (bubble up)
       CssParentNode* chroot = current;
       /*if (!nest) */chroot = chroot->bubbleThroughCss();

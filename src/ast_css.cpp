@@ -433,7 +433,7 @@ namespace Sass {
     CssParentNode(
       pstate, parent,
       std::move(children)),
-    queries2_(queries)
+    queries_(queries)
   {}
 
   // Copy constructor
@@ -442,17 +442,17 @@ namespace Sass {
     bool childless) :
     CssParentNode(
       ptr, childless),
-    queries2_(ptr->queries2_)
+    queries_(ptr->queries_)
   {}
 
   // Used by Extension::assertCompatibleMediaContext
   bool CssMediaRule::operator== (const CssMediaRule& rhs) const {
-    return PtrObjEqualityFn<CssMediaQueryVector>(queries2_, rhs.queries2_);
+    return PtrObjEqualityFn<CssMediaQueryVector>(queries_, rhs.queries_);
   }
   bool CssMediaRule::equalsIgnoringChildren(CssNode* rhs) const
   {
     if (const CssMediaRule* other = rhs->isaCssMediaRule())
-      return PtrObjEqualityFn<CssMediaQueryVector>(queries2_, other->queries2_);
+      return PtrObjEqualityFn<CssMediaQueryVector>(queries_, other->queries_);
     else return false;
   }
   // EO operator==

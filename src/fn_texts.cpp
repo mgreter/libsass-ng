@@ -20,6 +20,7 @@ namespace Sass {
 
     namespace Texts {
 
+      // ToDo: move to unicode helper
       long _codepointForIndex(long index, long lengthInCodepoints, bool allowNegative = false) {
         if (index == 0) return 0;
         if (index > 0) return std::min(index - 1, lengthInCodepoints);

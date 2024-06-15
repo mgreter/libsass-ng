@@ -23,13 +23,13 @@ using namespace Sass;
 // allow any argument, but can be inverted with the `--no-` prefix.
 // Other options may have an additional argument and also a default.
 /////////////////////////////////////////////////////////////////////////
-// Some of the key features are:
+// Some of the key features and short-comings are:
 // - Support for boolean options with [--no-] prefix
 // - Short options don't support exclamation `!` mark yet
 // - Supports name shortening, if target can be identified uniquely
 /////////////////////////////////////////////////////////////////////////
 // You may also use this API to completely use different or additional
-// options. Although part of LibSass it could also be used standalone.
+// options. Although part of LibSass, it could also be used standalone.
 // APIs are quite raw and not optimized for multi purpose though.
 /////////////////////////////////////////////////////////////////////////
 
@@ -352,7 +352,7 @@ static void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
     if (want_size <= i) {
       sass::sstream strm;
       sass::string value(getopt->args[i]);
-      StringUtils::makeReplace(value, "'", "\\'");
+      StringUtils::replaceAll(value, "'", "\\'");
       strm << "extra argument '" << value << "'";
       sass::string msg(strm.str());
       getopt_error(getopt, msg.c_str());
@@ -366,7 +366,7 @@ static void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
   for (size_t i = have_size; i < requiring; i += 1) {
     sass::sstream strm;
     sass::string value(getopt->arguments[i].name);
-    StringUtils::makeReplace(value, "'", "\\'");
+    StringUtils::replaceAll(value, "'", "\\'");
     strm << "missing required argument '" << value << "'";
     sass::string msg(strm.str());
     getopt_error(getopt, msg.c_str());
@@ -389,7 +389,7 @@ static void getopt_check_required_option(struct SassGetOpt* getopt)
     }
     else {
       sass::string value(getopt->needsArgument->name);
-      StringUtils::makeReplace(value, "'", "\\'");
+      StringUtils::replaceAll(value, "'", "\\'");
       strm << "option '--" << value << "' requires an argument'";
     }
     sass::string msg(strm.str());

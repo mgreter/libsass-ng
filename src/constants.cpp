@@ -9,10 +9,12 @@ namespace Sass {
 
   namespace Constants {
 
+    /////////////////////////////////////////////////////////////////////////
     // https://github.com/sass/libsass/issues/592
     // https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity
     // https://github.com/sass/sass/issues/1495#issuecomment-61189114
     namespace Specificity
+    /////////////////////////////////////////////////////////////////////////
     {
       extern const unsigned long Star = 0;
       extern const unsigned long Universal = 0;
@@ -22,11 +24,13 @@ namespace Sass {
       extern const unsigned long Attr = 1000;
       extern const unsigned long Pseudo = 1000;
       extern const unsigned long ID = 1000000;
-    }
+    } // namespace Specificity
 
-
+    /////////////////////////////////////////////////////////////////////////
     // http://en.wikipedia.org/wiki/Byte_order_mark
-    namespace BOM {
+    namespace BOM
+    /////////////////////////////////////////////////////////////////////////
+    {
       extern const unsigned char utf_8[] = { 0xEF, 0xBB, 0xBF };
       extern const unsigned char utf_16_be[] = { 0xFE, 0xFF };
       extern const unsigned char utf_16_le[] = { 0xFF, 0xFE };
@@ -42,10 +46,12 @@ namespace Sass {
       extern const unsigned char scsu[] = { 0x0E, 0xFE, 0xFF };
       extern const unsigned char bocu_1[] = { 0xFB, 0xEE, 0x28 };
       extern const unsigned char gb_18030[] = { 0x84, 0x31, 0x95, 0x33 };
-    }
+    } // namespace BOM
 
-
-    namespace Terminal {
+    /////////////////////////////////////////////////////////////////////////
+    namespace Terminal
+    /////////////////////////////////////////////////////////////////////////
+    {
       const char reset[] = "\033[m";
       const char bold[] = "\033[1m";
       const char red[] = "\033[31m";
@@ -79,15 +85,21 @@ namespace Sass {
       const char bg_bold_cyan[] = "\033[1;46m";
       const char bg_bold_white[] = "\033[1;47m";
 
-    }
+    } // namespace Terminal
 
-    namespace String {
+    /////////////////////////////////////////////////////////////////////////
+    namespace String
+    /////////////////////////////////////////////////////////////////////////
+    {
 
       const char empty[] = "";
 
-    }
+    } // namespace String
 
-    namespace Math {
+    /////////////////////////////////////////////////////////////////////////
+    namespace Math
+    /////////////////////////////////////////////////////////////////////////
+    {
 
       const double C_E = 2.71828182845904523536; // e
       const double C_LOG2E = 1.44269504088896340736; // log2(e)
@@ -104,7 +116,11 @@ namespace Sass {
       const double C_SQRT1_2 = 0.707106781186547524401; // 1/sqrt(2)
       const double RAD_TO_DEG = 57.295779513082320876798154814105;
 
-    }
+    } // namespace Math
 
-  }
-}
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
+  } // namespace Constants
+
+} // namespace Sass

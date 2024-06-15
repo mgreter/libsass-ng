@@ -30,9 +30,6 @@ namespace Sass {
     // Compiler context
     Compiler& compiler;
 
-    // Alias into context
-    Stylesheet*& modctx;
-
     sass::vector<Stylesheet*> modules;
 
     // Alias into context
@@ -55,9 +52,6 @@ namespace Sass {
     // Original source mappings. If defined, SourceSpans will
     // point to where the original source has come from. 
     // sass::vector<Mapping> srcmap;
-
-    // Points to context.varStack
-    sass::vector<EnvRefs*>& varStack;
 
     // The silent comment this parser encountered previously.
     SilentCommentObj lastSilentComment;

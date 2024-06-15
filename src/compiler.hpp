@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #ifndef SASS_COMPILER_H
 #define SASS_COMPILER_H
 
@@ -18,13 +21,19 @@
 
 namespace Sass {
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // Helper function to sort header and importer arrays by priorities
-  inline bool cmpImporterPrio(struct SassImporter* i, struct SassImporter* j)
+  static inline bool cmpImporterPrio(struct SassImporter* i, struct SassImporter* j)
   {
     return sass_importer_get_priority(i) > sass_importer_get_priority(j);
   }
 
-  // The main compiler context object holding config and results
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // The main compiler context holding config and results
   class Compiler final : public Logger {
 
   private:
@@ -37,58 +46,114 @@ namespace Sass {
 
     // Checking if a file exists can be quite extensive
     // Keep an internal map to avoid repeated system calls
+    // Means we are suspectible to underlying filesys changes
+    // Worst case we fail later than early, for regular gains
+    // Mainly used in `find_includes` and `find_file` methods
     std::unordered_map<sass::string, bool> fileExistsCache;
+
+    // Cache the raw source files by file path
+    std::map<const sass::string, ImportObj> sources19;
+
+    // Cache the parsed stylesheet by file path
+    std::map<const sass::string, StylesheetObj> sheets21;
 
     // Keep cache of resolved import filenames
     // Key is a pair of previous + import path
+    // Used mainly in `find_includes` method
     std::unordered_map<ImportRequest, sass::vector<ResolvedImport>> resolveCache;
+
+  public:
+
+    // Shared between eval and compiler
+    // ToDo: move to appropriate unit
+    WithConfig* wconfig99 = nullptr;
+
+    // Stack of environment frames. New frames are appended
+    // when parser encounters a new environment scoping.
+    // Shared between eval and compiler
+    // ToDo: move to appropriate unit
+    sass::vector<EnvRefs*> envstack;
+
+    // All internal available modules
+    EnvKeyMap<BuiltInMod*> modules64;
+
+    // Flag if we currently have a with-config
+    bool hasWithConfig = false;
+
+
+    // The root environment where parsed root variables
+    // and (custom) functions plus mixins are registered.
+    EnvRoot varRoot; // Must be after varStack!
+
+    // Functions only for evaluation phase (C-API functions and eval itself)
+    // CallableObj* findFunction(const EnvKey& name) { return varRoot.findFunction(name); }
+
+    /////////////////////////////////////////////////////////////////////////
+    // Values below are mainly hold for C-API queries
+    /////////////////////////////////////////////////////////////////////////
+
+    // The current state the compiler is in.
+    enum SassCompilerState state;
+
+    // Where we want to store the output.
+    // Source-map path is deducted from it.
+    // Defaults to `stream://stdout`.
+    sass::string output_path;
+
+    // main entry point for compilation
+    ImportObj entry_point;
+
+    // Parsed ast-tree
+    StylesheetObj sheet;
+
+    // Evaluated ast-tree
+    CssRootObj compiled22;
+
+    // The rendered css content.
+    sass::string content71;
+
+    // Rendered warnings and debugs. They can be emitted at any stage.
+    // Therefore we make a copy into our string after each stage from
+    // the actual logger instance (created by context). This is needed
+    // in order to return a `c_str` on the API from the output-stream.
+    sass::string warnings;
+
+    // The rendered output footer. This includes the
+    // rendered css comment footer for the source-map.
+    // Append after output for the full output document.
+    char* footer;
+
+    // The rendered source map. This is what an implementor
+    // would normally write out to the `output.css.map` file
+    char* srcmap;
+
+    // Runtime error
+    SassError error;
 
     // Include paths are local to context since we need to know
     // it for lookups during parsing. You may reset this for
     // another compilation when reusing the context.
     sass::vector<sass::string> includePaths;
 
-  public:
+    // The import stack during evaluation phase
+    // ToDo: used by C-API, not including @use etc.
+    sass::vector<ImportObj> import_stack;
 
-    Stylesheet* modctx3 = nullptr;
-
-    WithConfig* wconfig = nullptr;
-
-    EnvKeyMap<BuiltInMod*> modules;
-
-  protected:
-
-    // Functions in order of appearance
-    // Same order needed for function stack
-    sass::vector<CallableObj> fnList;
-
-  public:
-
-    // sass::vector<WithConfigVar>* withConfig = nullptr;
-    virtual ~Compiler();
-
-    // EnvKeyMap<WithConfigVar> withConfig;
-
-    // Sheets are filled after resources are parsed
-    // This could be shared, should go to engine!?
-    // ToDo: should be case insensitive on windows?
-    std::map<const sass::string, StylesheetObj> sheets;
-
-    // Only used to cache `loadImport` calls
-    std::map<const sass::string, ImportObj> sources;
+    // List of all sources that have been included
+    // ToDo: used by C-API, not including @use etc.
+    sass::vector<SourceDataObj> included_sources;
 
     // Additional C-API stuff for interaction
     sass::vector<struct SassImporter*> cHeaders;
     sass::vector<struct SassImporter*> cImporters;
     sass::vector<struct SassFunction*> cFunctions;
 
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
   public:
 
-    // The import stack during evaluation phase
-    sass::vector<ImportObj> import_stack;
-
-    // List of all sources that have been included
-    sass::vector<SourceDataObj> included_sources;
+    virtual ~Compiler();
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
@@ -127,92 +192,8 @@ namespace Sass {
     // Returns all results (e.g. for ambiguous but valid imports)
     const sass::vector<ResolvedImport>& findIncludes(const ImportRequest& import, bool forImport);
 
-
-  public:
-
-    EnvRefs* getCurrentScope() const {
-      if (varRoot.stack.empty()) return nullptr;
-      return varRoot.stack.back();
-    }
-
-    EnvRefs* getCurrentModule() const {
-      if (varRoot.stack.empty()) return nullptr;
-      auto current = varRoot.stack.back();
-      while (current->pscope) {
-        if (current->module) break;
-        current = current->pscope;
-      }
-      return current;
-    }
-
-    BuiltInMod& createModule(const sass::string& name) {
-      auto it = modules.find(name);
-      if (it != modules.end()) {
-        return *it->second;
-      }
-      BuiltInMod* module = new BuiltInMod("sass://" + name, varRoot);
-      modules.insert({ name, module });
-      return *module;
-    }
-
-    BuiltInMod* getModule(const sass::string& name) {
-      auto it = modules.find(name);
-      if (it == modules.end()) return nullptr;
-      return it->second;
-    }
-
-
-    // Flag if we currently have a with-config
-    bool hasWithConfig = false;
-
-    // Stack of environment frames. New frames are appended
-    // when parser encounters a new environment scoping.
-    sass::vector<EnvRefs*> varStack3312;
-
-    // The root environment where parsed root variables
-    // and (custom) functions plus mixins are registered.
-    EnvRoot varRoot; // Must be after varStack!
-
-    // Functions only for evaluation phase (C-API functions and eval itself)
-    // CallableObj* findFunction(const EnvKey& name) { return varRoot.findFunction(name); }
-
-    // The current state the compiler is in.
-    enum SassCompilerState state;
-
-    // Where we want to store the output.
-    // Source-map path is deducted from it.
-    // Defaults to `stream://stdout`.
-    sass::string output_path;
-
-    // main entry point for compilation
-    ImportObj entry_point;
-
-    // Parsed ast-tree
-    StylesheetObj sheet;
-
-    // Evaluated ast-tree
-    CssRootObj compiled;
-
-    // The rendered css content.
-    sass::string content;
-
-    // Rendered warnings and debugs. They can be emitted at any stage.
-    // Therefore we make a copy into our string after each stage from
-    // the actual logger instance (created by context). This is needed
-    // in order to return a `c_str` on the API from the output-stream.
-    sass::string warnings;
-
-    // The rendered output footer. This includes the
-    // rendered css comment footer for the source-map.
-    // Append after output for the full output document.
-    char* footer;
-
-    // The rendered source map. This is what an implementor
-    // would normally write out to the `output.css.map` file
-    char* srcmap;
-
-    // Runtime error
-    SassError error;
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
     // Constructor
     Compiler();
@@ -341,6 +322,42 @@ namespace Sass {
 
     // Invoke parser according to import format
       StylesheetObj parseSource(ImportObj source);
+
+
+  public:
+
+    EnvRefs* getCurrentScope() const {
+      auto& stack = varRoot.compiler.envstack;
+      if (stack.empty()) return nullptr;
+      return stack.back();
+    }
+
+    EnvRefs* getCurrentModule() const {
+      auto& stack = varRoot.compiler.envstack;
+      if (stack.empty()) return nullptr;
+      auto current = stack.back();
+      while (current->pscope) {
+        if (current->module) break;
+        current = current->pscope;
+      }
+      return current;
+    }
+
+    BuiltInMod& createModule(const sass::string& name) {
+      auto it = modules64.find(name);
+      if (it != modules64.end()) {
+        return *it->second;
+      }
+      BuiltInMod* module = new BuiltInMod("sass://" + name, varRoot);
+      modules64.insert({ name, module });
+      return *module;
+    }
+
+    BuiltInMod* getModule24(const sass::string& name) {
+      auto it = modules64.find(name);
+      if (it == modules64.end()) return nullptr;
+      return it->second;
+    }
 
   public:
 

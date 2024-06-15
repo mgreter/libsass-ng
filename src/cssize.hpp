@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// Subclass of inspect, specializing in outputting valid css
+/*****************************************************************************/
 #ifndef SASS_CSSIZE_HPP
 #define SASS_CSSIZE_HPP
 

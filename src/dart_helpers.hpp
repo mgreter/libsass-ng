@@ -1,3 +1,9 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+// Some helpers we (have) used when porting from dart-sass
+// Ideally prefer more optimized STL container operations
+/*****************************************************************************/
 #ifndef SASS_DART_HELPERS_HPP
 #define SASS_DART_HELPERS_HPP
 
@@ -10,53 +16,26 @@
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-  template <typename T>
-  sass::string InspectVector(sass::vector<T> exts) {
-    sass::string msg = "[";
-    bool first = true;
-    for (auto& entry : exts) {
-      if (!first) msg += ", ";
-      msg += entry->inspect();
-      first = false;
-    }
-    return msg + "]";
-
-  }
-
-  template <typename T>
-  sass::string InspectSelector(sass::vector<T> exts) {
-    sass::string msg = "[";
-    bool first = true;
-    for (auto& entry : exts) {
-      if (!first) msg += ", ";
-      msg += entry.selector->inspect();
-      first = false;
-    }
-    return msg + "]";
-
-  }
-  /////////////////////////////////////////////////////////////////////////
   // Returns a new list containing the elements between [start] and [end].
   /////////////////////////////////////////////////////////////////////////
-  template <class T>
-  sass::vector<T> sublist(const sass::vector<T>& vec,
-    size_t start, size_t end = sass::string::npos)
-  {
-    if (end == sass::string::npos) { end = vec.size(); }
-    return sass::vector<T>(vec.begin() + start, vec.begin() + end);
-  }
+  // template <class T>
+  // sass::vector<T> sublist(const sass::vector<T>& vec,
+  //   size_t start, size_t end = sass::string::npos)
+  // {
+  //   if (end == sass::string::npos) { end = vec.size(); }
+  //   return sass::vector<T>(vec.begin() + start, vec.begin() + end);
+  // }
 
   /////////////////////////////////////////////////////////////////////////
   // Removes the objects in the range [start] inclusive to [end] exclusive.
   /////////////////////////////////////////////////////////////////////////
-  template <class T>
-  void removeRange(sass::vector<T>& vec,
-    size_t start, size_t end = sass::string::npos)
-  { 
-    if (end == sass::string::npos) { end = vec.size(); }
-    vec.erase(vec.begin() + start, vec.begin() + end);
-  }
+  // template <class T>
+  // void removeRange(sass::vector<T>& vec,
+  //   size_t start, size_t end = sass::string::npos)
+  // { 
+  //   if (end == sass::string::npos) { end = vec.size(); }
+  //   vec.erase(vec.begin() + start, vec.begin() + end);
+  // }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -160,24 +139,12 @@ namespace Sass {
   // This avoids copying inner maps from [source] if possible.
   /////////////////////////////////////////////////////////////////////////
   template <class K1, class K2>
-  void mapAddAll2(K1& dst, K2& source)
+  void mapAddAllNested(K1& dst, K2& source)
   {
     for (auto& src : source) {
       mapAddAll(dst[src.first], src.second);
     }
   }
-
-  // Map<K1, Map<K2, V>> destination, Map<K1, Map<K2, V>> source) {
-  //   source.forEach((key, inner) {
-  //     var innerDestination = destination[key];
-  //     if (innerDestination != null) {
-  //       innerDestination.addAll(inner);
-  //     }
-  //     else {
-  //       destination[key] = inner;
-  //     }
-  //   });
-  // }
 
   /////////////////////////////////////////////////////////////////////////
   // Equivalent to dart `cnt.any`
@@ -252,7 +219,7 @@ namespace Sass {
     #define ACC(x, y) acc[(x) * nn + (y)]
     #define RES(x, y) res[(x) * nn + (y)]
 
-    /* Following steps build L[m+1][n+1] in bottom up fashion. Note
+    /* Following step builds L[m+1][n+1] in bottom up fashion. Note
       that L[i][j] contains length of LCS of X[0..i-1] and Y[0..j-1] */
     for (size_t i = 0; i <= m; i++) {
       for (size_t j = 0; j <= n; j++) {

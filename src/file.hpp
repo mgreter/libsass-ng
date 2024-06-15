@@ -32,7 +32,6 @@ namespace Sass {
 
   namespace File {
 
-
     // test if path exists and is a file
     bool file_exists(const sass::string& file, const sass::string& CWD,
       std::unordered_map<sass::string, bool>& cache);

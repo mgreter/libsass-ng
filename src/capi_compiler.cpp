@@ -9,9 +9,6 @@
 #include "compiler.hpp"
 #include "exceptions.hpp"
 
-
-#include "md5.hpp"
-
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
@@ -122,11 +119,11 @@ namespace Sass {
     // Bail out if we had any previous errors
     if (compiler.error.status != 0) return;
     // Make sure compile step was called before
-    if (compiler.compiled == nullptr) return;
+    if (compiler.compiled22 == nullptr) return;
 
     // This will hopefully use move semantics
     OutputBuffer output(compiler.renderCss());
-    compiler.content = std::move(output.buffer);
+    compiler.content71 = std::move(output.buffer);
 
     // Create options to render source map and footer.
     SrcMapOptions& options(compiler.mapopt);
@@ -174,8 +171,8 @@ namespace Sass {
 
       // ToDo: can we use the same types?
       const char* footer = compiler.footer;
-      const char* content = compiler.content.empty() ?
-        nullptr : compiler.content.c_str();
+      const char* content = compiler.content71.empty() ?
+        nullptr : compiler.content71.c_str();
 
       // Check if anything is to write
       if (content || footer) {
@@ -588,8 +585,8 @@ extern "C" {
   // Getter for output after parsing, compilation and rendering.
   const char* ADDCALL sass_compiler_get_output_string(struct SassCompiler* compiler)
   {
-    if (Compiler::unwrap(compiler).content.empty()) return nullptr;
-    return Compiler::unwrap(compiler).content.c_str();
+    if (Compiler::unwrap(compiler).content71.empty()) return nullptr;
+    return Compiler::unwrap(compiler).content71.c_str();
   }
 
   // Getter for footer string containing optional source-map (embedded or link).

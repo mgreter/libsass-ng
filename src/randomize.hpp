@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// Portable implementation of a tiny subset of the c++ crypto APIs.
+/*****************************************************************************/
 #ifndef SASS_RANDOMIZE_HPP
 #define SASS_RANDOMIZE_HPP
 

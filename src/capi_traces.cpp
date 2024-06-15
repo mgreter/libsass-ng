@@ -41,13 +41,13 @@ extern "C" {
   // Getter for line position of trace (starting from 0)
   size_t ADDCALL sass_srcspan_get_src_ln(struct SassSrcSpan* pstate)
   {
-    return SourceSpan::unwrap(pstate).position.line;
+    return SourceSpan::unwrap(pstate).getRawLine();
   }
 
   // Getter for column position of trace (starting from 0)
   size_t ADDCALL sass_srcspan_get_src_col(struct SassSrcSpan* pstate)
   {
-    return SourceSpan::unwrap(pstate).position.column;
+    return SourceSpan::unwrap(pstate).getRawColumn();
   }
 
   // Getter for line position of trace (starting from 1)
@@ -65,13 +65,13 @@ extern "C" {
   // Getter for line span of trace (starting from 0)
   size_t ADDCALL sass_srcspan_get_span_ln(struct SassSrcSpan* pstate)
   {
-    return SourceSpan::unwrap(pstate).span.line;
+    return SourceSpan::unwrap(pstate).span.getRawLine();
   }
 
   // Getter for column span of trace (starting from 0)
   size_t ADDCALL sass_srcspan_get_span_col(struct SassSrcSpan* pstate)
   {
-    return SourceSpan::unwrap(pstate).span.column;
+    return SourceSpan::unwrap(pstate).span.getRawColumn();
   }
 
   // Getter for attached source of trace for further details

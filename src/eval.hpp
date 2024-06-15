@@ -115,17 +115,15 @@ namespace Sass {
 
     Value* doDivision(Value* left, Value* right, BinaryOpExpression* node, Logger& logger, SourceSpan pstate) const;
 
+    inline Number* withoutSlash4(Number* value);
     inline Value* withoutSlash3(Value* value);
 
     size_t _indexAfterImports(sass::vector<CssNodeObj> statements);
 
-    void _loadModule51(sass::string url, sass::string stackFrame, AstNodeObj nodeWithSpan, std::function<void(Module* mod, bool firstLoad)> callback);
 
-    void _visitUpstreamModule(Stylesheet* upstream, sass::vector<Stylesheet*>& sorted, std::set<sass::string>& seen);
     void _visitUpstreamModule(Stylesheet* upstream, sass::vector<Stylesheet*>& sorted, std::set<sass::string>& seen, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone);
 
     CssRoot* _combineCss(Stylesheet* module, bool clone = false);
-    sass::vector<Stylesheet*> _topologicalModules(Stylesheet* root);
     sass::vector<Stylesheet*> _topologicalModules(Stylesheet* root, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone);
     void _extendModules(sass::vector<Stylesheet*> sortedModules);
 
@@ -285,7 +283,7 @@ namespace Sass {
     // Note: only needed for lazy evaluation in if expressions
     Expression* getArgument(
       ExpressionVector& positional,
-      ExpressionFlatMap& named,
+      const ExpressionFlatMap* named,
       size_t idx, const EnvKey& name);
 
     // Fetch evaluated positional argument (optionally by name)
@@ -330,8 +328,8 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
   public:
     ArgumentResults _evaluateArguments(CallableArguments* arguments);
-    void _addRestValueMap(ValueFlatMap& values, Map* map, const SourceSpan& nodeForSpan);
-    void _addRestExpressionMap(ExpressionFlatMap& values, Map* map, const SourceSpan& pstate);
+    void _addRestValueMap(ArgumentResults& results, Map* map, const SourceSpan& nodeForSpan);
+    void _addRestExpressionMap(CallableArguments* arguments, Map* map, const SourceSpan& pstate);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
@@ -344,9 +342,9 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    void _evaluateMacroArguments(CallableArguments* arguments,
-      ExpressionVector& positional,
-      ExpressionFlatMap& named);
+    void _evaluateMacroArguments(
+      CallableArguments* arguments,
+      ExpressionVector& positional);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

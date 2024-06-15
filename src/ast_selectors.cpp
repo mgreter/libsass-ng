@@ -59,37 +59,37 @@ namespace Sass {
 
   bool Selector::isUseless() const
   {
-    IsUselessVisitor visitor;
+    static IsUselessVisitor visitor;
     return const_cast<Selector*>(this)->accept(&visitor);
   }
 
   bool Selector::isInvisible() const
   {
-    IsInvisibleVisitor visitor(true);
+    static IsInvisibleVisitor visitor(true);
     return const_cast<Selector*>(this)->accept(&visitor);
   }
 
   bool Selector::isInvisibleOtherThanBogusCombinators() const
   {
-    IsInvisibleVisitor visitor(false);
+    static IsInvisibleVisitor visitor(false);
     return const_cast<Selector*>(this)->accept(&visitor);
   }
 
   bool Selector::isBogusOtherThanLeadingCombinator() const
   {
-    IsBogusVisitor visitor(false);
+    static IsBogusVisitor visitor(false);
     return const_cast<Selector*>(this)->accept(&visitor);
   }
 
   bool Selector::isBogusStrict() const
   {
-    IsBogusVisitor visitor(true);
+    static IsBogusVisitor visitor(true);
     return const_cast<Selector*>(this)->accept(&visitor);
   }
 
   bool Selector::isBogusLenient() const
   {
-    IsBogusVisitor visitor(false);
+    static IsBogusVisitor visitor(false);
     return const_cast<Selector*>(this)->accept(&visitor);
   }
 
@@ -1120,10 +1120,6 @@ namespace Sass {
 
       CplxSelComponent* component = elements_[n];
 
-      // std::cerr << "============\n";
-
-      // if (parent) std::cerr << "parent [" << parent->inspect() << "]\n";
-      // std::cerr << "resolve [" << component->inspecter() << "]\n";
       if (CompoundSelector* compound = component->selector()) {
 
         SelectorCombinatorVector leads;
@@ -1132,7 +1128,6 @@ namespace Sass {
           leadingCombinators_.end());
         auto tails(component->combinators());
 
-        //if (selectors.size() > 0) leads.clear();
         // loosing postfix combinators of component?
         sass::vector<ComplexSelectorObj> complexes =
           compound->resolveParentSelectors2(parent, traces,
@@ -1140,7 +1135,6 @@ namespace Sass {
 
         for (const auto& qwe : complexes) {
           qwe->pstate(pstate());
-          // std::cerr << "RESOL [" << qwe->inspect() << "]\n";
         }
 
         // for (auto sel : complexes) { sel->hasPreLineFeed(hasPreLineFeed()); }
@@ -1158,12 +1152,9 @@ namespace Sass {
       selectors.push_back({ SASS_MEMORY_NEW(ComplexSelector, pstate_, leadingCombinators_, {}) });
     }
 
-    // std::cerr << "permutate now\n";
-
     // Permutate through all paths
-    //for (auto s : selectors) { for (auto q : s) { std::cerr << "sel [" << q->inspect() << "]\n"; } }
+    // ToDo: why alternate version
     selectors = permutateAlt(selectors);
-    //for (auto s : selectors) { for (auto q : s) { std::cerr << "perm [" << q->inspect() << "]\n"; } }
 
 
     // Create final selectors from path permutations

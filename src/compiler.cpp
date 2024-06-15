@@ -27,7 +27,6 @@
 #include "fn_selectors.hpp"
 
 #include "b64/encode.hpp"
-#include "preloader.hpp"
 #include "plugins.hpp"
 #include "file.hpp"
 
@@ -41,7 +40,9 @@ namespace Sass {
 
   Compiler::~Compiler()
   {
-    for (auto& mod : modules) {
+    sources19.clear();
+    sheets21.clear();
+    for (auto& mod : modules64) {
       delete mod.second;
     }
     #ifdef DEBUG_MSVC_CRT_MEM
@@ -187,7 +188,7 @@ namespace Sass {
     // Only act right after parsing
     if (state == SASS_COMPILER_PARSED) {
       // Compile the parsed ast-tree
-      compiled = compileRoot(false);
+      compiled22 = compileRoot(false);
       // Update the compiler state
       state = SASS_COMPILER_COMPILED;
     }
@@ -200,8 +201,8 @@ namespace Sass {
     emitter.reserve(262144); // 256K
     emitter.in_declaration = false;
     // Start the render process
-    if (compiled != nullptr) {
-      emitter.visitCssRoot(compiled);
+    if (compiled22 != nullptr) {
+      emitter.visitCssRoot(compiled22);
     }
     // Finish emitter stream
     emitter.finalize();
@@ -727,8 +728,8 @@ namespace Sass {
     const sass::string& abs_path(source->getAbsPath());
 
     // ToDo: We don't take format into account
-    auto cached = sheets.find(abs_path);
-    if (cached != sheets.end()) {
+    auto cached = sheets21.find(abs_path);
+    if (cached != sheets21.end()) {
       return cached->second;
     }
 
@@ -758,14 +759,13 @@ namespace Sass {
     StylesheetObj stylesheet = parseSource(import);
 
     // Put the parsed stylesheet into the map
-    sheets.insert({ abs_path, stylesheet });
+    sheets21.insert({ abs_path, stylesheet });
 
     if (stylesheet.ptr() != nullptr) {
       stylesheet->import = import;
     }
 
     stylesheet->extender52 = SASS_MEMORY_NEW(ExtensionStore, ExtensionStore::NORMAL, *this);
-    // std::cerr << "!! Create import store " << abs_path  << " => " << stylesheet->extender.ptr() << "\n";
 
     // Return pointer, it is already managed
     // Don't call detach, as it could leak then
@@ -795,7 +795,7 @@ namespace Sass {
   {
 
     // Insert ourself onto the sources cache
-    sources.insert({ import->getAbsPath(), import });
+    sources19.insert({ import->getAbsPath(), import });
 
     // Register all built-in functions 
     loadBuiltInFunctions();
@@ -973,11 +973,11 @@ namespace Sass {
   Import* Compiler::loadImport(const ResolvedImport& import)
   {
     // Try to find the item in the cache first
-    auto cached = sources.find(import.abs_path);
-    if (cached != sources.end()) return cached->second;
+    auto cached = sources19.find(import.abs_path);
+    if (cached != sources19.end()) return cached->second;
     // Try to read source and (ToDo) optional mappings
     if (ImportObj loaded = File::read_import(import)) {
-      sources.insert({ import.abs_path, loaded });
+      sources19.insert({ import.abs_path, loaded });
       return loaded.ptr();
     }
     // Throw error if read has failed

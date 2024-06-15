@@ -51,7 +51,7 @@ int main(int argc, const char* argv[])
   sass_delete_import(import); // decrease ref-count
 
   // context is set up, call the compile step now
-  int status = sass_compiler_execute(compiler, true);
+  int status = sass_compiler_execute(compiler);
   // release allocated memory
   sass_delete_compiler(compiler);
 

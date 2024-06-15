@@ -9,8 +9,8 @@
 #include "capi_sass.hpp"
 
 #include "ast_fwd_decl.hpp"
+#include "environment.hpp"
 #include "environment_cnt.hpp"
-#include "environment_stack.hpp"
 
 namespace Sass {
 

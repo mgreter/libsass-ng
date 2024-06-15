@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// Portable implementation of a tiny subset of the c++ crypto APIs.
+/*****************************************************************************/
 #include "capi_sass.hpp"
 
 #include <thread>
@@ -19,6 +21,7 @@ namespace Sass {
 
   // Read a truly random seed
   // This is probably expensive
+  // Meant to seed PRNG hasher
   static uint32_t readHashSeed()
   {
     // Our hash seed
@@ -71,6 +74,7 @@ namespace Sass {
   // Creates one true random number to seed us
   uint32_t getHashSeed(uint32_t* preset)
   {
+    // Optionally use static seed
     #ifdef SassStaticHashSeed
     return SassStaticHashSeed
     #else

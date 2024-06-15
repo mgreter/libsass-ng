@@ -379,7 +379,8 @@ namespace Sass {
       double value, Units units);
 
     // Copy constructor
-    Number(const Number* ptr);
+    Number(const Number* ptr,
+      bool childless = false);
 
 		// Numbers can't be simplified further
 		AstNode* simplify(Logger& logger) override final { return this; }
@@ -414,10 +415,13 @@ namespace Sass {
     }
 
     Number* coerce(Logger& logger, Number& rhs);
-		double factorToUnits(const Units& units);
+    double coerceToUnit(Logger& logger, const Units& units, const sass::string& vname) const;
+    double factorToUnits(const Units& units);
 
     // Implement delayed value fetcher
     Value* withoutSlash() override final;
+
+    Number* withoutSlash5();
 
     sass::string recommendation() const;
 
@@ -471,7 +475,7 @@ namespace Sass {
 
     // Copy operations for childless items
     Number* copy(SASS_MEMORY_ARGS bool childless) const override final {
-      return SASS_MEMORY_NEW_DBG(Number, this);
+      return SASS_MEMORY_NEW_DBG(Number, this, true);
     }
 
   private:
@@ -792,7 +796,8 @@ namespace Sass {
   {
   private:
 
-    ValueFlatMap _keywords;
+    ValueFlatMapObj _keywords;
+
     mutable bool _wereKeywordsAccessed;
 
   public:
@@ -801,18 +806,18 @@ namespace Sass {
     ArgumentList(const SourceSpan& pstate,
       SassSeparator sep = SASS_SPACE,
       ValueVector&& values = {},
-      ValueFlatMap&& keywords = {});
+      ValueFlatMap* keywords = {});
 
     // Value move constructor
     ArgumentList(const SourceSpan& pstate,
       SassSeparator sep = SASS_SPACE,
       const ValueVector& values = {},
-      const ValueFlatMap& keywords = {});
+      ValueFlatMap* keywords = {});
 
     // Copy constructor
     ArgumentList(const ArgumentList* ptr);
-
-    ValueFlatMap& keywords() {
+    
+    ValueFlatMap* keywords() {
       _wereKeywordsAccessed = true;
       return _keywords;
     }
@@ -822,7 +827,7 @@ namespace Sass {
     }
 
     bool hasAllKeywordsConsumed() const {
-      return _keywords.empty() ||
+      return !_keywords || _keywords->empty() ||
         _wereKeywordsAccessed;
     }
 
@@ -851,7 +856,7 @@ namespace Sass {
 
     // Clone all items in-place
     ArgumentList* cloneChildren(SASS_MEMORY_ARGS_VOID) override final {
-      for (std::pair<EnvKey, ValueObj> it : _keywords) {
+      if (_keywords) for (std::pair<EnvKey, ValueObj> it : *_keywords) {
         it.second = it.second->copy(SASS_MEMORY_PARAMS_VOID);
         it.second->cloneChildren(SASS_MEMORY_PARAMS_VOID);
       }

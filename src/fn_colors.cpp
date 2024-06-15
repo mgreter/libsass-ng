@@ -32,16 +32,13 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    static double coerceToDeg(const Number* number) {
-      Units radiants("deg");
-      // if (std::isinf(number->value())) return number->value();
-      if (double factor = number->getUnitConversionFactor(radiants)) {
+    static double coerceToDeg(const Number* number)
+    {
+      // Returns conversion factor `0` if not convertible
+      if (double factor = number->getUnitConversionFactor(unit_deg)) {
         return number->value() * factor;
       }
       return number->value();
-      // CallStackFrame csf(compiler, number->pstate());
-      // throw Exception::RuntimeException(compiler, "$" + vname +
-      //   ": Expected " + number->inspect() + " to be an angle.");
     }
 
     /////////////////////////////////////////////////////////////////////////
@@ -1229,20 +1226,20 @@ namespace Sass {
         return SASS_MEMORY_NEW(String, pstate, ss.str());
       }
 
-      static Number* getKwdArg(ValueFlatMap& keywords, const EnvKey& name, Logger& logger)
+      static Number* getKwdArg(ValueFlatMap* keywords, const EnvKey& name, Logger& logger)
       {
-        EnvKey variable(name.norm());
-        auto kv = keywords.find(variable);
+        if (keywords == nullptr) return nullptr;
+        const EnvKey& variable(name.norm());
+        auto kv = keywords->find(variable);
         // Return null since args are optional
-        if (kv == keywords.end()) return nullptr;
+        if (kv == keywords->end()) return nullptr;
         // Get the number object from found keyword
         Number* num = kv->second->assertNumber(logger, name.orig());
         // Only consume keyword once
-        keywords.erase(kv);
+        keywords->erase(kv);
         // Return the number
         return num;
       }
-
 
       static BUILT_IN_FN(adjust)
       {
@@ -1259,17 +1256,17 @@ namespace Sass {
         }
 
         // ToDo: solve without erase ...
-        ValueFlatMap& keywords(argumentList->keywords());
+        ValueFlatMap* kwds(argumentList->keywords());
 
-        Number* nr_r = getKwdArg(keywords, key_red, compiler);
-        Number* nr_g = getKwdArg(keywords, key_green, compiler);
-        Number* nr_b = getKwdArg(keywords, key_blue, compiler);
-        Number* nr_h = getKwdArg(keywords, key_hue, compiler);
-        Number* nr_s = getKwdArg(keywords, key_saturation, compiler);
-        Number* nr_l = getKwdArg(keywords, key_lightness, compiler);
-        Number* nr_a = getKwdArg(keywords, key_alpha, compiler);
-        Number* nr_wn = getKwdArg(keywords, key_whiteness, compiler);
-        Number* nr_bn = getKwdArg(keywords, key_blackness, compiler);
+        Number* nr_r = getKwdArg(kwds, key_red, compiler);
+        Number* nr_g = getKwdArg(kwds, key_green, compiler);
+        Number* nr_b = getKwdArg(kwds, key_blue, compiler);
+        Number* nr_h = getKwdArg(kwds, key_hue, compiler);
+        Number* nr_s = getKwdArg(kwds, key_saturation, compiler);
+        Number* nr_l = getKwdArg(kwds, key_lightness, compiler);
+        Number* nr_a = getKwdArg(kwds, key_alpha, compiler);
+        Number* nr_wn = getKwdArg(kwds, key_whiteness, compiler);
+        Number* nr_bn = getKwdArg(kwds, key_blackness, compiler);
 
         if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
         if (nr_s) nr_s->checkPercent(compiler, Strings::saturation);
@@ -1288,8 +1285,8 @@ namespace Sass {
 
         double h = nr_h ? coerceToDeg(nr_h) : 0.0; // Hue is a very special case
 
-        if (!keywords.empty()) {
-          throw Exception::UnknownNamedArgument(compiler, keywords);
+        if (kwds && !kwds->empty()) {
+          throw Exception::UnknownNamedArgument(compiler, kwds);
         }
 
         bool hasRgb = nr_r || nr_g || nr_b;
@@ -1350,7 +1347,7 @@ namespace Sass {
         }
 
         // ToDo: solve without erase ...
-        ValueFlatMap& keywords(argumentList->keywords());
+        ValueFlatMap* keywords(argumentList->keywords());
 
         Number* nr_r = getKwdArg(keywords, key_red, compiler);
         Number* nr_g = getKwdArg(keywords, key_green, compiler);
@@ -1374,7 +1371,7 @@ namespace Sass {
         double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange( 0.0, 100.0, nr_bn, compiler, Strings::blackness) : 0.0;
         double h = nr_h ? coerceToDeg(nr_h) : 0.0; // Hue is a very special case
 
-        if (!keywords.empty()) {
+        if (keywords && !keywords->empty()) {
           throw Exception::UnknownNamedArgument(compiler, keywords);
         }
 
@@ -1437,7 +1434,7 @@ namespace Sass {
         }
 
         // ToDo: solve without erase ...
-        ValueFlatMap& keywords(argumentList->keywords());
+        ValueFlatMap* keywords(argumentList->keywords());
 
         Number* nr_r = getKwdArg(keywords, key_red, compiler);
         Number* nr_g = getKwdArg(keywords, key_green, compiler);
@@ -1457,7 +1454,7 @@ namespace Sass {
         double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange(-100.0, 100.0, nr_bn, compiler, Strings::blackness) / 100.0 : 0.0;
         double a = nr_a ? nr_a->assertHasUnits(compiler, Strings::percent, Strings::alpha)->assertRange(-100.0, 100.0, nr_a, compiler, Strings::alpha) / 100.0 : 0.0;
 
-        if (!keywords.empty()) {
+        if (keywords && !keywords->empty()) {
           throw Exception::UnknownNamedArgument(compiler, keywords);
         }
 

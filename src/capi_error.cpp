@@ -22,9 +22,9 @@ char* SassError::getJson(bool include_sources) const
   // Attach all stack traces
   if (traces.size() > 0) {
     JsonNode* json_traces = json_mkarray();
-    for (const StackTrace& trace : traces) {
+    for (const Traced& trace : traces) {
       JsonNode* json_trace = json_mkobject();
-      const SourceSpan& pstate(trace.pstate);
+      const SourceSpan& pstate(trace.getPstate());
       json_append_member(json_trace, "file", json_mkstring(pstate.getAbsPath()));
       json_append_member(json_trace, "line", json_mknumber((double)(pstate.getLine())));
       json_append_member(json_trace, "column", json_mknumber((double)(pstate.getColumn())));
@@ -184,28 +184,28 @@ extern "C" {
   size_t ADDCALL sass_error_get_line(const struct SassError* error)
   {
     if (error->traces.empty()) return 0;
-    return error->traces.back().pstate.getLine();
+    return error->traces.back().getPstate().getLine();
   }
 
   // Getter for column position where error occurred (starts from 1).
   size_t ADDCALL sass_error_get_column(const struct SassError* error)
   {
     if (error->traces.empty()) return 0;
-    return error->traces.back().pstate.getColumn();
+    return error->traces.back().getPstate().getColumn();
   }
 
   // Getter for source content referenced in line and column.
   const char* ADDCALL sass_error_get_content(const struct SassError* error)
   {
     if (error->traces.empty()) return 0;
-    return error->traces.back().pstate.getContent();
+    return error->traces.back().getPstate().getContent();
   }
 
   // Getter for path where the error occurred.
   const char* ADDCALL sass_error_get_path(const struct SassError* error)
   {
     if (error->traces.empty()) return nullptr;
-    return error->traces.back().pstate.getAbsPath();
+    return error->traces.back().getPstate().getAbsPath();
   }
 
   // Getter for number of traces attached to error object.

@@ -63,9 +63,6 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\src\visitor_is_calc_safe.cpp" />
-  </ItemGroup>
   <PropertyGroup Label="Common Properties">
     <PGO>None</PGO>
     <RelType>Debug</RelType>

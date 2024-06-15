@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// No longer in use, as replaced by tessil ordered map
+/*****************************************************************************/
 #ifndef SASS_ORDERED_MAP_H
 #define SASS_ORDERED_MAP_H
 

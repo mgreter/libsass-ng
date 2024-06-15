@@ -1,12 +1,22 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// This code unit contains all shared strings (loosely organized)
+// Also all `EnvKey`s, which are normalized for e.g. map lookups.
+// Could need some clean-up (always), but really last priority.
+/*****************************************************************************/
 #include "strings.hpp"
 
 namespace Sass
 {
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   const sass::string str_empty("");
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   // For list functions
   const sass::string str_length("length");
@@ -190,22 +200,10 @@ namespace Sass
   const sass::string str_is_superselector("is-superselector");
   const sass::string str_simple_selectors("simple-selectors");
 
-
-
-
   const Units unit_rad(str_rad);
   const Units unit_deg(str_deg);
   const Units unit_percent("%");
   const Units unit_none;
-
-
-
-
-
-
-
-
-
 
   // For list functions
   const EnvKey key_length(str_length);
@@ -416,9 +414,6 @@ namespace Sass
     const sass::string $whiteness("$whiteness");
     const sass::string $blackness("$blackness");
 
-
-
-
 		const sass::string lightness("lightness");
 		const sass::string saturation("saturation");
 
@@ -447,8 +442,6 @@ namespace Sass
 		const sass::string module("module");
     const sass::string supports("supports");
     const sass::string keyframes("keyframes");
-
-
 
     const sass::string useRule("@use");
 		const sass::string forRule("@for");
@@ -507,9 +500,6 @@ namespace Sass
 
     const EnvKey whiteness(Strings::whiteness);
     const EnvKey blackness(Strings::blackness);
-
-
-
 
 		const EnvKey warnRule(Strings::warnRule);
 		const EnvKey errorRule(Strings::errorRule);

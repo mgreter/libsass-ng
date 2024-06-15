@@ -512,11 +512,13 @@ namespace Sass {
     for (auto& positional : arguments_->positional()) {
       components.emplace_back(positional->toString());
     }
-    for (auto& name : arguments_->named()) {
-      sass::sstream strm;
-      strm << name.first.norm() << ": ";
-      strm << name.second->toString();
-      components.push_back(strm.str());
+    if (arguments_->hasNamed()) {
+      for (auto& name : *arguments_->named()) {
+        sass::sstream strm;
+        strm << name.first.norm() << ": ";
+        strm << name.second->toString();
+        components.push_back(strm.str());
+      }
     }
     if (arguments_->restArg()) {
       sass::sstream strm;

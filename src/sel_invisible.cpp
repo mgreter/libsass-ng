@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "sel_invisible.hpp"
 
 #include "ast_selectors.hpp"
@@ -25,11 +28,7 @@ namespace Sass {
 
   bool IsInvisibleVisitor::visitComplexSelector(ComplexSelector* complex)
   {
-    bool asd = AnySelectorVisitor::visitComplexSelector(complex);
-    if (asd) {
-      //std::cerr << "base is invisible\n";
-    }
-    return asd ||
+    return AnySelectorVisitor::visitComplexSelector(complex) ||
       (includeBogus && complex->isBogusOtherThanLeadingCombinator());
   }
 
@@ -40,7 +39,6 @@ namespace Sass {
 
   bool IsInvisibleVisitor::visitPseudoSelector(PseudoSelector* pseudo)
   {
-    //std::cerr << "Visit Rule " << includeBogus << "\n";
     if (const auto& selector = pseudo->selector()) {
       if (pseudo->name() != "not") return selector->accept(this); 
       else return includeBogus && selector->isBogusLenient();

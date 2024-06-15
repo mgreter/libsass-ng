@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Resources">
+    <Filter Include="0-Resources">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="1-Settings">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
@@ -41,12 +45,44 @@
       <UniqueIdentifier>{4FC737F1-C735-4376-A066-2A32D752A274}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Vendor Headers">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A166-2A32DA52A2F3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Vendor Sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-C066-2A22D752A2F3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Memory Headers">
+      <UniqueIdentifier>{4FC732F1-C7A5-4376-A066-2A32DA52A2F3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Memory Sources">
+      <UniqueIdentifier>{4FC737F3-C7A5-4376-A066-2A22D752A2F3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Base Headers">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32DA52A2F3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Base Sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A22D752A2F3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
     <Filter Include="LibSass Headers">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;in;inl;inc;xsd</Extensions>
     </Filter>
     <Filter Include="LibSass Sources">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2F3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Visitor Headers">
+      <UniqueIdentifier>{4DC737F1-C7A5-4376-A066-2A32DA52A2F3}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Visitor Sources">
+      <UniqueIdentifier>{2FC737F1-C7A5-4376-A066-2A22D752A2F3}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
@@ -92,6 +128,60 @@
     </ClInclude>
     <ClInclude Include="$(LIBSASS_INCLUDES_DIR)\sass\version.h">
       <Filter>API Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\eval.hpp">
+      <Filter>API Includes</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sel_any.hpp">
+      <Filter>Visitor Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sel_bogus.hpp">
+      <Filter>Visitor Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sel_invisible.hpp">
+      <Filter>Visitor Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sel_useless.hpp">
+      <Filter>Visitor Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\expr_to_calc.hpp">
+      <Filter>Visitor Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\calculation.hpp">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\remove_placeholders.hpp">
+      <Filter>Visitor Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\replace_expressions.hpp">
+      <Filter>Visitor Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\inspect.hpp">
+      <Filter>Visitor Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\exceptions.hpp">
+      <Filter>Base Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\hashing.hpp">
+      <Filter>Base Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\logger.hpp">
+      <Filter>Base Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ordered_map.hpp">
+      <Filter>Base Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\output.hpp">
+      <Filter>Visitor Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\randomize.hpp">
+      <Filter>Base Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source.hpp">
+      <Filter>Base Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory_config.hpp">
+      <Filter>1-Settings</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -157,14 +247,65 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\capi_values.cpp">
       <Filter>CAPI Sources</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\visitor_is_calc_safe.cpp">
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\css_every.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\css_imported.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\css_invisible.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\eval_css.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\eval_modules.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sel_any.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sel_bogus.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sel_invisible.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\sel_useless.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\expr_to_calc.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\source_offset.cpp">
+      <Filter>Base Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\calculation.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\eval.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\exceptions.cpp">
+      <Filter>Base Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\logger.cpp">
+      <Filter>Base Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\output.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\expression.cpp">
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\emitter.cpp">
+      <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\environment.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast.hpp">
-      <Filter>AST Headers</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ast_css.hpp">
       <Filter>AST Headers</Filter>
     </ClInclude>
@@ -379,28 +520,28 @@
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\base64vlq.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\character.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\charcode.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\color_maps.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\constants.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\cssize.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Visitor Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\dart_helpers.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\debugger.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\emitter.hpp">
       <Filter>LibSass Headers</Filter>
@@ -408,32 +549,26 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\environment.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\exceptions.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\settings.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>1-Settings</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory_config.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Memory Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory_allocator.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Memory Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory_pool.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Memory Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\shared_ptr.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Memory Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\MurmurHash2.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Vendor Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\eval.hpp">
-      <Filter>LibSass Headers</Filter>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\MurmurHash3.hpp">
+      <Filter>Vendor Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\extender.hpp">
       <Filter>LibSass Headers</Filter>
@@ -442,7 +577,7 @@
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\file.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\import.hpp">
       <Filter>LibSass Headers</Filter>
@@ -451,97 +586,70 @@
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\strings.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\inspect.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\terminal.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\interpolation.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\logger.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\json.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\randomize.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Vendor Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\mapping.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\ordered_map.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sources.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\output.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\permutate.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\plugins.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\offset.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\remove_placeholders.hpp">
-      <Filter>LibSass Headers</Filter>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_offset.hpp">
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\scanner_string.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_map.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_state.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\source_span.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\stylesheet.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\preloader.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\units.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\unicode.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\hashing.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\visitor_css.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Visitor Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\visitor_expression.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Visitor Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\visitor_selector.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Visitor Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\visitor_statement.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Visitor Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\visitor_value.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Visitor Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\string_utils.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Base Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\callstack.hpp">
       <Filter>LibSass Headers</Filter>
@@ -552,52 +660,43 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\environment_key.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\environment_stack.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\b64\cencode.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Vendor Headers</Filter>
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\b64\encode.hpp">
-      <Filter>LibSass Headers</Filter>
+      <Filter>Vendor Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\memory_allocator.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Memory Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\modules.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\constants.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\compiler.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\color_maps.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\environment.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\file.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\import.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\string_utils.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\logger.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\strings.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\json.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Vendor Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\units.cpp">
       <Filter>LibSass Sources</Filter>
@@ -606,19 +705,13 @@
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\source.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\offset.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\eval.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\randomize.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\cssize.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Visitor Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\extender.cpp">
       <Filter>LibSass Sources</Filter>
@@ -629,56 +722,44 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\stylesheet.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\preloader.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\interpolation.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\output.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\inspect.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Visitor Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\terminal.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\emitter.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\scanner_string.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\remove_placeholders.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Visitor Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\replace_expressions.cpp">
+      <Filter>Visitor Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\character.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\environment_stack.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\source_map.cpp">
       <Filter>LibSass Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\source_state.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\source_span.cpp">
-      <Filter>LibSass Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="$(LIBSASS_SRC_DIR)\exceptions.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\shared_ptr.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Memory Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\unicode.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Base Sources</Filter>
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\cencode.cpp">
-      <Filter>LibSass Sources</Filter>
+      <Filter>Vendor Sources</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

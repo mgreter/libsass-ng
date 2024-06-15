@@ -5,6 +5,7 @@
 #include "source_span.hpp"
 #include "ast_def_macros.hpp"
 
+/////////////////////////////////////////////////////////////////////////
 // During runtime we need stack traces in order to produce meaningful
 // error messages. Since the error catching might be done outside of
 // the main compile function, certain values might already be garbage
@@ -13,20 +14,39 @@
 // during the evaluation stage, as most of the time we would throw them
 // out right away. Therefore we only keep references during that phase
 // (BackTrace), and copy them once an actual error is thrown (StackTrace).
+/////////////////////////////////////////////////////////////////////////
 
 namespace Sass {
 
-  class Traced {
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  class Traced
+  {
   public:
+
     CAPI_WRAPPER(Traced, SassTrace);
+
     virtual const SourceSpan& getPstate() const = 0;
     virtual const sass::string& getName() const = 0;
     virtual bool isFn() const = 0;
+
+    bool operator==(const Traced& other) const
+    {
+      return getPstate() == other.getPstate()
+        && getName() == other.getName()
+        && isFn() == other.isFn();
+    }
+
     virtual ~Traced() {};
   };
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // Holding actual copies
-  class StackTrace : public Traced {
+  class StackTrace : public Traced
+  {
 
   public:
 
@@ -51,19 +71,18 @@ namespace Sass {
       return name;
     }
 
-    bool operator==(const StackTrace& other) const {
-      return pstate == other.pstate &&
-        name == other.name && fn == other.fn;
-    }
-
     bool isFn() const override final {
       return fn;
     }
 
   };
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // Holding only references
-  class BackTrace : public Traced {
+  class BackTrace : public Traced
+  {
 
   public:
 
@@ -101,10 +120,16 @@ namespace Sass {
 
   };
 
-  // Some related and often used aliases
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Some related typedef aliases
   typedef sass::vector<Traced> Traces;
   typedef sass::vector<BackTrace> BackTraces;
   typedef sass::vector<StackTrace> StackTraces;
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }
 

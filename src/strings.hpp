@@ -1,6 +1,10 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// This code unit contains all shared strings (loosely organized)
+// Also all `EnvKey`s, which are normalized for e.g. map lookups.
+// Could need some clean-up (always), but really last priority.
+/*****************************************************************************/
 #ifndef SASS_STRINGS_HPP
 #define SASS_STRINGS_HPP
 
@@ -11,9 +15,13 @@
 // Include normalized keys
 #include "environment_key.hpp"
 
+// We also declare some units
 #include "units.hpp"
 
 namespace Sass {
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   extern const sass::string str_empty;
 
@@ -387,7 +395,10 @@ namespace Sass {
 
 
 
-  namespace Strings {
+  /////////////////////////////////////////////////////////////////////////
+  namespace Strings
+  /////////////////////////////////////////////////////////////////////////
+  {
 
     extern const sass::string empty;
 
@@ -499,7 +510,10 @@ namespace Sass {
   }
 
  
-  namespace Keys {
+  /////////////////////////////////////////////////////////////////////////
+  namespace Keys
+  /////////////////////////////////////////////////////////////////////////
+  {
 
 
 
@@ -519,7 +533,9 @@ namespace Sass {
 
   }
 
-}
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
+}
 
 #endif

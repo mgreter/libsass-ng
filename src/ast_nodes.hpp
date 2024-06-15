@@ -123,8 +123,6 @@ namespace Sass {
     ItplString(const SourceSpan& pstate, const sass::string& text);
     Type getType() const override final { return LiteralInterpolant; }
 
-    sass::string toString() const;
-
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ItplString);
   };

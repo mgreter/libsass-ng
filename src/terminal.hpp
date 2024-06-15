@@ -1,6 +1,11 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// Helper functions to handle output to terminals (win/*nix).
+// Trying to support a subset of possibilites in a portable way.
+// Internally LibSass uses standard unix terminal escape codes.
+// This code converts this as good as possible to other system.
+/*****************************************************************************/
 #ifndef SASS_TERMINAL_HPP
 #define SASS_TERMINAL_HPP
 
@@ -22,6 +27,9 @@
 // Its main purpose is to let us print stuff with colors.
 namespace Terminal {
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // Import constant terminal color definition
   using namespace Sass::Constants::Terminal;
 
@@ -39,12 +47,19 @@ namespace Terminal {
   // Check that we print to a terminal with color support
   bool hasColorSupport(bool error = false);
 
+  // Count number of printable bytes/characters
+  size_t count_printable(const char* string);
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // This function is able to print a line with colors
   // It translates the ANSI terminal codes to windows
   void print(const char* output, bool error = false);
 
-  // Count number of printable bytes/characters
-  size_t count_printable(const char* string);
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }
 

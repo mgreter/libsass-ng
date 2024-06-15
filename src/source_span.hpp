@@ -12,7 +12,9 @@
 
 namespace Sass {
 
-  // ParseState is now SourceSpan
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   class SourceSpan : public SourceState
   {
 
@@ -38,8 +40,13 @@ namespace Sass {
     // Create span between two ast-node source-spans
     static SourceSpan delta(AstNode* lhs, AstNode* rhs);
 
-    // Create span from start with given length
+    // Create new span from start to given length
+    // Assumes that there are no linefeeds within
     SourceSpan first(uint32_t length) const;
+
+    // Either return path relative to cwd if path is
+    // inside cwd, otherwise return absolute path.
+    sass::string getDebugPath() const;
 
     bool operator==(const SourceSpan& rhs) const;
 
@@ -49,16 +56,19 @@ namespace Sass {
 
   };
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   struct StringToken {
     sass::string str;
     SourceSpan pstate;
-
     operator sass::string&() { return str; }
     operator const sass::string& () { return str; }
     operator SourceSpan&() { return pstate; }
-
-
   };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 } // namespace Sass
 

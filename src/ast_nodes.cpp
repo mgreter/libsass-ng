@@ -48,11 +48,6 @@ namespace Sass {
     text_(text)
   {}
 
-  sass::string ItplString::toString() const
-  {
-    return text_;
-  }
-
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
 
@@ -852,7 +847,8 @@ namespace Sass {
     }
     else if (const CssMediaRule* value = dynamic_cast<const CssMediaRule*>(this)) {
       sass::string txt;
-      for (const CssMediaQuery* query : value->queries()) {
+      if (value->queries() == nullptr) return txt;
+      for (const CssMediaQuery* query : *value->queries()) {
         for (const auto& f : query->features()) {
           txt += f + ", ";
         }

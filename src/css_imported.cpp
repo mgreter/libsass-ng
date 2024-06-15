@@ -74,7 +74,7 @@ namespace Sass {
     else {
       bool bubbleQuery = true;
       CssMediaQueryVector result; // not required, remove
-      CssMediaQueryVectorObj merged = eval.mergeMediaQueries(eval.mediaQueries, css->queries2(), result, bubbleQuery);
+      CssMediaQueryVectorObj merged = eval.mergeMediaQueries(eval.mediaQueries, css->queries(), result, bubbleQuery);
       if (merged == nullptr || merged->empty()) { eval._addChild(css, SkipStyleRules); }
       else { eval._addChild(css, SkipStyleAndMediaRules); }
     }

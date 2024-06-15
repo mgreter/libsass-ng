@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// Algorithm helpers fomr some dart-sass implementations
+/*****************************************************************************/
 #ifndef SASS_PERMUTATE_HPP
 #define SASS_PERMUTATE_HPP
 
@@ -12,6 +14,9 @@
 #include <vector>
 
 namespace Sass {
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   // Returns a list of all possible paths through the given lists.
   //
@@ -86,6 +91,9 @@ namespace Sass {
   }
   // EO permutate
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // ToDo: this variant is used in resolveParentSelectors
   // Returns a list of all possible paths through the given lists.
   //
@@ -101,7 +109,8 @@ namespace Sass {
   //  [2, 4, 5],
   //  [2, 4, 6]]
   // ```
-  // 
+  //
+  // Used by resolveParentSelectors
   template <class T>
   sass::vector<sass::vector<T>> permutateAlt(
     const sass::vector<sass::vector<T>>& in) {
@@ -124,12 +133,6 @@ namespace Sass {
     }
 
     while (true) {
-      /*
-      // std::cerr << "PERM: ";
-      for (size_t p = 0; p < L; p++)
-      { // std::cerr << state[p] << " "; }
-      // std::cerr << "\n";
-      */
       sass::vector<T> perm;
       // Create one permutation for state
       for (size_t i = 0; i < L; i += 1) {
@@ -139,7 +142,6 @@ namespace Sass {
       if (state[n] == 0) {
         // Find position of next decrement
         while (n > 0 && state[--n] == 0) {}
-
         // Check for end condition
         if (state[n] != 0) {
           // Decrease next on the left side
@@ -166,6 +168,9 @@ namespace Sass {
     return out;
   }
   // EO permutateAlt
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }
 

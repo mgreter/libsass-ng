@@ -1,7 +1,9 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
-#include "offset.hpp"
+// Base class to help holding and calculating line/column positions
+/*****************************************************************************/
+#include "source_offset.hpp"
 
 #include "charcode.hpp"
 #include "character.hpp"
@@ -52,48 +54,17 @@ namespace Sass {
     }
   }
 
-  // Append [character] to increment offset
-  void Offset::plus(uint8_t character)
-  {
-    switch (character) {
-    case $lf:
-      line += 1;
-      column = 0;
-      break;
-    case $space:
-    case $tab:
-    case $vt:
-    case $ff:
-    case $cr:
-      column += 1;
-      break;
-    default:
-      // skip over 10xxxxxx and 01xxxxxx
-      // count ASCII and initial utf8 bytes
-      if (Character::isCharacter(character)) {
-        // 64 => initial utf8 byte
-        // 128 => regular ASCII char
-        column += 1;
-      }
-      break;
-    }
-  }
-
-  // Append [text] to increment offset
-  void Offset::plus(const sass::string& text)
-  {
-    for (uint8_t character : text) {
-      plus(character);
-    }
-  }
+  /////////////////////////////////////////////////////////////////////////
+  // Static constructors via function interface
+  // Mostly to avoid ambiguity vs. regular ctors
+  /////////////////////////////////////////////////////////////////////////
 
   // Create offset with given [line] and [column]
-  // Needs static constructor to avoid ambiguity
   Offset Offset::init(size_t line, size_t column)
   {
     Offset offset;
-    offset.line = line == NPOS ? -1 : (uint32_t) line;
-    offset.column = column == NPOS ? -1 : (uint32_t) column;
+    offset.line = line == NPOS ? -1 : (uint32_t)line;
+    offset.column = column == NPOS ? -1 : (uint32_t)column;
     return offset;
   }
   // EO Offset::init
@@ -120,6 +91,49 @@ namespace Sass {
     return rv;
   }
   // EO Offset::distance
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Append [character] to increment offset
+  void Offset::plus(uint8_t character)
+  {
+    switch (character) {
+    case $lf:
+      line += 1;
+      column = 0;
+      break;
+    case $space:
+    case $tab:
+    case $vt:
+    case $ff:
+    case $cr:
+      column += 1;
+      break;
+    default:
+      // skip over 10xxxxxx and 01xxxxxx
+      // count ASCII and initial utf8 bytes
+      if (Character::isCharacter(character)) {
+        // 64 => initial utf8 byte
+        // 128 => regular ASCII char
+        column += 1;
+      }
+      break;
+    }
+  }
+  // EO Offset::plus
+
+  // Append [text] to increment offset
+  void Offset::plus(const sass::string& text)
+  {
+    for (uint8_t character : text) {
+      plus(character);
+    }
+  }
+  // EO Offset::plus
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   // Implement equality operators
   bool Offset::operator== (const Offset& rhs) const
@@ -153,6 +167,7 @@ namespace Sass {
   }
   // EO Offset::operator+
 
+
   // Implement multiply operator (returns new Offset)
   Offset Offset::operator* (uint32_t mul) const
   {
@@ -166,5 +181,8 @@ namespace Sass {
     return rv;
   }
   // EO Offset::operator*
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }

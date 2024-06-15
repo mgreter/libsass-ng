@@ -302,7 +302,7 @@ namespace Sass {
         rule->finalize(compiler);
       }
       else if (compiler.hasWithConfig || rule->hasConfig) {
-        if (!SameConfig(rule, compiler.wconfig)) {
+        if (!SameConfig(rule, compiler.wconfig99)) {
           throw Exception::ParserException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -333,7 +333,7 @@ namespace Sass {
         rule->finalize(compiler);
       }
       else if (rule->hasConfig) {
-        if (!SameConfig(rule, compiler.wconfig)) {
+        if (!SameConfig(rule, compiler.wconfig99)) {
           throw Exception::ParserException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -446,7 +446,7 @@ namespace Sass {
       return;
     }
 
-    WithConfig configs(compiler.wconfig,
+    WithConfig configs(wconfig,
       toWithConfig(withMap), hasWith);
     RAII_PTR(WithConfig, wconfig, &configs);
 

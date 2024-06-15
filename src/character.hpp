@@ -15,7 +15,13 @@ namespace Sass {
 
   namespace Character {
 
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
     using namespace Charcode;
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
     // The difference between upper- and lowercase ASCII letters.
     // `0b100000` can be bitwise-ORed with uppercase ASCII letters
@@ -30,6 +36,9 @@ namespace Sass {
     extern const std::bitset<256> tblDigit;
     extern const std::bitset<256> tblAlphanumeric;
     extern const std::bitset<256> tblHex;
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
     // skip over 10xxxxxx and 01xxxxxx
     // count ASCII and initial utf8 bytes
@@ -60,6 +69,9 @@ namespace Sass {
     // bool isUtf8HighSurrogate(uint16_t character) {
     //   return character >= 0xD800 && character <= 0xDBFF;
     // }
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
     // Returns whether [character] is an ASCII newline.
     inline bool isNewline(uint8_t character) {
@@ -201,8 +213,12 @@ namespace Sass {
       }
     }
 
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
     // Returns [character], converted to upper-
     // case if it's an ASCII lowercase letter.
+    // ToDo: duplicate in StringUtils (who's faster)!?
     inline uint8_t toUpperCase(uint8_t character)
     {
       return (character >= $a && character <= $z)
@@ -211,6 +227,7 @@ namespace Sass {
 
     // Returns [character], converted to lower-
     // case if it's an ASCII uppercase letter.
+    // ToDo: duplicate in StringUtils (who's faster)!?
     inline uint8_t toLowerCase(uint8_t character)
     {
       return (character >= $A && character <= $Z)
@@ -218,6 +235,7 @@ namespace Sass {
     }
 
     // Returns whether [character1] and [character2] are the same, modulo ASCII case.
+    // ToDo: duplicate in StringUtils (who's faster)!?
     inline bool characterEqualsIgnoreCase(uint8_t character1, uint8_t character2)
     {
       if (character1 == character2) return true;
@@ -233,11 +251,15 @@ namespace Sass {
 
     // Like [characterEqualsIgnoreCase], but optimized for the
     // fact that [letter] is known to be a lowercase ASCII letter.
+    // ToDo: duplicate in StringUtils (who's faster)!?
     inline bool equalsLetterIgnoreCase(uint8_t letter, uint8_t actual)
     {
       // assert(letter >= $a && letter <= $z);
       return (actual | asciiCaseBit) == letter;
     }
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
   }
 

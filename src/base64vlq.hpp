@@ -1,20 +1,29 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
+// Small helper to create VLQ encoding for source maps
+/*****************************************************************************/
 #ifndef SASS_BASE64VLQ_H
 #define SASS_BASE64VLQ_H
 
 #include <string>
-#include "memory.hpp"
 
 namespace Sass {
 
   class Base64VLQ {
 
-    const char* CHARACTERS =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
+    const char* CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     const int VLQ_BASE_SHIFT = 5;
     const int VLQ_BASE = 1 << VLQ_BASE_SHIFT;
     const int VLQ_BASE_MASK = VLQ_BASE - 1;
     const int VLQ_CONTINUATION_BIT = VLQ_BASE;
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
   public:
 
@@ -33,6 +42,9 @@ namespace Sass {
 
     }
 
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
   private:
 
     inline char base64_encode(const int number) const
@@ -47,6 +59,9 @@ namespace Sass {
     // {
     //   return (number < 0) ? ((-number) << 1) + 1 : (number << 1) + 0;
     // }
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
   };
 

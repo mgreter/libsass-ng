@@ -18,14 +18,14 @@ namespace Sass {
     /// Whether to consider selectors with bogus combinators invisible.
     bool includeBogus;
 
-  public:
-
-    IsInvisibleVisitor(bool includeBogus);
-
     virtual bool visitSelectorList(SelectorList* list) override final;
     virtual bool visitComplexSelector(ComplexSelector* complex) override;
     virtual bool visitPlaceholderSelector(PlaceholderSelector* placeholder) override final;
     virtual bool visitPseudoSelector(PseudoSelector* pseudo) override;
+
+  public:
+
+    IsInvisibleVisitor(bool includeBogus);
 
   };
 

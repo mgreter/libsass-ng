@@ -1,6 +1,11 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// Helper functions to handle output to terminals (win/*nix).
+// Trying to support a subset of possibilites in a portable way.
+// Internally LibSass uses standard unix terminal escape codes.
+// This code converts this as good as possible to other system.
+/*****************************************************************************/
 #include "terminal.hpp"
 
 #ifndef _WIN32
@@ -12,9 +17,10 @@
 #include <termios.h>
 #endif
 
-// Minimal terminal abstraction for cross compatibility.
-// Its main purpose is to let us print stuff with colors.
 namespace Terminal {
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   // Query number of available console columns
   // Useful to shorten our output to fit nicely
@@ -88,6 +94,31 @@ namespace Terminal {
     #endif
   }
   // EO hasColorSupport
+
+  // Count number of printable bytes/characters
+  size_t count_printable(const char* string)
+  {
+    size_t count = 0;
+    while (string && *string) {
+      if (string[0] == '\x1b' && string[1] == '[') {
+        while (*string != 0 && *string != 'm') {
+          string++;
+        }
+        string++;
+      }
+      else {
+        string += 1;
+        count += 1;
+      }
+    }
+    return count;
+  }
+  // EO count_printable
+
+  /////////////////////////////////////////////////////////////////////////
+  // Minimal terminal abstraction for cross compatibility.
+  // Its main purpose is to let us print stuff with colors.
+  /////////////////////////////////////////////////////////////////////////
 
   // This function is able to print a line with colors
   // It translates the ANSI terminal codes to windows
@@ -220,25 +251,8 @@ namespace Terminal {
   }
   // EO print
 
-  // Count number of printable bytes/characters
-  size_t count_printable(const char* string)
-  {
-    size_t count = 0;
-    while (string && *string) {
-      if (string[0] == '\x1b' && string[1] == '[') {
-        while (*string != 0 && *string != 'm') {
-          string++;
-        }
-        string++;
-      }
-      else {
-        string += 1;
-        count += 1;
-      }
-    }
-    return count;
-  }
-  // EO count_printable
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   // Code for color testing rainbow for debugging
   // 
@@ -267,5 +281,7 @@ namespace Terminal {
   // stream << getopt->compiler.getTerm(Terminal::bg_bold_magenta) << "bg_bold_magenta" << getopt->compiler.getTerm(Terminal::reset) << "\n";
   // stream << getopt->compiler.getTerm(Terminal::bg_bold_cyan) << "bg_bold_cyan" << getopt->compiler.getTerm(Terminal::reset) << "\n";
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
 }

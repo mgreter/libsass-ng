@@ -14,24 +14,21 @@
 
 namespace Sass {
 
-  // parsed stylesheet from loaded resource
-  // this should be a `Module` for sass 4.0
+  // Parsed stylesheet from loaded resource
+  // Not yet evaluated or anything, just parsed
   class Stylesheet final : public AstNode,
     public Vectorized<Statement>,
     public Module
   {
   public:
 
-    // sass::vector<Stylesheet*> upstreams;
-
     // Import object through which this module was loaded.
     // It also has the input type (css vs sass) attached
-    ImportObj import;
+    ImportObj import; // ToDo: maybe just need url?
 
     Stylesheet(const SourceSpan& pstate, size_t reserve = 0);
 
     Stylesheet(const SourceSpan& pstate, StatementVector&& vec);
-
 
   };
 

@@ -1,3 +1,6 @@
+/*****************************************************************************/
+/* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
+/*****************************************************************************/
 #include "css_invisible.hpp"
 
 #include "ast_css.hpp"
@@ -28,7 +31,6 @@ namespace Sass {
 
   bool IsCssInvisibleVisitor::visitCssStyleRule(CssStyleRule* rule)
   {
-    //std::cerr << "visit css style rule " << includeBogus << "\n";
     if (includeBogus) {
       if (rule->selector()->isInvisible()) {
         return true;
@@ -36,11 +38,20 @@ namespace Sass {
     }
     else {
       if (rule->selector()->isInvisibleOtherThanBogusCombinators()) {
-        //std::cerr << "has bogus 2\n";
         return true;
       }
     }
     return EveryCssVisitor::visitCssStyleRule(rule);
+  }
+
+  bool IsCssInvisibleVisitor::visitCssDeclaration(CssDeclaration* css)
+  {
+    return false;
+  }
+
+  bool IsCssInvisibleVisitor::visitCssImport(CssImport* css)
+  {
+    return false;
   }
 
   /////////////////////////////////////////////////////////////////////////

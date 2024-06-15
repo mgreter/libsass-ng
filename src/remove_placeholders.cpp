@@ -19,8 +19,6 @@ namespace Sass {
     for (size_t i = 0, L = compound->size(); i < L; ++i) {
       if (compound->get(i)) remove_placeholders(compound->get(i));
     }
-    // listEraseItemIf(compound->elements(), listIsInvisible<SimpleSelector>);
-    // listEraseItemIf(compound->elements(), listIsEmpty<SimpleSelector>);
   }
 
   void RemovePlaceholders::remove_placeholders(ComplexSelector* complex)
@@ -35,10 +33,6 @@ namespace Sass {
       }
     }
     complex->eraseIf(listIsEmpty<CplxSelComponent>);
-    // ToDo: describe what this means
-    //if (complex->hasInvisible()) {
-    //  complex->clear(); // remove all
-    //}
   }
 
   void RemovePlaceholders::remove_placeholders(SelectorList* sl)

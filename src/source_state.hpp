@@ -9,7 +9,7 @@
 #include "capi_sass.hpp"
 
 #include "ast_fwd_decl.hpp"
-#include "offset.hpp"
+#include "source_offset.hpp"
 #include "source.hpp"
 
 namespace Sass
@@ -59,16 +59,24 @@ namespace Sass
 			return position.line + 1;
 		}
 
-		// Return line as human readable
+		// Return column as human readable
 		// Starting from one instead of zero
 		uint32_t getColumn() const
 		{
 			return position.column + 1;
 		}
 
-		// Either return path relative to cwd if path is
-		// inside cwd, otherwise return absolute path.
-		sass::string getDebugPath() const;
+    // Return line as raw value
+    uint32_t getRawLine() const
+    {
+      return position.line;
+    }
+
+    // Return column as raw value
+    uint32_t getRawColumn() const
+    {
+      return position.column;
+    }
 
   };
 

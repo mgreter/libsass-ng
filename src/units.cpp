@@ -461,30 +461,11 @@ namespace Sass {
         }
       }
     }
-    /*
-
-    if (stringified.empty()) {
-      size_t iL = numerators.size();
-      size_t nL = denominators.size();
-      if (iL > 0) {
-        stringified += numerators[0];
-      }
-      for (size_t i = 1; i < iL; i += 1) {
-        stringified += " * 1";
-        stringified += numerators[i];
-      }
-      for (size_t n = 0; n < nL; n += 1) {
-        stringified += " / 1";
-        stringified += denominators[n];
-      }
-    }
-
-    */
     return stringified;
   }
   // EO unit
 
-    // Convert units to string
+  // Convert units to string
   const sass::string& Units::unit2() const
   {
     if (stringified.empty()) {
@@ -506,6 +487,7 @@ namespace Sass {
     return stringified;
   }
   // EO unit
+
   // Returns true if we only have given numerator
   bool Units::isOnlyOfUnit(sass::string unit) const
   {

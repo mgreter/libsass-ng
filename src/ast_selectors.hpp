@@ -10,6 +10,7 @@
 
 #include "ast_nodes.hpp"
 #include "constants.hpp"
+#include "character.hpp"
 #include "visitor_selector.hpp"
 
 namespace Sass {

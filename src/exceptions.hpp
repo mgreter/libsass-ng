@@ -30,7 +30,7 @@ namespace Sass {
     const sass::string& postfix = {},
     const uint8_t quote = 0);
 
-  StringVector getKeyVector(const ValueFlatMap& names);
+  StringVector getKeyVector(const ValueFlatMap* names);
 
   sass::string pluralize(const sass::string& singular, size_t size, const sass::string& plural = "");
 
@@ -242,20 +242,20 @@ namespace Sass {
     class TooFewArguments : public RuntimeException {
     public:
       TooFewArguments(BackTraces traces, size_t given, size_t expected);
-      TooFewArguments(BackTraces traces, const ExpressionFlatMap& given, const Sass::EnvKeySet& expected);
-      TooFewArguments(BackTraces traces, const ValueFlatMap& superfluous);
+      TooFewArguments(BackTraces traces, const ExpressionFlatMap* given, const Sass::EnvKeySet& expected);
+      TooFewArguments(BackTraces traces, const ValueFlatMap* superfluous);
     };
 
     class DuplicateKeyArgument : public RuntimeException {
     public:
-      DuplicateKeyArgument(BackTraces traces, const ValueFlatMap& superfluous);
+      DuplicateKeyArgument(BackTraces traces, const ValueFlatMap* superfluous);
     };
 
     class TooManyArguments : public RuntimeException {
       public:
         TooManyArguments(BackTraces traces, size_t given, size_t expected);
-        TooManyArguments(BackTraces traces, const ExpressionFlatMap& given, const Sass::EnvKeySet& expected);
-        TooManyArguments(BackTraces traces, const ValueFlatMap& superfluous);
+        TooManyArguments(BackTraces traces, const ExpressionFlatMap* given, const Sass::EnvKeySet& expected);
+        TooManyArguments(BackTraces traces, const ValueFlatMap* superfluous);
     };
 
     class NoAngleArgument : public RuntimeException {
@@ -281,7 +281,7 @@ namespace Sass {
 
     class UnknownNamedArgument : public RuntimeException {
     public:
-      UnknownNamedArgument(BackTraces traces, ValueFlatMap names);
+      UnknownNamedArgument(BackTraces traces, ValueFlatMap* names);
     };
 
     class MixedParamGroups : public RuntimeException {
