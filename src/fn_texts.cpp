@@ -10,8 +10,12 @@
 #include "ast_values.hpp"
 
 #ifdef __MINGW32__
-#include "windows.h"
-#include "wincrypt.h"
+# ifndef NOMINMAX
+#  define NOMINMAX
+# endif
+# define WIN32_LEAN_AND_MEAN
+# include "windows.h"
+# include "wincrypt.h"
 #endif
 
 namespace Sass {
@@ -126,9 +130,9 @@ namespace Sass {
 
       static BUILT_IN_FN(slice)
       {
-        String* string = arguments[0]->assertString(compiler, "string");
-        Number* beg = arguments[1]->assertNumber(compiler, "start-at");
-        Number* end = arguments[2]->assertNumber(compiler, "end-at");
+        const String* string = arguments[0]->assertString(compiler, "string");
+        const Number* beg = arguments[1]->assertNumber(compiler, "start-at");
+        const Number* end = arguments[2]->assertNumber(compiler, "end-at");
         size_t len = Unicode::codePointCount(string->value());
         beg = beg->assertUnitless(compiler, "start-at");
         end = end->assertUnitless(compiler, "end-at");

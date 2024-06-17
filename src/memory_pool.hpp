@@ -8,6 +8,7 @@
 #include <string>
 #include <climits>
 #include <algorithm>
+#include <iostream>
 
 #include "memory_config.hpp"
 
@@ -51,11 +52,15 @@ namespace Sass {
   // per thread. This can be achieved by using thread local PODs.
   // Simply create a pool on the first allocation and dispose
   // it once all allocations have been returned. E.g. by using:
-  // static thread_local size_t allocations;
-  // static thread_local MemoryPool* pool;
+  // static THREAD_LOCAL(MemoryPool*) pool = nullptr;
+  // static THREAD_LOCAL(size_t) allocations = 0;
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+
+  static bool poolDone = false;
+
+  static bool isPoolDone() { return poolDone; }
 
   class MemoryPool {
 
@@ -64,7 +69,7 @@ namespace Sass {
 
     // Position into the arena
     size_t offset = std::string::npos;
-
+    
     // A list of full arenas
     std::vector<void*> arenas;
 
@@ -93,12 +98,15 @@ namespace Sass {
 
     // Destructor
     ~MemoryPool() {
+      std::cerr << "destructr arenas " << arenas.size() << "\n";
       // Delete full arenas
       for (auto area : arenas) {
-        free(area);
+        if (&area) free(area);
       }
+      std::cerr << "destructr pool\n";
       // Delete current arena
-      free(arena);
+      if (&arena) free(arena);
+      std::cerr << "finish\n";
     }
 
     // Allocate a slice of the memory pool
@@ -109,7 +117,7 @@ namespace Sass {
       size = alignMemAddr(
         // Make sure we have enough space for us to
         // create the pointer to the free list later
-        std::max(sizeof(void*), size)
+        (sizeof(void*) > size ? sizeof(void*) : size)
         // and the size needed for our book-keeping
         + SassAllocatorBookSize);
 

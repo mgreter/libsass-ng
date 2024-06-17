@@ -20,6 +20,7 @@
 
 #include "character.hpp"
 #include "calculation.hpp"
+#include "calc_names.hpp"
 #include <limits>
 
 #include "environment.hpp"
@@ -32,11 +33,9 @@ namespace Sass {
   Eval::Eval(Compiler& compiler, Logger& logger, bool plainCss) :
     logger(logger),
     compiler(compiler),
-    traces(logger),
     wconfig(compiler.wconfig99),
     plainCss(plainCss)
   {
-    mediaStack.push_back({});
     bool_true = SASS_MEMORY_NEW(Boolean, SourceSpan::internal("[TRUE]"), true);
     bool_false = SASS_MEMORY_NEW(Boolean, SourceSpan::internal("[FALSE]"), false);
   }
@@ -483,7 +482,7 @@ namespace Sass {
     ValueVector& positional(results.positional());
 
     // Verify that the passed arguments are valid for this function
-    prototype->verify(positional.size(), named, pstate, traces);
+    prototype->verify(positional.size(), named, pstate, logger);
 
     // Process all prototype items which are not positional
     for (size_t i = positional.size(); i < parameters.size(); i++) {
@@ -574,7 +573,7 @@ namespace Sass {
         name.orig() + ": " + err->message());
       sass_delete_value(c_args);
       sass_delete_value(c_val);
-      throw Exception::ParserException(traces, message);
+      throw Exception::ParserException(logger, message);
     }
     // This will simply invoke the warning handler
     // ToDo: we should have another way to call this
@@ -705,8 +704,6 @@ namespace Sass {
     // Get some items from passed parameters
     ValueVector& positional(results.positional());
 
-    size_t qwe = arguments->size();
-
     // Collect positional args by evaluating input arguments
     for (const auto& arg : arguments->positional())
     {
@@ -784,7 +781,7 @@ namespace Sass {
     }
 
     CallStackFrame csf(logger, keywordRest->pstate());
-    throw Exception::RuntimeException(traces,
+    throw Exception::RuntimeException(logger,
       "Variable keyword arguments must be a map (was $keywordRest).");
 
   }
@@ -883,12 +880,11 @@ namespace Sass {
   /// If [trim] is `true`, removes whitespace around the result.
   /// If [warnForColor] is `true`, this will emit a warning for
   /// any named color values passed into the interpolation.
-  CssString* Eval::interpolationToCssString(InterpolationObj interpolation,
+  sass::string Eval::interpolationToCssString(InterpolationObj interpolation,
     bool warnForColor, bool trim)
   {
-    if (interpolation.isNull()) return nullptr;
-    sass::string result = acceptInterpolation(interpolation, warnForColor, trim);
-    return SASS_MEMORY_NEW(CssString, interpolation->pstate(), std::move(result));
+    if (interpolation.isNull()) return str_empty;
+    return acceptInterpolation(interpolation, warnForColor, trim);
   }
 
   /// Evaluates [interpolation] and parses the result into a [SelectorList].
@@ -1047,8 +1043,8 @@ namespace Sass {
       key = kvlist[i]->accept(this);
       // Check for key duplication
       if (map->has(key)) {
-        traces.emplace_back(kvlist[i]->pstate());
-        throw Exception::DuplicateKeyError(traces, *map, *key);
+        logger.callStack.emplace_back(kvlist[i]->pstate());
+        throw Exception::DuplicateKeyError(logger, *map, *key);
       }
       // Second insert the evaluated value for key
       map->insertOrSet(key, kvlist[i + 1]->accept(this));
@@ -1071,9 +1067,12 @@ namespace Sass {
         strings.emplace_back(lit->text());
       }
       else {
-        const Value* result = item->isaValue();
+        ValueObj result;
         if (Expression* ex = item->isaExpression()) {
           result = ex->accept(this);
+        }
+        else {
+          result = item->isaValue();
         }
         if (const String* lit = result->isaString()) {
           strings.emplace_back(lit->value());
@@ -1085,7 +1084,7 @@ namespace Sass {
     }
 
     return SASS_MEMORY_NEW(String, node->pstate(),
-      std::move(StringUtils::join(strings, "")), node->hasQuotes());
+      StringUtils::join(strings, ""), node->hasQuotes());
   }
   // EO visitStringExpression
 
@@ -1256,7 +1255,7 @@ namespace Sass {
     bool isPlainCss = imp->syntax == SASS_IMPORT_CSS;
 
     if (isPlainCss) {
-      CallStackFrame frame(traces, ex->pstate());
+      CallStackFrame frame(logger, ex->pstate());
       throw Exception::RuntimeException(logger,
         "Parentheses aren't allowed in plain CSS.");
     }
@@ -1281,13 +1280,13 @@ namespace Sass {
   void Eval::renderArgumentInvocation(sass::string& strm, CallableArguments* args)
   {
     if (args->hasNamed()) {
-      CallStackFrame frame(traces,
+      CallStackFrame frame(logger,
         args->pstate());
       throw Exception::RuntimeException(logger,
         "Plain CSS functions don't support keyword arguments.");
     }
     if (args->kwdRest() != nullptr) {
-      CallStackFrame frame(traces,
+      CallStackFrame frame(logger,
         args->kwdRest()->pstate());
       throw Exception::RuntimeException(logger,
         "Plain CSS functions don't support keyword arguments.");
@@ -1400,15 +1399,15 @@ namespace Sass {
 
     // If we reach this point we have an error
     // Mixin wasn't found and couldn't be executed
-    CallStackFrame frame(traces, variable->pstate());
+    CallStackFrame frame(logger, variable->pstate());
 
     // Check if variable was requested from a module and if that module actually exists
     if (variable->ns().empty() || compiler.envstack.back()->hasNameSpace(variable->ns())) {
-      throw Exception::RuntimeException(traces, "Undefined variable.");
+      throw Exception::RuntimeException(logger, "Undefined variable.");
     }
 
     // Otherwise the module simply wasn't imported
-    throw Exception::ModuleUnknown(traces, variable->ns());
+    throw Exception::ModuleUnknown(logger, variable->ns());
 
   }
   // EO visitVariableExpression
@@ -1470,38 +1469,30 @@ namespace Sass {
         }
       }
 
-      CallStackFrame frame(traces, function->pstate());
-      throw Exception::RuntimeException(traces, "Undefined function.");
+      CallStackFrame frame(logger, function->pstate());
+      throw Exception::RuntimeException(logger, "Undefined function.");
     }
 
     if (!callable || (callable->isInternal() && function->ns().empty())) {
 
-      sass::string name(StringUtils::toLowerCase(fname));
+      Calc::CFN fn = Calc::Parse(fname);
 
       // Check for potential css replacement
       if (!args->hasNamed() && args->restArg().isNull())
       {
-        if (name == str_min || name == str_max
-          || name == str_round || name == str_abs)
-        {
-          // Check that every argument is safe
+        if (Calc::hasCssReplacement(fn)) {
           if (std::all_of(list.begin(), list.end(),
             [&](const ExpressionObj& expression) {
               return expression->isCalcSafe(); }))
           {
-            return visitCalcuation(name, function, true);
+            return visitCalcuation(fn, function, true);
           }
+
         }
       }
 
-      if (name == str_calc || name == str_clamp || name == str_hypot
-        || name == str_sin || name == str_cos || name == str_tan
-        || name == str_asin || name == str_acos || name == str_atan
-        || name == str_sqrt || name == str_exp || name == str_sign
-        || name == str_mod || name == str_rem || name == str_atan2
-        || name == str_pow || name == str_log)
-      {
-        return visitCalcuation(name, function, false);
+      if (Calc::hasCalculationVisitor(fn)) {
+        return visitCalcuation(fn, function, false);
       }
 
       if (!callable)
@@ -1535,7 +1526,7 @@ namespace Sass {
     if (callable)
     {
       RAII_FLAG(inFunction, true);
-      CallStackFrame frame(traces, function->pstate(), true);
+      CallStackFrame frame(logger, function->pstate(), true);
       return callable->execute(*this,
         args, function->pstate());
     }
@@ -1545,9 +1536,9 @@ namespace Sass {
 
     // If we reach this point we have an error
     // Mixin wasn't found and couldn't be executed
-    CallStackFrame frame(traces, function->pstate());
+    CallStackFrame frame(logger, function->pstate());
     // Otherwise the module simply wasn't imported
-    throw Exception::ModuleUnknown(traces, function->ns());
+    throw Exception::ModuleUnknown(logger, function->ns());
   }
   // EO visitFunctionExpression
 
@@ -1564,16 +1555,16 @@ namespace Sass {
       if (auto op = currentNode->isaUnaryOpExpression()) {
         // auto foo = op->optype();
         if ((op->optype() != UnaryOpType::PLUS) && (op->optype() != UnaryOpType::MINUS)) continue;
-        throw Exception::OpNotCalcSafe(traces, op);
+        throw Exception::OpNotCalcSafe(logger, op);
       }
       else if (auto nr = currentNode->isaNumberExpression()) {
         if (nr->value()->value() >= 0) {
-          throw Exception::MissingMathOp(traces, previousNode, currentNode);
+          throw Exception::MissingMathOp(logger, previousNode, currentNode);
         }
-        throw Exception::OpNotCalcSafe(traces, nr);
+        throw Exception::OpNotCalcSafe(logger, nr);
       }
 
-      throw Exception::MissingMathOp(traces, previousNode, currentNode);
+      throw Exception::MissingMathOp(logger, previousNode, currentNode);
 
 
       // `calc(1 -2)` parses as a space-separated list whose second value is a
@@ -1616,10 +1607,10 @@ namespace Sass {
         else { return SASS_MEMORY_NEW(String, inner->pstate(), acceptInterpolation(inner->text(), false), false); }
       }
       else {
-        CallStackFrame frame(traces, inner->pstate());
+        CallStackFrame frame(logger, inner->pstate());
         throw Exception::SassScriptException(
           "This expression can't be used in a calculation.",
-          traces, inner->pstate());
+          logger, inner->pstate());
       }
     }
     else if (node->isaNumberExpression()
@@ -1645,12 +1636,12 @@ namespace Sass {
 
       if (inner->isCalcSafeOp() == false) {
         if (inner->operand() == SassOperator::ADD)
-          throw Exception::OpNotCalcSafe(traces, inner);
+          throw Exception::OpNotCalcSafe(logger, inner);
         if (inner->operand() == SassOperator::SUB)
-          throw Exception::OpNotCalcSafe(traces, inner);
+          throw Exception::OpNotCalcSafe(logger, inner);
       }
 
-      CallStackFrame frame(traces, inner->pstate());
+      CallStackFrame frame(logger, inner->pstate());
       if (inner->operand() != ADD && inner->operand() != SUB) {
         if (inner->operand() != MUL && inner->operand() != DIV) {
           // Optimize to report span at operator
@@ -1659,11 +1650,11 @@ namespace Sass {
             compiler, inner->pstate());
         }
       }
+      // Evaluate the arguments first in case second one throws an error
       ValueObj lhs(_visitCalculationExpression(inner->left(), inLegacySassFunction));
       ValueObj rhs(_visitCalculationExpression(inner->right(), inLegacySassFunction));
-      auto rv = operateInternal(inner->pstate(), inner->operand(),
+      return Calc::operate(logger, inner->pstate(), inner->operand(),
         lhs, rhs, inLegacySassFunction, !inSupportsDeclaration);
-      return rv;
     }
     else {
       const ListExpression* list = node->isaListExpression();
@@ -1694,25 +1685,26 @@ namespace Sass {
           list->pstate(), std::move(joined));
       }
       else {
-        CallStackFrame frame(traces, node->pstate());
+        CallStackFrame frame(logger, node->pstate());
         throw Exception::SassScriptException(
           "This expression can't be used in a calculation.",
-          traces, node->pstate());
+          logger, node->pstate());
       }
     }
     return node->accept(this);
   }
 
-  void Eval::_checkCalculationArguments(const sass::string& name, FunctionExpression* node, size_t maxArgs)
+  void Eval::_checkCalculationArguments(Calc::CFN fn, FunctionExpression* node, size_t maxArgs)
   {
     if (node->arguments()->positional().empty()) {
-      CallStackFrame frame(traces, node->pstate());
-      if (name == "sin" || name == "cos" || name == "tan") {
+      CallStackFrame frame(logger, node->pstate());
+      if (Calc::isSimpleTrigonometry(fn)) {
+      // if (name == "sin" || name == "cos" || name == "tan") {
         throw Exception::SassScriptException(logger,
           node->pstate(), "Missing argument $angle.");
       }
       else if (maxArgs == 0) {
-        throw Exception::MustHaveArguments(logger, name);
+        throw Exception::MustHaveArguments(logger, Calc::ToString(fn));
       }
       else {
         throw Exception::MissingArgument(logger, "number");
@@ -1726,158 +1718,62 @@ namespace Sass {
       msg << " allowed, but " << size;
       msg << pluralize(" was", size, " were");
       msg << " passed.";
-      CallStackFrame frame(traces, node->pstate());
+      CallStackFrame frame(logger, node->pstate());
       throw Exception::SassScriptException(
         logger, node->pstate(), msg.str());
     }
 
   }
 
-  void Eval::_checkCalculationArguments(const sass::string& name, FunctionExpression* node)
+  void Eval::_checkCalculationArguments(Calc::CFN fn, FunctionExpression* node)
   {
-    if (name == "calc" || name == "sqrt" || name == "sin" || name == "cos" ||
-      name == "tan" || name == "asin" || name == "acos" || name == "atan" ||
-      name == "abs" || name == "exp" || name == "sign")
-    {
-      _checkCalculationArguments(name, node, 1);
-    }
-    else if (name == "min" || name == "max" || name == "hypot")
-    {
-      _checkCalculationArguments(name, node, 0);
-    }
-    else if (name == "pow" || name == "atan2" ||
-      name == "log" || name == "mod" || name == "rem")
-    {
-      _checkCalculationArguments(name, node, 2);
-    }
-    else if (name == "round" || name == "clamp")
-    {
-      _checkCalculationArguments(name, node, 3);
-    }
+    _checkCalculationArguments(fn, node,
+      Calc::getArgumentsLength(fn));
   }
 
   // Name is already in lowercase (original name can be found on function node)
-  Value* Eval::visitCalcuation(const sass::string& name, FunctionExpression* node, bool inLegacySassFunction)
+  Value* Eval::visitCalcuation(Calc::CFN fn, FunctionExpression* node, bool inLegacySassFunction)
   {
 
     if (node->arguments()->hasNamed()) {
-      CallStackFrame frame(traces, node->pstate());
+      CallStackFrame frame(logger, node->pstate());
       throw Exception::SassScriptException(logger, node->pstate(),
         "Keyword arguments can't be used with calculations.");
     }
     else if (node->arguments()->restArg() != nullptr) {
-      CallStackFrame frame(traces, node->pstate());
+      CallStackFrame frame(logger, node->pstate());
       throw Exception::SassScriptException(logger, node->pstate(),
         "Rest arguments can't be used with calculations.");
     }
 
-    _checkCalculationArguments(name, node);
+    _checkCalculationArguments(fn, node);
 
-    ExpressionVector args(node->arguments()->positional());
+    const ExpressionVector& args(node->arguments()->positional());
     ValueVector arguments(args.size()); // pre-init
-    std::transform(args.begin(), args.end(), arguments.begin(),
-      [&](ExpressionObj& arg) { return
-
-      _visitCalculationExpression(arg, inLegacySassFunction);
-      // arg->accept(this);
+    // Transform and apply calculation visitor
+    std::transform(args.begin(), args.end(),
+      arguments.begin(), [&](const ExpressionObj& arg) {
+        return _visitCalculationExpression(arg, inLegacySassFunction);
       });
 
     if (inSupportsDeclaration) {
+      // Must slice items to subtype
       sass::vector<AstNodeObj> inputs;
+      inputs.reserve(arguments.size());
       inputs.insert(inputs.end(),
-        arguments.begin(),
-        arguments.end());
+        std::make_move_iterator(arguments.begin()),
+        std::make_move_iterator(arguments.end()));
       return new Calculation(node->pstate(),
         node->name(), std::move(inputs));
     }
 
-    // If we reach this point we have an error
-    // Mixin wasn't found and couldn't be executed
-    // This function trace is transparent (change ctx)
-    BackTrace trace(node->pstate(), name, true);
-    CallStackFrame frame(traces, trace, false);
+    // Add logger in case of error for reporting
+    BackTrace trace(node->pstate(), Calc::ToString(fn), true);
+    CallStackFrame frame(logger, trace, false);
 
-    ValueObj result; // we may get the same value as given in argument
-
-    try {
-
-      if (name == str_sqrt) { result = Sass::Calculation32::calc_sqrt(logger, node->pstate(), arguments); }
-
-      else if (name == str_abs) { result = Sass::Calculation32::calc_abs(logger, node->pstate(), arguments); }
-      else if (name == str_exp) { result = Sass::Calculation32::calc_exp2(logger, node->pstate(), arguments); }
-      else if (name == str_sign) { result = Sass::Calculation32::calc_sign2(logger, node->pstate(), arguments); } // 2505
-
-      else if (name == str_sin) { result = Sass::Calculation32::calc_sin(logger, node->pstate(), arguments); }
-      else if (name == str_cos) { result = Sass::Calculation32::calc_cos(logger, node->pstate(), arguments); }
-      else if (name == str_tan) { result = Sass::Calculation32::calc_tan(logger, node->pstate(), arguments); }
-      else if (name == str_asin) { result = Sass::Calculation32::calc_asin(logger, node->pstate(), arguments); }
-      else if (name == str_acos) { result = Sass::Calculation32::calc_acos(logger, node->pstate(), arguments); }
-      else if (name == str_atan) { result = Sass::Calculation32::calc_atan(logger, node->pstate(), arguments); }
-
-      else if (name == str_min) { result = Sass::Calculation32::calc_min(logger, node->pstate(), arguments); }
-      else if (name == str_max) { result = Sass::Calculation32::calc_max(logger, node->pstate(), arguments); }
-
-      else if (name == str_pow) { result = Sass::Calculation32::calc_pow2(logger, node->pstate(), arguments); }
-      else if (name == str_mod) { result = Sass::Calculation32::calc_mod2(logger, node->pstate(), arguments); }
-      else if (name == str_rem) { result = Sass::Calculation32::calc_rem2(logger, node->pstate(), arguments); }
-
-      else if (name == str_clamp) { result = Sass::Calculation32::calc_clamp(logger, node->pstate(), arguments); }
-      else if (name == str_hypot) { result = Sass::Calculation32::calc_hypot(logger, node->pstate(), arguments); }
-      else if (name == str_atan2) { result = Sass::Calculation32::calc_atan3(logger, node->pstate(), arguments); }
-
-      // Without any implementation 2548
-      else if (arguments.size() > 0) {
-        if (name == str_calc) { result = Sass::Calculation32::calc_fn(logger, arguments[0]); } // 2515
-        else if (name == str_sqrt) { result = Sass::Calculation32::calc_sqrt(logger, node, arguments[0]); } // 2512
-
-        else if (name == str_atan2) {
-          result = Sass::Calculation32::calc_atan2(
-            logger, node->pstate(), arguments[0], arguments.size() > 1 ? arguments[1] : nullptr);
-        }
-
-        else if (name == str_log) {
-          result = Sass::Calculation32::calc_log(
-            logger, node, arguments[0], arguments.size() > 1 ? arguments[1] : nullptr);
-        }
-
-        //else if (name == str_mod) { result = Sass::Calculation32::calc_mod(
-        //   logger, node, arguments[0], arguments.size() > 1 ? arguments[1] : nullptr); }
-        else if (name == str_rem) {
-          result = Sass::Calculation32::calc_rem(
-            logger, node, arguments[0], arguments.size() > 1 ? arguments[1] : nullptr);
-        }
-
-        else if (name == str_round) { result = Sass::Calculation32::calc_round(logger, node, arguments); }
-
-      }
-      else {
-        if (name == str_sqrt) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_sin) throw Exception::MissingArgument(logger, str_angle);
-        if (name == str_cos) throw Exception::MissingArgument(logger, str_angle);
-        if (name == str_tan) throw Exception::MissingArgument(logger, str_angle);
-        if (name == str_asin) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_acos) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_atan) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_abs) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_exp) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_sign) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_min) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_max) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_round) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_mod) throw Exception::MissingArgument(logger, str_number);
-        if (name == str_rem) throw Exception::MissingArgument(logger, str_number);
-      }
-
-    }
-    catch (Exception::UnitMismatch&) {
-      sass::vector<AstNode*> foo;
-      for (AstNode* qwe : arguments) {
-        foo.push_back(qwe);
-      }
-      _verifyCompatibleNumbers(foo, node->pstate());
-    }
-
-    return result.detach();
+    // Execute the calculation function now
+    return Sass::Calc::execute(
+      logger, node->pstate(), fn, arguments);
   }
 
   //*************************************************//
@@ -1902,7 +1798,7 @@ namespace Sass {
 
       // Sanity assertion
       if (rule == nullptr) {
-        throw Exception::RuntimeException(traces,
+        throw Exception::RuntimeException(logger,
           "Include doesn't reference a mixin!");
       }
 
@@ -2024,22 +1920,22 @@ namespace Sass {
 
     // If we reach this point we have an error
     // Mixin wasn't found and couldn't be executed
-    CallStackFrame frame(traces, include->pstate());
+    CallStackFrame frame(logger, include->pstate());
 
     if (!include->midx().isValid()) {
       // If we reach this point we have an error
       // Mixin wasn't found and couldn't be executed
-      // CallStackFrame frame(traces, include->pstate());
-      throw Exception::RuntimeException(traces, "Undefined mixin.");
+      // CallStackFrame frame(logger, include->pstate());
+      throw Exception::RuntimeException(logger, "Undefined mixin.");
     }
 
     // Check if function was requested from a module and if that module actually exists
     if (include->ns().empty() || compiler.envstack.back()->hasNameSpace(include->ns())) {
-      throw Exception::RuntimeException(traces, "Undefined mixin.");
+      throw Exception::RuntimeException(logger, "Undefined mixin.");
     }
 
     // Otherwise the module simply wasn't imported
-    throw Exception::ModuleUnknown(traces, include->ns());
+    throw Exception::ModuleUnknown(logger, include->ns());
 
   }
   // EO visitIncludeRule
@@ -2150,8 +2046,8 @@ namespace Sass {
     }
     else {
       sass::string result(message->inspect());
-      traces.push_back(BackTrace(node->pstate()));
-      throw Exception::RuntimeException(traces, result);
+      logger.callStack.push_back(BackTrace(node->pstate()));
+      throw Exception::RuntimeException(logger, result);
     }
     return nullptr;
   }
@@ -2164,12 +2060,12 @@ namespace Sass {
 
     if (!declarationName.empty()) {
       CallStackFrame frame(logger, node->pstate());
-      throw Exception::RuntimeException(traces,
+      throw Exception::RuntimeException(logger,
         "Style rules may not be used within nested declarations.");
     }
     else if (inKeyframes && current->isaCssKeyframeBlock()) {
       CallStackFrame frame(logger, node->pstate());
-      throw Exception::RuntimeException(traces,
+      throw Exception::RuntimeException(logger,
         "Style rules may not be used within keyframe blocks.");
     }
 
@@ -2194,7 +2090,7 @@ namespace Sass {
         acceptInterpolation(node->interpolation(), true, true)));
       // Invoke the keyframe parser and create a new CssKeyframeBlock
       CssKeyframeBlockObj child = SASS_MEMORY_NEW(CssKeyframeBlock, node->pstate(),
-        chroot, SASS_MEMORY_NEW(CssStringList, node->pstate(), parser.parse()));
+        chroot, parser.parse());
       // Add child to our parent
       chroot->addChildAt(child, false);
       // addChildAt(chroot, child);
@@ -2216,7 +2112,7 @@ namespace Sass {
             if (!complex->leadingCombinators().empty()) {
               const auto& first = complex->leadingCombinators().front();
               CallStackFrame frame(logger, first->pstate());
-              throw Exception::RuntimeException(traces,
+              throw Exception::RuntimeException(logger,
                 "Top-level leading combinators aren't allowed in plain CSS.");
             }
           }
@@ -2234,7 +2130,7 @@ namespace Sass {
 
       if (nest)
       {
-        slist = slist->resolveParentSelectors(original(), traces,
+        slist = slist->resolveParentSelectors(original(), logger,
           !atRootExcludingStyleRule, false);
       }
 
@@ -2248,7 +2144,7 @@ namespace Sass {
       // If previous extend rules match this selector it will
       // immediately do the extending, extend rules that occur
       // later will apply the extending to the existing ones.
-      _extensionStore->addSelector(slist, mediaStack.back());
+      _extensionStore->addSelector(slist, mediaQueries);
 
       // Find the parent we should append to (bubble up)
       CssParentNode* chroot = current; // ->bubbleThrough(true);
@@ -2359,7 +2255,7 @@ namespace Sass {
       auto index = _indexAfterImports(statements);
       sass::vector<CssNodeObj> rest;
       imports.insert(imports.end(), statements.begin(), statements.begin() + index);
-      css->append(statements.begin() + index, statements.end());
+      css->elements().insert(css->elements().end(), statements.begin() + index, statements.end());
     }
 
   }
@@ -2386,7 +2282,7 @@ namespace Sass {
     sass::vector<CssNodeObj> imports;
     auto sorted = _topologicalModules(root, mods, imports, clone);
     if (root->transitivelyContainsExtensions) _extendModules(sorted);
-    mods->prepend(imports.begin(), imports.end());
+    mods->elements().insert(mods->elements().begin(), imports.begin(), imports.end());
     return mods.detach();
   }
 
@@ -2545,8 +2441,8 @@ namespace Sass {
 
   Value* Eval::visitAtRule(AtRule* node)
   {
-    CssStringObj name = interpolationToCssString(node->name(), true, false);
-    CssStringObj value = interpolationToCssString(node->value(), true, true);
+    sass::string name(interpolationToCssString(node->name(), true, false));
+    sass::string value(interpolationToCssString(node->value(), true, true));
 
     if (node->empty()) {
       CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
@@ -2557,7 +2453,7 @@ namespace Sass {
 
     EnvScope envscope(compiler.varRoot, node->idxs);
 
-    sass::string normalized(StringUtils::unvendor(name->text()));
+    sass::string normalized(StringUtils::unvendor(name));
     bool isKeyframe = normalized == "keyframes";
     RAII_FLAG(inUnknownAtRule, !isKeyframe);
     RAII_FLAG(inKeyframes, isKeyframe);
@@ -2574,7 +2470,7 @@ namespace Sass {
 
     RAII_OBJ(CssParentNode, current, css);
 
-    if (!(!atRootExcludingStyleRule && readStyleRule != nullptr) || inKeyframes || name->text() == "font-face") {
+    if (!(!atRootExcludingStyleRule && readStyleRule != nullptr) || inKeyframes || name == "font-face") {
 
       for (const auto& child : node->elements()) {
         ValueObj val = child->accept(this);
@@ -2695,8 +2591,6 @@ namespace Sass {
 
     RAII_OBJ(CssMediaQueryVector, mediaQueries, mergedQueries);
 
-    mediaStack.emplace_back(css->queries());
-
     if (isInStyleRule()) {
       CssStyleRule* copy = SASS_MEMORY_RESECT(readStyleRule);
       css->addChildAt(copy, true);
@@ -2707,8 +2601,6 @@ namespace Sass {
         ValueObj rv = child->accept(this);
       }
     }
-
-    mediaStack.pop_back();
 
     return nullptr;
   }
@@ -2901,20 +2793,21 @@ namespace Sass {
 
     if (!isInStyleRule() && !inUnknownAtRule && !inKeyframes) {
       CallStackFrame csf(logger, node->pstate());
-      throw Exception::RuntimeException(traces,
+      throw Exception::RuntimeException(logger,
         "Declarations may only be used within style rules.");
     }
-    bool is_custom_property = node->is_custom_property();
-    if (!declarationName.empty() && is_custom_property) {
+    bool was_custom_property = node->isCustomProperty();
+    if (!declarationName.empty() && was_custom_property) {
       CallStackFrame csf(logger, node->pstate());
-      throw Exception::RuntimeException(traces,
+      throw Exception::RuntimeException(logger,
         "Declarations whose names begin with \"--\" may not be nested.");
     }
 
-    CssStringObj name = interpolationToCssString(node->name(), true, false);
+    sass::string name(interpolationToCssString(node->name(), true, false));
 
+    // Apply BEM style selector aggregation
     if (!declarationName.empty()) {
-      name->text(declarationName + "-" + name->text());
+      name = declarationName + "-" + name;
     }
 
     ValueObj cssValue;
@@ -2922,29 +2815,31 @@ namespace Sass {
       cssValue = node->value()->accept(this);
     }
 
-    // The parent to add declarations too
-
-    // If the value is an empty list, preserve it, because converting it to CSS
-    // will throw an error that we want the user to see.
-    if (cssValue != nullptr && (!cssValue->isBlank()
-      || cssValue->lengthAsList() == 0)) {
+    // If the value is an empty list, preserve it, because converting
+    // it to CSS will throw an error that we want the user to see.
+    if (cssValue != nullptr && (!cssValue->isBlank() || cssValue->lengthAsList() == 0))
+    {
+      // Only place we create css declarations!?
       current->append(SASS_MEMORY_NEW(CssDeclaration,
-        node->pstate(), name, cssValue, is_custom_property));
+        node->pstate(), name, cssValue, was_custom_property));
     }
-    else if (is_custom_property) {
+    else if (was_custom_property) {
       CallStackFrame frame(logger, node->value()->pstate());
       throw Exception::RuntimeException(logger,
         "Custom property values may not be empty.");
     }
 
     if (!node->empty()) {
-      LocalOption<sass::string> ll1(declarationName, name->text());
+      // Now produce the inner declarations
+      LocalOption<sass::string> ll1(declarationName, name);
       for (Statement* child : node->elements()) {
         ValueObj result = child->accept(this);
       }
     }
+
     return nullptr;
   }
+  // EO visitDeclaration
 
   Value* Eval::visitLoudComment(LoudComment* c)
   {
@@ -3044,7 +2939,7 @@ namespace Sass {
     //std::cerr << "Visit extend\n";
     if (!isInStyleRule() /* || !declarationName.empty() */) {
       CallStackFrame csf(logger, e->pstate());
-      throw Exception::RuntimeException(traces,
+      throw Exception::RuntimeException(logger,
         "@extend may only be used within style rules.");
     }
 
@@ -3080,7 +2975,7 @@ namespace Sass {
 
         if (complex->size() != 1) {
           CallStackFrame csf(logger, complex->pstate());
-          throw Exception::RuntimeException(traces,
+          throw Exception::RuntimeException(logger,
             "complex selectors may not be extended.");
         }
 
@@ -3098,27 +2993,27 @@ namespace Sass {
             sels << "` instead.\nSee https://sass-lang.com/d/extend-compound for details.";
             #if SassRestrictCompoundExtending
             CallStackFrame csf(logger, compound->pstate());
-            throw Exception::RuntimeException(traces, sels.str());
+            throw Exception::RuntimeException(logger, sels.str());
             #else
             logger.addDeprecation(sels.str(), compound->pstate());
             #endif
 
             // Make this an error once deprecation is over
             for (SimpleSelectorObj simple : compound->elements()) {
-              if (_extensionStore) _extensionStore->addExtension(selector(), simple, mediaStack.back(), e, e->is_optional());
+              if (_extensionStore) _extensionStore->addExtension(selector(), simple, mediaQueries, e, e->is_optional());
               else std::cerr << "NO _extensionStore\n";
             }
 
           }
           else {
-              if (_extensionStore) _extensionStore->addExtension(selector(), compound->first(), mediaStack.back(), e, e->is_optional());
+              if (_extensionStore) _extensionStore->addExtension(selector(), compound->first(), mediaQueries, e, e->is_optional());
               else std::cerr << "NO _extensionStore\n";
           }
 
         }
         else {
           CallStackFrame csf(logger, complex->pstate());
-          throw Exception::RuntimeException(traces,
+          throw Exception::RuntimeException(logger,
             "complex selectors may not be extended.");
         }
       }
@@ -3247,7 +3142,6 @@ namespace Sass {
     // Create new CssImport object
     CssImportObj css = SASS_MEMORY_NEW(CssImport, rule->pstate(),
       interpolationToCssString(rule->url(), false, false),
-      rule->modifiers() == nullptr ? nullptr :
       interpolationToCssString(rule->modifiers(), false, false));
 
     if (current != _stylesheet->compiled) {
@@ -3437,8 +3331,8 @@ namespace Sass {
         // Assignment must succeed!
         // Create variable if necessary!
         a->vidx(compiler.envstack.back()->createVariable(a->variable()));
-        // CallStackFrame frame(traces, a->pstate());
-        // throw Exception::RuntimeException(traces, "Undefined variable.");
+        // CallStackFrame frame(logger, a->pstate());
+        // throw Exception::RuntimeException(logger, "Undefined variable.");
       }
     //  std::cerr << "FOUND VARIABLE " << a->vidx().offset << "\n";
       //exit(1);
@@ -3484,12 +3378,12 @@ namespace Sass {
     if (!a->vidx().isValid())
     {
       if (a->ns().empty() || compiler.envstack.back()->hasNameSpace(a->ns())) {
-        CallStackFrame frame(traces, a->pstate());
-        throw Exception::RuntimeException(traces, "Undefined variable.");
+        CallStackFrame frame(logger, a->pstate());
+        throw Exception::RuntimeException(logger, "Undefined variable.");
       }
       else {
-        CallStackFrame frame(traces, a->pstate());
-        throw Exception::ModuleUnknown(traces, a->ns());
+        CallStackFrame frame(logger, a->pstate());
+        throw Exception::ModuleUnknown(logger, a->ns());
       }
     }
 

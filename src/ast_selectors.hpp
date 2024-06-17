@@ -129,6 +129,7 @@ namespace Sass {
     //DECLARE_ISA_CASTER(SelectorCombinator);
     DECLARE_ISA_CASTER(CompoundSelector);
     DECLARE_ISA_CASTER(SelectorList);
+    FINALIZE_AST_NODE(Selector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -193,7 +194,7 @@ namespace Sass {
     virtual SimpleSelector* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
 
     IMPLEMENT_ISA_CASTER(SimpleSelector);
-
+    FINALIZE_AST_NODE(SimpleSelector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -231,7 +232,7 @@ namespace Sass {
     IMPLEMENT_EQ_OPERATOR(Selector, CssParentSelector);
 
     IMPLEMENT_ISA_CASTER(CssParentSelector);
-
+    FINALIZE_AST_NODE(CssParentSelector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -296,6 +297,7 @@ namespace Sass {
     virtual SelectorNS* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
 
     IMPLEMENT_ISA_CASTER(SelectorNS);
+    FINALIZE_AST_NODE(SelectorNS);
 
     SelectorNS* unity(SelectorNS* rhs);
   };
@@ -341,6 +343,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(PlaceholderSelector);
+    FINALIZE_AST_NODE(PlaceholderSelector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -388,6 +391,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(TypeSelector);
+    FINALIZE_AST_NODE(TypeSelector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -419,6 +423,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ClassSelector);
+    FINALIZE_AST_NODE(ClassSelector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -457,6 +462,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(IDSelector);
+    FINALIZE_AST_NODE(IDSelector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -517,6 +523,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(AttributeSelector);
+    FINALIZE_AST_NODE(AttributeSelector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -633,6 +640,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(PseudoSelector);
+    FINALIZE_AST_NODE(PseudoSelector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -697,6 +705,7 @@ namespace Sass {
       bool childless = false);
 
     ComplexSelector* withAdditionalCombinators(const SelectorCombinatorVector& others);
+    ComplexSelector* withAdditionalComponent(CplxSelComponent* component, SourceSpan& span, bool forceLineBreak) const;
 
     ComplexSelector* concatenate(ComplexSelector* child, const SourceSpan& span, bool forceLineBreak);
 
@@ -747,8 +756,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ComplexSelector);
-
-    ComplexSelector* withAdditionalComponent(CplxSelComponent* component, SourceSpan& span, bool forceLineBreak);
+    FINALIZE_AST_NODE(ComplexSelector);
 
   };
 
@@ -758,7 +766,7 @@ namespace Sass {
 
   // Enumerate all possible selector combinators. There is some
   // discrepancy with dart-sass. Opted to name them as in CSS33
-  enum SelectorPrefix { CHILD /* > */, FOLLOWING /* ~ */, SIBLING /* + */ };
+  enum SelectorPrefix : unsigned char { CHILD /* > */, FOLLOWING /* ~ */, SIBLING /* + */ };
 
   class CplxSelComponent : public AstNode
   {
@@ -828,6 +836,7 @@ namespace Sass {
     // line here, we make sure that callers know the return is a bit more specific.
     // virtual CplxSelComponent* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
 
+    FINALIZE_AST_NODE(CplxSelComponent);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -877,6 +886,7 @@ namespace Sass {
     }
 
 
+    FINALIZE_AST_NODE(SelectorCombinator);
   };
 
   /*
@@ -1037,6 +1047,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(CompoundSelector);
+    FINALIZE_AST_NODE(CompoundSelector);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -1114,6 +1125,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SelectorList);
+    FINALIZE_AST_NODE(SelectorList);
   };
 
   /////////////////////////////////////////////////////////////////////////

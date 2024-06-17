@@ -10,7 +10,7 @@
 #include "visitor_css.hpp"
 #include "ast_statements.hpp"
 #include "environment.hpp"
-// #include "ast_def_macros.hpp"
+#include "extension.hpp"
 
 namespace Sass {
 
@@ -69,6 +69,8 @@ namespace Sass {
     DECLARE_ISA_CASTER(CssKeyframeBlock);
     DECLARE_ISA_CASTER(CssSupportsRule);
     DECLARE_ISA_CASTER(CssParentNode);
+    DECLARE_ISA_CASTER(CssDeclaration);
+    FINALIZE_AST_NODE(CssNode);
   };
   // EO CssNode
 
@@ -129,68 +131,87 @@ namespace Sass {
     /// Returns whether [this] is equal to [other], ignoring their child nodes.
     virtual bool equalsIgnoringChildren(CssNode* other) const { return this == other; }
 
-    // virtual CssNode* produce() const override;
-
-
     // Declare up-casting methods
-    DECLARE_ISA_CASTER(CssRoot);
-    DECLARE_ISA_CASTER(CssAtRule);
-    DECLARE_ISA_CASTER(CssMediaRule);
-    DECLARE_ISA_CASTER(CssStyleRule);
-    DECLARE_ISA_CASTER(CssKeyframeBlock);
-    DECLARE_ISA_CASTER(CssSupportsRule);
+    OVERRIDE_ISA_CASTER(CssRoot);
+    OVERRIDE_ISA_CASTER(CssAtRule);
+    OVERRIDE_ISA_CASTER(CssMediaRule);
+    OVERRIDE_ISA_CASTER(CssStyleRule);
+    OVERRIDE_ISA_CASTER(CssKeyframeBlock);
+    OVERRIDE_ISA_CASTER(CssSupportsRule);
     // Define isaCssAtRule up-cast function
     IMPLEMENT_ISA_CASTER(CssParentNode);
+    FINALIZE_AST_NODE(CssParentNode);
   };
   // EO CssParentNode
 
   /////////////////////////////////////////////////////////////////////////
-  // A plain CSS string
   /////////////////////////////////////////////////////////////////////////
 
-  class CssString final : public AstNode
-  {
-  private:
+  // Media Queries after they have been evaluated
+  // Representing the static or resulting css
+  class CssMediaQuery final : public AstNode {
 
-    ADD_CONSTREF(sass::string, text);
+    // The media type, for example "screen" or "print".
+    // This may be `null`. If so, [features] will not be empty.
+    ADD_CONSTREF(sass::string, type);
+
+    // The modifier, probably either "not" or "only".
+    // This may be `null` if no modifier is in use.
+    ADD_CONSTREF(sass::string, modifier);
+
+    // Is it an `and` or `or` group
+    ADD_CONSTREF(bool, conjunction);
+
+    // Feature queries, including parentheses.
+    ADD_CONSTREF(StringVector, features);
 
   public:
 
-    // Value constructor
-    CssString(
+    // Value copy constructor
+    // Only used when merging
+    CssMediaQuery(
       const SourceSpan& pstate,
-      const sass::string& text);
+      const sass::string& type,
+      const sass::string& modifier,
+      const StringVector& features);
 
-    bool empty() const { return text_.empty(); }
+    // Value move constructor
+    CssMediaQuery(
+      const SourceSpan& pstate,
+      sass::string&& type,
+      sass::string&& modifier,
+      StringVector&& features);
+
+    // Value move constructor
+    CssMediaQuery(
+      const SourceSpan& pstate,
+      StringVector&& conditions,
+      bool conjunction = true);
+
+    // Returns true if this query is empty
+    // Meaning it has no type and features
+    bool empty() const {
+      return type_.empty()
+        && modifier_.empty()
+        && features_.empty();
+    }
+
+    // Whether this media query matches all media types.
+    bool matchesAllTypes() const {
+      return type_.empty() || StringUtils::equalsIgnoreCase(type_, "all", 3);
+    }
 
     // Check if two instances are considered equal
-    bool operator== (const CssString& rhs) const;
+    bool operator== (const CssMediaQuery& rhs) const;
 
+    // Merges this with [other] and adds a query that matches the intersection
+    // of both inputs to [result]. Returns false if the result is unrepresentable
+    CssMediaQuery* merge(CssMediaQuery* other);
+
+    // IMPLEMENT_ISA_CASTER(CssMediaQuery);
+    FINALIZE_AST_NODE(CssMediaQuery);
   };
-  // EO CssString
-
-  /////////////////////////////////////////////////////////////////////////
-  // A plain list of CSS strings
-  /////////////////////////////////////////////////////////////////////////
-
-  class CssStringList final : public AstNode
-  {
-  private:
-
-    ADD_CONSTREF(StringVector, texts);
-
-  public:
-
-    // Value constructor
-    CssStringList(
-      const SourceSpan& pstate,
-      StringVector&& texts);
-
-    // Check if two instances are considered equal
-    bool operator== (const CssStringList& rhs) const;
-
-  };
-  // EO CssStringList
+  // EO CssMediaQuery
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -214,6 +235,7 @@ namespace Sass {
       return visitor->visitCssComment(this);
     }
     IMPLEMENT_ISA_CASTER(CssComment);
+    FINALIZE_AST_NODE(CssComment);
   };
   // EO CssComment
 
@@ -224,15 +246,21 @@ namespace Sass {
   {
   private:
     // The name of this declaration.
-    ADD_CONSTREF(CssStringObj, name);
+    ADD_CONSTREF(sass::string, name);
     // The value of this declaration.
     ADD_CONSTREF(ValueObj, value);
-    ADD_CONSTREF(bool, is_custom_property);
+    // Was original declaration a custom property
+    ADD_CONSTREF(bool, wasCustomProperty);
   public:
     CssDeclaration(const SourceSpan& pstate,
-      CssString* name, Value* value,
-      bool is_custom_property = false);
+      const sass::string& name, Value* value,
+      bool wasCustomProperty = false);
     CssDeclaration(const CssDeclaration* ptr);
+
+    inline bool isCustomProperty() const {
+      return name_[0] == '-'
+        && name_[1] == '-';
+    }
 
     // Css visitor and rendering entry function
     void accept(CssVisitor<void>* visitor) override final {
@@ -241,6 +269,9 @@ namespace Sass {
     bool accept(CssVisitor<bool>* visitor) override final {
       return visitor->visitCssDeclaration(this);
     }
+
+    IMPLEMENT_ISA_CASTER(CssDeclaration);
+    FINALIZE_AST_NODE(CssDeclaration);
   };
   // EO CssDeclaration
 
@@ -254,10 +285,10 @@ namespace Sass {
   private:
 
     // The url including quotes.
-    ADD_CONSTREF(CssStringObj, url);
+    ADD_CONSTREF(sass::string, url);
 
     // The supports condition attached to this import.
-    ADD_CONSTREF(CssStringObj, modifiers);
+    ADD_CONSTREF(sass::string, modifiers);
 
     // The media query attached to this import.
     // ADD_CONSTREF(CssMediaQueryVector, media);
@@ -272,8 +303,8 @@ namespace Sass {
     // Standard value constructor
     CssImport(
       const SourceSpan& pstate,
-      CssString* url = nullptr,
-      CssString* modifiers = nullptr);
+      sass::string&& url,
+      sass::string&& modifiers);
 
     // Copy constructor
     CssImport(const CssImport* ptr);
@@ -287,6 +318,7 @@ namespace Sass {
     }
 
     IMPLEMENT_ISA_CASTER(CssImport);
+    FINALIZE_AST_NODE(CssImport);
   };
   // EO CssImport
 
@@ -331,6 +363,7 @@ namespace Sass {
     bool equalsIgnoringChildren(CssNode* other) const override final;
 
     IMPLEMENT_ISA_CASTER(CssRoot);
+    FINALIZE_AST_NODE(CssRoot);
   };
   // EO CssRoot
 
@@ -341,9 +374,9 @@ namespace Sass {
   {
   private:
 
-    ADD_CONSTREF(CssStringObj, name);
+    ADD_CONSTREF(sass::string, name);
 
-    ADD_CONSTREF(CssStringObj, value);
+    ADD_CONSTREF(sass::string, value);
 
     // Whether the rule has no children and should be emitted
     // without curly braces. This implies `children.isEmpty`,
@@ -358,8 +391,8 @@ namespace Sass {
     CssAtRule(
       const SourceSpan& pstate,
       CssParentNode* parent,
-      CssString* name,
-      CssString* value,
+      const sass::string& name,
+      const sass::string& value,
       bool isChildless = false,
       CssNodeVector&& children = {});
 
@@ -374,7 +407,7 @@ namespace Sass {
 
     // Returns the at-rule name for [node], or `null` if it's not an at-rule.
     const sass::string& getAtRuleName() const override final {
-      return name()->text();
+      return name_;
     }
 
     // Css visitor and rendering entry function
@@ -401,6 +434,7 @@ namespace Sass {
 
     // Define isaCssAtRule up-cast function
     IMPLEMENT_ISA_CASTER(CssAtRule);
+    FINALIZE_AST_NODE(CssAtRule);
   };
   // EO CssAtRule
 
@@ -413,7 +447,7 @@ namespace Sass {
   private:
 
     // The selector for this block.
-    ADD_CONSTREF(CssStringListObj, selector);
+    ADD_CONSTREF(StringVector, selector);
 
   public:
 
@@ -421,7 +455,7 @@ namespace Sass {
     CssKeyframeBlock(
       const SourceSpan& pstate,
       CssParentNode* parent,
-      CssStringList* selector,
+      StringVector&& selector,
       CssNodeVector&& children = {});
 
     // Copy constructor
@@ -447,6 +481,7 @@ namespace Sass {
     bool equalsIgnoringChildren(CssNode* other) const override final;
 
     IMPLEMENT_ISA_CASTER(CssKeyframeBlock);
+    FINALIZE_AST_NODE(CssKeyframeBlock);
   };
   // EO CssKeyframeBlock
 
@@ -509,6 +544,7 @@ namespace Sass {
 
     // Define isaCssStyleRule up-cast function
     IMPLEMENT_ISA_CASTER(CssStyleRule);
+    FINALIZE_AST_NODE(CssStyleRule);
   };
   // EO CssStyleRule
 
@@ -555,73 +591,9 @@ namespace Sass {
 
     // Define isaCssSupportsRule up-cast function
     IMPLEMENT_ISA_CASTER(CssSupportsRule);
+    FINALIZE_AST_NODE(CssSupportsRule);
   };
   // EO CssSupportsRule
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  // Media Queries after they have been evaluated
-  // Representing the static or resulting css
-  class CssMediaQuery final : public AstNode {
-
-    // The media type, for example "screen" or "print".
-    // This may be `null`. If so, [features] will not be empty.
-    ADD_CONSTREF(sass::string, type);
-
-    // The modifier, probably either "not" or "only".
-    // This may be `null` if no modifier is in use.
-    ADD_CONSTREF(sass::string, modifier);
-
-    ADD_CONSTREF(bool, conjunction);
-
-    // Feature queries, including parentheses.
-    ADD_CONSTREF(StringVector, features);
-
-  public:
-
-    // Value copy constructor
-    CssMediaQuery(
-      const SourceSpan& pstate,
-      const sass::string& type,
-      const sass::string& modifier,
-      const StringVector& features);
-
-    // Value move constructor
-    CssMediaQuery(
-      const SourceSpan& pstate,
-      sass::string&& type,
-      sass::string&& modifier = "",
-      StringVector&& features = {});
-
-    // Value move constructor
-    CssMediaQuery(
-      const SourceSpan& pstate,
-      StringVector&& conditions,
-      bool conjunction = true);
-
-    // Returns true if this query is empty
-    // Meaning it has no type and features
-    bool empty() const {
-      return type_.empty()
-        && modifier_.empty()
-        && features_.empty();
-    }
-
-    // Whether this media query matches all media types.
-    bool matchesAllTypes() const {
-      return type_.empty() || StringUtils::equalsIgnoreCase(type_, "all", 3);
-    }
-
-    // Check if two instances are considered equal
-    bool operator== (const CssMediaQuery& rhs) const;
-
-    // Merges this with [other] and adds a query that matches the intersection
-    // of both inputs to [result]. Returns false if the result is unrepresentable
-    CssMediaQuery* merge(CssMediaQuery* other);
-
-  };
-  // EO CssMediaQuery
 
   /////////////////////////////////////////////////////////////////////////
   // A plain CSS `@media` rule after it has been evaluated.
@@ -681,6 +653,7 @@ namespace Sass {
 
     // Define isaCssMediaRule up-cast function
     IMPLEMENT_ISA_CASTER(CssMediaRule);
+    FINALIZE_AST_NODE(CssMediaRule);
   };
   // EO CssMediaRule
 

@@ -106,7 +106,7 @@ namespace Sass {
       // return CssMediaQuery.type(identifier1);
       return SASS_MEMORY_NEW(CssMediaQuery,
         scanner.rawSpanFrom(start),
-        std::move(identifier1));
+        std::move(identifier1), "", {});
     }
 
     auto identifier2 = readIdentifier();
@@ -130,7 +130,7 @@ namespace Sass {
         return SASS_MEMORY_NEW(CssMediaQuery,
           scanner.rawSpanFrom(start),
           std::move(type),
-          std::move(modifier));
+          std::move(modifier), {});
 
       }
     }
@@ -158,7 +158,7 @@ namespace Sass {
     auto qwe = SASS_MEMORY_NEW(CssMediaQuery,
       scanner.rawSpanFrom(start),
       std::move(type), std::move(modifier),
-      std::move(readMediaLogicSequence2("and")));
+      readMediaLogicSequence2("and"));
 
     return qwe;
 

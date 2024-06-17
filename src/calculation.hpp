@@ -4,214 +4,285 @@
 #ifndef SASS_CALCULATION_HPP
 #define SASS_CALCULATION_HPP
 
-#include "ast_callables.hpp"
-#include "exceptions.hpp"
-#include "strings.hpp"
+#include "ast_fwd_decl.hpp"
+
+#include "calc_names.hpp"
 
 #include <cmath>
 
 namespace Sass {
 
-  class Calculation32 {
+  namespace Calc {
 
-    sass::string name;
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
-    sass::vector<AstNodeObj> arguments;
-
-    bool isSpecialNumber = true;
-
-  public:
-
-    static Calculation32 unsimplified(const sass::string& name, sass::vector<AstNodeObj> arguments) {
-      return Calculation32(name, arguments);
-    }
-
-    static Number* roundWithStep(const sass::string&, Number* number, Number* step);
-
-    static Value* singleArgument(Logger& logger, const FunctionExpression* pstate, const sass::string& name, AstNode* argument, Number*(*mathFunc)(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number*), bool forbitUnits = false)
-    {
-      AstNode* simplified = argument->simplify(logger);
-      auto* number = dynamic_cast<Number*>(simplified);
-      if (number == nullptr) return SASS_MEMORY_NEW(
-        Calculation, argument->pstate(), name, { simplified });
-      // if (forbitUnits) number->assertNoUnits();
-      return mathFunc(logger, pstate, argument, number);
-    }
-
-    static Value* singleArgument2(Logger& logger, const SourceSpan& pstate, const sass::string& name, const ValueVector& args, Number* (*mathFunc)(Logger& logger, const SourceSpan& pstate, AstNode* argument, Number*), bool forbitUnits = false)
-    {
-      AstNode* simplified = args[0]->simplify(logger);
-      auto* number = dynamic_cast<Number*>(simplified);
-      if (number == nullptr) return SASS_MEMORY_NEW(
-        Calculation, pstate, name, {simplified});
-      // if (forbitUnits) number->assertNoUnits();
-      return mathFunc(logger, pstate, args[0], number);
-    }
-
-    // No support for numbers with units
-    static Number* fnSqrt(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number* arg) {
-      double rv = std::sqrt(arg->value());
-      return SASS_MEMORY_NEW(Number, arg->pstate(), rv);
-    }
-
-    static Number* fnSin(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number* arg) {
-      double factor = arg->factorToUnits(unit_rad);
-      if (factor == 0.0) {
-        throw Exception::SassScriptException(
-          "$number: Expected " + argument->toString() + " to have an angle unit (deg, grad, rad, turn).",
-          logger, pstate->pstate());
-      }
-      return SASS_MEMORY_NEW(Number, arg->pstate(),
-        std::sin(arg->value() * factor));
-    }
-
-    static Number* fnCos(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number* arg) {
-      double factor = arg->factorToUnits(unit_rad);
-      if (factor == 0.0) {
-        throw Exception::SassScriptException(
-          "$number: Expected " + argument->toString() + " to have an angle unit (deg, grad, rad, turn).",
-          logger, pstate->pstate());
-      }
-      return SASS_MEMORY_NEW(Number, arg->pstate(),
-        std::cos(arg->value() * factor));
-    }
-    
-    static Number* fnTan(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number* arg) {
-      double factor = arg->factorToUnits(unit_rad);
-      if (factor == 0.0) {
-        throw Exception::SassScriptException(
-          "$number: Expected " + argument->toString() + " to have an angle unit (deg, grad, rad, turn).",
-          logger, pstate->pstate());
-      }
-      return SASS_MEMORY_NEW(Number, arg->pstate(),
-        std::tan(arg->value() * factor));
-    }
-
-
-
-    static Value* calc_sign2(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-
-    static Value* calc_exp2(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-
-    static Value* calc_sqrt(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-
-    static Value* calc_abs(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-
-    static Value* calc_sin(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-    static Value* calc_cos(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-    static Value* calc_tan(Logger& logger, const SourceSpan& pstate, const ValueVector& argument);
-
-    static Value* calc_asin(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-    static Value* calc_acos(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-    static Value* calc_atan(Logger& logger, const SourceSpan& pstate, const ValueVector& argument);
-
-    static Value* calc_min(Logger& logger, const SourceSpan& pstate, const ValueVector& args, bool strict = false);
-    static Value* calc_max(Logger& logger, const SourceSpan& pstate, const ValueVector& args, bool strict = false);
-
-    static Value* calc_clamp(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-    static Value* calc_hypot(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-
-    static Value* calc_pow2(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-    static Value* calc_mod2(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-    static Value* calc_rem2(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-    static Value* calc_atan3(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
-
-
-    static Number* fnAbs(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number* arg);
-    static Number* fnExp(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number* arg);
-    static Number* fnSign(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number* arg);
-    static Value* calc_abs(Logger& logger, const FunctionExpression* pstate, AstNode* argument);
-    static Value* calc_exp(Logger& logger, const FunctionExpression* pstate, AstNode* argument);
-    static Value* calc_sign(Logger& logger, const FunctionExpression* pstate, AstNode* argument);
-
-    static Number* fnMin(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number* arg);
-    static Number* fnMax(Logger& logger, const FunctionExpression* pstate, AstNode* argument, Number* arg);
-
-    static Value* calc_pow(Logger& logger, const FunctionExpression* pstate, AstNode* arg1, AstNode* arg2);
-    static Value* calc_atan2(Logger& logger, const SourceSpan& pstate, AstNode* arg1, AstNode* arg2);
-    static Value* calc_log(Logger& logger, const FunctionExpression* pstate, AstNode* arg1, AstNode* arg2);
-
-    static Value* calc_sqrt(Logger& logger, const FunctionExpression* pstate, AstNode* argument) {
-      return singleArgument(logger, pstate, str_sqrt, argument, fnSqrt, true);
-    }
-
-
-    // static Value* calc_sin(Logger& logger, const FunctionExpression* pstate, AstNode* argument) {
-    //   return singleArgument(logger, pstate, str_sin, argument, fnSin, true);
-    // }
-    // 
-    // static Value* calc_cos(Logger& logger, const FunctionExpression* pstate, AstNode* argument) {
-    //   return singleArgument(logger, pstate, str_cos, argument, fnCos, true);
-    // }
-    // static Value* calc_tan(Logger& logger, const FunctionExpression* pstate, AstNode* argument) {
-    //   return singleArgument(logger, pstate, str_tan, argument, fnTan, true);
+    // static Value* singleArgument(Logger& logger, const SourceSpan& pstate, const sass::string& name, AstNode* argument,
+    //   Number* (*mathFunc)(Logger& logger, const SourceSpan& pstate, AstNode* argument, Number*), bool forbitUnits = false)
+    // {
+    //   AstNode* simplified = argument->simplify(logger);
+    //   auto* number = dynamic_cast<Number*>(simplified);
+    //   if (number == nullptr) return SASS_MEMORY_NEW(
+    //     Calculation, argument->pstate(), name, { simplified });
+    //   // if (forbitUnits) number->assertNoUnits();
+    //   return mathFunc(logger, fn, argument, number);
     // }
 
-    static Value* calc_round(Logger& logger, Expression* node, const ValueVector& arguments);
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
+    Value* operate(Logger& logger, const SourceSpan& span,
+      SassOperator op, AstNode* lhs, AstNode* rhs,
+      bool inLegacySassFunction, bool simplify);
 
-    static Value* calc_rem(Logger& logger, const FunctionExpression* pstate, AstNode* lhs, AstNode* rhs);
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
-    static Value* calc_mod(Logger& logger, const FunctionExpression* pstate, AstNode* lhs, AstNode* rhs);
+    // Execute calculation function with arguments
+    Value* execute(Logger& logger, const SourceSpan& pstate,
+      CFN fn, const ValueVector& args);
 
-    static Value* calc_fn(Logger& logger, AstNode* argument) {
-      AstNodeObj simplified = argument->simplify(logger);
-      // debug_ast(simplified, "simplified: ");
-      if (auto number = dynamic_cast<Number*>(simplified.ptr())) {
-        simplified.detach(); return number;
-      }
-      else if (auto calc = dynamic_cast<Calculation*>(simplified.ptr())) {
-        simplified.detach(); return calc;
-      }
-      else {
-        return SASS_MEMORY_NEW(Calculation,
-          argument->pstate(), "calc", { simplified });
-      }
-    }
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
+    /// Creates a `calc()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_calc(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
 
+    /// Creates an `abs()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_abs(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
 
-  private:
+    /// Creates a `sqrt()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_sqrt(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
 
-    // Internal constructor that doesn't perform any validation or simplification.
-    Calculation32(const sass::string& name, sass::vector<AstNodeObj> arguments) :
-      name(name), arguments(arguments) { }
+    /// Creates a `sign()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_sign(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
 
-    /*
-    /// Simplifies a calculation argument.
-    static AstNode* _simplify(AstNode* arg) {
-      return nullptr;
-      // if (dynamic_cast<Number*>(arg)) {}
-      // else if (dynamic_cast<Number*>(arg)) {}
-      // //else if (dynamic_cast<CalculationOperation*>(arg)) {}
-      // //else if (dynamic_cast<CalculationInterpolation*>(arg)) {}
-      // else if (dynamic_cast<String*>(arg)) {}
-      // else if (dynamic_cast<Calculation32*>(arg)) {}
-      // else if (dynamic_cast<Value*>(arg)) {}
+    /// Creates an `exp()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_exp(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
 
-    }
-    */
-    /*
-    = > switch (arg) {
-      SassNumber() || CalculationOperation() = > arg,
-        CalculationInterpolation() = >
-        SassString('(${arg.value})', quotes: false),
-        SassString(hasQuotes: false) = > arg,
-        SassString() = > throw SassScriptException(
-          "Quoted string $arg can't be used in a calculation."),
-        SassCalculation(
-          name: 'calc',
-          arguments : [SassString(hasQuotes:false, : var text)]
-        )
-        when _needsParentheses(text) = >
-        SassString('($text)', quotes: false),
-        SassCalculation(name: 'calc', arguments : [var value] ) = > value,
-        SassCalculation() = > arg,
-        Value() = > throw SassScriptException(
-          "Value $arg can't be used in a calculation."),
-        _ = > throw ArgumentError("Unexpected calculation argument $arg.")
-    };
-    */
+    /// Creates a `sin()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_sin(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates a `cos()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_cos(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates a `tan()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_tan(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates an `asin()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_asin(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates an `acos()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_acos(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates an `atan()` calculation with the given [argument].
+    ///
+    /// The [argument] must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_atan(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates a `log()` calculation with the given [number] and [base].
+    ///
+    /// Each argument must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    ///
+    /// If arguments contains exactly a single argument, the base is set to
+    /// `math.e` by default.
+    Value* calc_log(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates a `atan2()` calculation for [y] and [x].
+    ///
+    /// Each argument must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    ///
+    /// This may be passed fewer than two arguments, but only if one of the
+    /// arguments is an unquoted `var()` string.
+    Value* calc_atan2(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates a `mod()` calculation with the given [dividend] and [modulus].
+    ///
+    /// Each argument must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    ///
+    /// This may be passed fewer than two arguments, but only if one of the
+    /// arguments is an unquoted `var()` string.
+    Value* calc_mod(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates a `pow()` calculation with the given [base] and [exponent].
+    ///
+    /// Each argument must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    ///
+    /// This may be passed fewer than two arguments, but only if one of the
+    /// arguments is an unquoted `var()` string.
+    Value* calc_pow(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates a `rem()` calculation with the given [dividend] and [modulus].
+    ///
+    /// Each argument must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    ///
+    /// This may be passed fewer than two arguments, but only if one of the
+    /// arguments is an unquoted `var()` string.
+    Value* calc_rem(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates a `clamp()` calculation with the given [min], [value], and [max].
+    ///
+    /// Each argument must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation].
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    ///
+    /// This may be passed fewer than three arguments, but only if one of the
+    /// arguments is an unquoted `var()` string.
+    Value* calc_clamp(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /// Creates a `min()` calculation with the given [arguments].
+    ///
+    /// Each argument must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation]. It must be passed at
+    /// least one argument.
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_min(Logger& logger, const SourceSpan& pstate, const ValueVector& args, bool strict = false);
+
+    /// Creates a `max()` calculation with the given [arguments].
+    ///
+    /// Each argument must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation]. It must be passed at
+    /// least one argument.
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_max(Logger& logger, const SourceSpan& pstate, const ValueVector& args, bool strict = false);
+
+    /// Creates a `hypot()` calculation with the given [arguments].
+    ///
+    /// Each argument must be either a [SassNumber], a [SassCalculation], an
+    /// unquoted [SassString], or a [CalculationOperation]. It must be passed at
+    /// least one argument.
+    ///
+    /// This automatically simplifies the calculation, so it may return a
+    /// [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    /// can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_hypot(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    // Creates a `round()` calculation with the given [strategyOrNumber],
+    // [numberOrStep], and [step]. Strategy must be either nearest,
+    // up, down or to-zero.
+    //
+    // Number and step must be either a [SassNumber], a [SassCalculation],
+    // an unquoted [SassString], or a [CalculationOperation].
+    //
+    // This automatically simplifies the calculation, so it may return a
+    // [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    // can determine that the calculation will definitely produce invalid CSS.
+    //
+    // This may be passed fewer than two arguments, but only if one of the
+    // arguments is an unquoted `var()` string.
+    Value* calc_round(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
 
   };
 

@@ -38,7 +38,7 @@ namespace Sass {
     return text; // Should use RVO
   }
 
-  enum SassOutputStyle Emitter::output_style(void) const
+  SassOutputStyle Emitter::output_style(void) const
   {
     return outopt.output_style;
   }

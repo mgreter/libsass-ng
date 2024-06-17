@@ -236,10 +236,13 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   inline bool isFakePseudoElement(const sass::string& name)
   {
-    return StringUtils::equalsIgnoreCase(name, "after", 5)
-      || StringUtils::equalsIgnoreCase(name, "before", 6)
-      || StringUtils::equalsIgnoreCase(name, "first-line", 10)
-      || StringUtils::equalsIgnoreCase(name, "first-letter", 12);
+    switch (name.size()) {
+    case 5: return StringUtils::equalsIgnoreCase(name, "after", 5);
+    case 6: return StringUtils::equalsIgnoreCase(name, "before", 6);
+    case 10: return StringUtils::equalsIgnoreCase(name, "first-line", 10);
+    case 12: return StringUtils::equalsIgnoreCase(name, "first-letter", 12);
+    default: return false;
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -249,12 +252,15 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   inline bool isSubselectorPseudo(const sass::string& norm)
   {
-    return StringUtils::equalsIgnoreCase(norm, "is", 2)
-      || StringUtils::equalsIgnoreCase(norm, "any", 3)
-      || StringUtils::equalsIgnoreCase(norm, "matches", 7)
-      || StringUtils::equalsIgnoreCase(norm, "where", 5)
-      || StringUtils::equalsIgnoreCase(norm, "nth-child", 9)
-      || StringUtils::equalsIgnoreCase(norm, "nth-last-child", 14);
+    switch (norm.size()) {
+    case 2: return StringUtils::equalsIgnoreCase(norm, "is", 2);
+    case 3: return StringUtils::equalsIgnoreCase(norm, "any", 3);
+    case 5: return StringUtils::equalsIgnoreCase(norm, "where", 5);
+    case 7: return StringUtils::equalsIgnoreCase(norm, "matches", 7);
+    case 9: return StringUtils::equalsIgnoreCase(norm, "nth-child", 9);
+    case 14: return StringUtils::equalsIgnoreCase(norm, "nth-last-child", 14);;
+    default: return false;
+    }
   }
   // EO isSubselectorPseudo
 
@@ -263,15 +269,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////#
   inline bool isSelectorPseudoClass(const sass::string& test)
   {
-    return StringUtils::equalsIgnoreCase(test, "is", 2)
-      || StringUtils::equalsIgnoreCase(test, "not", 3)
-      || StringUtils::equalsIgnoreCase(test, "matches", 7)
-      || StringUtils::equalsIgnoreCase(test, "where", 5)
-      || StringUtils::equalsIgnoreCase(test, "current", 7)
-      || StringUtils::equalsIgnoreCase(test, "any", 3)
-      || StringUtils::equalsIgnoreCase(test, "has", 3)
-      || StringUtils::equalsIgnoreCase(test, "host", 4)
-      || StringUtils::equalsIgnoreCase(test, "host-context", 12);
+    switch (test.size()) {
+    case 2: return StringUtils::equalsIgnoreCase(test, "is", 2);
+    case 3: return StringUtils::equalsIgnoreCase(test, "not", 3)
+                || StringUtils::equalsIgnoreCase(test, "any", 3)
+                || StringUtils::equalsIgnoreCase(test, "has", 3);
+    case 4: return StringUtils::equalsIgnoreCase(test, "host", 4);
+    case 5: return StringUtils::equalsIgnoreCase(test, "where", 5);
+    case 7: return StringUtils::equalsIgnoreCase(test, "matches", 7)
+                || StringUtils::equalsIgnoreCase(test, "current", 7);
+    case 12: return StringUtils::equalsIgnoreCase(test, "host-context", 12);
+    default: return false;
+    }
   }
   // EO isSelectorPseudoClass
 

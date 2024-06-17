@@ -144,7 +144,6 @@ namespace Sass {
 
     ADD_CONSTREF(InterpolationObj, name);
     ADD_CONSTREF(ExpressionObj, value);
-    ADD_CONSTREF(bool, is_custom_property);
 
   public:
 
@@ -152,7 +151,6 @@ namespace Sass {
     Declaration(SourceSpan&& pstate,
       Interpolation* name,
       Expression* value = nullptr,
-      bool is_custom_property = false,
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function

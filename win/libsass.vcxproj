@@ -38,6 +38,14 @@
       <Configuration>Debug Shared</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug Shared|arm">
+      <Configuration>Debug Shared</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug Shared|arm64">
+      <Configuration>Debug Shared</Configuration>
+      <Platform>arm64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release Shared|Win32">
       <Configuration>Release Shared</Configuration>
       <Platform>Win32</Platform>
@@ -45,6 +53,14 @@
     <ProjectConfiguration Include="Release Shared|x64">
       <Configuration>Release Shared</Configuration>
       <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release Shared|arm">
+      <Configuration>Release Shared</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release Shared|arm64">
+      <Configuration>Release Shared</Configuration>
+      <Platform>arm64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug Static|Win32">
       <Configuration>Debug Static</Configuration>
@@ -54,6 +70,14 @@
       <Configuration>Debug Static</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug Static|arm">
+      <Configuration>Debug Static</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug Static|arm64">
+      <Configuration>Debug Static</Configuration>
+      <Platform>arm64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release Static|Win32">
       <Configuration>Release Static</Configuration>
       <Platform>Win32</Platform>
@@ -62,6 +86,14 @@
       <Configuration>Release Static</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release Static|arm">
+      <Configuration>Release Static</Configuration>
+      <Platform>arm</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release Static|arm64">
+      <Configuration>Release Static</Configuration>
+      <Platform>arm64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Common Properties">
     <PGO>None</PGO>
@@ -69,30 +101,6 @@
     <LibType>Shared</LibType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release Shared|Win32'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release Static|Win32'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release Shared|x64'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release Static|x64'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug Shared|x64'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug Static|x64'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug Shared|Win32'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug Static|Win32'">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="$(Configuration) == 'Release Static'">
     <RelType>Release</RelType>
     <LibType>Static</LibType>
@@ -128,6 +136,9 @@
   <PropertyGroup Label="VS2019 toolset selection" Condition="'$(VisualStudioVersion)' == '16.0'">
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Label="VS2020 toolset selection" Condition="'$(VisualStudioVersion)' == '17.0'">
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="$(RelType) == 'Debug'">
     <LinkIncremental>true</LinkIncremental>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -143,6 +154,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="$(Platform) == 'x64'">
     <OutDir>$(SolutionDir)build\x64\$(RelType)\$(LibType)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(Platform) == 'arm'">
+    <OutDir>$(SolutionDir)build\arm\$(RelType)\$(LibType)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(Platform) == 'arm64'">
+    <OutDir>$(SolutionDir)build\arm64\$(RelType)\$(LibType)\</OutDir>
   </PropertyGroup>
   <PropertyGroup>
     <IntDir>$(OutDir)libsass\</IntDir>

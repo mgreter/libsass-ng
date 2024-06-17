@@ -8,14 +8,14 @@ if ENABLE_COVERAGE
 	AM_COVLDFLAGS += -lgcov
 endif
 
-AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(abs_top_srcdir)/include
 AM_CFLAGS   = $(AM_COPT)
 AM_CXXFLAGS = $(AM_COPT)
 AM_LDFLAGS  = $(AM_COPT) $(AM_COVLDFLAGS)
 
 # only needed to support old source tree
 # we have moved the files to src folder
-AM_CPPFLAGS += -I$(top_srcdir)
+AM_CPPFLAGS += -I$(abs_top_srcdir)
 
 RESOURCES =
 AM_CXXFLAGS += -std=c++11
@@ -23,16 +23,16 @@ if COMPILER_IS_MINGW32
   RESOURCES += res/libsass.rc
 endif
 
-TEST_EXTENSIONS = .rb
+TEST_EXTENSIONS = .ts
 
 if ENABLE_TESTS
 
-SASS_SASSC_PATH ?= $(top_srcdir)/sassc
-SASS_SPEC_PATH ?= $(top_srcdir)/sass-spec
-SASS_SPEC_ROOT ?= $(top_srcdir)/sass-spec
+SASS_SASSC_PATH ?= $(abs_top_srcdir)/sassc
+SASS_SPEC_PATH ?= $(abs_top_srcdir)/sass-spec
+SASS_SPEC_ROOT ?= $(abs_top_srcdir)/sass-spec
 
 noinst_PROGRAMS = tester
-tester_LDADD = src/libsass.la
+tester_LDADD = src/.libs/libsass.a
 tester_LDFLAGS = $(AM_LDFLAGS)
 nodist_tester_SOURCES = $(SASS_SASSC_PATH)/sassc.c
 SASS_SASSC_VERSION ?= `cd "$(SASS_SASSC_PATH)" && ./version.sh`
@@ -43,32 +43,37 @@ if ENABLE_COVERAGE
 nodist_EXTRA_tester_SOURCES = non-existent-file-to-force-CXX-linking.cxx
 endif
 
-TESTS = $(SASS_SPEC_PATH)/sass-spec.rb
-RB_LOG_COMPILER = ./script/tap-runner
-AM_RB_LOG_FLAGS = $(RUBY)
+TESTS = $(SASS_SPEC_PATH)/sass-spec.ts
+TS_LOG_COMPILER = ./script/tap-runner
+AM_TS_LOG_FLAGS = $(NPM)
 
 SASS_TEST_FLAGS = --impl libsass
 SASS_TEST_FLAGS += -r $(SASS_SPEC_PATH)/spec
-SASS_TEST_FLAGS += -c $(top_srcdir)/tester$(EXEEXT)
+SASS_TEST_FLAGS += -c $(abs_top_srcdir)/tester$(EXEEXT)
 SASS_TEST_FLAGS += --cmd-args "-I $(SASS_SPEC_ROOT)/spec"
 AM_TESTS_ENVIRONMENT = TEST_FLAGS='$(SASS_TEST_FLAGS)'
 
-SASS_TESTER = $(RUBY) $(SASS_SPEC_PATH)/sass-spec.rb
+SASS_TESTER = $(NPM) --prefix $(SASS_SPEC_PATH)
 
 test:
-	$(SASS_TESTER) $(SASS_TEST_FLAGS)
+	$(SASS_TESTER) ci
+	$(SASS_TESTER) run sass-spec -- $(SASS_TEST_FLAGS)
 
 test_build:
-	$(SASS_TESTER) $(SASS_TEST_FLAGS)
+	$(SASS_TESTER) ci
+	$(SASS_TESTER) run sass-spec -- $(SASS_TEST_FLAGS)
 
 test_full:
-	$(SASS_TESTER) --run-todo $(SASS_TEST_FLAGS)
+	$(SASS_TESTER) ci
+	$(SASS_TESTER) run sass-spec -- --run-todo $(SASS_TEST_FLAGS)
 
 test_probe:
-	$(SASS_TESTER) --probe-todo $(SASS_TEST_FLAGS)
+	$(SASS_TESTER) ci
+	$(SASS_TESTER) run sass-spec -- --probe-todo $(SASS_TEST_FLAGS)
 
 test_interactive:
-	$(SASS_TESTER) --interactive $(SASS_TEST_FLAGS)
+	$(SASS_TESTER) ci
+	$(SASS_TESTER) run sass-spec -- --interactive $(SASS_TEST_FLAGS)
 
 .PHONY: test test_build test_full test_probe
 

@@ -10,12 +10,16 @@
 #include "string_utils.hpp"
 
 #ifdef _WIN32
-#include <windows.h>
+# ifndef NOMINMAX
+#  define NOMINMAX
+# endif
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
 #else
-#include <sys/types.h>
-#include <dirent.h>
-#include <errno.h>
-#include <dlfcn.h>
+# include <sys/types.h>
+# include <dirent.h>
+# include <errno.h>
+# include <dlfcn.h>
 #endif
 
 namespace Sass {

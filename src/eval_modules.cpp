@@ -4,6 +4,7 @@
 #include "eval.hpp"
 
 #include "compiler.hpp"
+#include "extension.hpp"
 #include "exceptions.hpp"
 #include "ast_imports.hpp"
 #include "css_imported.hpp"
@@ -404,8 +405,8 @@ namespace Sass {
         RAII_OBJ(CssParentNode, current, css);
         exposeImpRule1(rule); // May also be outside
         for (auto& item : root->elements()) {
-          Value* child = item->accept(this);
-          if (child) delete child;
+          ValueObj child = item->accept(this);
+          // if (child) delete child;
         }
       }
 
@@ -542,8 +543,8 @@ namespace Sass {
     RAII_SIZE(_endOfImports, 0);
 
     for (const auto& child : root->elements()) {
-      Value* value = child->accept(this);
-      if (value) delete value;
+      ValueObj value = child->accept(this);
+      // if (value) delete value;
     }
 
     root->compiled->elements().insert(
@@ -578,7 +579,6 @@ namespace Sass {
     assert(current->size() == 0);
 
     current->clear();
-
 
   }
 
@@ -632,7 +632,7 @@ namespace Sass {
 
     if (!unsatisfiedExtensions.empty()) {
       ExtensionObj extension = *unsatisfiedExtensions.begin();
-      throw Exception::UnsatisfiedExtend(traces, extension);
+      throw Exception::UnsatisfiedExtend(logger, extension);
     }
 
   }

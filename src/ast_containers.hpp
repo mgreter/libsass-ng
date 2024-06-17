@@ -456,8 +456,8 @@ namespace Sass {
     typename sass::vector<T>::iterator insert(typename sass::vector<T>::iterator el, typename sass::vector<T>::iterator beg, typename sass::vector<T>::iterator end) { hash_ = 0; return elements_.insert(beg, end); }
     typename sass::vector<T>::const_iterator insert(typename sass::vector<T>::iterator el, typename sass::vector<T>::const_iterator beg, typename sass::vector<T>::const_iterator end) { hash_ = 0; return elements_.insert(beg, end); }
 
-    typename sass::vector<T>::iterator prepend(typename sass::vector<T>::iterator from, typename sass::vector<T>::iterator to) { hash_ = 0; return elements_.insert(begin(), from, to); }
-    typename sass::vector<T>::iterator append(typename sass::vector<T>::iterator from, typename sass::vector<T>::iterator to) { hash_ = 0; return elements_.insert(end(), from, to); }
+    // typename sass::vector<T>::iterator prepend(typename sass::vector<T>::iterator from, typename sass::vector<T>::iterator to) { hash_ = 0; return elements_.insert(begin(), from, to); }
+    // typename sass::vector<T>::iterator append(typename sass::vector<T>::iterator from, typename sass::vector<T>::iterator to) { hash_ = 0; return elements_.insert(end(), from, to); }
 
   };
 

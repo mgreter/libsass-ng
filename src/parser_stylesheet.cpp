@@ -495,7 +495,7 @@ namespace Sass {
       expectStatementSeparator("custom property");
       return SASS_MEMORY_NEW(Declaration,
         scanner.relevantSpanFrom(start), name,
-        value->wrapInStringExpression(), true);
+        value->wrapInStringExpression());
     }
 
     if (scanner.scanChar($colon)) {
@@ -623,8 +623,7 @@ namespace Sass {
 
     expectStatementSeparator();
     return SASS_MEMORY_NEW(Declaration,
-      scanner.relevantSpanFrom(start), name, value,
-      startsWith(name->getInitialPlain(), "--", 2));
+      scanner.relevantSpanFrom(start), name, value);
 
     }
   // EO readPropertyOrVariableDeclaration
@@ -639,8 +638,7 @@ namespace Sass {
       }
       return withChildren<Declaration>(
         &StylesheetParser::readDeclarationOrAtRule,
-        start, name, value,
-        startsWith(name->getInitialPlain(), "--", 2));
+        start, name, value);
     }
 
 
@@ -1354,7 +1352,7 @@ namespace Sass {
     if (scanIdentifier("not")) {
       scanWhitespace();
       Offset start(scanner.offset);
-      StringScannerState state(scanner.state());
+      // StringScannerState state(scanner.state());
       return new SupportsNegation(
         scanner.rawSpanFrom(start),
         readSupportsConditionInParens());
@@ -1367,7 +1365,7 @@ namespace Sass {
       if (function != nullptr) return function;
 
       Offset start(scanner.offset);
-      StringScannerState state(scanner.state());
+      // StringScannerState state(scanner.state());
       ExpressionObj name = readExpression();
       scanner.expectChar($colon);
       return readSupportsDeclarationValue(name, start);
@@ -1685,7 +1683,7 @@ namespace Sass {
     InterpolationObj query = readMediaQueryList();
     return withChildren<MediaRule>(
       &StylesheetParser::readChildStatement,
-      start, query, local.idxs);
+      start, query.ptr(), local.idxs);
   }
 
 
@@ -4692,7 +4690,7 @@ namespace Sass {
 
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
-    Offset before(scanner.offset);
+    // Offset before(scanner.offset);
     StringToken name = readIdentifierToken();
 
     if (StringUtils::startsWith(name.str, "--")) {

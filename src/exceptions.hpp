@@ -290,6 +290,24 @@ namespace Sass {
     };
     
 
+    class UndefinedOperation : public Base {
+    public:
+      UndefinedOperation(
+        BackTraces traces,
+        SourceSpan pstate,
+        const Value* lhs,
+        const Value* rhs,
+        sass::string op);
+    public:
+      UndefinedOperation(
+        BackTraces traces,
+        SourceSpan pstate,
+        const Value* val,
+        sass::string op);
+    };
+
+
+
     class InvalidCssValue : public Base {
       public:
         InvalidCssValue(BackTraces traces, const Value& val);

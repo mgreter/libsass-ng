@@ -4,6 +4,7 @@
 #ifndef SASS_AST_NODES_HPP
 #define SASS_AST_NODES_HPP
 
+#include "ast_def_macros.hpp"
 #include "backtrace.hpp"
 #include "source_span.hpp"
 #include "ast_containers.hpp"
@@ -19,10 +20,10 @@ namespace Sass {
   // Some helpers in regard to sass value operations.
   /////////////////////////////////////////////////////////////////////////
 
-  uint8_t sass_op_to_precedence(enum SassOperator op);
-  const char* sass_op_to_name(enum SassOperator op);
-  const char* sass_op_separator(enum SassOperator op);
-  const char* sass_list_separator(enum SassSeparator op);
+  uint8_t sass_op_to_precedence(SassOperator op);
+  const char* sass_op_to_name(SassOperator op);
+  const char* sass_op_separator(SassOperator op);
+  const char* sass_list_separator(SassSeparator op);
 
   /////////////////////////////////////////////////////////////////////////
   // Abstract base class for all abstract syntax tree nodes.
@@ -60,14 +61,19 @@ namespace Sass {
     bool operator>(const AstNode& rhs) const = delete;
     bool operator<(const AstNode& rhs) const = delete;
 
-    // Crutches to implement calculation
+    // Simplify nodes to be used in calculations
+    // May produce a new copy, so catch the return
 		virtual AstNode* simplify(Logger& logger);
 
     // Convert to string (only for debugging)
     sass::string toString() const;
 
     DECLARE_ISA_CASTER(Value);
+    DECLARE_ISA_CASTER(String);
+    DECLARE_ISA_CASTER(Number);
+    DECLARE_ISA_CASTER(Calculation);
 
+    FINALIZE_AST_NODE(AstNode);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -91,7 +97,7 @@ namespace Sass {
     Interpolant(const SourceSpan& pstate);
 
     // We know four types
-    enum Type {
+    enum Type : unsigned char {
       ValueInterpolant,
       LiteralInterpolant,
       ExpressionInterpolant,
@@ -102,9 +108,11 @@ namespace Sass {
 
     // Declare up-casting methods
     DECLARE_ISA_CASTER(Value);
-    DECLARE_ISA_CASTER(String);
+    OVERRIDE_ISA_CASTER(String);
     DECLARE_ISA_CASTER(ItplString);
     DECLARE_ISA_CASTER(Expression);
+
+    FINALIZE_AST_NODE(Interpolant);
   };
   // EO Interpolant
 
@@ -125,6 +133,8 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ItplString);
+
+    FINALIZE_AST_NODE(ItplString);
   };
   // EO ItplString
 
@@ -157,6 +167,7 @@ namespace Sass {
     // Convert to string (only for debugging)
     sass::string toString() const;
 
+    FINALIZE_AST_NODE(Interpolation);
   };
   // EO Interpolation
 
@@ -217,6 +228,8 @@ namespace Sass {
     DECLARE_ISA_CASTER(IfExpression);
     // Implement our up-casting
     IMPLEMENT_ISA_CASTER(Expression);
+
+    FINALIZE_AST_NODE(Expression);
   };
   // EO Expression
 
@@ -263,6 +276,7 @@ namespace Sass {
 
     // Declare up-casting methods
     DECLARE_ISA_CASTER(StyleRule);
+    FINALIZE_AST_NODE(Statement);
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -279,6 +293,7 @@ namespace Sass {
     // Declare up-casting methods
     DECLARE_ISA_CASTER(StaticImport);
     DECLARE_ISA_CASTER(IncludeImport);
+    FINALIZE_AST_NODE(ImportBase);
   };
 
   //////////////////////////////////////////////////////////////////////
@@ -293,7 +308,7 @@ namespace Sass {
   public:
 
     // We know four iterator types
-    enum ItType {
+    enum ItType : unsigned char {
       MapIterator,
       ListIterator,
       SingleIterator,
@@ -411,7 +426,7 @@ namespace Sass {
     virtual size_t hash() const = 0;
 
     // Interface to be implemented by our classes
-    virtual enum SassValueType getTag() const = 0;
+    virtual SassValueType getTag() const = 0;
 
     // Whether the value will be represented in CSS as the empty string.
     virtual bool isBlank() const { return false; }
@@ -476,37 +491,37 @@ namespace Sass {
     virtual bool operator== (const Value& rhs) const = 0;
 
     // The SassScript `>` operation.
-    virtual bool greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual bool greaterThan(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     // The SassScript `>=` operation.
-    virtual bool greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual bool greaterThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     // The SassScript `<` operation.
-    virtual bool lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual bool lessThan(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     // The SassScript `<=` operation.
-    virtual bool lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual bool lessThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     // The SassScript `*` operation.
-    virtual Value* times(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual Value* times(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     // The SassScript `%` operation.
-    virtual Value* modulo(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual Value* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     // The SassScript `rem` operation.
-    virtual Value* remainder(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual Value* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     /// The SassScript `=` operation.
-    virtual Value* singleEquals(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual Value* singleEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     /// The SassScript `+` operation.
-    virtual Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     /// The SassScript `-` operation.
-    virtual Value* minus(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     /// The SassScript `/` operation.
-    virtual Value* dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const;
+    virtual Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const;
 
     /// The SassScript unary `+` operation.
     virtual Value* unaryPlus(Logger& logger, const SourceSpan& pstate) const;
@@ -614,7 +629,8 @@ namespace Sass {
     DECLARE_ISA_CASTER(Map);
     DECLARE_ISA_CASTER(List);
     DECLARE_ISA_CASTER(Null);
-    DECLARE_ISA_CASTER(Number);
+    OVERRIDE_ISA_CASTER(String);
+    OVERRIDE_ISA_CASTER(Number);
     DECLARE_ISA_CASTER(Color);
     DECLARE_ISA_CASTER(ColorRgba);
     DECLARE_ISA_CASTER(ColorHsla);
@@ -624,13 +640,14 @@ namespace Sass {
     DECLARE_ISA_CASTER(CustomError);
     DECLARE_ISA_CASTER(CustomWarning);
     DECLARE_ISA_CASTER(ArgumentList);
-    DECLARE_ISA_CASTER(Calculation);
+    OVERRIDE_ISA_CASTER(Calculation);
     DECLARE_ISA_CASTER(CalcOperation);
     DECLARE_ISA_CASTER(Mixin);
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(Value);
     // Expose class as SassValue struct to C
     CAPI_WRAPPER(Value, SassValue);
+    FINALIZE_AST_NODE(Value);
   };
 
 
@@ -689,6 +706,7 @@ namespace Sass {
     // The default at-root query, which excludes only style rules.
     static AtRootQuery* defaultQuery(SourceSpan&& pstate);
 
+    FINALIZE_AST_NODE(AtRootQuery);
   };
 
   /////////////////////////////////////////////////////////////////////////

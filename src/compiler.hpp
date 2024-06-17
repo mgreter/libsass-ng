@@ -93,7 +93,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
 
     // The current state the compiler is in.
-    enum SassCompilerState state;
+    SassCompilerState state;
 
     // Where we want to store the output.
     // Source-map path is deducted from it.

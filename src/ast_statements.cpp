@@ -74,7 +74,7 @@ namespace Sass {
         // Found an unguarded value
         if (!varcfg->second.isGuarded41) {
           if (!varcfg->second.isNull()) {
-            #ifdef USE_TSL_HOPSCOTCH
+            #ifdef SASS_USE_TSL_HOPSCOTCH
             varcfg.value().wasAssigned = true;
             return &varcfg.value();
             #else
@@ -111,7 +111,7 @@ namespace Sass {
       // Then try to find the named item
       auto varcfg = withcfg->config.find(key);
       if (varcfg != withcfg->config.end()) {
-        #ifdef USE_TSL_HOPSCOTCH
+        #ifdef SASS_USE_TSL_HOPSCOTCH
         varcfg.value().wasAssigned = true;
         if (!guarded) guarded = &varcfg.value();
         #else
@@ -182,22 +182,20 @@ namespace Sass {
     SourceSpan&& pstate,
     Interpolation* name,
     Expression* value,
-    bool is_custom_property,
     StatementVector&& children) :
     ParentStatement(
       std::move(pstate),
       std::move(children),
       nullptr),
     name_(name),
-    value_(value),
-    is_custom_property_(is_custom_property)
+    value_(value)
   {}
 
   bool Declaration::isCustomProperty() const
   {
     if (name_.isNull()) return false;
-    const sass::string& plain = name_->getInitialPlain();
-    return StringUtils::startsWith(plain, "--", 2);
+    const sass::string& plain(name_->getInitialPlain());
+    return plain[0] == '-' && plain[1] == '-';
   }
 
   /////////////////////////////////////////////////////////////////////////

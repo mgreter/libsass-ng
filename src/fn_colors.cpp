@@ -1136,9 +1136,14 @@ namespace Sass {
       {
         if (String * string = arguments[0]->isaString()) {
           if (!string->hasQuotes() && isMsFilterStart(string->value())) {
+            // dart-sass has two different code paths for this deprecation!?
+            // compiler.addDeprecation("Using color.alpha() for a Microsoft"
+            //   "filter is deprecated.\n\n  Recommendation: " + fn->toCss(),
+            //   arguments[0]->pstate(), Logger::WARN_MS_ALPHA);
             return getFunctionString(Strings::alpha, pstate, arguments);
           }
         }
+
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
@@ -1626,6 +1631,7 @@ namespace Sass {
         uint32_t idx_transparentize_loose = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
         uint32_t idx_ie_hex_str = ctx.createBuiltInFunction(key_ie_hex_str, "$color", ieHexStr);
         uint32_t idx_alpha = ctx.createBuiltInOverloadFns(key_alpha, {
+          // This does not give deprecations
           std::make_pair("$color", alphaOne),
           std::make_pair("$args...", alphaAny),
           });

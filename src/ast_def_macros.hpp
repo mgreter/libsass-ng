@@ -1,6 +1,7 @@
 #ifndef SASS_AST_DEF_MACROS_H
 #define SASS_AST_DEF_MACROS_H
 
+#include "thread_local.hpp"
 #include "memory_allocator.hpp"
 
 // Helper class to switch a flag
@@ -113,6 +114,10 @@ private:
     public: virtual klass* isa##klass() { return nullptr; } \
     public: virtual const klass* isa##klass() const { return nullptr; } \
 
+  #define OVERRIDE_ISA_CASTER(klass) \
+    public: virtual klass* isa##klass() override { return nullptr; } \
+    public: virtual const klass* isa##klass() const override { return nullptr; } \
+
   #define IMPLEMENT_ISA_CASTER(klass) \
     public: klass* isa##klass() final override { return this; } \
     public: const klass* isa##klass() const final override { return this; } \
@@ -140,6 +145,14 @@ private:
     public: klass* copy(SASS_MEMORY_ARGS bool childless) const override final { \
       return SASS_MEMORY_NEW_DBG(klass, this); \
     } \
+
+  // Macro to safely upcast objects via virtual isa methods
+  // This should be a tad bit faster than using dynamic_cast
+  #define SASS_CAST(type, ptr) (ptr ? ptr->isa##type() : nullptr)
+
+  #define FINALIZE_AST_NODE(name) \
+    protected: friend class SharedPtr<name>; ~name() {}
+
 
   /////////////////////////////////////////////////////////////////////////
   /* Wrap c++ pointers for C-API to anon-structs */

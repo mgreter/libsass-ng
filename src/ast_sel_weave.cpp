@@ -356,7 +356,7 @@ namespace Sass {
   /// as having line breaks.
   ComplexSelector* ComplexSelector::withAdditionalComponent(
     CplxSelComponent* component, SourceSpan& span,
-    bool forceLineBreak = false)
+    bool forceLineBreak = false) const
     {
     SelectorCombinatorVector combo(leadingCombinators_);
     CplxSelComponentVector comps(elements_);
@@ -444,9 +444,8 @@ namespace Sass {
         if (weaveds.empty()) continue;
         for (const auto& parent : weaveds) {
           SourceSpan span(complex->pstate());
-          auto asd = parent->withAdditionalComponent(
-            complex->elements().back(),
-            span, forceLineBreak);
+          ComplexSelectorObj asd = parent->withAdditionalComponent(
+            complex->elements().back(), span, forceLineBreak);
           newPrefixes.push_back(asd);
 
         //  // Still returns multiple parents here
@@ -519,13 +518,13 @@ namespace Sass {
     CompoundSelector* compound1,
     CompoundSelector* compound2)
   {
-    auto result = compound2->elements();
+    // Optimize case when nothing is changed
+    if (compound1->empty()) return compound1;
+    // Make a copy of the existing elements (ToDo: optimize)
+    sass::vector<SimpleSelectorObj> result(compound2->elements());
     for (const auto& simple : compound1->elements()) {
-      // std::cerr << "==== unifyCompound [" << simple->inspect() << "][" << compound2->inspect() << "]\n";
-      auto unified = simple->unify(result);
-      if (unified.empty()) return nullptr;
-      // for (auto& foo : unified) { std::cerr << "  ==> " << foo->inspect() << "\n"; }
-      result = unified;
+      result = simple->unify(result);
+      if (result.empty()) return nullptr;
     }
     return SASS_MEMORY_NEW(CompoundSelector,
       compound1->pstate(), std::move(result));
@@ -560,34 +559,38 @@ namespace Sass {
     if (first1 != nullptr && first2 != nullptr)
     {
       if (first1->isFollowingSibling() && first2->isFollowingSibling()) {
-        const auto& component1 = components1.back();
-        const auto& component2 = components2.back();
-        components1.pop_back(); // consumed
-        components2.pop_back(); // consumed
-        if (component1->selector()->isSuperselectorOf(component2->selector())) {
-          result.push_back({ { component2 } });
-        }
-        else if (component2->selector()->isSuperselectorOf(component1->selector())) {
-          result.push_back({ { component1 } });
+        if (!components1.empty() && !components2.empty()) {
+          // const auto& front = combinators1.front();
+          const auto& component1 = components1.back();
+          const auto& component2 = components2.back();
+          if (component1->selector()->isSuperselectorOf(component2->selector())) {
+            result.push_back({ { component2 } });
+          }
+          else if (component2->selector()->isSuperselectorOf(component1->selector())) {
+            result.push_back({ { component1 } });
+          }
+          else {
+            sass::vector<CplxSelComponentVector> choices;
+            choices.push_back({ component1, component2 });
+            choices.push_back({ component2, component1 });
+            if (CompoundSelectorObj unified = unifyCompound(
+              component1->selector(), component2->selector())) {
+              choices.push_back({ SASS_MEMORY_NEW(CplxSelComponent,
+                 span, { first1 }, unified) });
+            }
+            result.push_back(choices);
+          }
+          components1.pop_back(); // consumed
+          components2.pop_back(); // consumed
         }
         else {
-          sass::vector<CplxSelComponentVector> choices;
-          choices.push_back({ component1, component2 });
-          choices.push_back({ component2, component1 });
-          if (CompoundSelectorObj unified = unifyCompound(
-            component1->selector(),component2->selector())) {
-            choices.push_back({ SASS_MEMORY_NEW(CplxSelComponent,
-               span, { combinators1.front() }, unified) });
-          }
-          result.push_back(choices);
+          std::cerr << "The container or combinator was empty!!!???\n";
         }
         // std::cerr << "Merge case 1\n";
       }
       else if (first1->isFollowingSibling() && first2->isNextSibling()) {
         const auto& next = components2.back();
         const auto& following = components1.back();
-        components1.pop_back(); // consumed
-        components2.pop_back(); // consumed
 
         // std::cerr << "next1 " << next->inspecter() << "\n";
         // std::cerr << "following1 " << following->inspecter() << "\n";
@@ -608,13 +611,13 @@ namespace Sass {
             {following, next}
             });
         }
+        components1.pop_back(); // consumed
+        components2.pop_back(); // consumed
         // std::cerr << "Merge case 2a\n";
       }
       else if (first1->isNextSibling() && first2->isFollowingSibling()) {
         const auto& next = components1.back();
         const auto& following = components2.back();
-        components1.pop_back(); // consumed
-        components2.pop_back(); // consumed
 
         // std::cerr << "next2 " << next->inspecter() << "\n";
         // std::cerr << "following2 " << following->inspecter() << "\n";
@@ -635,6 +638,8 @@ namespace Sass {
             {following, next}
             });
         }
+        components1.pop_back(); // consumed
+        components2.pop_back(); // consumed
         // std::cerr << "Merge case 2b\n";
       }
       else if (first1->isChild() && !first2->isChild()) {
@@ -649,19 +654,29 @@ namespace Sass {
       }
       else if (first1->combinator() == first2->combinator()) {
 
-        const auto& lst1 = components1.back();
-        components1.pop_back();
+        if (!components1.empty() && !components2.empty()) {
 
-        const auto& lst2 = components2.back();
-        components2.pop_back();
+          // const auto& front = combinators1.front();
+          const auto& last1 = components1.back();
+          const auto& last2 = components2.back();
 
-        auto unified = unifyCompound(
-          lst1->selector(), lst2->selector());
-        if (unified == nullptr) return false;
+          CompoundSelectorObj unified = unifyCompound(
+            last1->selector(), last2->selector());
+          if (unified == nullptr) return false;
 
-        // std::cerr << " cmp " << unified->inspect() << "\n";
+          result.push_back({ { SASS_MEMORY_NEW(CplxSelComponent, span, { first1 }, unified) } });
 
-        result.push_back({ { SASS_MEMORY_NEW(CplxSelComponent, span, { combinators1.front() }, unified) } });
+          components1.pop_back();
+          components2.pop_back();
+
+          // std::cerr << " cmp " << unified->inspect() << "\n";
+
+
+        }
+        else {
+          std::cerr << "The container or combinator was empty!!!???\n";
+        }
+
 
         // std::cerr << "Merge case 4\n";
       }
@@ -716,7 +731,7 @@ namespace Sass {
   // single list. If there are no combinators to be merged, returns an
   // empty list. If the sequences can't be merged, returns `null`.
   /////////////////////////////////////////////////////////////////////////
-  bool mergeFinalCombinators(
+  static bool mergeFinalCombinators(
     CplxSelComponentVector& components1,
     CplxSelComponentVector& components2,
     sass::vector<sass::vector<CplxSelComponentVector>>& result)
@@ -903,15 +918,18 @@ namespace Sass {
     // _mergeLeadingCombinators must report success or not
     if (rs1 == false) return {};
 
-    if (base->empty()) throw "Need base";
+    if (base->empty()) {
+      throw "Need base";
+    }
 
-    CplxSelComponentVector leads;
+    CplxSelComponentVector leads{};
 
 
     CplxSelComponentVector queue1(prefix->begin(), prefix->end());
-    CplxSelComponentVector queue2(base->begin(), base->end() - 1);
+    CplxSelComponentVector queue2(base->begin(),
+      base->begin() == base->end() ? base->end() : base->end() - 1);
 
-    sass::vector<sass::vector<CplxSelComponentVector>> trails;
+    sass::vector<sass::vector<CplxSelComponentVector>> trails{};
     bool ok = _mergeTrailingCombinators(
       base->pstate(), queue1, queue2, trails);
 

@@ -54,7 +54,7 @@ namespace Sass {
 
       static BUILT_IN_FN(fnCalcName)
       {
-        auto calculation = arguments[0]->assertCalculation(compiler, Sass::Strings::calc);
+        Calculation* calculation = arguments[0]->assertCalculation(compiler, Sass::Strings::calc);
         return SASS_MEMORY_NEW(String, calculation->pstate(), calculation->name().c_str(), true);
       }
 
@@ -62,7 +62,7 @@ namespace Sass {
 
       static BUILT_IN_FN(fnCalcArgs)
       {
-        auto calculation = arguments[0]->assertCalculation(compiler, Sass::Strings::calc);
+        Calculation* calculation = arguments[0]->assertCalculation(compiler, Sass::Strings::calc);
         const sass::vector<AstNodeObj>& args(calculation->arguments());
         ValueVector values; // args.size()
 
@@ -269,7 +269,7 @@ namespace Sass {
           MixinRule* rule = mixin->declaration()->isaMixinRule();
           // Sanity assertion
           if (rule == nullptr) {
-            throw Exception::RuntimeException(eval.traces,
+            throw Exception::RuntimeException(eval.logger,
               "Include doesn't reference a mixin!");
           }
           // Create new mixin for content block

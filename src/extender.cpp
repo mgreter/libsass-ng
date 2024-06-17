@@ -5,6 +5,7 @@
 
 #include "permutate.hpp"
 #include "callstack.hpp"
+#include "extension.hpp"
 #include "exceptions.hpp"
 #include "dart_helpers.hpp"
 #include "ast_selectors.hpp"
@@ -274,7 +275,7 @@ namespace Sass {
             // Creating this structure can take up to 5%
             const auto& found = selectors54.find(simple);
             if (found != selectors54.end()) {
-              #ifdef USE_TSL_HOPSCOTCH
+              #ifdef SASS_USE_TSL_HOPSCOTCH
               found.value().insert(rule);
               #else
               found->second.insert(rule);
@@ -575,7 +576,7 @@ namespace Sass {
   }
 
 
-  Extension* ExtensionStore::PutOrMerge(ExtSelExtMapEntry& map, ComplexSelector* key, Extension* value)
+  Extension* ExtensionStore::PutOrMerge(ExtSelExtMapEntry& map, const ComplexSelectorObj& key, Extension* value)
   {
     if (map.count(key) > 0) {
       return map[key] = mergeExtension2(map[key], value);

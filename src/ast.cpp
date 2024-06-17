@@ -4,6 +4,7 @@
 
 #include "cssize.hpp"
 #include "inspect.hpp"
+#include "extension.hpp"
 #include "exceptions.hpp"
 #include "dart_helpers.hpp"
 
@@ -32,25 +33,25 @@ namespace Sass {
 
   // Precedence is used to decide order
   // in ExpressionParser::addOperator.
-  uint8_t sass_op_to_precedence(enum SassOperator op)
+  uint8_t sass_op_to_precedence(SassOperator op)
   {
     return SassOpPresedence[op];
   }
 
   // Get readable name for error messages
-  const char* sass_op_to_name(enum SassOperator op)
+  const char* sass_op_to_name(SassOperator op)
   {
     return SassOpName[op];
   }
 
   // Get readable name for operator (e.g. `==`)
-  const char* sass_op_separator(enum SassOperator op)
+  const char* sass_op_separator(SassOperator op)
   {
     return SassOpOperator[op];
   }
 
   // Get readable name for list operator (e.g. `,`, `/` or ` `)
-  const char* sass_list_separator(enum SassSeparator op)
+  const char* sass_list_separator(SassSeparator op)
   {
     switch (op) {
     case SASS_COMMA: return ", ";

@@ -13,21 +13,22 @@ on:
 jobs:
 
   linux-and-mac:
-    name: Linux and MacOS build
+    name: GNU
     # if: ${{ false }}
     runs-on: ${{ matrix.config.os }}
 
     strategy:
-      # fail-fast: false
+      fail-fast: false
       matrix:
         config:
-          #- {os: ubuntu-16.04, build: 'static', cc: 'gcc-4.4', cxx: 'g++-4.4', autotools: 'no', cppstd: 'gnu++0x'}
-          #- {os: ubuntu-16.04, build: 'static', cc: 'gcc-4.6', cxx: 'g++-4.6', autotools: 'no', cppstd: 'gnu++0x'}
-          #- {os: ubuntu-16.04, build: 'static', cc: 'gcc-4.7', cxx: 'g++-4.7', autotools: 'no', cppstd: 'gnu++11'}
-          #- {os: ubuntu-16.04, build: 'static', cc: 'gcc-4.8', cxx: 'g++-4.8', autotools: 'no', cppstd: 'c++11'}
-          - {os: ubuntu-16.04, build: 'static', cc: 'gcc-5', cxx: 'g++-5', autotools: 'no', cppstd: 'c++11'}
-          - {os: ubuntu-16.04, build: 'static', cc: 'gcc-6', cxx: 'g++-6', autotools: 'no', cppstd: 'c++11'}
-          - {os: ubuntu-latest, build: 'static', cc: 'gcc-7', cxx: 'g++-7', autotools: 'no', cppstd: 'c++11'}
+          # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.4', cxx: 'g++-4.4', autotools: 'no', cppstd: 'gnu++0x'}
+          # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.5', cxx: 'g++-4.5', autotools: 'no', cppstd: 'gnu++0x'}
+          # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.6', cxx: 'g++-4.6', autotools: 'no', cppstd: 'gnu++0x'}
+          - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.7', cxx: 'g++-4.7', autotools: 'no', cppstd: 'gnu++11'}
+          - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.8', cxx: 'g++-4.8', autotools: 'no', cppstd: 'c++11'}
+          - {os: ubuntu-20.04, build: 'static', cc: 'gcc-5', cxx: 'g++-5', autotools: 'no', cppstd: 'c++11'}
+          # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-6', cxx: 'g++-6', autotools: 'no', cppstd: 'c++11'}
+          - {os: ubuntu-20.04, build: 'static', cc: 'gcc-7', cxx: 'g++-7', autotools: 'no', cppstd: 'c++11'}
           - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
           - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
           - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11'}
@@ -54,69 +55,65 @@ jobs:
       CC: ${{ matrix.config.cc }}
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: ruby/setup-ruby@v1
-      if: matrix.config.os == 'ubuntu-16.04'
-      with:
-        ruby-version: 2.6
-    - name: Install ruby hrx module
-      if: matrix.config.os == 'ubuntu-16.04'
-      run: sudo /opt/hostedtoolcache/Ruby/2.6.7/x64/bin/gem install hrx
-    - name: Install ruby minitest module
-      if: matrix.config.os == 'ubuntu-16.04'
-      run: sudo /opt/hostedtoolcache/Ruby/2.6.7/x64/bin/gem install minitest
-    - name: Install automake if needed (MacOS)
-      if: runner.os == 'macOS'
-      run: brew install automake
+    - uses: actions/checkout@v4
     - name: Install gcc 7 if needed
       if: matrix.config.cc == 'gcc-7'
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu focal main universe"
         sudo apt update
-        sudo apt install g++-7 -y
+        sudo apt install g++-7 gcc-7 -y
     - name: Install gcc 6 if needed
       if: matrix.config.cc == 'gcc-6'
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial main"
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial universe"
         sudo apt update
-        sudo apt install g++-6 -y
+        sudo apt install g++-6 gcc-6 -y
     - name: Install gcc 5 if needed
       if: matrix.config.cc == 'gcc-5'
       run: |
-        sudo add-apt-repository universe
-        sudo add-apt-repository multiverse
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial main"
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial universe"
         sudo apt update
         sudo apt install g++-5 -y
     - name: Install gcc 4.8 if needed
       if: matrix.config.cc == 'gcc-4.8'
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial main"
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial universe"
         sudo apt update
         sudo apt install g++-4.8 -y
     - name: Install gcc 4.7 if needed
       if: matrix.config.cc == 'gcc-4.7'
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial main"
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial universe"
         sudo apt update
         sudo apt install g++-4.7 -y
     - name: Install gcc 4.6 if needed
       if: matrix.config.cc == 'gcc-4.6'
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial main"
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial universe"
         sudo apt update
         sudo apt install g++-4.6 -y
     - name: Install gcc 4.5 if needed
       if: matrix.config.cc == 'gcc-4.5'
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial main"
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial universe"
         sudo apt update
         sudo apt install g++-4.5 -y
     - name: Install gcc 4.4 if needed
       if: matrix.config.cc == 'gcc-4.4'
       run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial main"
+        sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ xenial universe"
         sudo apt update
         sudo apt install g++-4.4 -y
+    - name: Install autotools on MacOS
+      if: matrix.config.os == 'macOS-latest'
+      run: brew install autoconf automake libtool
     - name: ./script/ci-install-deps
       env:
         MAKE_OPTS: LIBSASS_CPPSTD=${{ matrix.config.cppstd }}
@@ -139,64 +136,106 @@ jobs:
 
   windows-msvc:
     runs-on: ${{ matrix.config.os }}
-    name: Windows MSVC build
+    name: MSVC
     # if: ${{ false }}
 
     strategy:
-      # fail-fast: false
+      fail-fast: false
       matrix:
         config:
-          - {os: 'windows-latest', build: Release, platform: Win64, version: 'latest'}
-          - {os: 'windows-latest', build: Debug, platform: Win64, version: 'latest'}
-          - {os: 'windows-latest', build: Release, platform: Win32, version: 'latest'}
-          - {os: 'windows-latest', build: Debug, platform: Win32, version: 'latest'}
-          - {os: 'windows-2016', build: Release, platform: Win64, version: '[15.0,16.0]'}
-          - {os: 'windows-2016', build: Debug, platform: Win64, version: '[15.0,16.0]'}
-          - {os: 'windows-2016', build: Release, platform: Win32, version: '[15.0,16.0]'}
-          - {os: 'windows-2016', build: Debug, platform: Win32, version: '[15.0,16.0]'}
+          - {os: 'windows-latest', build: Release, platform: x64, version: 'latest'}
+          - {os: 'windows-latest', build: Release, platform: x86, version: 'latest'}
+          #- {os: 'windows-latest', build: Release, platform: arm64, version: 'latest'}
+          - {os: 'windows-latest', build: Release, platform: arm, version: 'latest'}
+          - {os: 'windows-latest', build: Debug, platform: x64, version: 'latest'}
+          - {os: 'windows-latest', build: Debug, platform: x86, version: 'latest'}
+          #- {os: 'windows-latest', build: Debug, platform: arm64, version: 'latest'}
+          - {os: 'windows-latest', build: Debug, platform: arm, version: 'latest'}
+          - {os: 'windows-2019', build: Release, platform: x64, version: '[16.0,16.99]'}
+          - {os: 'windows-2019', build: Release, platform: x86, version: '[16.0,16.99]'}
+          #- {os: 'windows-2019', build: Release, platform: arm64, version: '[16.0,16.99]'}
+          - {os: 'windows-2019', build: Release, platform: arm, version: '[16.0,16.99]'}
+          - {os: 'windows-2019', build: Debug, platform: x64, version: '[16.0,16.99]'}
+          - {os: 'windows-2019', build: Debug, platform: x86, version: '[16.0,16.99]'}
+          #- {os: 'windows-2019', build: Debug, platform: arm64, version: '[16.0,16.99]'}
+          - {os: 'windows-2019', build: Debug, platform: arm, version: '[16.0,16.99]'}
 
     steps:
     - name: Change git config to preserve line-endings
       run: |
         git config --system core.autocrlf false
         git config --system core.eol lf
-    - uses: actions/checkout@v2
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: 2.6
-        bundler-cache: true
-    - name: Install ruby hrx module
-      run: gem install hrx
-    - name: Install ruby minitest module
-      run: gem install minitest
+    - uses: actions/checkout@v4
+    - name: Add ASAN DLL directory to PATH
+      if: ${{ matrix.config.build == 'Debug' }}
+      shell: pwsh
+      run: |
+        $installDir=(& "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath)
+        echo "Detected MSVC install dir: \"${installDir}\""
+        if ("${{ 'msvc' }}" -eq "msvc") {
+          if (Test-Path -Path "${installDir}\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt") {
+            $vctoolsVersion=(Get-Content -Path "${installDir}\VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt")
+            echo "Detected VCTools version: ${vctoolsVersion}"
+          } else {
+            echo "Failed to detect MSVC version"
+            exit 1
+          }
+          dir "${installDir}\VC\Tools\MSVC\${vctoolsVersion}\bin"
+          dir "${installDir}\VC\Tools\MSVC\${vctoolsVersion}\bin\arm64"
+          "${installDir}\VC\Tools\MSVC\${vctoolsVersion}\bin\HostX64\${{ matrix.config.platform }}" >> $env:GITHUB_PATH
+        } else {
+          $clangVersion=((& "${installDir}\VC\Tools\Llvm\x64\bin\clang.exe" --version) | Select-String -Pattern "\d+.\d+.\d+" | % { $_.Matches } | % { $_.Value })
+          echo "Detected clang version: ${clangVersion}"
+          "${installDir}\VC\Tools\Llvm\x64\lib\clang\${clangVersion}\lib\windows" >> $env:GITHUB_PATH
+        }
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v2
       with:
         vs-version: ${{ matrix.config.version }}
+        msbuild-architecture: ${{ matrix.config.platform }}
     - name: Clone and checkout sassc repository
-      run: git clone https://github.com/mgreter/sassc.git --branch refactor/libsass-4-alpha
+      run: git clone https://github.com/mgreter/sassc-ng.git --branch libsass-ng sassc
     - name: Clone and checkout sass-spec repository
-      run: git clone https://github.com/mgreter/sass-spec.git --branch refactor/libsass-4-alpha
+      run: git clone https://github.com/mgreter/sass-spec-ng.git --branch libsass-ng sass-spec
     - name: Compile libsass ${{ matrix.config.build }} build for ${{ matrix.config.platform }}
       run: msbuild /m:4 /p:Configuration=${{ matrix.config.build }} /p:Platform=${{ matrix.config.platform }} sassc\win\sassc.sln
+    - name: Listening results
+      run: dir sassc\bin
     - name: Check sassc help call
+      if: matrix.config.platform != 'arm' && matrix.config.platform != 'arm64'
       run: sassc\bin\sassc.exe --term-colors --help
+    - name: Bootstrap spec test runner
+      if: matrix.config.platform != 'arm' && matrix.config.platform != 'arm64'
+      run: npm --prefix sass-spec ci
     - name: Execute spec test runner
-      if: matrix.config.build != 'Debug'
-      run: ruby sass-spec/sass-spec.rb --probe-todo --impl libsass -c sassc/bin/sassc.exe -s sass-spec/spec
+      if: matrix.config.platform != 'arm' && matrix.config.platform != 'arm64'
+      run: npm --prefix sass-spec run sass-spec -- -c "../sassc/bin/sassc.exe" --impl "libsass"
 
   windows-mingw:
     runs-on: windows-latest
-    name: Windows MinGW build
+    name: MinGW
+    # if: ${{ false }}
 
     strategy:
-      # fail-fast: false
+      fail-fast: false
       matrix:
         config:
-          - {build: shared, platform: x64}
-          - {build: static, platform: x64}
-          - {build: shared, platform: x86}
-          - {build: static, platform: x86}
+          - {build: static, platform: x64, version: 13.2.0}
+          - {build: static, platform: x64, version: 12.2.0}
+          - {build: static, platform: x64, version: 11.2.0}
+          - {build: static, platform: x64, version: 10.3.0}
+          - {build: shared, platform: x64, version: 13.2.0}
+          - {build: shared, platform: x64, version: 12.2.0}
+          - {build: shared, platform: x64, version: 11.2.0}
+          - {build: shared, platform: x64, version: 10.3.0}
+          - {build: static, platform: x86, version: 13.2.0}
+          - {build: static, platform: x86, version: 12.2.0}
+          - {build: static, platform: x86, version: 11.2.0}
+          - {build: static, platform: x86, version: 10.3.0}
+          - {build: shared, platform: x86, version: 13.2.0}
+          - {build: shared, platform: x86, version: 12.2.0}
+          - {build: shared, platform: x86, version: 11.2.0}
+          - {build: shared, platform: x86, version: 10.3.0}
 
     env:
       ASAN_OPTIONS: ${{ matrix.config.asan }}
@@ -210,23 +249,17 @@ jobs:
       run: |
         git config --system core.autocrlf false
         git config --system core.eol lf
-    - uses: actions/checkout@v2
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: 2.6
-        bundler-cache: true
+    - uses: actions/checkout@v4
     - name: Set up MinGW
-      uses: egor-tensin/setup-mingw@v2
+      # uses: egor-tensin/setup-mingw@v2.2.0
+      uses: ocbnet/setup-mingw@master
       with:
+        version: ${{ matrix.config.version }}
         platform: ${{ matrix.config.platform }}
-    - name: Install ruby hrx module
-      run: gem install hrx
-    - name: Install ruby minitest module
-      run: gem install minitest
     - name: Clone and checkout sassc repository
-      run: git clone https://github.com/mgreter/sassc.git --branch refactor/libsass-4-alpha
+      run: git clone https://github.com/mgreter/sassc-ng.git --branch libsass-ng sassc
     - name: Clone and checkout sass-spec repository
-      run: git clone https://github.com/mgreter/sass-spec.git --branch refactor/libsass-4-alpha
+      run: git clone https://github.com/mgreter/sass-spec-ng.git --branch libsass-ng sass-spec
     - name: Compile libsass ${{ matrix.config.build }} build for ${{ matrix.config.platform }}
       run: make -j5 ${{ matrix.config.build }} BUILD=${{ matrix.config.build }} CC=gcc
     - name: Listening results
@@ -238,9 +271,12 @@ jobs:
       run: make -j5 sassc BUILD=${{ matrix.config.build }} CC=gcc
     - name: Check sassc help call
       run: sassc\bin\sassc.exe --term-colors --help
+    - name: Bootstrap spec test runner
+      if: matrix.config.build != 'Debug'
+      run: npm --prefix sass-spec ci
     - name: Execute spec test runner
-      run: ruby sass-spec/sass-spec.rb --probe-todo --impl libsass -c sassc/bin/sassc.exe -s sass-spec/spec
-
+      if: matrix.config.build != 'Debug'
+      run: npm --prefix sass-spec run sass-spec -- -c "../sassc/bin/sassc.exe" --impl "libsass"
 
 #- name: Install LLVM and Clang
 #  uses: KyleMayes/install-llvm-action@v1.2.2

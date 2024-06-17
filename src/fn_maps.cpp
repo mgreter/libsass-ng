@@ -362,7 +362,7 @@ namespace Sass {
       static BUILT_IN_FN(keys)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
-        return SASS_MEMORY_NEW(List, pstate, std::move(map->keys()), SASS_COMMA);
+        return SASS_MEMORY_NEW(List, pstate, map->keys(), SASS_COMMA);
       }
 
       /*******************************************************************/
@@ -370,7 +370,7 @@ namespace Sass {
       static BUILT_IN_FN(values)
       {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
-        return SASS_MEMORY_NEW(List, pstate, std::move(map->values()), SASS_COMMA);
+        return SASS_MEMORY_NEW(List, pstate, map->values(), SASS_COMMA);
       }
 
       /*******************************************************************/

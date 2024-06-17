@@ -25,7 +25,7 @@ namespace Sass {
 
   public:
 
-    enum WarningType {
+    enum WarningType : uint8_t {
       WARN_MATH_DIV,
       WARN_CAPI_FN,
       WARN_ANGLE_CONVERT,
@@ -48,6 +48,7 @@ namespace Sass {
       WARN_DUPE_VAR_FLAG,
       WARN_DOUBLE_DASH_MIXIN,
       WARN_ABS_PERCENT,
+      WARN_MS_ALPHA,
     };
 
     // Epsilon for precision
@@ -113,7 +114,7 @@ namespace Sass {
     void printWarning(
       const sass::string& message,
       const SourceSpan& pstate,
-      enum WarningType type,
+      WarningType type,
       bool deprecation = false);
 
   private:
@@ -157,19 +158,19 @@ namespace Sass {
     // void setPrecision(int precision);
 
     // Print a warning without any SourceSpan (used by @warn)
-    void addWarning(const sass::string& message, enum WarningType);
+    void addWarning(const sass::string& message, WarningType);
 
     // Print a debug message without any SourceSpan (used by @debug)
     void addDebug(const sass::string& message, const SourceSpan& pstate);
 
     // Print a warning with SourceSpan attached (used internally)
-    void addWarning(const sass::string& message, const SourceSpan& pstate, enum WarningType type)
+    void addWarning(const sass::string& message, const SourceSpan& pstate, WarningType type)
     {
       printWarning(message, pstate, type, false);
     }
 
     // Print a deprecation warning with SourceSpan attached (used internally)
-    void addDeprecation(const sass::string& message, const SourceSpan& pstate, enum WarningType type)
+    void addDeprecation(const sass::string& message, const SourceSpan& pstate, WarningType type)
     {
       printWarning(message, pstate, type, true);
     }

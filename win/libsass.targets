@@ -223,6 +223,7 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\environment_cnt.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\environment_key.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\calculation.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\calc_names.hpp" />
   </ItemGroup>
   <ItemGroup Label="LibSass Sources">
     <ClCompile Include="$(LIBSASS_SRC_DIR)\memory_allocator.cpp" />
@@ -258,5 +259,6 @@
     <ClCompile Include="$(LIBSASS_SRC_DIR)\shared_ptr.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\unicode.cpp" />
     <ClCompile Include="$(LIBSASS_SRC_DIR)\calculation.cpp" />
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\calc_names.cpp" />
   </ItemGroup>
 </Project>

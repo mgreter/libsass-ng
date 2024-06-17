@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.61])
+AC_PREREQ([2.71])
 
-AC_INIT([libsass], m4_esyscmd_s([./version.sh]), [support@moovweb.com])
+AC_INIT([libsass],[m4_esyscmd_s(./version.sh)],[support@moovweb.com])
 # AC_CONFIG_SRCDIR([src/ast.hpp])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([src/config.h])
@@ -12,7 +12,7 @@ AC_CONFIG_AUX_DIR([script])
 
 # These are flags passed to automake
 # Though they look like gcc flags!
-AM_INIT_AUTOMAKE([foreign parallel-tests -Wall])
+AM_INIT_AUTOMAKE([foreign parallel-tests subdir-objects -Wall])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([no])])
 
 # Checks for programs.
@@ -20,7 +20,7 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_LANG_PUSH([C])
 AC_LANG_PUSH([C++])
-AC_GNU_SOURCE
+AC_USE_SYSTEM_EXTENSIONS
 # Check fails on Travis, but it works fine
 # AX_CXX_COMPILE_STDCXX_11([ext],[optional])
 AC_CHECK_TOOL([AR], [ar], [false])
@@ -58,8 +58,7 @@ fi
 if test "x$enable_tests" = "xyes"; then
   AC_PROG_CC
   AC_PROG_AWK
-  # test need minitest gem
-  AC_PATH_PROG(RUBY, [ruby])
+  AC_PATH_PROG(NPM, [npm])
   AC_PATH_PROG(TAPOUT, [tapout])
   AC_REQUIRE_AUX_FILE([tap-driver])
   AC_REQUIRE_AUX_FILE([tap-runner])
@@ -68,8 +67,8 @@ if test "x$enable_tests" = "xyes"; then
               [sassc_dir="$withval"], [sassc_dir="sassc"])
   AC_CHECK_FILE([$sassc_dir/sassc.c], [], [
     AC_MSG_ERROR([Unable to find sassc directory.
-You must clone the sassc repository in this directory or specify
-the --with-sassc-dir=<dir> argument.
+You must clone the sassc repository into this directory
+or specify the --with-sassc-dir=<dir> argument.
 ])
   ])
   SASS_SASSC_PATH=$sassc_dir
@@ -78,10 +77,10 @@ the --with-sassc-dir=<dir> argument.
   AC_ARG_WITH(sass-spec-dir,
               AS_HELP_STRING([--with-sass-spec-dir=<dir>], [specify directory of sass-spec for testing (default: sass-spec)]),
               [sass_spec_dir="$withval"], [sass_spec_dir="sass-spec"])
-  AC_CHECK_FILE([$sass_spec_dir/sass-spec.rb], [], [
+  AC_CHECK_FILE([$sass_spec_dir/sass-spec.ts], [], [
     AC_MSG_ERROR([Unable to find sass-spec directory.
-You must clone the sass-spec repository in this directory or specify
-the --with-sass-spec-dir=<dir> argument.
+You must clone the sass-spec repository into this directory
+or specify the --with-sass-spec-dir=<dir> argument.
 ])
   ])
   # Automake doesn't like its tests in an absolute path, so we make it relative.

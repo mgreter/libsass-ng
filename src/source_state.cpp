@@ -19,7 +19,7 @@ namespace Sass
     source(source),
     position(position)
   {
-    assert(source != nullptr);
+    // assert(source != nullptr);
   }
 
   /////////////////////////////////////////////////////////////////////////

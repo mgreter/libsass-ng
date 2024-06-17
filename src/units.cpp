@@ -18,7 +18,7 @@ namespace Sass {
   /* and yes, we actually use both, not sure why, but why not!? */
   /////////////////////////////////////////////////////////////////////////
 
-  const int size_conversion_factors_count = 7;
+  const size_t size_conversion_factors_count = 7;
   const double size_conversion_factors[7][7] =
   {
              /*  in           cm           pc           mm           pt           px           q           */
@@ -31,7 +31,7 @@ namespace Sass {
     /* q    */ { 1.0/101.6,   2.54/101.6,  6.0/101.6,   25.4/101.6,  72.0/101.6,  96.0/101.6,  101.6/101.6 }
   };
 
-  const int time_conversion_factors_count = 2;
+  const size_t time_conversion_factors_count = 2;
   const double time_conversion_factors[2][2] =
   {
              /*  s            ms        */
@@ -39,7 +39,7 @@ namespace Sass {
     /* ms   */ { 1/1000.0,    1.0       }
   };
 
-  const int angle_conversion_factors_count = 4;
+  const size_t angle_conversion_factors_count = 4;
   const double angle_conversion_factors[4][4] =
   {
              /*  deg          grad         rad          turn      */
@@ -49,7 +49,7 @@ namespace Sass {
     /* turn */ { 360.0,       400.0,       2.0*PI,      1.0       }
   };
 
-  const int frequency_conversion_factors_count = 2;
+  const size_t frequency_conversion_factors_count = 2;
   const double frequency_conversion_factors[2][2] =
   {
              /*  Hz           kHz       */
@@ -57,7 +57,7 @@ namespace Sass {
     /* kHz  */ { 1000.0,      1.0       }
   };
 
-  const int resolution_conversion_factors_count = 3;
+  const size_t resolution_conversion_factors_count = 3;
   const double resolution_conversion_factors[3][3] =
   {
              /*  dpi          dpcm         dppx     */

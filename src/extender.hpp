@@ -13,7 +13,6 @@
 
 #include "ast_helpers.hpp"
 #include "backtrace.hpp"
-//#include "extension.hpp"
 
 namespace Sass {
 
@@ -97,7 +96,7 @@ namespace Sass {
 
   public:
 
-    enum ExtendMode { TARGETS, REPLACE, NORMAL, };
+    enum ExtendMode : unsigned char { TARGETS, REPLACE, NORMAL, };
 
     mutable ExtSmplSelSet wasExtended2;
 
@@ -281,7 +280,7 @@ namespace Sass {
     void addExtensions(
       sass::vector<ExtensionStoreObj>& extensionStores);
 
-    Extension* PutOrMerge(ExtSelExtMapEntry& map, ComplexSelector* key, Extension* value);
+    Extension* PutOrMerge(ExtSelExtMapEntry& map, const ComplexSelectorObj& key, Extension* value);
 
   private:
 
@@ -469,7 +468,5 @@ namespace Sass {
 
 
 }
-
-#include "extension.hpp"
 
 #endif

@@ -13,7 +13,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  enum UnitClass {
+  // Requires 3 bits for unit class
+  enum UnitClass : uint16_t {
     LENGTH = 0x000,
     TIME = 0x100,
     ANGLE = 0x200,
@@ -25,7 +26,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  enum UnitType {
+  // Requires 3 bits for unit type
+  enum UnitType : uint16_t {
 
     // size units
     INCH = UnitClass::LENGTH,
@@ -148,6 +150,9 @@ namespace Sass {
 
     // Compare units (without any normalizing)
     bool operator==(const Units& rhs) const;
+    bool operator!=(const Units& rhs) const {
+      return !(*this == rhs);
+    }
 
     // Delete other operators to make implementation more clear
     // Helps us spot cases where we use undefined implementations

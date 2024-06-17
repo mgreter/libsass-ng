@@ -231,6 +231,14 @@ namespace Sass {
       return *this;
     }
 
+    static T* detach(T* ptr)
+    {
+      if (ptr != nullptr) {
+        ptr->refcount |= SET_DETACHED_BITMASK;
+      }
+      return ptr;
+    }
+
     // Prevents all SharedPtrs from freeing this node
     // until it is assigned to any other SharedPtr.
     T* detach()

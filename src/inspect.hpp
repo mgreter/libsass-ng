@@ -103,7 +103,7 @@ namespace Sass {
     // Not part of visitors (used internally as entry points)
     /////////////////////////////////////////////////////////////////////////
 
-    virtual void acceptCssString(const CssString*);
+    virtual void acceptCssString(const sass::string&);
     virtual void acceptCssMediaQuery(CssMediaQuery*);
     virtual void acceptInterpolation(Interpolation*);
     virtual void acceptNameSpaceSelector(SelectorNS*);

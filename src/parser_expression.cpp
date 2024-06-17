@@ -105,7 +105,7 @@ namespace Sass {
 
   void ExpressionParser::resolveOneOperation()
   {
-    enum SassOperator op = operators.back();
+    SassOperator op = operators.back();
     SourceSpan opstate = opstates.back();
     uint8_t isCalcSafe = calcSafe.back();
     // auto start(parser.scanner.offset);

@@ -96,6 +96,27 @@
 // Brings up to 5% improvement
 #define SASS_ELIDE_COPIES
 
+// When defined we will force to calculate the hash for comparisons
+// If disabled, we check if hashes are there and use them voluntarily
+// Helps if we keep comparing the same items for equality (seen 5%)
+#define SASS_FORCE_CMP_HASH
+
+// Use native thread local if possible
+// Or always use shim from `thread_local`
+// When using shim, we must link to pthread
+#define USE_STD_THREAD_LOCAL 1
+
+// Use non thread-safe optimizations?
+// Only enable if you know the use-case!
+// E.g. not using thread local memory pool
+// Shim is quite a bit slower than original
+// Ok to cache CWD, but not for memory pool
+// #define SASS_OPTIMIZE_SINGLE_THREADED
+
+// Regresses quite heavy in performance
+// ToDo: find out why, should be faster?
+// #define SASS_USE_TSL_HOPSCOTCH
+
 /////////////////////////////////////////////////////////////////////////
 // Self assign optimization is experimental and may break your code
 /////////////////////////////////////////////////////////////////////////
@@ -115,16 +136,6 @@
 #ifndef SassAssignableRefCount
 #define SassAssignableRefCount 3
 #endif
-
-/////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
-// When defined we will force to calculate the hash for comparisons
-// If disabled, we check if hashes are there and use them voluntarily
-// Helps if we keep comparing the same items for equality (seen 5%)
-#define SASS_FORCE_CMP_HASH
-
-// #define USE_TSL_HOPSCOTCH
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////

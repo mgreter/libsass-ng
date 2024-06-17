@@ -7,19 +7,6 @@
 
 namespace Sass {
 
-
-  template <typename T>
-  sass::string VecToString2(sass::vector<T> exts) {
-    sass::string msg = "[";
-    bool joiner = false;
-    for (auto& entry : exts) {
-      if (joiner) msg += ", ";
-      msg += entry->inspect();
-      joiner = true;
-    }
-    return msg + "]";
-
-  }
   /////////////////////////////////////////////////////////////////////////
   // Returns the contents of a [SelectorList] that matches only 
   // elements that are matched by both [complex1] and [complex2].
@@ -193,12 +180,8 @@ namespace Sass {
         return others;
     }
 
-    //if (std::find(others.begin(), others.end(), this) != others.end()) {
-    //  return others; // simply return what we already have
-    //}
-
     sass::vector<SimpleSelectorObj> results;
-    // results.reserve(rhs->size() + 1);
+    // results.reserve(others->size() + 1);
     bool addedThis = false;
     for (auto& simple : others) {
       // Make sure pseudo selectors always come last.
@@ -222,8 +205,8 @@ namespace Sass {
     const sass::vector<SimpleSelectorObj>& rhs)
   {
     for (const SimpleSelector* sel : rhs) {
-      if (const IDSelector* id_sel = sel->isaIDSelector()) {
-        if (id_sel->name() != name()) return {};
+      if (const IDSelector* ids = sel->isaIDSelector()) {
+        if (ids->name() != name()) return {};
       }
     }
     // Dispatch to base implementation

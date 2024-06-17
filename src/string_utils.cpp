@@ -32,7 +32,7 @@ namespace Sass {
     // You must make sure that the first argument is already lowercase!
     // Note: No unicode case sensitivity rules are implemented
     static bool _equalsIgnoreCaseConst(const char a, const char b) {
-      return a == b || a == Character::toLowerCase(b);
+      return /* a == b || */ a == Character::toLowerCase(b);
     }
 
     /////////////////////////////////////////////////////////////////////////

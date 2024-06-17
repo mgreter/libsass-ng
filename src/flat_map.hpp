@@ -84,11 +84,12 @@ namespace Sass {
     // Removes item with specific key from the map
     void erase(const K& key)
     {
-      const_iterator cur = items.begin();
-      const_iterator end = items.end();
+      iterator cur = items.begin();
+      iterator end = items.end();
       while (cur != end) {
         // Compare the normalized keys
         if (cur->first == key) {
+          // Error on gcc 4.8
           items.erase(cur);
           return;
         }

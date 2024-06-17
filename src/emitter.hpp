@@ -58,7 +58,7 @@ namespace Sass {
       // return buffer as sass::string
       sass::string get_buffer(bool trim = false);
       // flush scheduled space/linefeed
-      enum SassOutputStyle output_style(void) const;
+      SassOutputStyle output_style(void) const;
       // add outstanding linefeed
       void finalize(bool final = true);
       // flush scheduled space/linefeed

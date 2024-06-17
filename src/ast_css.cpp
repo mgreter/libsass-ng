@@ -180,41 +180,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  CssString::CssString(
-    const SourceSpan& pstate,
-    const sass::string& text) :
-    AstNode(pstate),
-    text_(text)
-  {}
-
-  bool CssString::operator==(const CssString & rhs) const
-  {
-    return text_ == rhs.text_;
-  }
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  CssStringList::CssStringList(
-    const SourceSpan& pstate,
-    StringVector&& texts) :
-    AstNode(pstate),
-    texts_(std::move(texts))
-  {}
-
-  bool CssStringList::operator==(const CssStringList & rhs) const
-  {
-    return texts_ == rhs.texts_;
-  }
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   CssAtRule::CssAtRule(
     const SourceSpan& pstate,
     CssParentNode* parent,
-    CssString* name,
-    CssString* value,
+    const sass::string& name,
+    const sass::string& value,
     bool isChildless,
     CssNodeVector&& children) :
     CssParentNode(
@@ -238,8 +208,8 @@ namespace Sass {
   bool CssAtRule::equalsIgnoringChildren(CssNode * other) const
   {
     if (const CssAtRule* rule = other->isaCssAtRule()) {
-      return ObjEqualityFn(name_, rule->name_)
-        && ObjEqualityFn(value_, rule->value_)
+      return name_ == rule->name_
+        && value_ == rule->value_
         && isChildless_ == rule->isChildless_;
     }
     return false;
@@ -269,13 +239,13 @@ namespace Sass {
 
   CssDeclaration::CssDeclaration(
     const SourceSpan& pstate,
-    CssString* name,
+    const sass::string& name,
     Value* value,
-    bool is_custom_property) :
+    bool wasCustomProperty) :
     CssNode(pstate),
     name_(name),
     value_(value),
-    is_custom_property_(is_custom_property)
+    wasCustomProperty_(wasCustomProperty)
   {}
 
   CssDeclaration::CssDeclaration(
@@ -283,7 +253,7 @@ namespace Sass {
     CssNode(ptr),
     name_(ptr->name_),
     value_(ptr->value_),
-    is_custom_property_(ptr->is_custom_property_)
+    wasCustomProperty_(ptr->wasCustomProperty_)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -292,8 +262,8 @@ namespace Sass {
   // Value constructor
   CssImport::CssImport(
     const SourceSpan& pstate,
-    CssString* url,
-    CssString* modifiers) :
+    sass::string&& url,
+    sass::string&& modifiers) :
     CssNode(pstate),
     url_(url),
     modifiers_(modifiers),
@@ -318,7 +288,7 @@ namespace Sass {
   CssKeyframeBlock::CssKeyframeBlock(
     const SourceSpan& pstate,
     CssParentNode* parent,
-    CssStringList* selector,
+    StringVector&& selector,
     CssNodeVector&& children) :
     CssParentNode(
       pstate, parent,
@@ -338,7 +308,7 @@ namespace Sass {
   bool CssKeyframeBlock::equalsIgnoringChildren(CssNode * other) const
   {
     if (const CssKeyframeBlock* kframe = other->isaCssKeyframeBlock()) {
-      return ObjEqualityFn(selector_, kframe->selector_);
+      return selector_ == kframe->selector_;
     }
     return false;
   }
@@ -460,6 +430,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Value copy constructor
+  // Only used when merging
   CssMediaQuery::CssMediaQuery(
     const SourceSpan& pstate,
     const sass::string& type,
@@ -472,6 +444,7 @@ namespace Sass {
     features_(features)
   {}
 
+  // Value move constructor
   CssMediaQuery::CssMediaQuery(
     const SourceSpan& pstate,
     sass::string&& type,
@@ -484,6 +457,7 @@ namespace Sass {
     features_(std::move(features))
   {}
 
+  // Value move constructor
   CssMediaQuery::CssMediaQuery(
     const SourceSpan& pstate,
     StringVector && conditions,
@@ -547,7 +521,7 @@ namespace Sass {
         // (grid)`, because it means `not (screen and (color))` and so it allows
         // a screen with no color but with a grid.
         if (listIsSubsetOrEqual(negativeFeatures, positiveFeatures)) {
-          return SASS_MEMORY_NEW(CssMediaQuery, pstate(), "");
+          return SASS_MEMORY_NEW(CssMediaQuery, pstate(), "", "", {});
         }
         // Otherwise we can't merge them
         // std::cerr << "NOT REPRESENTABLE 2\n";
@@ -588,7 +562,7 @@ namespace Sass {
     if (!equalsIgnoreCase(thisType, otherType)) {
       // Check that nothing has an "all" modifier
       if (!thisMatchesAll && !otherMatchesAll) {
-        return SASS_MEMORY_NEW(CssMediaQuery, pstate(), "");
+        return SASS_MEMORY_NEW(CssMediaQuery, pstate(), "", "", {});
       }
     }
 

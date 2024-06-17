@@ -13,6 +13,7 @@
 
 #include "ast_fwd_decl.hpp"
 #include "ast_def_macros.hpp"
+#include "memory_config.hpp"
 #include "backtrace.hpp"
 #include "hashing.hpp"
 #include "source.hpp"

@@ -74,7 +74,7 @@
 #include "randomize.hpp"
 
 // Include unordered map implementation
-#ifdef USE_TSL_HOPSCOTCH
+#ifdef SASS_USE_TSL_HOPSCOTCH
 #include "tessil/hopscotch_map.h"
 #include "tessil/hopscotch_set.h"
 #define UnorderedMap tsl::hopscotch_map
@@ -111,11 +111,11 @@ namespace Sass {
 
     // Change default input syntax for entry point
     // Only applied if entry point has AUTO syntax
-    enum SassImportSyntax input_syntax;
+    SassImportSyntax input_syntax;
 
     // Output style for the generated CSS code
     // A value from above SASS_STYLE_* constants
-    enum SassOutputStyle output_style;
+    SassOutputStyle output_style;
 
     // Precision for fractional numbers
     int precision;
@@ -138,7 +138,7 @@ namespace Sass {
 
     // initialization list (constructor with defaults)
     InspectOptions(
-      enum SassOutputStyle style = SASS_STYLE_NESTED,
+      SassOutputStyle style = SASS_STYLE_NESTED,
       int precision = SassDefaultPrecision) :
       input_syntax(SASS_IMPORT_AUTO),
       output_style(style),
@@ -166,7 +166,7 @@ namespace Sass {
     // Case 3: create source-maps, reference to file in css
     // Case 4: create source-maps, embed the json in the css
     // Note: Writing source-maps to disk depends on implementor
-    enum SassSrcMapMode mode;
+    SassSrcMapMode mode;
 
     // Flag to embed full sources
     // Ignored for SASS_SRCMAP_NONE

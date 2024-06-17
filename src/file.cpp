@@ -11,12 +11,6 @@
 // https://perldoc.perl.org/File/Basename.html
 // https://perldoc.perl.org/File/Spec.html
 
-#if defined (_MSC_VER) // Visual studio
-#define thread_local __declspec( thread )
-#elif defined (__GCC__) // GCC
-#define thread_local __thread
-#endif
-
 #ifdef _WIN32
 # ifdef __MINGW32__
 #  ifndef off64_t
@@ -36,6 +30,7 @@
 #include "character.hpp"
 #include "exceptions.hpp"
 #include "string_utils.hpp"
+#include "thread_local.hpp"
 
 namespace Sass {
 
@@ -77,7 +72,7 @@ namespace Sass {
   // Has proven to be the most stable, but the memory
   // will kinda leak (not relevant since long living).
   // One known offender is mingw v8.1.0 x86/i686
-  static thread_local sass::string* cwd;
+  static THREAD_LOCAL(sass::string*) cwd;
 
   // Initialize current directory once
   extern void set_cwd(const sass::string& path)
@@ -124,13 +119,17 @@ namespace Sass {
         return it->second;
       }
       #ifdef _WIN32
-        wchar_t resolved[32768]{};
+        // Use std::unique_ptr to avoid the bug stack allocations
+        // Also serves as a first test-balloon to see compiler support
+        std::unique_ptr<wchar_t[]> resolved{ new wchar_t[32768] };
+        // sass::wstring resolved; resolved.reserve(32768);
+        // wchar_t* ptr = const_cast<wchar_t*>(resolved.c_str());
         sass::wstring wpath(Unicode::utf8to16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
-        DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
+        DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved.get(), NULL);
         if (rv > 32767) throw Exception::OperationError("Path is too long");
         if (rv == 0) throw Exception::OperationError("Path could not be resolved");
-        DWORD dwAttrib = GetFileAttributesW(resolved); // was 3%
+        DWORD dwAttrib = GetFileAttributesW(resolved.get()); // was 3%
         bool result = (dwAttrib != INVALID_FILE_ATTRIBUTES
           && (!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
       #else
@@ -523,13 +522,17 @@ namespace Sass {
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
-        wchar_t resolved[32768]{};
+        // Use std::unique_ptr to avoid the bug stack allocations
+        // Also serves as a first test-balloon to see compiler support
+        std::unique_ptr<wchar_t[]> resolved{ new wchar_t[32768] };
+        // sass::wstring resolved; resolved.reserve(32768);
+        // wchar_t* ptr = const_cast<wchar_t*>(resolved.c_str());
         sass::wstring wpath(Unicode::utf8to16(abspath));
         std::replace(wpath.begin(), wpath.end(), '/', '\\');
-        DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved, NULL);
+        DWORD rv = GetFullPathNameW(wpath.c_str(), 32767, resolved.get(), NULL);
         if (rv > 32767) throw Exception::OperationError("Path is too long");
         if (rv == 0) throw Exception::OperationError("Path could not be resolved");
-        HANDLE hFile = CreateFileW(resolved, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        HANDLE hFile = CreateFileW(resolved.get(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
         if (hFile == INVALID_HANDLE_VALUE) return 0;
         // ToDo: do some file locking here!?
         DWORD dwFileLength = GetFileSize(hFile, NULL);

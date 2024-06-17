@@ -18,7 +18,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Enum for UnaryOpExpression (value prefix)
-  enum UnaryOpType { PLUS, MINUS, NOT, SLASH };
+  enum UnaryOpType : unsigned char { PLUS, MINUS, NOT, SLASH };
 
   /////////////////////////////////////////////////////////////////////////
   // The Parent Reference Expression.
@@ -684,8 +684,8 @@ namespace Sass {
     virtual sass::string toString() const override;
 
     // Declare up-casting methods
-    DECLARE_ISA_CASTER(IfExpression);
-    DECLARE_ISA_CASTER(FunctionExpression);
+    OVERRIDE_ISA_CASTER(IfExpression);
+    OVERRIDE_ISA_CASTER(FunctionExpression);
     DECLARE_ISA_CASTER(ItplFnExpression);
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(InvocationExpression);

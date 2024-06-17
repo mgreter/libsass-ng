@@ -57,6 +57,18 @@ const T* Cast(const AstNode* ptr) {
 
 inline void debug_ast(AstNode* node, std::string ind = "");
 
+template <typename T>
+sass::string VecToString2(sass::vector<T> exts) {
+  sass::string msg = "[";
+  bool joiner = false;
+  for (auto& entry : exts) {
+    if (joiner) msg += ", ";
+    msg += entry->inspect();
+    joiner = true;
+  }
+  return msg + "]";
+}
+
 inline sass::string ns_name(SelectorNS* s)
 {
   if (!s->hasNs()) return s->name();
@@ -70,9 +82,6 @@ inline std::string debug_pstate(SourceSpan pstate) {
   return str.str();
 }
 
-inline sass::string dbgValStr(CssString* str) {
-  return str ? str->text() : "{nullptr}";
-}
 
 // inline sass::string debug_vec(const AstNode* node) {
 //   if (node == NULL) return "null";
@@ -784,16 +793,10 @@ inline void debug_ast(AstNode* node, std::string ind)
     CssDeclaration* rule = Cast<CssDeclaration>(node);
     std::cerr << ind << "CssDeclaration " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
+    std::cerr << " " << rule->name();
     std::cerr << "\n";
-    debug_ast(rule->name(), ind + " name: ");
+    // debug_ast(rule->name(), ind + " name: ");
     debug_ast(rule->value(), ind + " prop: ");
-  }
-  else if (Cast<CssString>(node)) {
-    CssString* rule = Cast<CssString>(node);
-    std::cerr << ind << "CssString " << rule;
-    std::cerr << " (" << pstate_source_position(rule) << ")";
-    std::cerr << " <" << rule->text() << ">";
-    std::cerr << std::endl;
   }
   else if (Cast<CssMediaQuery>(node)) {
     CssMediaQuery* query = Cast<CssMediaQuery>(node);
@@ -957,7 +960,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     CssImport* block = Cast<CssImport>(node);
     std::cerr << ind << "CssImport " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [" << block->url()->text() << "] ";
+    std::cerr << " [" << block->url() << "] ";
     std::cerr << std::endl;
   }
   else if (Cast<IncludeImport>(node)) {
@@ -997,7 +1000,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     Declaration* block = Cast<Declaration>(node);
     std::cerr << ind << "Declaration " << block;
     std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [is_custom_property: " << block->is_custom_property() << "] ";
+    std::cerr << " [is_custom_property: " << block->isCustomProperty() << "] ";
     std::cerr << " " << block->tabs() << std::endl;
     debug_ast(block->name(), ind + " name: ");
     debug_ast(block->value(), ind + " value: ");
@@ -1347,8 +1350,8 @@ inline void debug_ast(AstNode* node, std::string ind)
   CssAtRule* rule = Cast<CssAtRule>(node);
     std::cerr << ind << "CssAtRule " << rule;
     std::cerr << " (" << pstate_source_position(rule) << ")";
-    std::cerr << " [name: " << dbgValStr(rule->name()) << "] ";
-    std::cerr << " [value: " << dbgValStr(rule->value()) << "] ";
+    std::cerr << " [name: " << rule->name() << "] ";
+    std::cerr << " [value: " << rule->value() << "] ";
     std::cerr << std::endl;
     debug_block(rule, ind + " ");
   }

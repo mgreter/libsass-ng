@@ -97,8 +97,6 @@ namespace Sass {
 
   class CssRoot;
   class CssNode;
-  class CssString;
-  class CssStringList;
   class CssMediaRule;
   class CssMediaQuery;
   class CssAtRule;
@@ -225,8 +223,6 @@ namespace Sass {
 
   IMPL_MEM_OBJ(CssRoot);
   IMPL_MEM_OBJ(CssNode);
-  IMPL_MEM_OBJ(CssStringList);
-  IMPL_MEM_OBJ(CssString);
   IMPL_MEM_OBJ(CssMediaRule);
   IMPL_MEM_OBJ(CssMediaQuery);
   IMPL_MEM_OBJ(CssAtRule);

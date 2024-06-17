@@ -27,7 +27,6 @@ namespace Sass {
         break;
       }
     }
-    // std::cerr << "TO MODULE " << url << " => " << transitivelyContainsExtensions << "\n";
   }
 
   Module::Module(const sass::string& url, EnvRefs* idxs) :

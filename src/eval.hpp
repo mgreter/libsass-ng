@@ -12,6 +12,7 @@
 // #include "extender.hpp"
 #include "ast_supports.hpp"
 #include "ast_callables.hpp"
+#include "calc_names.hpp"
 
 namespace Sass {
 
@@ -26,14 +27,12 @@ namespace Sass {
   public:
 
     // A pointer to the slot where we will assign to
-// Used to optimize self-assignment in functions
+    // Used to optimize self-assignments in functions
     ValueObj* assigne = nullptr;
 
     // Base references
     Logger& logger;
     Compiler& compiler;
-    // Use logger instead?
-    BackTraces& traces;
 
     /////////////////////////////////////////////////////////////////////////
     // Options related to scoped css and selector production
@@ -45,8 +44,6 @@ namespace Sass {
     // The name of the current declaration parent. Used for BEM-
     // declaration blocks as in `div { prefix: { suffix: val; } }`;
     sass::string declarationName;
-
-    CssMediaVector mediaStack;
 
     // The current media queries, if any.
     CssMediaQueryVectorObj mediaQueries;
@@ -336,7 +333,7 @@ namespace Sass {
 
     sass::string acceptInterpolation(InterpolationObj interpolation, bool warnForColor, bool trim = false);
     SourceData* interpolationToSource(InterpolationObj interpolation, bool warnForColor, bool trim = false, bool ws = true);
-    CssString* interpolationToCssString(InterpolationObj interpolation, bool warnForColor, bool trim = false);
+    sass::string interpolationToCssString(InterpolationObj interpolation, bool warnForColor, bool trim = false);
     SelectorListObj interpolationToSelector(Interpolation* interpolation, bool plainCss, bool allowParent = true);
 
     /////////////////////////////////////////////////////////////////////////
@@ -371,9 +368,9 @@ namespace Sass {
 
     Value* _visitCalculationExpression(Expression* node, bool inLegacySassFunction);
 
-    void _checkCalculationArguments(const sass::string& name, FunctionExpression* node, size_t maxArgs);
+    void _checkCalculationArguments(Calc::CFN fn, FunctionExpression* node, size_t maxArgs);
 
-    void _checkCalculationArguments(const sass::string& name, FunctionExpression* node);
+    void _checkCalculationArguments(Calc::CFN fn, FunctionExpression* node);
 
     Value* applyMixin(
       const SourceSpan& pstate, const EnvKey& name,
@@ -383,7 +380,7 @@ namespace Sass {
 
     private:
 
-    Value* visitCalcuation(const sass::string& name, FunctionExpression* node, bool inLegacySassFunction);
+    Value* visitCalcuation(Calc::CFN fn, FunctionExpression* node, bool inLegacySassFunction);
 
 
     protected:
@@ -516,9 +513,7 @@ public:
 
 
 
-    void _verifyCompatibleNumbers(sass::vector<AstNode*> args, const SourceSpan& pstate);
-
-    Value* operateInternal(const SourceSpan& span, SassOperator op, AstNode* lhs, AstNode* rhs, bool inLegacySassFunction, bool simplify);
+    //void _verifyCompatibleNumbers(sass::vector<AstNode*> args, const SourceSpan& pstate);
 
 };
 

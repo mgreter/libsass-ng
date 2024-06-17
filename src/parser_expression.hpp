@@ -41,7 +41,7 @@ namespace Sass {
     // appearance in the document. Because a low-precedence operator will cause
     // parsing to finish for all preceding higher-precedence operators, this is
     // naturally ordered from lowest to highest precedence.
-    sass::vector<enum SassOperator> operators;
+    sass::vector<SassOperator> operators;
     sass::vector<SourceSpan> opstates;
     sass::vector<uint8_t> calcSafe;
 

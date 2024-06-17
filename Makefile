@@ -158,7 +158,6 @@ endif
 SASS_SASSC_PATH ?= sassc
 SASS_SPEC_PATH ?= sass-spec
 SASS_SPEC_SPEC_DIR ?= spec
-LIBSASS_SPEC_PATH ?= libsass-spec
 LIBSASS_SPEC_SPEC_DIR ?= suites
 SASSC_BIN = $(SASS_SASSC_PATH)/bin/sassc
 RUBY_BIN = ruby
@@ -188,6 +187,8 @@ ifneq (Cygwin,$(UNAME))
 	LDFLAGS  += -fPIC
 endif
 endif
+
+SASSC_BIN_PATH = $(realpath $(SASSC_BIN))
 
 include Makefile.conf
 OBJECTS = $(addprefix src/,$(SOURCES:.cpp=.o))
@@ -318,66 +319,28 @@ version: $(SASSC_BIN)
 test: test_build
 
 $(SASS_SPEC_PATH):
-	git clone https://github.com/sass/sass-spec $(SASS_SPEC_PATH)
+	git clone https://github.com/mgreter/sass-spec-ng --branch libsass-ng $(SASS_SPEC_PATH)
 
-$(LIBSASS_SPEC_PATH):
-	git clone https://github.com/mgreter/libsass-spec $(LIBSASS_SPEC_PATH)
+test_build: $(SASSC_BIN) $(SASS_SPEC_PATH)
+	npm ci --prefix $(SASS_SPEC_PATH)
+	npm run --prefix $(SASS_SPEC_PATH) sass-spec \
+	-- --command $(SASSC_BIN_PATH) --impl libsass \
+	--cmd-args "-I $(SASS_SPEC_SPEC_DIR)" \
+	$(SASS_SPEC_SPEC_DIR)
 
-test_build: $(SASSC_BIN) $(SASS_SPEC_PATH) $(LIBSASS_SPEC_PATH)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I $(SASS_SPEC_PATH)/$(SASS_SPEC_SPEC_DIR)" \
-	$(LOG_FLAGS) $(SASS_SPEC_PATH)/$(SASS_SPEC_SPEC_DIR)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/$(LIBSASS_SPEC_SPEC_DIR)" \
-	$(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/$(LIBSASS_SPEC_SPEC_DIR)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/styles/compressed -t compressed" \
-	$(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/styles/compressed
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/styles/nested -t nested" \
-	$(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/styles/nested
+test_full: $(SASSC_BIN) $(SASS_SPEC_PATH)
+	npm ci --prefix $(SASS_SPEC_PATH)
+	npm run --prefix $(SASS_SPEC_PATH) sass-spec \
+	-- --command $(SASSC_BIN_PATH) --impl libsass \
+	--cmd-args "-I $(SASS_SPEC_SPEC_DIR)" \
+	--run-todo $(SASS_SPEC_SPEC_DIR)
 
-test_full: $(SASSC_BIN) $(SASS_SPEC_PATH) $(LIBSASS_SPEC_PATH)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I $(SASS_SPEC_PATH)/$(SASS_SPEC_SPEC_DIR)" \
-	--run-todo $(LOG_FLAGS) $(SASS_SPEC_PATH)/$(SASS_SPEC_SPEC_DIR)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/$(LIBSASS_SPEC_SPEC_DIR)" \
-	--run-todo $(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/$(LIBSASS_SPEC_SPEC_DIR)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/styles/compressed -t compressed" \
-	--run-todo $(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/styles/compressed
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/styles/nested -t nested" \
-	--run-todo $(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/styles/nested
-
-test_probe: $(SASSC_BIN) $(SASS_SPEC_PATH) $(LIBSASS_SPEC_PATH)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I $(SASS_SPEC_PATH)/$(SASS_SPEC_SPEC_DIR)" \
-	--probe-todo $(LOG_FLAGS) $(SASS_SPEC_PATH)/$(SASS_SPEC_SPEC_DIR)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/$(LIBSASS_SPEC_SPEC_DIR)" \
-	--probe-todo $(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/$(LIBSASS_SPEC_SPEC_DIR)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/styles/compressed -t compressed" \
-	--probe-todo $(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/styles/compressed
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/styles/nested -t nested" \
-	--probe-todo $(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/styles/nested
-
-test_interactive: $(SASSC_BIN) $(SASS_SPEC_PATH) $(LIBSASS_SPEC_PATH)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I $(SASS_SPEC_PATH)/$(SASS_SPEC_SPEC_DIR)" \
-	--interactive $(LOG_FLAGS) $(SASS_SPEC_PATH)/$(SASS_SPEC_SPEC_DIR)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/$(LIBSASS_SPEC_SPEC_DIR)" \
-	--interactive $(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/$(LIBSASS_SPEC_SPEC_DIR)
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/styles/compressed -t compressed" \
-	--interactive $(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/styles/compressed
-	$(RUBY_BIN) $(SASS_SPEC_PATH)/sass-spec.rb -c $(SASSC_BIN) --impl libsass \
-	--cmd-args "-I . -I $(LIBSASS_SPEC_PATH)/styles/nested -t nested" \
-	--interactive $(LOG_FLAGS) $(LIBSASS_SPEC_PATH)/styles/nested
+test_probe: $(SASSC_BIN) $(SASS_SPEC_PATH)
+	npm ci --prefix $(SASS_SPEC_PATH)
+	npm run --prefix $(SASS_SPEC_PATH) sass-spec \
+	-- --command $(SASSC_BIN_PATH) --impl libsass \
+	--cmd-args "-I $(SASS_SPEC_SPEC_DIR)" \
+	--probe-todo $(SASS_SPEC_SPEC_DIR)
 
 clean-objects: | lib
 	-$(RM) lib/*.a lib/*.so lib/*.dll lib/*.dylib lib/*.la

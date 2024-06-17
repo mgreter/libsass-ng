@@ -43,7 +43,7 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   // Return the sass tag for a generic sass value (useful for your own case switch)
-  enum SassValueType ADDCALL sass_value_get_tag(struct SassValue* v) { return getValue(v)->getTag(); }
+  SassValueType ADDCALL sass_value_get_tag(struct SassValue* v) { return getValue(v)->getTag(); }
 
   // Check value for a specific type (dispatch to virtual check methods)
   bool ADDCALL sass_value_is_null(struct SassValue* value) { return getNull(value) != nullptr; }
@@ -160,8 +160,8 @@ extern "C" {
   // Getters and setters for Sass_List
   size_t ADDCALL sass_list_get_size(struct SassValue* v) { return getList(v)->size(); }
 
-  enum SassSeparator ADDCALL sass_list_get_separator(struct SassValue* v) { return getList(v)->separator(); }
-  void ADDCALL sass_list_set_separator(struct SassValue* v, enum SassSeparator separator) { getList(v)->separator(separator); }
+  SassSeparator ADDCALL sass_list_get_separator(struct SassValue* v) { return getList(v)->separator(); }
+  void ADDCALL sass_list_set_separator(struct SassValue* v, SassSeparator separator) { getList(v)->separator(separator); }
   bool ADDCALL sass_list_get_is_bracketed(struct SassValue* v) { return getList(v)->hasBrackets(); }
   void ADDCALL sass_list_set_is_bracketed(struct SassValue* v, bool is_bracketed) { getList(v)->hasBrackets(is_bracketed); }
 
@@ -212,7 +212,7 @@ extern "C" {
       String, SourceSpan::internal("sass://string"), value, is_quoted));
   }
 
-  struct SassValue* ADDCALL sass_make_list(enum SassSeparator sep, bool is_bracketed)
+  struct SassValue* ADDCALL sass_make_list(SassSeparator sep, bool is_bracketed)
   {
     return newSassValue(SASS_MEMORY_NEW(
       List, SourceSpan::internal("sass://list"), {}, sep, is_bracketed));
@@ -249,13 +249,13 @@ extern "C" {
 
   void ADDCALL sass_delete_value(struct SassValue* value)
   {
-    Value* val = getValue(value);
-    if (value) {
-      val->refcount -= 1;
-      if (val->refcount == 0) {
-        delete val;
-      }
-    }
+    ValueObj val = getValue(value);
+    //if (value) {
+    //  val->refcount -= 1;
+    //  if (val->refcount == 0) {
+    //    delete val;
+    //  }
+    //}
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -282,7 +282,7 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  struct SassValue* ADDCALL sass_value_op(enum SassOperator op, struct SassValue* left, struct SassValue* right)
+  struct SassValue* ADDCALL sass_value_op(SassOperator op, struct SassValue* left, struct SassValue* right)
   {
 
     Logger logger;

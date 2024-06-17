@@ -5,6 +5,8 @@
 #define SASS_ALLOCATOR_HPP
 
 #include "memory_config.hpp"
+#include "memory_pool.hpp"
+#include "thread_local.hpp"
 #include "settings.hpp"
 #include "MurmurHash2.hpp"
 #include "MurmurHash3.hpp"
@@ -24,13 +26,23 @@ namespace Sass {
   template <typename T> using Allocator = std::allocator<T>;
   #else
 
+  // Use simpler but non thread-safe implementation
+  #ifdef SASS_OPTIMIZE_SINGLE_THREADED
+
+  // Keep one instance
+  // extern thread_local MemoryPool pool;
+
+  #endif
+
+  bool isPoolDone();
+
   // Allocate memory from the memory pool.
   // Memory pool is allocated on first call.
   void* allocateMem(size_t size);
 
   // Release the memory from the pool.
   // Destroys the pool when it is emptied.
-  void deallocateMem(void* ptr, size_t size = 1);
+  void deallocateMem(void* ptr);
 
   template<typename T>
   class Allocator
@@ -71,7 +83,7 @@ namespace Sass {
     // deallocate storage ptr of deleted elements
     void deallocate(pointer ptr, size_type count)
     {
-      Sass::deallocateMem(ptr, count);
+      Sass::deallocateMem(ptr);
     }
 
     // return maximum number of elements that can be allocated
@@ -121,10 +133,10 @@ namespace Sass {
 
 }
 
-// Make them available on the global scope
-// Easier for global structs needed for C linkage
+// Make them available on our local sass scope
 namespace sass { // Note the lower-case notation
-#ifndef SASS_CUSTOM_ALLOCATOR
+
+  #ifndef SASS_CUSTOM_ALLOCATOR
   template <typename T> using deque = std::deque<T>;
   template <typename T> using vector = std::vector<T>;
   using string = std::string;
@@ -132,7 +144,7 @@ namespace sass { // Note the lower-case notation
   using sstream = std::stringstream;
   using ostream = std::ostringstream;
   using istream = std::istringstream;
-#else
+  #else
   template <typename T> using deque = std::deque<T, Sass::Allocator<T>>;
   template <typename T> using vector = std::vector<T, Sass::Allocator<T>>;
   using string = std::basic_string<char, std::char_traits<char>, Sass::Allocator<char>>;
@@ -140,7 +152,8 @@ namespace sass { // Note the lower-case notation
   using sstream = std::basic_stringstream<char, std::char_traits<char>, Sass::Allocator<char>>;
   using ostream = std::basic_ostringstream<char, std::char_traits<char>, Sass::Allocator<char>>;
   using istream = std::basic_istringstream<char, std::char_traits<char>, Sass::Allocator<char>>;
-#endif
+  #endif
+
 }
 
 #ifdef SASS_CUSTOM_ALLOCATOR

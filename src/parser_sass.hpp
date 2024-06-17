@@ -19,7 +19,7 @@ namespace Sass {
   {
   public:
 
-    enum SassIndentType {
+    enum SassIndentType : unsigned char {
       AUTO, TABS, SPACES,
     };
 

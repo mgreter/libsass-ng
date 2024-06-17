@@ -14,11 +14,15 @@
 #include "capi_sass.hpp"
 
 #ifdef _WIN32
-#include <cstdio>
-#include <io.h>
-#include <fcntl.h>
-#include <windows.h>
-#include <wincon.h>
+# ifndef NOMINMAX
+#  define NOMINMAX
+# endif
+# define WIN32_LEAN_AND_MEAN
+# include <cstdio>
+# include <io.h>
+# include <fcntl.h>
+# include <windows.h>
+# include <wincon.h>
 #endif
 
 #include "constants.hpp"

@@ -7,11 +7,15 @@
 
 #include <thread>
 #ifdef USE_WIN_CRYPT
-#include <windows.h>
-#include <wincrypt.h>
+# ifndef NOMINMAX
+#  define NOMINMAX
+# endif
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+# include <wincrypt.h>
 #else
-#include <random>
-#include <ctime>
+# include <random>
+# include <ctime>
 #endif
 
 namespace Sass {

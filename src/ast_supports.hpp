@@ -31,6 +31,7 @@ namespace Sass {
     DECLARE_ISA_CASTER(SupportsNegation);
     DECLARE_ISA_CASTER(SupportsDeclaration);
     DECLARE_ISA_CASTER(SupportsInterpolation);
+    FINALIZE_AST_NODE(SupportsCondition);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -41,7 +42,7 @@ namespace Sass {
   {
   public:
 
-    enum Operand { AND, OR };
+    enum Operand : bool { AND, OR };
 
   private:
 
@@ -60,6 +61,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SupportsOperation);
+    FINALIZE_AST_NODE(SupportsOperation);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -83,6 +85,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SupportsFunction);
+    FINALIZE_AST_NODE(SupportsFunction);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -105,6 +108,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SupportsAnything);
+    FINALIZE_AST_NODE(SupportsAnything);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -127,6 +131,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SupportsNegation);
+    FINALIZE_AST_NODE(SupportsNegation);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -151,6 +156,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SupportsDeclaration);
+    FINALIZE_AST_NODE(SupportsDeclaration);
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -172,6 +178,7 @@ namespace Sass {
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SupportsInterpolation);
+    FINALIZE_AST_NODE(SupportsInterpolation);
   };
 
   /////////////////////////////////////////////////////////////////////////

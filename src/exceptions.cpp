@@ -10,6 +10,10 @@
 
 namespace Sass {
 
+  /////////////////////////////////////////////////////////////////////////
+  // This file is quite messy. Really last priority to polish this.
+  /////////////////////////////////////////////////////////////////////////
+
   StringVector getKeyVector(
     const ValueFlatMap* names)
   {
@@ -473,6 +477,24 @@ namespace Sass {
   {
     msg = "The default namespace \"" + name + "\" is not a valid Sass identifier.\n";
     msg += "\nRecommendation: add an \"as\" clause to define an explicit namespace.";
+  }
+
+  UndefinedOperation::UndefinedOperation(
+    BackTraces traces, SourceSpan pstate,
+    const Value* lhs, const Value* rhs, sass::string op)
+    : Base("Undefined operation \"" + lhs->inspect()
+      + " " + op + " " + rhs->inspect() + "\".",
+      traces, pstate)
+  {
+    this->traces.push_back(pstate);
+  }
+
+  UndefinedOperation::UndefinedOperation(BackTraces traces, SourceSpan pstate, const Value* val, sass::string op)
+    : Base("Undefined operation \"" +
+        op + val->inspect() + "\".",
+    traces, pstate)
+    {
+      this->traces.push_back(pstate);
   }
 
 }

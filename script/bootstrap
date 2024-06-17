@@ -6,12 +6,9 @@ script/branding
 : ${SASS_SPEC_PATH:="sass-spec"}
 : ${SASS_SASSC_PATH:="sassc" }
 
-if [ ! -d $LIBSASS_SPEC_PATH ]; then
-  git clone https://github.com/mgreter/libsass-spec.git --branch refactor/libsass-4-alpha $LIBSASS_SPEC_PATH
-fi
 if [ ! -d $SASS_SPEC_PATH ]; then
-  git clone https://github.com/mgreter/sass-spec.git --branch refactor/libsass-4-alpha $SASS_SPEC_PATH
+  git clone https://github.com/mgreter/sass-spec-ng.git --branch libsass-ng $SASS_SPEC_PATH
 fi
 if [ ! -d $SASS_SASSC_PATH ]; then
-  git clone https://github.com/mgreter/sassc.git --branch refactor/libsass-4-alpha $SASS_SASSC_PATH
+  git clone https://github.com/mgreter/sassc-ng.git --branch libsass-ng $SASS_SASSC_PATH
 fi

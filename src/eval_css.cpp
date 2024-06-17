@@ -5,6 +5,8 @@
 
 #include "character.hpp"
 #include "calculation.hpp"
+#include "exceptions.hpp"
+#include "extension.hpp"
 #include <limits>
 
 namespace Sass {
@@ -17,7 +19,7 @@ namespace Sass {
       return;
     }
 
-    sass::string normalized(StringUtils::unvendor(node->name()->text()));
+    sass::string normalized(StringUtils::unvendor(node->name()));
     bool isKeyframe = normalized == "keyframes";
     RAII_FLAG(inUnknownAtRule, !isKeyframe);
     RAII_FLAG(inKeyframes, isKeyframe);
@@ -36,7 +38,7 @@ namespace Sass {
     RAII_OBJ(CssParentNode, current, copy);
 
 
-    if (!(!atRootExcludingStyleRule && readStyleRule != nullptr) || inKeyframes || node->name()->text() == "font-face") {
+    if (!(!atRootExcludingStyleRule && readStyleRule != nullptr) || inKeyframes || node->name() == "font-face") {
 
       for (const auto& child : node->elements()) {
         child->accept(this);
@@ -136,12 +138,12 @@ namespace Sass {
 
     if (!declarationName.empty()) {
       CallStackFrame frame(logger, css->pstate());
-      throw Exception::RuntimeException(traces,
+      throw Exception::RuntimeException(logger,
         "Style rules may not be used within nested declarations.");
     }
     else if (inKeyframes && current->isaCssKeyframeBlock()) {
       CallStackFrame frame(logger, css->pstate());
-      throw Exception::RuntimeException(traces,
+      throw Exception::RuntimeException(logger,
         "Style rules may not be used within keyframe blocks.");
     }
 
@@ -165,7 +167,7 @@ namespace Sass {
         }
       }
 
-      /*if (!nest)*/ slist = slist->resolveParentSelectors(original(), traces, !atRootExcludingStyleRule);
+      /*if (!nest)*/ slist = slist->resolveParentSelectors(original(), logger, !atRootExcludingStyleRule);
 
       // Append new selector list to the stack
       RAII_SELECTOR(selectorStack, slist/*->copy(false)*/);
@@ -174,7 +176,7 @@ namespace Sass {
       RAII_SELECTOR(originalStack, SASS_MEMORY_COPY(slist));
 
 
-      if (_extensionStore) _extensionStore->addSelector(slist, mediaStack.back());
+      if (_extensionStore) _extensionStore->addSelector(slist, mediaQueries);
       else std::cerr << "no extension store\n";
       // check if selector must be extendable by downstream extends
 

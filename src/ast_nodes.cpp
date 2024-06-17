@@ -356,79 +356,58 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // The SassScript `>` operation.
-  bool Value::greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const
+  bool Value::greaterThan(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " > " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, ">");
   }
   // EO greaterThan
 
   // The SassScript `>=` operation.
-  bool Value::greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
+  bool Value::greaterThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " >= " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, ">=");
   }
   // EO greaterThanOrEquals
 
   // The SassScript `<` operation.
-  bool Value::lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const
+  bool Value::lessThan(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " < " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "<");
   }
   // EO lessThan
 
   // The SassScript `<=` operation.
-  bool Value::lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
+  bool Value::lessThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " <= " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "<=");
   }
   // EO lessThanOrEquals
 
   // The SassScript `*` operation.
-  Value* Value::times(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Value::times(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " * " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "*");
   }
   // EO times
 
   // The SassScript `%` operation.
-  Value* Value::modulo(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Value::modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " % " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "%");
   }
   // EO modulo
 
   // The SassScript `rem` operation.
-  Value* Value::remainder(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Value::remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " % " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "%%");
   }
   // EO remainder
 
@@ -436,16 +415,16 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // The SassScript `=` operation.
-  Value* Value::singleEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Value::singleEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     return SASS_MEMORY_NEW(String, pstate,
       toCss() + "=" + other->toCss());
   }
 
   // The SassScript `+` operation.
-  Value* Value::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Value::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (String* str = other->isaString()) {
+    if (const String* str = other->isaString()) {
       sass::string text(toCss());
       return SASS_MEMORY_NEW(String, pstate,
         text + str->value(),
@@ -466,7 +445,7 @@ namespace Sass {
   }
 
   // The SassScript `-` operation.
-  Value* Value::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Value::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaCalculation()) {
       CallStackFrame csf(logger, pstate);
@@ -481,7 +460,7 @@ namespace Sass {
   }
 
   // The SassScript `/` operation.
-  Value* Value::dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Value::dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     sass::string text(toCss());
     return SASS_MEMORY_NEW(String, pstate,

@@ -121,7 +121,7 @@ namespace Sass {
               subtotal += std::pow(number->value() * factor, 2.0);
             }
             else {
-              throw Exception::UnitMismatch(compiler, numbers[0], number);
+              throw Exception::UnitMismatch(compiler, *numbers[0], *number);
             }
           }
           else {
@@ -225,19 +225,7 @@ namespace Sass {
         for (Value* value : arguments[0]->start()) {
           foobar.push_back(value);
         }
-        return Calculation32::calc_max(compiler, pstate, foobar, true);
-        Number* max = nullptr;
-        for (Value* value : arguments[0]->start()) {
-          Number* number = value->assertNumber(compiler, "");
-          if (max == nullptr || max->lessThan(number, compiler, pstate)) {
-            max = number;
-          }
-        }
-        if (max != nullptr) return max;
-        // Report invalid arguments error
-        throw Exception::SassScriptException(
-          "At least one argument must be passed.",
-          compiler, pstate);
+        return Calc::calc_max(compiler, pstate, foobar, true);
       }
 
       /*******************************************************************/
@@ -248,20 +236,7 @@ namespace Sass {
         for (Value* value : arguments[0]->start()) {
           foobar.push_back(value);
         }
-        return Calculation32::calc_min(compiler, pstate, foobar, true);
-
-        Number* min = nullptr;
-        for (Value* value : arguments[0]->start()) {
-          Number* number = value->assertNumber(compiler, "");
-          if (min == nullptr || min->greaterThan(number, compiler, pstate)) {
-            min = number;
-          }
-        }
-        if (min != nullptr) return min;
-        // Report invalid arguments error
-        throw Exception::SassScriptException(
-          "At least one argument must be passed.",
-          compiler, pstate);
+        return Calc::calc_min(compiler, pstate, foobar, true);
       }
 
       /*******************************************************************/
@@ -423,7 +398,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Number, pstate, result, "deg");
         }
 
-        throw Exception::UnitMismatch(compiler, y, x);
+        throw Exception::UnitMismatch(compiler, *y, *x);
       }
 
       /*******************************************************************/

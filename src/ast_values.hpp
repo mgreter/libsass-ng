@@ -11,6 +11,7 @@
 #include "units.hpp"
 #include "ast_nodes.hpp"
 #include "ast_callables.hpp"
+#include "calc_names.hpp"
 
 namespace Sass {
 
@@ -38,7 +39,7 @@ namespace Sass {
 
     // Implement interface for base Value class
     size_t hash() const override final { return 0; }
-    enum SassValueType getTag() const override final { return SASS_ERROR; }
+    SassValueType getTag() const override final { return SASS_ERROR; }
     const sass::string& type() const override final { return Strings::error; }
 
     // Implement equality comparators for base value class
@@ -80,7 +81,7 @@ namespace Sass {
 
     // Implement interface for base Value class
     size_t hash() const override final { return 0; }
-    enum SassValueType getTag() const override final { return SASS_WARNING; }
+    SassValueType getTag() const override final { return SASS_WARNING; }
     const sass::string& type() const override final { return Strings::warning; }
 
     // Implement equality comparators for base value class
@@ -121,7 +122,7 @@ namespace Sass {
     // Implement interface for base Value class
     size_t hash() const override final;
 
-    enum SassValueType getTag() const override final { return SASS_NULL; }
+    SassValueType getTag() const override final { return SASS_NULL; }
     const sass::string& type() const override final { return Strings::null; }
 
     // Implement equality comparators for base value class
@@ -177,15 +178,15 @@ namespace Sass {
 
     // Implement interface for base Value class
     virtual size_t hash() const override = 0;
-    enum SassValueType getTag() const override final { return SASS_COLOR; }
+    SassValueType getTag() const override final { return SASS_COLOR; }
     const sass::string& type() const override final { return Strings::color; }
 
     // Implement some operations for base value class
-    Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* minus(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* modulo(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* remainder(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
 
     // Implement type fetcher for base value class (throws in base implementation)
     const Color* assertColor(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
@@ -398,6 +399,38 @@ namespace Sass {
         numerators.front() == unit;
     }
 
+    // Copy this number object and assign a new value to it
+    inline Number* copyWithNewValue(double value) const
+    {
+      return SASS_MEMORY_NEW(Number, pstate_, value, this);
+    }
+
+    // Copy this number object and assign new units to it
+    inline Number* copyWithNewUnits(const Units& units) const
+    {
+      return SASS_MEMORY_NEW(Number, pstate_, value_, units);
+    }
+
+    // Round with strategy and step
+    double roundWithStep(const Number* step,
+      Round::RNDSTRAT strategy = Round::RNDSTRAT::NEAREST) const;
+
+    inline double sign() const {
+      if (value_ == 0.0) return value_;
+      if (std::isnan(value_)) return value_;
+      return std::signbit(value_) ? -1 : 1;
+    }
+
+    bool isNaN() const
+    {
+      return std::isnan(value_);
+    }
+
+    bool isInf() const
+    {
+      return std::isfinite(value_);
+    }
+
     // cancel out unnecessary units
     // result will be in input units
     void reduce()
@@ -416,7 +449,7 @@ namespace Sass {
 
     Number* coerce(Logger& logger, Number& rhs);
     double coerceToUnit(Logger& logger, const Units& units, const sass::string& vname) const;
-    double factorToUnits(const Units& units);
+    double factorToUnits(const Units& units) const;
 
     // Implement delayed value fetcher
     Value* withoutSlash() override final;
@@ -427,36 +460,36 @@ namespace Sass {
 
     // Implement interface for base Value class
     size_t hash() const override final;
-    enum SassValueType getTag() const override final { return SASS_NUMBER; }
+    SassValueType getTag() const override final { return SASS_NUMBER; }
     const sass::string& type() const override final { return Strings::number; }
 
     // Implement some comparators for base value class
-    bool greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    bool greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    bool lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    bool lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    bool greaterThan(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    bool greaterThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    bool lessThan(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    bool lessThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
 
-    // Implement some operations for base value class
-    Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* minus(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* times(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* modulo(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* remainder(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    // Implement some operations for base value class (some of them may return a string)
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Number* times(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Number* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Number* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
 
     // Implement unary operations for base value class
-    Value* unaryPlus(Logger& logger, const SourceSpan& pstate) const override final;
-    Value* unaryMinus(Logger& logger, const SourceSpan& pstate) const override final;
+    Number* unaryPlus(Logger& logger, const SourceSpan& pstate) const override final;
+    Number* unaryMinus(Logger& logger, const SourceSpan& pstate) const override final;
 
     // Implement type fetcher for base value class (throws in base implementation)
     Number* assertNumber(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
 
     // Implement number specific assertions
     long assertInt(Logger& logger, const sass::string& name = Strings::empty) const;
-    Number* assertUnitless(Logger& logger, const sass::string& name = Strings::empty);
+    const Number* assertUnitless(Logger& logger, const sass::string& name = Strings::empty) const;
 		Number* assertHasUnits(Logger& logger, const sass::string& unit, const sass::string& name = Strings::empty);
-		Number* assertNoUnits(Logger& logger, const sass::string& name = Strings::empty);
-		double assertRange(double min, double max, const Units& units, Logger& logger, const sass::string& name = Strings::empty) const;
+    void assertNoUnits(Logger& logger, const sass::string& name = Strings::empty) const;
+    double assertRange(double min, double max, const Units& units, Logger& logger, const sass::string& name = Strings::empty) const;
 
     const Number* checkPercent(Logger& logger, const sass::string& name) const;
 
@@ -480,9 +513,10 @@ namespace Sass {
 
   private:
 
-    Value* operate(double (*op)(double, double), const Number& rhs, Logger& logger, const SourceSpan& pstate) const;
+    Number* operate(double (*op)(double, double), const Number& rhs, Logger& logger, const SourceSpan& pstate) const;
 
     IMPLEMENT_ISA_CASTER(Number);
+    FINALIZE_AST_NODE(Number);
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -510,7 +544,7 @@ namespace Sass {
 
     // Implement interface for base Value class
     size_t hash() const override final;
-    enum SassValueType getTag() const override final { return SASS_BOOLEAN; }
+    SassValueType getTag() const override final { return SASS_BOOLEAN; }
     const sass::string& type() const override final { return Strings::boolean; }
 
     // Implement equality comparators for base value class
@@ -532,6 +566,7 @@ namespace Sass {
     }
 
     IMPLEMENT_ISA_CASTER(Boolean);
+    FINALIZE_AST_NODE(Boolean);
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -572,7 +607,7 @@ namespace Sass {
 
     // Implement interface for base Value class
     size_t hash() const override final;
-    enum SassValueType getTag() const override final { return SASS_STRING; }
+    SassValueType getTag() const override final { return SASS_STRING; }
     const sass::string& type() const override { return Strings::string; }
 
     // Implement equality comparators for base value class
@@ -584,7 +619,7 @@ namespace Sass {
     String* assertString(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
 
     // Implement some operations for base value class
-    Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
 
     // Main entry point for Value Visitor pattern
     // Main entry point for Value Visitor pattern
@@ -601,6 +636,7 @@ namespace Sass {
     }
 
     IMPLEMENT_ISA_CASTER(String);
+    FINALIZE_AST_NODE(String);
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -647,7 +683,7 @@ namespace Sass {
 
     // Implement interface for base Value class
     size_t hash() const override final;
-    enum SassValueType getTag() const override final { return SASS_MAP; }
+    SassValueType getTag() const override final { return SASS_MAP; }
     const sass::string& type() const override final { return Strings::map; }
 
     // Implement equality comparators for base value class
@@ -682,6 +718,7 @@ namespace Sass {
     }
 
     IMPLEMENT_ISA_CASTER(Map);
+    FINALIZE_AST_NODE(Map);
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -693,7 +730,7 @@ namespace Sass {
   {
   private:
 
-    enum SassSeparator separator_;
+    SassSeparator separator_;
     ADD_CONSTREF(bool, hasBrackets);
 
   public:
@@ -701,13 +738,13 @@ namespace Sass {
     // Value constructor
     List(const SourceSpan& pstate,
       const ValueVector& values = {},
-      enum SassSeparator separator = SASS_SPACE,
+      SassSeparator separator = SASS_SPACE,
       bool hasBrackets = false);
 
     // Value constructor
     List(const SourceSpan& pstate,
       ValueVector&& values,
-      enum SassSeparator separator = SASS_SPACE,
+      SassSeparator separator = SASS_SPACE,
       bool hasBrackets = false);
 
     // Copy constructor
@@ -752,7 +789,7 @@ namespace Sass {
 
     // Implement interface for base Value class
     virtual size_t hash() const override;
-    enum SassValueType getTag() const override final { return SASS_LIST; }
+    SassValueType getTag() const override final { return SASS_LIST; }
     virtual const sass::string& type() const override { return Strings::list; }
 
     // Implement equality comparators for base value class
@@ -787,6 +824,7 @@ namespace Sass {
     }
 
     IMPLEMENT_ISA_CASTER(List);
+    FINALIZE_AST_NODE(List);
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -864,6 +902,7 @@ namespace Sass {
     }
 
     IMPLEMENT_ISA_CASTER(ArgumentList);
+    FINALIZE_AST_NODE(ArgumentList);
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -893,7 +932,7 @@ namespace Sass {
 
     // Implement interface for base Value class
     size_t hash() const override final { return 0; }
-    enum SassValueType getTag() const override final { return SASS_FUNCTION; }
+    SassValueType getTag() const override final { return SASS_FUNCTION; }
     const sass::string& type() const override final { return Strings::function; }
 
     // Implement equality comparators for base value class
@@ -916,6 +955,7 @@ namespace Sass {
     }
 
     IMPLEMENT_ISA_CASTER(Function);
+    FINALIZE_AST_NODE(Function);
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -933,11 +973,13 @@ namespace Sass {
   public:
 
     // Value constructor
-    Calculation(const SourceSpan& pstate,
+    // Must move arguments
+    Calculation(
+      const SourceSpan& pstate,
       const sass::string& name,
-      const sass::vector<AstNodeObj> arguments);
+      sass::vector<AstNodeObj>&& args);
 
-    // Copy constructor
+    // Copy constructor (doesn't seem to be used)
     Calculation(const Calculation* ptr);
 
     // CalcOperation can't be simplified further
@@ -951,14 +993,14 @@ namespace Sass {
     // Implement interface for base Value class
     size_t hash() const override final;
 
-    enum SassValueType getTag() const override final { return SASS_CALCULATION; }
+    SassValueType getTag() const override final { return SASS_CALCULATION; }
     const sass::string& type() const override final { return Strings::calculation; }
 
     // Implement equality comparators for base value class
     bool operator== (const Value& rhs) const override final;
 
-    Value* plus(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* minus(Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
     Value* unaryPlus(Logger& logger, const SourceSpan& pstate) const override final;
     Value* unaryMinus(Logger& logger, const SourceSpan& pstate) const override final;
 
@@ -970,17 +1012,17 @@ namespace Sass {
       return visitor->visitCalculation(this);
     }
 
-    // Copy operations for childless items
+    // Copy operations for items with children
     Calculation* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(Calculation, this);
     }
-
 
     Calculation* assertCalculation(Logger& logger, const sass::string& name = Strings::empty) override final {
       return this;
     }
 
     IMPLEMENT_ISA_CASTER(Calculation);
+    FINALIZE_AST_NODE(Calculation);
   };
 
   ///////////////////////////////////////////////////////////////////////
@@ -1020,7 +1062,7 @@ namespace Sass {
     // Implement interface for base Value class
     size_t hash() const override final;
 
-    enum SassValueType getTag() const override final { return SASS_MIXIN; }
+    SassValueType getTag() const override final { return SASS_MIXIN; }
     const sass::string& type() const override final { return Strings::mixin; }
 
     // Implement equality comparators for base value class
@@ -1041,7 +1083,7 @@ namespace Sass {
     }
 
     IMPLEMENT_ISA_CASTER(Mixin);
-
+    FINALIZE_AST_NODE(Mixin);
   };
 
 
@@ -1080,7 +1122,7 @@ namespace Sass {
     // Implement interface for base Value class
     size_t hash() const override final;
 
-    enum SassValueType getTag() const override final { return SASS_CALC_OPERATION; }
+    SassValueType getTag() const override final { return SASS_CALC_OPERATION; }
     const sass::string& type() const override final { return Strings::calcoperation; }
 
     // Implement equality comparators for base value class
@@ -1100,7 +1142,7 @@ namespace Sass {
     }
 
     IMPLEMENT_ISA_CASTER(CalcOperation);
-
+    FINALIZE_AST_NODE(CalcOperation);
   };
 
   /////////////////////////////////////////////////////////////////////////

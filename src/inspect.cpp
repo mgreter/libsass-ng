@@ -63,9 +63,10 @@ namespace Sass {
   {
   }
 
-  void Inspect::acceptCssString(const CssString* node)
+  void Inspect::acceptCssString(const sass::string& node)
   {
-    append_token(node->text(), node);
+    // append_token(node->text(), node);
+    append_string(node);
   }
 
   void Inspect::visitBlockStatements(CssNodeVector children)
@@ -362,11 +363,11 @@ namespace Sass {
   {
     RAII_FLAG(in_declaration, true);
     RAII_FLAG(in_custom_property,
-      node->is_custom_property());
+      node->wasCustomProperty());
     // if (output_style() == SASS_STYLE_NESTED)
     //   indentation += node->tabs();
     append_indentation();
-    if (node->name()) {
+    if (!node->name().empty()) {
       force_next_mapping = true;
       acceptCssString(node->name());
       force_next_mapping = false;
@@ -405,17 +406,13 @@ namespace Sass {
 
   void Inspect::visitCssKeyframeBlock(CssKeyframeBlock* node)
   {
-    if (node->selector()) {
-      const auto& selector
-        = node->selector()->texts();
-      if (!selector.empty()) {
-        append_indentation();
-        bool addComma = false;
-        for (const sass::string& sel : selector) {
-          if (addComma) append_comma_separator();
-          append_string(sel);
-          addComma = true;
-        }
+    if (!node->selector().empty()) {
+      append_indentation();
+      bool addComma = false;
+      for (const sass::string& sel : node->selector()) {
+        if (addComma) append_comma_separator();
+        append_string(sel);
+        addComma = true;
       }
     }
 
@@ -431,11 +428,11 @@ namespace Sass {
   void Inspect::visitCssAtRule(CssAtRule* node)
   {
     append_indentation();
-    if (node->name()) {
+    if (!node->name().empty()) {
       append_char($at);
       acceptCssString(node->name());
     }
-    if (node->value()) {
+    if (!node->value().empty()) {
       append_mandatory_space();
       acceptCssString(node->value());
     }
@@ -453,12 +450,14 @@ namespace Sass {
     add_open_mapping(import, true);
     append_string("@import");
     append_mandatory_space();
-    CssString* url(import->url());
-    append_token(url->text(), url);
-    if (import->modifiers()) {
+    // const sass::string& url(import->url());
+    // append_token(url->text(), url);
+    append_string(import->url());
+    if (!import->modifiers().empty()) {
       append_mandatory_space();
-      CssString* text(import->modifiers());
-      append_token(text->text(), text);
+      // CssString* text(import->modifiers());
+      // append_token(text->text(), text);
+      append_string(import->modifiers());
     }
     add_close_mapping(import, true);
     append_delimiter();

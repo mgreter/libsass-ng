@@ -176,20 +176,29 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Calculation::Calculation(const SourceSpan& pstate, const sass::string& name,
-    const sass::vector<AstNodeObj> arguments) :
+  // Value constructor
+  // Must move arguments
+  Calculation::Calculation(
+    const SourceSpan& pstate,
+    const sass::string& name,
+    sass::vector<AstNodeObj>&& args) :
     Value(pstate),
     name_(name),
-    arguments_(arguments)
+    arguments_(args)
   {}
 
+  // Copy constructor (doesn't seem to be used)
   Calculation::Calculation(const Calculation* ptr)
-    : Value(ptr)
+    : Value(ptr),
+      name_(ptr->name_),
+      arguments_(ptr->arguments_)
   {}
+
   /// Returns whether [character] intrinsically needs parentheses if it appears
   /// in the unquoted string argument of a `calc()` being embedded in another
   /// calculation.
-  static bool _charNeedsParentheses(uint8_t character) {
+  static bool _charNeedsParentheses(uint8_t character)
+  {
     return Character::isWhitespace(character)
       || character == Character::$asterisk
       || character == Character::$slash;
@@ -198,7 +207,8 @@ namespace Sass {
 
   /// Returns whether [text] needs parentheses if it's the contents of a
   /// `calc()` being embedded in another calculation.
-  static bool _needsParentheses(const sass::string& text) {
+  static bool _needsParentheses(const sass::string& text)
+  {
     auto first = text[0]; // .codeUnitAt(0);
     if (_charNeedsParentheses(first)) return true;
     auto couldBeVar = text.size() >= 4 &&
@@ -228,20 +238,16 @@ namespace Sass {
 
   AstNode* Calculation::simplify(Logger& logger)
   {
-    if (name_ == str_calc) {
-      if (arguments_.empty()) std::cerr << "arguments empty!!!\n";
-      else if (arguments_.size() > 1) std::cerr << "too many args!!!\n";
-      else {
-        const AstNode* arg = arguments_[0];
-        const String* str = dynamic_cast<const String*>(arg);
-        if (str != nullptr && str->hasQuotes() == false) {
-          if (_needsParentheses(str->value())) {
-            sass::string quoted("(" + str->value() + ")");
-            return new String(pstate_, std::move(quoted), false);
-          }
+    if (name_ == str_calc && arguments_.size() == 1) {
+      const AstNode* arg = arguments_[0];
+      const String* str = dynamic_cast<const String*>(arg);
+      if (str != nullptr && str->hasQuotes() == false) {
+        if (_needsParentheses(str->value())) {
+          return SASS_MEMORY_NEW(String, pstate_,
+            "(" + str->value() + ")", false);
         }
-        return arguments_[0];
       }
+      return arguments_[0];
     }
     // Or return ourself again
     return this;
@@ -249,46 +255,43 @@ namespace Sass {
 
   bool Calculation::operator== (const Value& rhs) const
   {
-    throw "not implemented Calc==";
-    return false; // rhs.isNull();
+    throw std::logic_error("Calculation::operator==");
+    return this == &rhs; // or compare to pointers?
   }
 
-  Value* Calculation::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Calculation::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (auto str = other->isaString())
       return Value::plus(str, logger, pstate);
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(logger, pstate,
-      "Undefined operation \"" + toCss() + " + " + other->toCss() + "\".");
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "+");
   }
 
-  Value* Calculation::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Calculation::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (auto str = other->isaString())
       return Value::minus(str, logger, pstate);
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(logger, pstate,
-      "Undefined operation \"" + toCss() + " - " + other->toCss() + "\".");
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "-");
   }
 
   // The SassScript unary `+` operation.
   Value* Calculation::unaryPlus(Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(logger, pstate,
-      "Undefined operation \"+" + toCss() + "\".");
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, "+");
   }
 
   // The SassScript unary `-` operation.
   Value* Calculation::unaryMinus(Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(logger, pstate,
-      "Undefined operation \"-" + toCss() + "\".");
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, "-");
   }
 
   size_t Calculation::hash() const
   {
+    throw std::logic_error("Calculation::hash()");
     return typeid(Calculation).hash_code();
   }
 
@@ -340,58 +343,43 @@ namespace Sass {
   // Implement value operators for color
   /////////////////////////////////////////////////////////////////////////
 
-  Value* Color::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaNumber() || other->isaColor()) {
-      CallStackFrame csf(logger, pstate);
-      throw Exception::SassScriptException(
-        "Undefined operation \"" + inspect()
-        + " + " + other->inspect() + "\".",
-        logger, pstate);
+      throw Exception::UndefinedOperation(
+        logger, pstate, this, other, "+");
     }
     return Value::plus(other, logger, pstate);
   }
 
-  Value* Color::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaNumber() || other->isaColor()) {
-      CallStackFrame csf(logger, pstate);
-      throw Exception::SassScriptException(
-        "Undefined operation \"" + inspect()
-        + " - " + other->inspect() + "\".",
-        logger, pstate);
+      throw Exception::UndefinedOperation(
+        logger, pstate, this, other, "-");
     }
     return Value::minus(other, logger, pstate);
   }
 
-  Value* Color::dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (other->isaNumber() || other->isaColor()) {
-      CallStackFrame csf(logger, pstate);
-      throw Exception::SassScriptException(
-        "Undefined operation \"" + inspect()
-        + " / " + other->inspect() + "\".",
-        logger, pstate);
+      throw Exception::UndefinedOperation(
+        logger, pstate, this, other, "/");
     }
     return Value::dividedBy(other, logger, pstate);
   }
 
-  Value* Color::modulo(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " % " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "%");
   }
 
-  Value* Color::remainder(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " % " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "%%");
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -830,19 +818,19 @@ namespace Sass {
   static bool isSimpleNumberComparison(const Number& lhs, const Number& rhs)
   {
     // Gather statistics from the units
-    size_t l_n_units = lhs.numerators.size();
-    size_t r_n_units = rhs.numerators.size();
-    size_t l_d_units = lhs.denominators.size();
-    size_t r_d_units = rhs.denominators.size();
-    size_t l_units = l_n_units + l_d_units;
-    size_t r_units = r_n_units + r_d_units;
+    size_t l_n_count = lhs.numerators.size();
+    size_t r_n_count = rhs.numerators.size();
+    size_t l_d_count = lhs.denominators.size();
+    size_t r_d_count = rhs.denominators.size();
+    size_t l_count = l_n_count + l_d_count;
+    size_t r_count = r_n_count + r_d_count;
 
     // Old ruby sass behavior (deprecated)
-    if (l_units == 0) return true;
-    if (r_units == 0) return true;
+    if (l_count == 0) return true;
+    if (r_count == 0) return true;
 
     // check if both sides have exactly the same units
-    if (l_n_units == r_n_units && l_d_units == r_d_units) {
+    if (l_n_count == r_n_count && l_d_count == r_d_count) {
       return (lhs.numerators == rhs.numerators)
         && (lhs.denominators == rhs.denominators);
     }
@@ -897,9 +885,9 @@ namespace Sass {
   // Implement value comparators for number
   /////////////////////////////////////////////////////////////////////////
 
-  bool Number::greaterThan(Value* other, Logger& logger, const SourceSpan& pstate) const
+  bool Number::greaterThan(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (Number* rhs = other->isaNumber()) {
+    if (const Number* rhs = other->isaNumber()) {
       // Ignore units in certain cases
       if (isSimpleNumberComparison(*this, *rhs)) {
         return value() > rhs->value();
@@ -918,17 +906,14 @@ namespace Sass {
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " > " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, ">");
   }
   // EO greaterThan
 
-  bool Number::greaterThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
+  bool Number::greaterThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (Number* rhs = other->isaNumber()) {
+    if (const Number* rhs = other->isaNumber()) {
       // Ignore units in certain cases
       if (isSimpleNumberComparison(*this, *rhs)) {
         return value() >= rhs->value();
@@ -947,17 +932,14 @@ namespace Sass {
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " >= " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, ">=");
   }
   // EO greaterThanOrEquals
 
-  bool Number::lessThan(Value* other, Logger& logger, const SourceSpan& pstate) const
+  bool Number::lessThan(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (Number* rhs = other->isaNumber()) {
+    if (const Number* rhs = other->isaNumber()) {
       // Ignore units in certain cases
       if (isSimpleNumberComparison(*this, *rhs)) {
         return value() < rhs->value();
@@ -976,17 +958,14 @@ namespace Sass {
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " < " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "<");
   }
   // EO lessThan
 
-  bool Number::lessThanOrEquals(Value* other, Logger& logger, const SourceSpan& pstate) const
+  bool Number::lessThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (Number* rhs = other->isaNumber()) {
+    if (const Number* rhs = other->isaNumber()) {
       // Ignore units in certain cases
       if (isSimpleNumberComparison(*this, *rhs)) {
         return value() <= rhs->value();
@@ -1005,11 +984,8 @@ namespace Sass {
       throw Exception::UnitMismatch(
         logger, this, rhs);
     }
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " <= " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "<=");
   }
   // EO lessThanOrEquals
 
@@ -1064,7 +1040,7 @@ namespace Sass {
   // Implement value operators for number
   /////////////////////////////////////////////////////////////////////////
 
-  Value* Number::operate(double (*op)(double, double), const Number& rhs, Logger& logger, const SourceSpan& pstate) const
+  Number* Number::operate(double (*op)(double, double), const Number& rhs, Logger& logger, const SourceSpan& pstate) const
   {
 
     size_t l_n_units = numerators.size();
@@ -1204,77 +1180,66 @@ namespace Sass {
   }
   // EO operate
 
-  Value* Number::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Number::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (const Number* nr = other->isaNumber()) {
       return operate(add, *nr, logger, pstate);
     }
-    if (!other->isaColor()) return Value::plus(other, logger, pstate);
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " + " + other->inspect() + "\".",
-      logger, pstate);
+    // May return a string instead
+    if (!other->isaColor()) return
+      Value::plus(other, logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "+");
   }
   // EO plus
 
-  Value* Number::minus(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Number::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (const Number* nr = other->isaNumber()) {
       return operate(sub, *nr, logger, pstate);
     }
-    if (!other->isaColor()) return Value::minus(other, logger, pstate);
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " - " + other->inspect() + "\".",
-      logger, pstate);
+    // May return a string instead
+    if (!other->isaColor()) return
+      Value::minus(other, logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "-");
   }
   // EO minus
 
-  Value* Number::times(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Number* Number::times(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (const Number* nr = other->isaNumber()) {
       return operate(mul, *nr, logger, pstate);
     }
-    if (!other->isaColor()) return Value::times(other, logger, pstate);
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " * " + other->inspect() + "\".",
-      logger, pstate);
+    // Implementation always errors
+    // if (!other->isaColor()) return
+    //   Value::times(other, logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "*");
   }
   // EO times
 
-  Value* Number::modulo(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Number* Number::modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (const Number* nr = other->isaNumber()) {
       return operate(mod, *nr, logger, pstate);
     }
-    if (!other->isaColor()) return Value::modulo(other, logger, pstate);
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " % " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "%");
   }
   // EO modulo
 
-  Value* Number::remainder(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Number* Number::remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (const Number* nr = other->isaNumber()) {
       return operate(rem, *nr, logger, pstate);
     }
-    if (!other->isaColor()) return Value::remainder(other, logger, pstate);
-    CallStackFrame csf(logger, pstate);
-    throw Exception::SassScriptException(
-      "Undefined operation \"" + inspect()
-      + " %% " + other->inspect() + "\".",
-      logger, pstate);
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "%%");
   }
   // EO remainder
 
-  Value* Number::dividedBy(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Number::dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (const Number* nr = other->isaNumber()) {
       if (!nr->hasUnits()) {
@@ -1305,12 +1270,12 @@ namespace Sass {
   // Implement unary operations for base value class
   /////////////////////////////////////////////////////////////////////////
 
-  Value* Number::unaryPlus(Logger& logger, const SourceSpan& pstate) const
+  Number* Number::unaryPlus(Logger& logger, const SourceSpan& pstate) const
   {
     return SASS_MEMORY_COPY(this);
   }
 
-  Value* Number::unaryMinus(Logger& logger, const SourceSpan& pstate) const
+  Number* Number::unaryMinus(Logger& logger, const SourceSpan& pstate) const
   {
     Number* cpy = SASS_MEMORY_COPY(this);
     cpy->value(cpy->value() * -1.0);
@@ -1333,7 +1298,7 @@ namespace Sass {
       logger, span, name);
   }
 
-  Number* Number::assertUnitless(Logger& logger, const sass::string& name)
+  const Number* Number::assertUnitless(Logger& logger, const sass::string& name) const
   {
     if (!hasUnits()) return this;
     SourceSpan span(this->pstate());
@@ -1353,9 +1318,9 @@ namespace Sass {
       logger, span, name);
   }
 
-  Number* Number::assertNoUnits(Logger& logger, const sass::string& name)
+  void Number::assertNoUnits(Logger& logger, const sass::string& name) const
   {
-    if (numerators.empty() && denominators.empty()) return this;
+    if (numerators.empty() && denominators.empty()) return;
     SourceSpan span(this->pstate());
     CallStackFrame csf(logger, span);
     throw Exception::SassScriptException(
@@ -1390,6 +1355,60 @@ namespace Sass {
     return this;
   }
 
+  const double NANR = std::numeric_limits<double>::quiet_NaN();
+  const double INFNR = std::numeric_limits<double>::infinity();
+
+  double Number::roundWithStep(const Number* step, Round::RNDSTRAT strategy) const
+  {
+    // Special case when step is infinite
+    if (std::isinf(step->value_))
+    {
+      if (value_ == 0) {
+        return value_;
+      }
+      if (std::isinf(value_)) {
+        return NANR;
+      }
+      if (strategy == Round::RNDSTRAT::UP) {
+        return value_ > 0 ? INFNR : -0.0;
+      }
+      if (strategy == Round::RNDSTRAT::DOWN) {
+        return value_ < 0 ? -INFNR : 0.0;
+      }
+      if (std::isinf(value_)) return -NANR;
+      return value_ > 0 ? 0.0 : -0.0;
+    }
+    // Convert step number into our units
+    double steps = step->value_ *
+      step->getUnitConversionFactor(this);
+    // Do the actual rounding by strategy
+    switch (strategy) {
+    case Round::RNDSTRAT::NEAREST: {
+      return std::round(value_ / steps) * steps;
+    }
+    case Round::RNDSTRAT::UP: {
+      return (step->value_ < 0
+        ? std::floor(value_ / steps)
+        : std::ceil(value_ / steps)
+        ) * steps;
+    }
+    case Round::RNDSTRAT::DOWN: {
+      return (step->value_ < 0
+        ? std::ceil(value_ / steps)
+        : std::floor(value_ / steps)
+        ) * steps;
+    }
+    case Round::RNDSTRAT::TO_ZERO: {
+      return (value_ < 0
+        ? std::ceil(value_ / steps)
+        : std::floor(value_ / steps)
+        ) * steps;
+    }
+    default:
+      throw "Invalid rounding strategy";
+    }
+  }
+
   Number* Number::coerce(Logger& logger, Number& lhs)
   {
     if (this->Units::operator==(lhs)) return this;
@@ -1409,7 +1428,7 @@ namespace Sass {
       ": Expected " + inspect() + " to be an angle.");
   }
 
-  double Number::factorToUnits(const Units& units)
+  double Number::factorToUnits(const Units& units) const
   {
     if (this->Units::operator==(units)) return 1;
     return getUnitConversionFactor(units);
@@ -1567,7 +1586,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  Value* String::plus(Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* String::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     if (const String* str = other->isaString()) {
       sass::string text(value() + str->value());

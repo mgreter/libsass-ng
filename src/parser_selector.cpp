@@ -110,7 +110,7 @@ namespace Sass {
     while (true) {
       scanWhitespace();
 
-      Offset before(scanner.offset);
+      // Offset before(scanner.offset);
       bool hasIdentifier = false;
       if (!scanner.peekChar(next)) {
         goto endOfLoop;
