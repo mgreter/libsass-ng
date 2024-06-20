@@ -27,12 +27,13 @@ namespace Sass {
     SourceSpan() {}
 
     // Regular value constructor
+    // Also known as `pstate`
     SourceSpan(SourceDataObj source,
       const Offset& position = Offset(),
       const Offset& span = Offset());
 
     // Create SourceSpan for internal things
-    static SourceSpan internal(const char* path);
+    static SourceSpan internal32(const char* path);
 
     // Create span between `lhs.start` and `rhs.end` (must be same source)
     static SourceSpan delta(const SourceSpan& lhs, const SourceSpan& rhs);

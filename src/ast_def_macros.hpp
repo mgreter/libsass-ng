@@ -132,7 +132,17 @@ private:
       auto sel = rhs.isa##klass(); \
       return sel ? *this == *sel : false; \
     } \
+    public: bool operator<(const subklass& rhs) const override final { \
+      auto sel = rhs.isa##klass(); \
+      return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
+    } \
     public: bool operator==(const klass& rhs) const; \
+    public: bool operator<(const klass& rhs) const; \
+
+  #define IMPLEMENT_CMP_OPERATOR(klass, val) \
+    bool klass::operator<(const klass& rhs) const { \
+      return val < rhs.val; \
+    } \
 
   // Childless argument is passed to ctor
   #define IMPLEMENT_SEL_COPY_CHILDREN(klass) \

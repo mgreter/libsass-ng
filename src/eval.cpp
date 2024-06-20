@@ -36,8 +36,8 @@ namespace Sass {
     wconfig(compiler.wconfig99),
     plainCss(plainCss)
   {
-    bool_true = SASS_MEMORY_NEW(Boolean, SourceSpan::internal("[TRUE]"), true);
-    bool_false = SASS_MEMORY_NEW(Boolean, SourceSpan::internal("[FALSE]"), false);
+    bool_true = SASS_MEMORY_NEW(Boolean, SourceSpan::internal32("[TRUE]"), true);
+    bool_false = SASS_MEMORY_NEW(Boolean, SourceSpan::internal32("[FALSE]"), false);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -1238,8 +1238,11 @@ namespace Sass {
     }
     size_t nn = named ? named->size() : 0;
     if (positional.size() + nn > 3) { // arguments->size()
-      throw Exception::TooManyArguments(logger, named,
-        { Keys::condition, Keys::ifTrue, Keys::ifFalse });
+      EnvKeySet set;
+      set.insert(Keys::condition);
+      set.insert(Keys::ifTrue);
+      set.insert(Keys::ifFalse);
+      throw Exception::TooManyArguments(logger, named, set);
     }
 
     ValueObj rv = condition ? condition->accept(this) : nullptr;
@@ -1513,7 +1516,7 @@ namespace Sass {
         function->pstate(), function->name());
     }
 
-    if (StringUtils::startsWith(fname, "--") /* dart has some more conditions */) {
+    if (StringUtils::startsWith(fname, "--", 2) /* dart has some more conditions */) {
       compiler.addDeprecation(
         "Sass @function names beginning with -- are deprecated for forward-"
         "compatibility with plain CSS functions.\n"
@@ -1891,7 +1894,7 @@ namespace Sass {
   Value* Eval::visitIncludeRule(IncludeRule* include)
   {
 
-    if (StringUtils::startsWith(include->name().orig(), "--") /* dart has some more conditions */) {
+    if (StringUtils::startsWith(include->name().orig(), "--", 2) /* dart has some more conditions */) {
       compiler.addDeprecation(
         "Sass @mixin names beginning with -- are deprecated for forward-"
         "compatibility with plain CSS mixins.\n"
@@ -2375,7 +2378,7 @@ namespace Sass {
     }
     CssParentNodeObj root = _trimIncluded(included);
 
-    if (root == orgParent) {
+    if (root.ptr() == orgParent) {
       acceptChildrenAt(root, node);
     }
     else {
@@ -2446,7 +2449,9 @@ namespace Sass {
 
     if (node->empty()) {
       CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
-        node->pstate(), current, name, value, node->isChildless());
+        node->pstate(), current,
+        std::move(name), std::move(value),
+        node->isChildless());
       current->addChildAt(css, false);
       return nullptr;
     }
@@ -2461,16 +2466,21 @@ namespace Sass {
 
     auto pu = current->bubbleThrough(true);
 
+
+
     // ModifiableCssKeyframeBlock
     CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
-      node->pstate(), pu, name, value, node->isChildless());
+      node->pstate(), pu,
+      std::move(name),
+      std::move(value),
+      node->isChildless());
 
     // Adds new empty atRule to Root!
     pu->addChildAt(css, false);
 
     RAII_OBJ(CssParentNode, current, css);
 
-    if (!(!atRootExcludingStyleRule && readStyleRule != nullptr) || inKeyframes || name == "font-face") {
+    if (!(!atRootExcludingStyleRule && readStyleRule != nullptr) || inKeyframes || css->name() == "font-face") {
 
       for (const auto& child : node->elements()) {
         ValueObj val = child->accept(this);
@@ -2846,14 +2856,14 @@ namespace Sass {
     if (inFunction) return nullptr;
 
     // Comments are allowed to appear between CSS imports.
-    if (current == _stylesheet->compiled && _endOfImports == _stylesheet->compiled->size()) {
+    if (current.ptr() == _stylesheet->compiled && _endOfImports == _stylesheet->compiled->size()) {
       _endOfImports++;
     }
 
 
     sass::string text(acceptInterpolation(c->text(), false));
     bool preserve = text[2] == '!';
-    current->append(SASS_MEMORY_NEW(CssComment, c->pstate(), text, preserve));
+    current->append(SASS_MEMORY_NEW(CssComment, c->pstate(), std::move(text), preserve));
     return nullptr;
   }
 
@@ -3286,7 +3296,7 @@ namespace Sass {
       if (hasVar == false) {
 
         // Check if we are at the global scope
-        if (compiler.varRoot.isGlobal()) {
+        if (compiler.envstack.size() == 1) {
           logger.addDeprecation(
             "As of LibSass 5.0.0, !global assignments won't be able to declare new variables.\n"
             "\nSince this assignment is at the root of the stylesheet, the !global"

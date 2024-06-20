@@ -74,13 +74,8 @@ namespace Sass {
         // Found an unguarded value
         if (!varcfg->second.isGuarded41) {
           if (!varcfg->second.isNull()) {
-            #ifdef SASS_USE_TSL_HOPSCOTCH
-            varcfg.value().wasAssigned = true;
-            return &varcfg.value();
-            #else
-            varcfg->second.wasAssigned = true;
-            return &varcfg->second;
-            #endif 
+            env_map_unordered_itval(varcfg).wasAssigned = true;
+            return &env_map_unordered_itval(varcfg);
           }
         }
       }
@@ -111,13 +106,8 @@ namespace Sass {
       // Then try to find the named item
       auto varcfg = withcfg->config.find(key);
       if (varcfg != withcfg->config.end()) {
-        #ifdef SASS_USE_TSL_HOPSCOTCH
-        varcfg.value().wasAssigned = true;
-        if (!guarded) guarded = &varcfg.value();
-        #else
-        varcfg->second.wasAssigned = true;
-        if (!guarded) guarded = &varcfg->second;
-        #endif
+        env_map_unordered_itval(varcfg).wasAssigned = true;
+        if (!guarded) guarded = &env_map_unordered_itval(varcfg);
       }
       // Should we apply some prefixes
       if (!withcfg->prefix.empty()) {

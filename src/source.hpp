@@ -22,6 +22,7 @@ namespace Sass {
   // SourceData is the base class to hold loaded content.
   // Need to keep all the content around for error reporting
   // ToDo: could use string views everywhere instead of copies
+  // E.g. every string is basically: source with start to end
   class SourceData : public RefCounted
   {
   protected:

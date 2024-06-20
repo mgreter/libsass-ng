@@ -22,19 +22,12 @@
 namespace Sass {
 
   // Fallback to standard allocator
+  // Might be the case for shared libs
   #ifndef SASS_CUSTOM_ALLOCATOR
   template <typename T> using Allocator = std::allocator<T>;
   #else
 
-  // Use simpler but non thread-safe implementation
-  #ifdef SASS_OPTIMIZE_SINGLE_THREADED
-
-  // Keep one instance
-  // extern thread_local MemoryPool pool;
-
-  #endif
-
-  bool isPoolDone();
+  // bool isPoolDone();
 
   // Allocate memory from the memory pool.
   // Memory pool is allocated on first call.
@@ -117,7 +110,7 @@ namespace Sass {
     bool operator==(Allocator<T> const& left,
       Allocator<U> const& right)
   {
-    return true;
+    return true; // left == right;
   }
 
   // Allocators are equal, don't care for type!
@@ -125,7 +118,7 @@ namespace Sass {
     bool operator!=(Allocator<T> const& left,
       Allocator<U> const& right)
   {
-    return !(left == right);
+    return false; // !(left == right);
   }
 
   // EO custom allocator

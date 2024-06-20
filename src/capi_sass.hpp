@@ -63,6 +63,11 @@
 # endif
 #endif
 
+// ToDo: remove before release
+#define _CRT_SECURE_NO_WARNINGS
+
+#include <math.h>
+
 // Include C-API headers
 #include "sass/base.h"
 #include "sass/version.h"
@@ -72,23 +77,6 @@
 
 // Include random seed
 #include "randomize.hpp"
-
-// Include unordered map implementation
-#ifdef SASS_USE_TSL_HOPSCOTCH
-#include "tessil/hopscotch_map.h"
-#include "tessil/hopscotch_set.h"
-#define UnorderedMap tsl::hopscotch_map
-#define UnorderedSet tsl::hopscotch_set
-#else
-#include <unordered_map>
-#include <unordered_set>
-#define UnorderedMap std::unordered_map
-#define UnorderedSet std::unordered_set
-#endif
-
-// Always use tessil implementation
-#include "tessil/ordered_map.h"
-#define OrderedMap tsl::ordered_map
 
 // Small helper to avoid typing
 #define NPOS std::string::npos
@@ -131,7 +119,7 @@ namespace Sass {
     void setPrecision(int precision)
     {
       this->precision = precision;
-      this->epsilon = pow(0.1, precision);
+      this->epsilon = std::pow(0.1, precision);
       // Update sprintf format to match precision
       snprintf(this->nr_sprintf, 32, "%%.%df", precision);
     }

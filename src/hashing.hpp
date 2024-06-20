@@ -9,6 +9,7 @@
 #include "capi_sass.hpp"
 
 #include "randomize.hpp"
+#include "MurmurHash3.hpp"
 
 //////////////////////////////////////////////////////////
 // `hash_combine` comes from boost (functional/hash):
@@ -48,6 +49,16 @@ namespace Sass {
     hash = val + getHashSeed();
   }
   // EO hash_start
+
+  // Our base implementation to hash strings
+  inline size_t hash_string(const sass::string& str)
+  {
+    return MurmurHash3(
+      (void*)str.c_str(),
+      (int)str.size(),
+      getHashSeed());
+  }
+  // EO StringHasher
 
 }
 

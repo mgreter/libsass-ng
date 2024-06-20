@@ -43,9 +43,9 @@ namespace Sass {
   {
     if (schema->empty()) return;
 
-    auto& elements = schema->elements();
+    const auto& elements = schema->elements();
     auto addStart = elements.begin();
-    auto addEnd = elements.end();
+    const auto addEnd = elements.end();
 
     // The schema to add start with a plain string
     if (ItplString* str = elements[0]->isaItplString()) {

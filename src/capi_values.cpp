@@ -191,55 +191,55 @@ extern "C" {
   struct SassValue* ADDCALL sass_make_boolean(bool state)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      Boolean, SourceSpan::internal("sass://boolean"), state));
+      Boolean, SourceSpan::internal32("sass://boolean"), state));
   }
 
   struct SassValue* ADDCALL sass_make_number(double value, const char* unit)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      Number, SourceSpan::internal("sass://number"), value, unit ? unit : ""));
+      Number, SourceSpan::internal32("sass://number"), value, unit ? unit : ""));
   }
 
   struct SassValue* ADDCALL sass_make_color(double r, double g, double b, double a)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      ColorRgba, SourceSpan::internal("sass://color"), r, g, b, a));
+      ColorRgba, SourceSpan::internal32("sass://color"), r, g, b, a));
   }
 
   struct SassValue* ADDCALL sass_make_string(const char* value, bool is_quoted)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      String, SourceSpan::internal("sass://string"), value, is_quoted));
+      String, SourceSpan::internal32("sass://string"), value, is_quoted));
   }
 
   struct SassValue* ADDCALL sass_make_list(SassSeparator sep, bool is_bracketed)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      List, SourceSpan::internal("sass://list"), {}, sep, is_bracketed));
+      List, SourceSpan::internal32("sass://list"), {}, sep, is_bracketed));
   }
 
   struct SassValue* ADDCALL sass_make_map(void)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      Map, SourceSpan::internal("sass://map")));
+      Map, SourceSpan::internal32("sass://map")));
   }
 
   struct SassValue* ADDCALL sass_make_null(void)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      Null, SourceSpan::internal("sass://null")));
+      Null, SourceSpan::internal32("sass://null")));
   }
 
   struct SassValue* ADDCALL sass_make_error(const char* msg)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      CustomError, SourceSpan::internal("sass://error"), msg));
+      CustomError, SourceSpan::internal32("sass://error"), msg));
   }
 
   struct SassValue* ADDCALL sass_make_warning(const char* msg)
   {
     return newSassValue(SASS_MEMORY_NEW(
-      CustomWarning, SourceSpan::internal("sass://warning"), msg));
+      CustomWarning, SourceSpan::internal32("sass://warning"), msg));
   }
 
   /////////////////////////////////////////////////////////////////////////

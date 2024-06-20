@@ -8,6 +8,8 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+#include <cmath>
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
@@ -25,13 +27,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  template <typename K, typename V> class FlatMap
+  template <typename Key, typename Value,
+    std::size_t N = 0,
+    class KeyEqual = std::equal_to<Key>,
+    class Allocator = std::allocator<std::pair<Key, Value>>
+  >
+  class FlatMap
   {
   private:
 
     // Define base types
-    using PAIR = std::pair<K, V>;
-    using TYPE = sass::vector<PAIR>;
+    using PAIR = std::pair<Key, Value>;
+    using TYPE = std::vector<PAIR, Allocator>;
 
     // Main key/value pair vector
     TYPE items;
@@ -39,10 +46,20 @@ namespace Sass {
   public:
 
     // Some convenient iterator type aliases
+    // using key_type = typename Key;
+    // using value_type = typename Value;
+    // using key_equal = typename KeyEqual;
+    // using allocator_type = typename Allocator;
     using iterator = typename TYPE::iterator;
     using const_iterator = typename TYPE::const_iterator;
     using reverse_iterator = typename TYPE::reverse_iterator;
     using const_reverse_iterator = typename TYPE::const_reverse_iterator;
+
+    // allocator_type get_allocator() const { return Allocator; }
+
+    FlatMap() {
+      items.reserve(N);
+    }
 
     // Returns number of key/value pairs
     size_t size() const
@@ -66,7 +83,7 @@ namespace Sass {
     // EO clear
 
     // Returns the number of elements matching specific key 
-    size_t count(const K& key) const
+    size_t count(const Key& key) const
     {
       const_iterator cur = items.begin();
       const_iterator end = items.end();
@@ -82,7 +99,7 @@ namespace Sass {
     // EO count
 
     // Removes item with specific key from the map
-    void erase(const K& key)
+    void erase(const Key& key)
     {
       iterator cur = items.begin();
       iterator end = items.end();
@@ -113,7 +130,7 @@ namespace Sass {
     // EO reserve
 
     // Finds element with specific key
-    iterator find(const K& key)
+    iterator find(const Key& key)
     {
       iterator cur = items.begin();
       iterator end = items.end();
@@ -128,7 +145,7 @@ namespace Sass {
     // EO find
 
     // Finds element with specific key 
-    const_iterator find(const K& key) const
+    const_iterator find(const Key& key) const
     {
       const_iterator cur = items.begin();
       const_iterator end = items.end();
@@ -144,7 +161,7 @@ namespace Sass {
     // EO const find
 
     // Access or insert specified element
-    V& operator[](const K& key)
+    Value& operator[](const Key& key)
     {
       iterator cur = items.begin();
       iterator end = items.end();
@@ -156,9 +173,9 @@ namespace Sass {
         cur++;
       }
       // Append empty object
-      items.push_back(
+      items.emplace_back(
         std::make_pair(
-          key, V{}));
+          key, Value{}));
       // Returns newly added value
       return items.back().second;
     }
@@ -196,15 +213,22 @@ namespace Sass {
 
     // Insert passed key/value pair
     // ToDo: should return pair<it,bool>
-    bool insert(const K& k, const V& v)
+    bool insert(const Key& k, const Value& v)
     {
-      return insert(std::make_pair<K, V>(k, v));
+      if (count(k) == 0) {
+        // Append the pair
+        items.emplace_back({ k,v });
+        // Returns success
+        return true;
+      }
+      // Nothing inserted
+      return false;
     }
     // EO insert
 
     // Access element at specific key
     // Throws of key is not known in map
-    const V& at(const K& key) const
+    const Value& at(const Key& key) const
     {
       const_iterator cur = items.begin();
       const_iterator end = items.end();
@@ -221,7 +245,7 @@ namespace Sass {
     // EO at
 
     // Equality comparison operator
-    bool operator==(FlatMap<K, V> rhs) const {
+    bool operator==(FlatMap<Key, Value, N, KeyEqual, Allocator> rhs) const {
       return items == rhs.items;
     }
 

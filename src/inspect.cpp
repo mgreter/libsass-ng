@@ -329,7 +329,7 @@ namespace Sass {
         append_string(query->conjunction() ? "and" : "or");
         append_mandatory_space();
       }
-      if (isFirst && StringUtils::startsWith(feature, "(not ")) {
+      if (isFirst && StringUtils::startsWith(feature, "(not ", 5)) {
         append_string(feature.substr(1, feature.size() - 2));
       }
       else {

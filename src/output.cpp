@@ -116,8 +116,8 @@ namespace Sass {
   void Output::printCssComment(CssComment* comment)
   {
     // Ignore sourceMappingURL and sourceURL comments (ToDo: use regexp?).
-    if (StringUtils::startsWith(comment->text(), "/*# sourceMappingURL=")) return;
-    else if (StringUtils::startsWith(comment->text(), "/*# sourceURL=")) return;
+    if (StringUtils::startsWith(comment->text(), "/*# sourceMappingURL=", 21)) return;
+    else if (StringUtils::startsWith(comment->text(), "/*# sourceURL=", 14)) return;
     bool important = comment->isPreserved();
     if (output_style() == SASS_STYLE_COMPRESSED || output_style() == SASS_STYLE_COMPACT) {
       if (!important) return;

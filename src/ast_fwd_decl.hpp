@@ -345,6 +345,9 @@ namespace Sass {
   typedef sass::vector<CssParentNodeObj> CssParentVector;
   // typedef sass::vector<CssMediaQueryObj> CssMediaQueryVector;
   typedef sass::vector<SelectorListObj> SelectorLists;
+  typedef sass::vector<ComplexSelectorObj> ComplexSelectors;
+  typedef sass::vector<SimpleSelectorObj> SimpleSelectors;
+  typedef sass::vector<PseudoSelectorObj> PseudoSelectors;
   typedef sass::vector<StatementObj> StatementVector;
   typedef sass::vector<ExpressionObj> ExpressionVector;
   typedef std::unordered_set<sass::string> StringSet;
@@ -376,5 +379,15 @@ namespace Sass {
   class SourceSpan;
 
 }
+
+// template<> class std::less<Sass::SharedPtr<Sass::ComplexSelector>>
+// {
+// public: bool operator()(const Sass::SharedPtr<Sass::ComplexSelector>& a, const Sass::SharedPtr<Sass::ComplexSelector>& b)
+// {
+//   std::cerr << "Actually called\n";
+//   // return *a < *b;
+//   return false;
+// }
+// };
 
 #endif

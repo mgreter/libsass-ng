@@ -740,7 +740,7 @@ namespace Sass {
         String* url = arguments[0]->assertStringOrNull(compiler, Strings::url);
         MapObj withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
         eval.importCssModule(url, withMap, pstate);
-        return SASS_MEMORY_NEW(Null, SourceSpan::internal("[LOADCSS]"));
+        return SASS_MEMORY_NEW(Null, SourceSpan::internal32("[LOADCSS]"));
       }
 
       /*******************************************************************/

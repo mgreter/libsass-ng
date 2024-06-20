@@ -201,8 +201,6 @@ namespace Sass {
 //      return extender.checkForUnsatisfiedExtends(unsatisfied);
 //    }
 
-    ExtSmplSelSet wasExtended;
-
     // Another entry point for the `call` sass-function
     Value* acceptFunctionExpression(FunctionExpression* expression) {
       return visitFunctionExpression(expression);

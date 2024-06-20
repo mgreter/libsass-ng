@@ -180,11 +180,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Value move constructor
   CssAtRule::CssAtRule(
     const SourceSpan& pstate,
     CssParentNode* parent,
-    const sass::string& name,
-    const sass::string& value,
+    sass::string&& name,
+    sass::string&& value,
     bool isChildless,
     CssNodeVector&& children) :
     CssParentNode(
@@ -195,6 +196,7 @@ namespace Sass {
     isChildless_(isChildless)
   {}
 
+  // Copy by ptr constructor
   CssAtRule::CssAtRule(
     const CssAtRule* ptr,
     bool childless) :
@@ -220,7 +222,7 @@ namespace Sass {
 
   CssComment::CssComment(
     const SourceSpan& pstate,
-    const sass::string& text,
+    sass::string&& text,
     bool preserve) :
     CssNode(pstate),
     text_(text),
@@ -239,7 +241,7 @@ namespace Sass {
 
   CssDeclaration::CssDeclaration(
     const SourceSpan& pstate,
-    const sass::string& name,
+    const sass::string& name, // copy ok
     Value* value,
     bool wasCustomProperty) :
     CssNode(pstate),

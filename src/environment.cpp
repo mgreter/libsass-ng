@@ -53,9 +53,6 @@ namespace Sass {
 
   // Runtime check to see if we are currently in global scope
 
-  bool EnvRoot::isGlobal() const { return idxs->root.compiler.envstack.size() == 1; }
-  // EO EnvRoot ctor
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -191,7 +188,7 @@ namespace Sass {
   // Get value instance by stack index reference
   // Just converting and returning reference to array offset
 
-  static ValueObj qwe = SASS_MEMORY_NEW(Null, SourceSpan::internal("null"));
+  static ValueObj qwe = SASS_MEMORY_NEW(Null, SourceSpan::internal32("null"));
 
   ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
   {

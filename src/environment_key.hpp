@@ -126,7 +126,7 @@ namespace Sass {
     }
 
   };
-
+  /*
   struct hashEnvKey {
     inline size_t operator()(const EnvKey& str) const
     {
@@ -139,6 +139,7 @@ namespace Sass {
       return lhs.norm() == rhs.norm();
     }
   };
+  */
 
   struct hashString {
     inline size_t operator()(const sass::string& str) const

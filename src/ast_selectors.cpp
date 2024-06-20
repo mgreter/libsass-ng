@@ -1,5 +1,6 @@
 #include "ast_selectors.hpp"
 
+#include <functional>
 #include "permutate.hpp"
 #include "callstack.hpp"
 #include "dart_helpers.hpp"
@@ -436,7 +437,7 @@ namespace Sass {
   ComplexSelector::ComplexSelector(
     const SourceSpan& pstate,
     SelectorCombinatorVector&& leadingCombinators,
-    CplxSelComponentVector && components,
+    CplxSelComponentVector&& components,
     bool hasLineBreak) :
     Selector(pstate),
     Vectorized(std::move(components)),
@@ -457,6 +458,37 @@ namespace Sass {
     leadingCombinators_(ptr->leadingCombinators_)
   {}
 
+  ComplexSelector* ComplexSelector::withAdditionalComponent(
+    CplxSelComponent* component, const SourceSpan& span,
+    bool forceLineBreak = false) const
+  {
+    SelectorCombinatorVector combinators(leadingCombinators_);
+    CplxSelComponentVector components(elements_);
+    components.push_back(component);
+    return SASS_MEMORY_NEW(ComplexSelector, span,
+      std::move(combinators), std::move(components),
+      hasLineBreak_ || forceLineBreak);
+  }
+
+
+  ComplexSelector* ComplexSelector::withAdditionalCombinators(
+    SelectorCombinatorVector&& combinators)
+  {
+    if (combinators.empty()) return this;
+    CplxSelComponentVector components(elements_);
+    if (empty()) {
+      // Just add to existing leading combinators
+      return SASS_MEMORY_NEW(ComplexSelector, pstate_,
+        combinators, std::move(components));
+    }
+    else {
+      components.back() = components.back()->
+        withAdditionalCombinators(combinators);
+      return SASS_MEMORY_NEW(ComplexSelector, pstate_,
+        SelectorCombinatorVector(leadingCombinators_),
+        std::move(components));
+    }
+  }
 
   unsigned long ComplexSelector::specificity() const
   {
@@ -764,7 +796,7 @@ namespace Sass {
   // Determine if given `this` is a sub-selector of `sub`
   bool CompoundSelector::isSuperselectorOf(const CompoundSelector* sub) const
   {
-    return compoundIsSuperselector(this, sub);
+    return compoundIsSuperselector(this->elements(), sub->elements());
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -773,7 +805,7 @@ namespace Sass {
 
   SelectorList::SelectorList(
     const SourceSpan& pstate,
-    sass::vector<ComplexSelectorObj>&& complexes) :
+    ComplexSelectors&& complexes) :
     Selector(pstate),
     Vectorized(std::move(complexes))
   {}
@@ -852,12 +884,6 @@ namespace Sass {
     return false;
   }
 
-  bool CplxSelComponent::operator==(const CplxSelComponent& rhs) const
-  {
-    if (combinators_ != rhs.combinators_) return false;
-    if (selector_ && rhs.selector_) return *selector_ == *rhs.selector_;
-    return selector_ == nullptr && rhs.selector_ == nullptr;
-  }
 
   const Selector* CplxSelComponent::hasAnyExplicitParent() const
   {
@@ -988,32 +1014,6 @@ namespace Sass {
       pstate(), std::move(merged), selector());
   }
 
-  // Fully converted 16.01.2024 (untested)
-  ComplexSelector* ComplexSelector::withAdditionalCombinators(
-    const SelectorCombinatorVector& combinators)
-  {
-    if (combinators.empty()) return this;
-    CplxSelComponentVector components(elements_);
-    if (empty()) {
-      // Just add to existing leading combinators
-      SelectorCombinatorVector merged(leadingCombinators_);
-      merged.insert(merged.end(), combinators.begin(), combinators.end());
-      return SASS_MEMORY_NEW(ComplexSelector, pstate_,
-        combinators, std::move(components));
-    }
-    else {
-      // SelectorCombinatorVector merged(elements_.back()->combinators());
-      components.back() = components.back()->withAdditionalCombinators(combinators);
-      return SASS_MEMORY_NEW(ComplexSelector, pstate_,
-        leadingCombinators_, std::move(components));
-    }
-
-    // SelectorCombinatorVector merged(combinators_);
-    // merged.insert(merged.end(),
-    //   others.begin(), others.end());
-    // return SASS_MEMORY_NEW(CplxSelComponent,
-    //   pstate(), std::move(merged), selector());
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -1080,7 +1080,7 @@ namespace Sass {
 
 
 
-  sass::vector<ComplexSelectorObj> ComplexSelector::resolveParentSelectors(
+  ComplexSelectors ComplexSelector::resolveParentSelectors(
     SelectorList* parent, BackTraces& traces, bool implicit_parent, bool preserve_parent)
   {
 
@@ -1094,7 +1094,7 @@ namespace Sass {
     if (parent) {
       // std::cerr << "Resolve parent selector " << parent->toString() << "\n";
     }
-    sass::vector<sass::vector<ComplexSelectorObj>> selectors;
+    sass::vector<ComplexSelectors> selectors;
 
     // bool cr = chroots();
     // bool he = hasExplicitParent();
@@ -1129,7 +1129,7 @@ namespace Sass {
         auto tails(component->combinators());
 
         // loosing postfix combinators of component?
-        sass::vector<ComplexSelectorObj> complexes =
+        ComplexSelectors complexes =
           compound->resolveParentSelectors2(parent, traces,
             leads, tails, implicit_parent);
 
@@ -1158,8 +1158,8 @@ namespace Sass {
 
 
     // Create final selectors from path permutations
-    sass::vector<ComplexSelectorObj> resolved;
-    for (sass::vector<ComplexSelectorObj>& append : selectors) {
+    ComplexSelectors resolved;
+    for (ComplexSelectors& append : selectors) {
 
       if (append.empty()) continue;
 
@@ -1234,7 +1234,7 @@ namespace Sass {
 
   // 
 
-  sass::vector<ComplexSelectorObj>
+  ComplexSelectors
     CompoundSelector::resolveParentSelectors2(
       SelectorList* parents, BackTraces& traces,
       SelectorCombinatorVector prefixes, // from complex selector
@@ -1247,7 +1247,7 @@ namespace Sass {
 
     // must add prefixes to parent's last selector combinators
 
-    sass::vector<ComplexSelectorObj> rv;
+    ComplexSelectors rv;
 
     // Missing this->combinators
 
@@ -1391,7 +1391,7 @@ namespace Sass {
     bool implicit_parent, bool preserve_parent)
   {
     // // if (parent == nullptr && preserve_parent) return this;
-    sass::vector<sass::vector<ComplexSelectorObj>> lists;
+    sass::vector<ComplexSelectors> lists;
     for (ComplexSelector* sel : elements()) {
       lists.emplace_back(sel->resolveParentSelectors
       (parent, traces, implicit_parent));

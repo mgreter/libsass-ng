@@ -1818,7 +1818,8 @@ namespace Sass {
 
   bool ArgumentList::operator==(const ArgumentList& rhs) const
   {
-    return _keywords == rhs._keywords;
+    return _keywords.ptr() == rhs._keywords.ptr();
+    // return ObjEqualityFn(_keywords, rhs._keywords);
   }
 
   size_t ArgumentList::hash() const

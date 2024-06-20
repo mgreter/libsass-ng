@@ -15,9 +15,9 @@ namespace Sass {
   // Helpers for forward rules
   /////////////////////////////////////////////////////////////////////////
 
+  template <typename T>
   static void exposeUnfiltered(
-    VidxEnvKeyMap& merged,
-    VidxEnvKeyMap expose,
+    T& merged, T expose,
     const sass::string prefix,
     const sass::string& errprefix,
     Logger& logger,
@@ -40,9 +40,9 @@ namespace Sass {
     }
   }
 
+  template <typename T>
   static void exposeFiltered(
-    VidxEnvKeyMap& merged,
-    VidxEnvKeyMap expose,
+    T& merged, T expose,
     const sass::string prefix,
     const std::set<EnvKey>& filters,
     const sass::string& errprefix,
@@ -481,10 +481,11 @@ namespace Sass {
 
     bool hasWith = withMap && !withMap->empty();
 
-    EnvKeyFlatMap<ValueObj> config;
     sass::vector<WithConfigVar> withConfigs;
 
     if (hasWith) {
+      sass::flatmap::env<EnvKey, ValueObj, 0> config;
+      config.reserve(withMap->elements().size());
       for (auto& kv : withMap->elements()) {
         String* name = kv.first->assertString(compiler, "with key");
         EnvKey kname(name->value());
@@ -603,7 +604,7 @@ namespace Sass {
       // [ExtensionStore] so that we don't consider an extension "satisfied"
       // below because of a simple selector added by another (sibling)
       // extension.
-      ExtSmplSelSet originalSelectors;
+      ExtSmplSelSet originalSelectors; // getSimpleSelectors
       for (auto& sel : module->extender52->selectors54) {
         originalSelectors.insert(sel.first);
       }
@@ -631,7 +632,7 @@ namespace Sass {
     }
 
     if (!unsatisfiedExtensions.empty()) {
-      ExtensionObj extension = *unsatisfiedExtensions.begin();
+      const Extension* extension = *unsatisfiedExtensions.begin();
       throw Exception::UnsatisfiedExtend(logger, extension);
     }
 

@@ -409,35 +409,35 @@ namespace Sass {
         BuiltInMod& module(ctx.createModule("math"));
 
         module.addVariable(key_e, ctx.createBuiltInVariable(key_e,
-          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
+          SASS_MEMORY_NEW(Number, SourceSpan::internal32("[sass:math]"),
             2.71828182845904523536028747135266249775724709369995)));
         module.addVariable(key_pi, ctx.createBuiltInVariable(key_pi,
-          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
+          SASS_MEMORY_NEW(Number, SourceSpan::internal32("[sass:math]"),
             3.14159265358979323846264338327950288419716939937510)));
         module.addVariable(key_tau, ctx.createBuiltInVariable(key_tau,
-          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
+          SASS_MEMORY_NEW(Number, SourceSpan::internal32("[sass:math]"),
             3.14159265358979323846264338327950288419716939937510 * 2.0)));
 
         module.addVariable(key_epsilon, ctx.createBuiltInVariable(key_epsilon,
-          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
+          SASS_MEMORY_NEW(Number, SourceSpan::internal32("[sass:math]"),
             std::numeric_limits<double>().epsilon())));
         module.addVariable(key_min_number, ctx.createBuiltInVariable(key_min_number,
-          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
+          SASS_MEMORY_NEW(Number, SourceSpan::internal32("[sass:math]"),
             std::numeric_limits<double>().denorm_min())));
         module.addVariable(key_max_number, ctx.createBuiltInVariable(key_max_number,
-          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"),
+          SASS_MEMORY_NEW(Number, SourceSpan::internal32("[sass:math]"),
             std::numeric_limits<double>().max())));
 
         module.addVariable(key_min_safe_integer, ctx.createBuiltInVariable(key_min_safe_integer,
-          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"), -9007199254740991)));
+          SASS_MEMORY_NEW(Number, SourceSpan::internal32("[sass:math]"), -9007199254740991)));
         module.addVariable(key_max_safe_integer, ctx.createBuiltInVariable(key_max_safe_integer,
-          SASS_MEMORY_NEW(Number, SourceSpan::internal("[sass:math]"), 9007199254740991)));
+          SASS_MEMORY_NEW(Number, SourceSpan::internal32("[sass:math]"), 9007199254740991)));
 
         module.addFunction(key_ceil, ctx.registerBuiltInFunction(key_ceil, "$number", ceil));
         module.addFunction(key_clamp, ctx.createBuiltInFunction(key_clamp, "$min, $number, $max", fnClamp));
         module.addFunction(key_floor, ctx.registerBuiltInFunction(key_floor, "$number", floor));
 
-        // Some functions are marked internal (for what exactly?)
+        // Some functions are marked internal32 (for what exactly?)
         module.addFunction(key_max, ctx.registerInternalFunction(key_max, "$numbers...", max));
         module.addFunction(key_min, ctx.registerInternalFunction(key_min, "$numbers...", min));
         module.addFunction(key_round, ctx.registerInternalFunction(key_round, "$number", round));

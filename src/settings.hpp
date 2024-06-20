@@ -99,23 +99,43 @@
 // When defined we will force to calculate the hash for comparisons
 // If disabled, we check if hashes are there and use them voluntarily
 // Helps if we keep comparing the same items for equality (seen 5%)
-#define SASS_FORCE_CMP_HASH
+// #define SASS_FORCE_CMP_HASH
 
 // Use native thread local if possible
 // Or always use shim from `thread_local`
 // When using shim, we must link to pthread
 #define USE_STD_THREAD_LOCAL 1
 
-// Use non thread-safe optimizations?
-// Only enable if you know the use-case!
-// E.g. not using thread local memory pool
-// Shim is quite a bit slower than original
-// Ok to cache CWD, but not for memory pool
-// #define SASS_OPTIMIZE_SINGLE_THREADED
+// Implementation for unordered map/set
+#define SASS_USE_TSL_ROBIN_MAP
+#define SASS_USE_TSL_ROBIN_SET
 
-// Regresses quite heavy in performance
-// ToDo: find out why, should be faster?
-// #define SASS_USE_TSL_HOPSCOTCH
+// Comes with Zlib license attached
+// Improved environment lookups (5%)
+// Better O(logn) worst-case behavior
+#define SASS_USE_SFL_ORDERED_FLAT_MAP
+#define SASS_USE_SFL_UNORDERED_FLAT_MAP
+
+// Performance for on extreme extends
+// Comes with Apache 2.0 license attached
+// Improves heavy extend pretty well (5%)
+#define SASS_USE_TSL_BHOPSCOTCH_MAP
+#define SASS_USE_TSL_BHOPSCOTCH_SET
+
+// Performance for on extreme extends
+// Comes with Apache 2.0 license attached
+// Improves heavy extend substantially (10%)
+#define SASS_USE_ABSEIL_BTREE_MAP
+#define SASS_USE_ABSEIL_BTREE_SET
+
+
+// Some headers may not be included
+// #define SASS_USE_TSL_BHOPSCOTCH_MAP
+// #define SASS_USE_TSL_BHOPSCOTCH_SET
+// #define SASS_USE_TSL_ROBIN_PG_MAP
+// #define SASS_USE_TSL_ROBIN_PG_SET
+// #define SASS_USE_TSL_SPARSE_MAP
+// #define SASS_USE_TSL_SPARSE_SET
 
 /////////////////////////////////////////////////////////////////////////
 // Self assign optimization is experimental and may break your code

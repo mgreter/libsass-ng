@@ -8,24 +8,6 @@
 
 namespace Sass {
 
-  /////////////////////////////////////////////////////////////////////////
-  // Returns whether or not [compound] contains a `::root` selector.
-  /////////////////////////////////////////////////////////////////////////
-  /*
-  static bool hasRoot(const CompoundSelector* compound)
-  {
-    for (const SimpleSelector* simple : compound->elements()) {
-      if (const PseudoSelector* pseudo = simple->isaPseudoSelector()) {
-        if (pseudo->isClass() && pseudo->normalized() == "root") {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  */
-  // EO hasRoot
-
   static bool hasRootish(const CompoundSelector* compound)
   {
     for (const SimpleSelector* simple : compound->elements()) {
@@ -104,48 +86,39 @@ namespace Sass {
 
     if (ListEquality(group1, group2, PtrObjEqualityFn<CplxSelComponent>))
     {
-      // std::cerr << ("List is equal\n");
       select = group1;
       return true;
     }
 
-    // std::cerr << "cmp1: " << InspectVector(group1) << "\n";
-    // std::cerr << "cmp2: " << InspectVector(group2) << "\n";
-
     if (!group1.front()->selector()) {
-      // std::cerr << "group1 front has no selector\n";
-      select = {};
+      select.clear();
       return false;
     }
     if (!group2.front()->selector()) {
-      // std::cerr << "group2 front has no selector\n";
-      select = {};
+      select.clear();
       return false;
     }
 
     if (complexIsParentSuperselector(group1, group2)) {
-      // std::cerr << ("!Complex is parent super 1\n");
       select = group2;
       return true;
     }
     if (complexIsParentSuperselector(group2, group1)) {
-      // std::cerr << ("!Complex is parent super 2\n");
       select = group1;
       return true;
     }
 
     if (!mustUnify(group1, group2)) {
-      // std::cerr << ("!Must not unify\n");
       select.clear();
       return false;
     }
 
-    auto span = SourceSpan::internal("[BASE]");
+    auto span = SourceSpan::internal32("[BASE]");
     CplxSelComponentVector comp1(group1);
     CplxSelComponentVector comp2(group2);
-    auto q1 = SASS_MEMORY_NEW(ComplexSelector, span, std::move(comp1));
-    auto q2 = SASS_MEMORY_NEW(ComplexSelector, span, std::move(comp2));
-    auto unified = _unifyComplex({ q2, q1 }, span);
+    ComplexSelectorObj q1 = SASS_MEMORY_NEW(ComplexSelector, span, std::move(comp1));
+    ComplexSelectorObj q2 = SASS_MEMORY_NEW(ComplexSelector, span, std::move(comp2));
+    ComplexSelectors unified = _unifyComplex({ q2, q1 }, span);
     if (unified.size() == 1) {
       select = unified[0]->elements();
     }
@@ -354,65 +327,11 @@ namespace Sass {
   ///
   /// If [forceLineBreak] is `true`, this will mark all returned complex selectors
   /// as having line breaks.
-  ComplexSelector* ComplexSelector::withAdditionalComponent(
-    CplxSelComponent* component, SourceSpan& span,
-    bool forceLineBreak = false) const
-    {
-    SelectorCombinatorVector combo(leadingCombinators_);
-    CplxSelComponentVector comps(elements_);
-    comps.push_back(component);
-    return SASS_MEMORY_NEW(ComplexSelector, span,
-      std::move(combo), std::move(comps),
-      hasLineBreak_ || forceLineBreak);
-  }
 
-  sass::vector<ComplexSelectorObj> weave27(
-    const sass::vector<ComplexSelectorObj>& complexes,
+  ComplexSelectors weave27(
+    const ComplexSelectors& complexes,
     bool forceLineBreak)
   {
-
-
-    /*
-
-
-    sass::vector<ComplexSelectorObj> prefixes;
-
-    prefixes.emplace_back(complexes.at(0));
-
-    for (size_t i = 1; i < complexes.size(); i += 1) {
-
-      if (complexes[i]->empty()) {
-        continue;
-      }
-      const ComplexSelectorObj& complex = complexes[i];
-      CplxSelComponent* target = complex->elements().back();
-      if (complex->size() == 1) {
-        for (auto& prefix : prefixes) {
-          prefix->elements().push_back(target);
-        }
-        continue;
-      }
-
-      ComplexSelectorObj parents = SASS_MEMORY_COPY(complex);
-
-      parents->elements().pop_back();
-
-      sass::vector<ComplexSelectorObj> newPrefixes;
-      for (ComplexSelectorObj prefix : prefixes) {
-        sass::vector<ComplexSelectorObj>
-          parentPrefixes = weaveParents(prefix, parents);
-        if (parentPrefixes.empty()) continue;
-        for (auto& parentPrefix : parentPrefixes) {
-          parentPrefix->elements().emplace_back(target);
-          newPrefixes.push_back(parentPrefix);
-        }
-      }
-      prefixes = newPrefixes;
-
-    }
-    return prefixes;
-
-    */
 
     if (complexes.empty()) return complexes;
 
@@ -420,7 +339,7 @@ namespace Sass {
       return complexes;
     }
 
-    sass::vector<ComplexSelectorObj> prefixes;
+    ComplexSelectors prefixes;
     prefixes.emplace_back(complexes.front());
 
     for (size_t i = 1; i < complexes.size(); i += 1) {
@@ -428,18 +347,13 @@ namespace Sass {
       if (complex->elements().size() == 1) {
         for (auto& prefix : prefixes) {
           prefix = prefix->concatenate(complex, complex->pstate(), forceLineBreak);
-          // prefix->elements().push_back(complex);
-         // prefix->concatenate(complex);
         }
         continue;
       }
 
-      // CplxSelComponentVector parents(complex);
-      // parents.pop_back();
-
-      sass::vector<ComplexSelectorObj> newPrefixes;
+      ComplexSelectors newPrefixes;
       for (const ComplexSelectorObj& prefix : prefixes) {
-        sass::vector<ComplexSelectorObj> weaveds
+        ComplexSelectors weaveds
           = weaveParents(prefix, complex);
         if (weaveds.empty()) continue;
         for (const auto& parent : weaveds) {
@@ -447,11 +361,6 @@ namespace Sass {
           ComplexSelectorObj asd = parent->withAdditionalComponent(
             complex->elements().back(), span, forceLineBreak);
           newPrefixes.push_back(asd);
-
-        //  // Still returns multiple parents here
-        //  prefix->elements().insert(prefix->end(),
-        //    std::make_move_iterator(parents.begin()),
-        //    std::make_move_iterator(parents.end()));
         }
       }
       prefixes = newPrefixes;
@@ -461,7 +370,6 @@ namespace Sass {
 
   }
   // EO weave
-
 
   static bool _mergeLeadingCombinators(
     const SelectorCombinatorVector& combinators1,
@@ -521,7 +429,7 @@ namespace Sass {
     // Optimize case when nothing is changed
     if (compound1->empty()) return compound1;
     // Make a copy of the existing elements (ToDo: optimize)
-    sass::vector<SimpleSelectorObj> result(compound2->elements());
+    SimpleSelectors result(compound2->elements());
     for (const auto& simple : compound1->elements()) {
       result = simple->unify(result);
       if (result.empty()) return nullptr;
@@ -785,129 +693,21 @@ namespace Sass {
 
     if (!combinator1.isNull() && !combinator2.isNull()) {
 
-      // CompoundSelector* compound1 = components1.back()->selector();
-      // CompoundSelector* compound2 = components2.back()->selector();
-
       components1.pop_back();
       components2.pop_back();
-      /*
-      if (combinator1->isGeneralCombinator() && combinator2->isGeneralCombinator()) {
-
-        if (compound1->isSuperselectorOf(compound2)) {
-          result.push_back({ { compound2, combinator2.ptr() } });
-        }
-        else if (compound2->isSuperselectorOf(compound1)) {
-          result.push_back({ { compound1, combinator1.ptr() } });
-        }
-        else {
-          sass::vector<CplxSelComponentVector> choices;
-          choices.push_back({ compound1, combinator1.ptr(), compound2, combinator2.ptr() });
-          choices.push_back({ compound2, combinator2.ptr(), compound1, combinator1.ptr() });
-          if (CompoundSelector* unified = compound1->unifyWith(compound2)) {
-            choices.push_back({ unified, combinator1.ptr() });
-          }
-          result.emplace_back(choices);
-        }
-      }
-      else if ((combinator1->isGeneralCombinator() && combinator2->isAdjacentCombinator()) ||
-        (combinator1->isAdjacentCombinator() && combinator2->isGeneralCombinator())) {
-
-        CompoundSelector* followingSiblingSelector = combinator1->isGeneralCombinator() ? compound1 : compound2;
-        CompoundSelector* nextSiblingSelector = combinator1->isGeneralCombinator() ? compound2 : compound1;
-        SelectorCombinator* followingSiblingCombinator = combinator1->isGeneralCombinator() ? combinator1 : combinator2;
-        SelectorCombinator* nextSiblingCombinator = combinator1->isGeneralCombinator() ? combinator2 : combinator1;
-
-        if (followingSiblingSelector->isSuperselectorOf(nextSiblingSelector)) {
-          result.push_back({ { nextSiblingSelector, nextSiblingCombinator } });
-        }
-        else {
-          CompoundSelectorObj unified = compound1->unifyWith(compound2);
-          sass::vector<CplxSelComponentVector> items;
-
-          if (!unified.isNull()) {
-            items.push_back({
-              unified.ptr(), nextSiblingCombinator
-            });
-          }
-
-          items.insert(items.begin(), {
-            followingSiblingSelector,
-            followingSiblingCombinator,
-            nextSiblingSelector,
-            nextSiblingCombinator,
-          });
-
-          result.emplace_back(items);
-        }
-
-      }
-      else if (combinator1->isChildCombinator() && (combinator2->isAdjacentCombinator() || combinator2->isGeneralCombinator())) {
-        result.push_back({ { compound2, combinator2.ptr() } });
-        components1.emplace_back(compound1);
-        components1.emplace_back(combinator1);
-      }
-      else if (combinator2->isChildCombinator() && (combinator1->isAdjacentCombinator() || combinator1->isGeneralCombinator())) {
-        result.push_back({ { compound1, combinator1.ptr() } });
-        components2.emplace_back(compound2);
-        components2.emplace_back(combinator2);
-      }
-      else if (*combinator1 == *combinator2) {
-        CompoundSelectorObj unified = compound1->unifyWith(compound2);
-        if (unified.isNull()) return false;
-        result.push_back({ { unified.ptr(), combinator1.ptr() } });
-      }
-      else {
-        return false;
-      }
-      */
 
       return mergeFinalCombinators(components1, components2, result);
 
     }
-    // else if (!combinator1.isNull()) {
-      /*
-      if (combinator1->isChildCombinator() && !components2.empty()) {
-        const CompoundSelector* back1 = components1.back()->isaCompoundSelector();
-        const CompoundSelector* back2 = components2.back()->isaCompoundSelector();
-        if (back1 && back2 && back2->isSuperselectorOf(back1)) {
-          components2.pop_back();
-        }
-      }
-
-      result.push_back({ { components1.back(), combinator1.ptr() } });
-
-      components1.pop_back();
-      */
-      //return mergeFinalCombinators(components1, components2, result);
-
-    //}
-    /*
-    if (combinator2->isChildCombinator() && !components1.empty()) {
-      const CompoundSelector* back1 = components1.back()->isaCompoundSelector();
-      const CompoundSelector* back2 = components2.back()->isaCompoundSelector();
-      if (back1 && back2 && back1->isSuperselectorOf(back2)) {
-        components1.pop_back();
-      }
-    }
-
-    result.push_back({ { components2.back(), combinator2.ptr() } });
-
-    components2.pop_back();
-    */
     return mergeFinalCombinators(components1, components2, result);
 
   }
   // EO mergeFinalCombinators
 
 
-
-
-  sass::vector<ComplexSelectorObj> weaveParents(
+  ComplexSelectors weaveParents(
     ComplexSelector* prefix, ComplexSelector* base)
   {
-
-    //std::cerr << "wp prefix " << prefix->inspect() << "\n";
-    //std::cerr << "wp base " << base->inspect() << "\n";
 
     SelectorCombinatorVector lead;
     bool rs1 = _mergeLeadingCombinators(
@@ -959,15 +759,9 @@ namespace Sass {
       queue2.insert(queue2.begin(), root2.ptr());
     }
 
-    //for (auto g1 : queue1) { std::cerr << "q1: " << g1->inspect() << "\n"; }
-    //for (auto g2 : queue2) { std::cerr << "q2: " << g2->inspect() << "\n"; }
-
     // group into sub-lists so no sub-list contains two adjacent ComplexSelectors.
     sass::vector<CplxSelComponentVector> groups1 = groupSelectors(queue1);
     sass::vector<CplxSelComponentVector> groups2 = groupSelectors(queue2);
-
-    //for (auto g1 : groups1) { std::cerr << "g1: " << InspectVector(g1) << "\n"; }
-    //for (auto g2 : groups2) { std::cerr << "g2: " << InspectVector(g2) << "\n"; }
 
     // The main array to store our choices that will be permutated
     sass::vector<sass::vector<CplxSelComponentVector>> choices;
@@ -1017,7 +811,7 @@ namespace Sass {
 
     auto perm = permutate(choices);
 
-    sass::vector<ComplexSelectorObj> foobar;
+    ComplexSelectors foobar;
     for (const auto& path : perm) {
       CplxSelComponentVector comps;
       for (const auto& compis : path) {

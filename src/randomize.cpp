@@ -33,7 +33,7 @@ namespace Sass {
     // Load optional fixed seed from environment
     // Mainly used to pass the seed to plugins
     if (const char* envseed = GET_ENV("SASS_HASH_SEED")) {
-      seed = atol(envseed);
+      seed = std::atol(envseed);
     }
     else {
       #ifdef SassStaticHashSeed

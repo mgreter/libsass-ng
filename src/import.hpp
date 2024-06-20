@@ -38,9 +38,13 @@ namespace Sass {
     }
 
     bool operator==(const ImportRequest& other) const {
-      return considerImports == other.considerImports
-        && imp_path == other.imp_path
-        && ctx_path == other.ctx_path;
+      return std::tie(considerImports, imp_path, ctx_path)
+        == std::tie(other.considerImports, other.imp_path, other.ctx_path);
+    }
+
+    bool operator<(const ImportRequest& other) const {
+      return std::tie(considerImports, imp_path, ctx_path)
+        < std::tie(other.considerImports, other.imp_path, other.ctx_path);
     }
 
     ImportRequest() {};

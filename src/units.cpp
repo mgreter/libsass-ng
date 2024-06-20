@@ -3,7 +3,9 @@
 /*****************************************************************************/
 #include "units.hpp"
 
+#include "memory.hpp"
 #include "flat_map.hpp"
+#include "comparators.hpp"
 #include "string_utils.hpp"
 
 #include <set>
@@ -336,7 +338,8 @@ namespace Sass {
     // we basically construct exponents for each unit
     // has the advantage that they will be presorted
     // ToDo: use fast map implementation?
-    FlatMap<sass::string, int> exponents;
+    FlatMap<sass::string, int, 4, StringEquality,
+      Sass::Allocator<std::pair<sass::string, int>>> exponents;
 
     // initialize by summing up occurrences in unit vectors
     // this will already cancel out equivalent units (e.q. px/px)
@@ -622,7 +625,7 @@ namespace Sass {
   // Return factor to convert into passed units
   double Units::getUnitConversionFactor(const Units& r, bool strict) const
   {
-
+    // allocates quite a bit of working memory
     sass::vector<sass::string> miss_nums(0);
     sass::vector<sass::string> miss_dens(0);
     // create copy since we need these for state keeping
@@ -648,7 +651,7 @@ namespace Sass {
     while (l_num_it != l_num_end)
     {
       // get and increment afterwards
-      const sass::string l_num = *(l_num_it ++);
+      const sass::string& l_num = *(l_num_it ++);
 
       // ToDo: we erase from base vector in the loop.
       // Iterators might get invalid during the loop
@@ -659,10 +662,8 @@ namespace Sass {
       // search for compatible numerator
       while (r_num_it != r_num_end)
       {
-        // get and increment afterwards
-        const sass::string r_num = *(r_num_it);
         // get possible conversion factor for units
-        double conversion = conversion_factor(l_num, r_num);
+        double conversion = conversion_factor(l_num, *r_num_it);
         // skip incompatible numerator
         if (conversion == 0) {
           ++ r_num_it;
@@ -688,7 +689,7 @@ namespace Sass {
     while (l_den_it != l_den_end)
     {
       // get and increment afterwards
-      const sass::string l_den = *(l_den_it ++);
+      const sass::string& l_den = *(l_den_it ++);
 
       auto r_den_it = r_dens.begin();
       auto r_den_end = r_dens.end();
@@ -697,10 +698,8 @@ namespace Sass {
       // search for compatible denominator
       while (r_den_it != r_den_end)
       {
-        // get and increment afterwards
-        const sass::string r_den = *(r_den_it);
         // get possible conversion factor for units
-        double conversion = conversion_factor(l_den, r_den);
+        double conversion = conversion_factor(l_den, *r_den_it);
         // skip incompatible denominator
         if (conversion == 0) {
           ++ r_den_it;

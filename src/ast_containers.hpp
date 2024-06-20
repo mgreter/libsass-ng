@@ -3,6 +3,7 @@
 
 #include "hashing.hpp"
 #include "ast_helpers.hpp"
+#include "containers.hpp"
 
 namespace Sass {
 
@@ -471,11 +472,7 @@ namespace Sass {
 
   public:
 
-    using ordered_map_type = typename OrderedMap<
-      K, T, ObjHash, ObjEquality,
-      Sass::Allocator<std::pair<K, T>>,
-      sass::vector<std::pair<K, T>>
-    >;
+    using ordered_map_type = typename sass::stblmap::obj<K, T>;
 
   protected:
 

@@ -16,6 +16,7 @@
 #include "memory_config.hpp"
 #include "backtrace.hpp"
 #include "hashing.hpp"
+#include "containers.hpp"
 #include "source.hpp"
 
 namespace Sass {
@@ -35,7 +36,7 @@ namespace Sass {
 
     // test if path exists and is a file
     bool file_exists(const sass::string& file, const sass::string& CWD,
-      std::unordered_map<sass::string, bool>& cache);
+      sass::cachemap::str<sass::string, bool>& cache);
 
     // return if given path is absolute
     // works with *nix and windows paths
@@ -65,11 +66,11 @@ namespace Sass {
     // helper function to resolve a filename
     // searching without variations in all paths
     // sass::string find_file(const sass::string& file, const sass::string& CWD, struct SassCompilerCpp* options);
-    sass::string find_file(const sass::string& file, const sass::string& CWD, const StringVector paths, std::unordered_map<sass::string, bool>& cache);
+    sass::string find_file(const sass::string& file, const sass::string& CWD, const StringVector paths, sass::cachemap::str<sass::string, bool>& cache);
 
     // helper function to resolve a include filename
     // this has the original resolve logic for sass include
-    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector paths, bool forImport, std::unordered_map<sass::string, bool>& cache);
+    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector paths, bool forImport, sass::cachemap::str<sass::string, bool>& cache);
 
     // split a path string delimited by semicolons or colons (OS dependent)
     // StringVector split_path_list(sass::string paths);
@@ -82,7 +83,7 @@ namespace Sass {
     Import* read_import(const ResolvedImport& import);
 
     sass::vector<ResolvedImport> resolve_includes(const sass::string& root, const sass::string& file, const sass::string& CWD, bool forImport,
-      std::unordered_map<sass::string, bool>& cache, const std::vector<sass::string>& exts = { ".sass", ".scss", ".css" });
+      sass::cachemap::str<sass::string, bool>& cache, const std::vector<sass::string>& exts = { ".sass", ".scss", ".css" });
 
   }
 

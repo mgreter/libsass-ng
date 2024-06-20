@@ -306,7 +306,7 @@ namespace Sass {
     {}
 
     // Thrown when a non-optional extend found nothing to extend
-    UnsatisfiedExtend::UnsatisfiedExtend(BackTraces traces, Extension* extension)
+    UnsatisfiedExtend::UnsatisfiedExtend(BackTraces traces, const Extension* extension)
       : Base("The target selector was not found.\n"
         // Calling inspect to the placeholder is visible
         "Use \"@extend " + extension->target->inspect() +

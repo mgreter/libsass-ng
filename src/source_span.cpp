@@ -1,6 +1,8 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+/* Helper class to hold and calculate spans from two Offset positions        */
+/*****************************************************************************/
 #include "source_span.hpp"
 
 #include "sources.hpp"
@@ -13,6 +15,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Regular value constructor
+  // Also known as `pstate`
   SourceSpan::SourceSpan(
     SourceDataObj source,
     const Offset& position,
@@ -25,7 +28,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Create SourceSpan for internal things
-  SourceSpan SourceSpan::internal(const char* label)
+  SourceSpan SourceSpan::internal32(const char* label)
   {
     return SourceSpan(SASS_MEMORY_NEW(
       SourceString, "sass://internal", label),

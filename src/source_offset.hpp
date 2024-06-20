@@ -1,7 +1,7 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
-// Base class to help holding and calculating line/column positions
+/* Helper class to hold and calculate line / column positions                */
 /*****************************************************************************/
 #ifndef SASS_OFFSET_HPP
 #define SASS_OFFSET_HPP

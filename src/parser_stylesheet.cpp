@@ -490,7 +490,7 @@ namespace Sass {
 
     // Parse custom properties as declarations no matter what.
     InterpolationObj name = nameBuffer.getInterpolation(beforeColon);
-    if (startsWith(name->getInitialPlain(), "--")) {
+    if (startsWith(name->getInitialPlain(), "--", 2)) {
       InterpolationObj value(readInterpolatedDeclarationValue());
       expectStatementSeparator("custom property");
       return SASS_MEMORY_NEW(Declaration,
@@ -1883,11 +1883,10 @@ namespace Sass {
     scanWhitespace();
     sass::vector<ArgumentObj> arguments;
     EnvKeySet named;
-    sass::string restArgument;
+    EnvKey restArgument;
     while (scanner.peekChar() == $dollar) {
       Offset variableStart(scanner.offset);
-      sass::string name(variableName());
-      EnvKey norm(name);
+      EnvKey name(variableName());
       scanWhitespace();
 
       ExpressionObj defaultValue;
@@ -1899,25 +1898,25 @@ namespace Sass {
         scanner.expectChar($dot);
         scanner.expectChar($dot);
         scanWhitespace();
-        restArgument = name;
+        restArgument = name.orig();
         // Defer adding variable until we parsed expression
         // Just in case the same variable is mentioned again
-        compiler.envstack.back()->createVariable(norm);
+        compiler.envstack.back()->createVariable(name);
         break;
       }
 
       // Defer adding variable until we parsed expression
       // Just in case the same variable is mentioned again
-      compiler.envstack.back()->createVariable(norm);
+      compiler.envstack.back()->createVariable(name);
 
       arguments.emplace_back(SASS_MEMORY_NEW(Argument,
         scanner.relevantSpanFrom(variableStart), name, defaultValue));
 
-      if (named.count(norm) == 1) {
+      // Insert into set and check if it already existed
+      if (!named.insert(std::move(name)).second) {
         error("Duplicate argument.",
           arguments.back()->pstate());
       }
-      named.insert(std::move(norm));
 
       if (!scanner.scanChar($comma)) break;
       scanWhitespace();
@@ -4633,7 +4632,7 @@ namespace Sass {
     // lastSilentComment = null;
     StringToken name = readIdentifierToken();
 
-    if (StringUtils::startsWith(name.str, "--")) {
+    if (StringUtils::startsWith(name.str, "--", 2)) {
       compiler.addDeprecation(
         "Sass @mixin names beginning with -- are deprecated for forward-"
         "compatibility with plain CSS mixins.\n"
@@ -4693,7 +4692,7 @@ namespace Sass {
     // Offset before(scanner.offset);
     StringToken name = readIdentifierToken();
 
-    if (StringUtils::startsWith(name.str, "--")) {
+    if (StringUtils::startsWith(name.str, "--", 2)) {
       compiler.addDeprecation(
         "Sass @function names beginning with -- are deprecated for forward-"
         "compatibility with plain CSS mixins.\n"

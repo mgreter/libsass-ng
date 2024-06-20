@@ -333,7 +333,7 @@ namespace Sass {
 
     class UnsatisfiedExtend : public Base {
     public:
-      UnsatisfiedExtend(BackTraces traces, Extension* extension);
+      UnsatisfiedExtend(BackTraces traces, const Extension* extension);
     };
 
     class ExtendAcrossMedia : public Base {

@@ -117,7 +117,7 @@ inline std::string debug_vec(EnvKey key) {
   return key.norm().c_str();
 }
 
-inline std::string debug_vec(sass::vector<ComplexSelectorObj> vec) {
+inline std::string debug_vec(ComplexSelectors vec) {
   std::stringstream out;
   out << "[";
   SelectorListObj slist = SASS_MEMORY_NEW(SelectorList, SourceSpan::internal("DBG"), std::move(vec));

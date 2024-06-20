@@ -1,0 +1,18 @@
+#define SassAllocatorBuckets
+
+#define CAPI_WRAPPER(Klass)
+#define DECLARE_ISA_CASTER(Klass)
+#define OVERRIDE_ISA_CASTER(Klass)
+#define IMPLEMENT_ISA_CASTER(Klass)
+#define FINALIZE_AST_NODE(Klass)
+#define ADD_CONSTREF(Klass, Name)
+#define ADD_PROPERTY(Klass, Name)
+#define ADD_REF(Klass, Name)
+
+#define IMPLEMENT_SEL_COPY_IGNORE(Klass)
+#define IMPLEMENT_SEL_COPY_CHILDREN(Klass)
+#define IMPLEMENT_EQ_OPERATOR(Base, Klass)
+#define IMPLEMENT_ACCEPT(Result, Base, Klass)
+
+#define ADDAPI
+#define ADDCALL

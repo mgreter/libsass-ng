@@ -332,6 +332,10 @@ namespace Sass {
       #endif
     }
 
+  public:
+
+    // Not sure this does anything, but it doesn't hurt
+    // Maybe compiler is able to deduce a faster way ...
     // template <class U>
     // SharedPtr<T>& operator=(U *rhs) {
     //   return static_cast<SharedPtr<T>&>(
@@ -343,7 +347,7 @@ namespace Sass {
     //   return static_cast<SharedPtr<T>&>(
     //     SharedPtr<T>::operator=(std::move(static_cast<SharedPtr<T>&>(rhs))));
     // }
-    // 
+    
     // template <class U>
     // SharedPtr<T>& operator=(const SharedPtr<U>& rhs) {
     //   return static_cast<SharedPtr<T>&>(

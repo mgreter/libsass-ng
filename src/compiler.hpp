@@ -18,6 +18,7 @@
 #include "capi_compiler.hpp"
 #include "capi_traces.hpp"
 #include "source_map.hpp"
+#include "containers.hpp"
 
 namespace Sass {
 
@@ -49,18 +50,18 @@ namespace Sass {
     // Means we are suspectible to underlying filesys changes
     // Worst case we fail later than early, for regular gains
     // Mainly used in `find_includes` and `find_file` methods
-    std::unordered_map<sass::string, bool> fileExistsCache;
+    sass::cachemap::str<sass::string, bool> fileExistsCache;
 
     // Cache the raw source files by file path
-    std::map<const sass::string, ImportObj> sources19;
+    sass::cachemap::str<sass::string, ImportObj> sources19;
 
     // Cache the parsed stylesheet by file path
-    std::map<const sass::string, StylesheetObj> sheets21;
+    sass::cachemap::str<sass::string, StylesheetObj> sheets21;
 
     // Keep cache of resolved import filenames
     // Key is a pair of previous + import path
     // Used mainly in `find_includes` method
-    std::unordered_map<ImportRequest, sass::vector<ResolvedImport>> resolveCache;
+    sass::cachemap::stl<ImportRequest, sass::vector<ResolvedImport>> resolveCache;
 
   public:
 

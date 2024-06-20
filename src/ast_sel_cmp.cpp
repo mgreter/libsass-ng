@@ -9,6 +9,68 @@
 
 namespace Sass {
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  bool CplxSelComponent::operator==(const CplxSelComponent& rhs) const
+  {
+    if (combinators_ != rhs.combinators_) return false;
+    if (selector_ && rhs.selector_) return *selector_ == *rhs.selector_;
+    return selector_ == nullptr && rhs.selector_ == nullptr;
+  }
+
+  bool CplxSelComponent::operator<(const CplxSelComponent& rhs) const
+  {
+    if (&rhs == this) return false;
+    return std::lexicographical_compare(
+      combinators_.begin(), combinators_.end(),
+      rhs.combinators_.begin(), rhs.combinators_.end(),
+      [](const SelectorCombinatorObj& a, const SelectorCombinatorObj& b) {
+        return ObjLessThanFn(a, b);
+      }) ||
+      ObjLessThanFn(selector_, rhs.selector_);
+  }
+
+  bool SelectorList::operator<(const SelectorList& rhs) const
+  {
+    if (&rhs == this) return false;
+    return std::lexicographical_compare(
+      begin(), end(), rhs.begin(), rhs.end(),
+      [](const ComplexSelectorObj& a, const ComplexSelectorObj& b) {
+        return ObjLessThanFn(a, b);
+      });
+  }
+
+  bool ComplexSelector::operator<(const ComplexSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    return std::lexicographical_compare(
+      begin(), end(), rhs.begin(), rhs.end(),
+      [](const CplxSelComponentObj& a, const CplxSelComponentObj& b) {
+        return ObjLessThanFn(a, b);
+      });
+  }
+
+  bool CompoundSelector::operator<(const CompoundSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    return std::lexicographical_compare(
+      begin(), end(), rhs.begin(), rhs.end(),
+      [](const SimpleSelectorObj& a, const SimpleSelectorObj& b) {
+        return ObjLessThanFn(a, b);
+      });
+  }
+
+  bool IDSelector::operator<(const IDSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    // ID has no namespace
+    return name() < rhs.name();
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   bool SelectorList::operator== (const SelectorList& rhs) const
   {
     if (&rhs == this) return true;
@@ -83,6 +145,29 @@ namespace Sass {
       name_ == rhs.name_;
   }
 
+  bool TypeSelector::operator<(const TypeSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    return std::tie(ns_, hasNs_, name_)
+      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
+  }
+
+  bool PlaceholderSelector::operator<(const PlaceholderSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    // Placeholder has no namespace
+    return name() < rhs.name();
+  }
+
+
+  bool ClassSelector::operator<(const ClassSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    // Class has no namespace
+    return name() < rhs.name();
+  }
+
+
   bool ClassSelector::operator== (const ClassSelector& rhs) const
   {
     if (&rhs == this) return true;
@@ -103,6 +188,23 @@ namespace Sass {
       if (hash() != rhs.hash()) return false;
     // Placeholder has no namespace
     return name() == rhs.name();
+  }
+
+  bool AttributeSelector::operator<(const AttributeSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    return std::tie(ns_, hasNs_, name_, value_, op_, modifier_)
+      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_, rhs.value_, rhs.op_, rhs.modifier_);
+  }
+
+  bool PseudoSelector::operator<(const PseudoSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    return std::tie(name_, argument_, isClass_)
+      < std::tie(rhs.name_, rhs.argument_, rhs.isClass_)
+      || (!(std::tie(rhs.name_, rhs.argument_, rhs.isClass_)
+          < std::tie(name_, argument_, isClass_))
+          && ObjLessThanFn(selector_, rhs.selector_));
   }
 
   bool AttributeSelector::operator== (const AttributeSelector& rhs) const
@@ -126,10 +228,9 @@ namespace Sass {
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
       if (hash() != rhs.hash()) return false;
-    return nsMatch(rhs)
-      && name() == rhs.name()
+    return name() == rhs.name()
       && argument() == rhs.argument()
-      && isPseudoElement() == rhs.isPseudoElement()
+      && isClass() == rhs.isClass()
       && ObjEquality()(selector(), rhs.selector());
   }
 
@@ -137,6 +238,11 @@ namespace Sass {
   bool CssParentSelector::operator== (const CssParentSelector& rhs) const
   {
     return true;
+  }
+
+  bool CssParentSelector::operator< (const CssParentSelector& rhs) const
+  {
+    return false;
   }
 
   /////////////////////////////////////////////////////////////////////////

@@ -513,6 +513,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\comparators.hpp">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\containers.hpp">
+      <Filter>LibSass Headers</Filter>
+    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\modules.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>

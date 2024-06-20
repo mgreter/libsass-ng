@@ -88,7 +88,7 @@ namespace Sass {
   }
 
   Extension::Extension() :
-    extender(SourceSpan::internal("Ext"), {}, 0, false),
+    extender(SourceSpan::internal32("Ext"), {}, 0, false),
     specificity(0),
     isOptional(false),
     isOriginal(false),
@@ -119,8 +119,7 @@ namespace Sass {
 
     if (this->mediaContext.isNull()) return;
 
-    if (mediaQueryContext && mediaContext == mediaQueryContext) return;
-
+    // if (mediaQueryContext && mediaContext.ptr() == mediaQueryContext) return;
     if (ObjEqualityFn<CssMediaQueryVectorObj>(mediaQueryContext, mediaContext)) return;
 
     throw Exception::ExtendAcrossMedia(traces, this);
@@ -136,8 +135,7 @@ namespace Sass {
 
     if (this->mediaContext.isNull()) return;
 
-    if (mediaQueryContext && mediaContext == mediaQueryContext) return;
-
+    // if (mediaQueryContext && mediaContext.ptr() == mediaQueryContext) return;
     if (ObjEqualityFn<CssMediaQueryVectorObj>(mediaQueryContext, mediaContext)) return;
 
     throw Exception::ExtendAcrossMedia(traces, this);

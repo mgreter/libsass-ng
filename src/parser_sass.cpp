@@ -39,7 +39,7 @@ namespace Sass {
     while (true) {
       auto next = scanner.readChar();
       if (isNewline(next)) {
-        scanner._fail("*/");
+        scanner.fail("*/");
       }
       if (next != $asterisk) continue;
 
@@ -50,7 +50,8 @@ namespace Sass {
     }
   }
 
-  void SassParser::expectStatementSeparator(sass::string name) {
+  void SassParser::expectStatementSeparator(sass::string name)
+  {
     if (!atEndOfStatement()) expectNewline();
     if (peekIndentation() <= currentIndentation) return;
     sass::sstream strm;
@@ -63,9 +64,6 @@ namespace Sass {
       scanner.readChar();
     }
     error(strm.str(), scanner.rawSpanFrom(start));
-
-      /*,
-      position: nextIndentationEnd.position*/
   }
 
   bool SassParser::atEndOfStatement()
@@ -118,7 +116,7 @@ namespace Sass {
       next = scanner.peekChar();
     }
 
-    sass::string url = scanner.substring(state2.position);
+    sass::string url(scanner.substring(state2.position));
 
     if (isPlainImportUrl(url)) {
       InterpolationObj itpl = SASS_MEMORY_NEW(
@@ -133,15 +131,12 @@ namespace Sass {
         scanner.relevantSpanFrom(start), itpl, nullptr));
     }
     else {
-
       SourceSpan pstate(scanner.relevantSpanFrom(start));
       if (!compiler.callCustomImporters(url, pstate, rule)) {
         rule->append(SASS_MEMORY_NEW(IncludeImport,
           pstate, scanner.sourceUrl, url, nullptr));
       }
-
     }
-
   }
 
   bool SassParser::scanElse(size_t ifIndentation)
@@ -150,7 +145,7 @@ namespace Sass {
     StringScannerState state(scanner.state());
     size_t startIndentation = currentIndentation;
     size_t startNextIndentation = nextIndentation;
-    StringScannerState startNextIndentationEnd = nextIndentationEnd;
+    StringScannerState startNextIndentationEnd(nextIndentationEnd);
 
     readIndentation();
     if (scanner.scanChar($at) && scanIdentifier("else")) return true;
@@ -239,8 +234,8 @@ namespace Sass {
       while (true) {
         buffer.write(commentPrefix);
 
-        // Skip the initial characters because we're already writing the
-        // slashes.
+        // Skip the initial characters because
+        // we're already writing the slashes.
         for (size_t i = commentPrefix.length();
           i < currentIndentation - parentIndentation;
           i++) {
@@ -416,12 +411,7 @@ namespace Sass {
         sass::sstream msg;
         msg << "Inconsistent indentation, expected "
           << childIndentation << " spaces.";
-        error(msg.str(),
-          scanner.rawSpan());
-
-          /*,
-          position: scanner.position - scanner.column,
-          length : scanner.column*/
+        error(msg.str(), scanner.rawSpan());
       }
       children.emplace_back(parseChild(child));
     }
@@ -459,7 +449,6 @@ namespace Sass {
     if (!scanCharIf(isNewline)) {
       error("Expected newline.",
         scanner.rawSpan());
-        /* position: scanner.position*/
     }
 
     bool containsTab;
@@ -515,20 +504,15 @@ namespace Sass {
       if (containsSpace) {
         error("Tabs and spaces may not be mixed.",
           scanner.rawSpan());
-          /* position: scanner.position - scanner.column,
-          length : scanner.column*/
       }
       else if (useSpaceIndentation()) {
         error("Expected spaces, was tabs.",
           scanner.rawSpan());
-          /* position: scanner.position - scanner.column,
-          length : scanner.column*/
       }
     }
     else if (containsSpace && useTabIndentation()) {
       error("Expected tabs, was spaces.",
         scanner.rawSpan());
-        /* position: scanner.position - scanner.column, length : scanner.column*/
     }
   }
 

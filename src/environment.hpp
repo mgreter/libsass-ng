@@ -342,9 +342,6 @@ namespace Sass {
     // Destructor
     ~EnvRoot();
 
-    // Runtime check to see if we are currently in global scope
-    bool isGlobal() const;
-
     // Get value instance by stack index reference
     // Just converting and returning reference to array offset
     ValueObj& getVariable(const EnvRef& vidx);
@@ -393,6 +390,7 @@ namespace Sass {
       const EnvKey& name,
       const sass::string& ns,
       bool global = false) const;
+
 
     void findVarIdxs(
       sass::vector<EnvRef>& vidxs,

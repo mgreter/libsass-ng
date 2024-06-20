@@ -52,7 +52,7 @@ namespace Sass {
       const String* str = value->isaString();
       if (str == nullptr) return false;
       if (str->hasQuotes()) return false;
-      return startsWith(str->value(), "var(") &&
+      return startsWith(str->value(), "var(", 4) &&
         str->value().find('/') != NPOS;
     }
     // EO isVarSlash
@@ -65,7 +65,7 @@ namespace Sass {
       const String* str = value->isaString();
       if (str == nullptr) return false;
       if (str->hasQuotes()) return false;
-      return startsWith(str->value(), "var(");
+      return startsWith(str->value(), "var(", 4);
     }
     // EO isVar
 
@@ -1234,8 +1234,7 @@ namespace Sass {
       static Number* getKwdArg(ValueFlatMap* keywords, const EnvKey& name, Logger& logger)
       {
         if (keywords == nullptr) return nullptr;
-        const EnvKey& variable(name.norm());
-        auto kv = keywords->find(variable);
+        auto kv = keywords->find(name);
         // Return null since args are optional
         if (kv == keywords->end()) return nullptr;
         // Get the number object from found keyword

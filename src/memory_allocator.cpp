@@ -11,33 +11,6 @@
 
 namespace Sass {
 
-#ifdef SASS_OPTIMIZE_SINGLE_THREADED
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  // Keep one instance
-  static THREAD_LOCAL(MemoryPool*) pool;
-
-  // Allocate memory from the memory pool.
-  // Memory pool is allocated on first call.
-  void* allocateMem(size_t size)
-  {
-    if (pool == nullptr) pool = new MemoryPool();
-    // Invoke implementation
-    return pool->allocate(size);
-  }
-
-  // Release the memory from the pool.
-  // Destroys the pool when it is emptied.
-  void deallocateMem(void* ptr)
-  {
-    // Invoke implementation
-    /* if (pool) */ pool->deallocate(ptr);
-  }
-
-#else
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -107,9 +80,6 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-
-#endif
-
 
 }
 

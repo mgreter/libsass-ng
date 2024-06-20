@@ -58,9 +58,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  static bool poolDone = false;
+  // static bool poolDone = false;
 
-  static bool isPoolDone() { return poolDone; }
+  // static bool isPoolDone() { return poolDone; }
 
   class MemoryPool {
 
@@ -101,7 +101,7 @@ namespace Sass {
       std::cerr << "destructr arenas " << arenas.size() << "\n";
       // Delete full arenas
       for (auto area : arenas) {
-        if (&area) free(area);
+        /*if (&area)*/ free(area);
       }
       std::cerr << "destructr pool\n";
       // Delete current arena

@@ -74,9 +74,11 @@ namespace Sass {
     // from [position]. [offset] defaults to zero, and may be negative
     // to inspect already-consumed characters. This returns `null` if
     // [offset] points outside the string. It doesn't affect [lastMatch].
-    uint8_t peekChar(size_t offset = 0) const;
-
-    bool peekChar(uint8_t& chr, size_t offset = 0) const;
+    uint8_t peekChar() const;
+    bool peekChar(uint8_t& chr) const;
+    // Slightly more expensive code path
+    uint8_t peekChar(size_t offset) const;
+    bool peekChar(uint8_t& chr, size_t offset) const;
 
     // If the next character in the string is [character], consumes it.
     // Returns whether or not [character] was consumed.
@@ -115,7 +117,7 @@ namespace Sass {
 
     // Throws a [FormatException] describing that [name] is
     // expected at the current position in the string.
-    void _fail(const sass::string& name) const;
+    void fail(const sass::string& name) const;
 
     // Throws a [FormatException] with [traces] and [pstate].
     void error(const sass::string& name,

@@ -19,25 +19,27 @@ namespace Sass {
   // Some helpers for superselector and weave parts
   /////////////////////////////////////////////////////////////////////////
 
+  // super selector
   bool compoundIsSuperselector(
-    const CompoundSelector* compound1,
-    const CompoundSelector* compound2,
+    const SimpleSelectors& compound1,
+    const SimpleSelectors& compound2,
     const CplxSelComponentVector& parents = {});
 
+  // selector weave
   bool complexIsParentSuperselector(
     const CplxSelComponentVector& complex1,
     const CplxSelComponentVector& complex2);
 
-  sass::vector<ComplexSelectorObj> weave27(
-    const sass::vector<ComplexSelectorObj>& complexes,
+  ComplexSelectors weave27(
+    const ComplexSelectors& complexes,
     bool forceLineBreak = false);
 
   // ToDo: What happens if we modify our parent?
-  sass::vector<ComplexSelectorObj> weaveParents(
+  ComplexSelectors weaveParents(
     ComplexSelector* prefix, ComplexSelector* base);
 
-  sass::vector<ComplexSelectorObj> _unifyComplex(
-    sass::vector<ComplexSelectorObj> complexes,
+  ComplexSelectors _unifyComplex(
+    const ComplexSelectors& complexes,
     const SourceSpan& pstate);
 
   /////////////////////////////////////////////////////////////////////////
@@ -111,6 +113,7 @@ namespace Sass {
 
     // To be implemented by specialization
     virtual bool operator==(const Selector& rhs) const = 0;
+    virtual bool operator<(const Selector& rhs) const = 0;
 
     // Base copy method with [childless] being void most of the times
     virtual Selector* copy(SASS_MEMORY_ARGS bool childless = false) const = 0;
@@ -171,13 +174,15 @@ namespace Sass {
     }
 
     // Unify simple selector with multiple simple selectors
-    virtual sass::vector<SimpleSelectorObj> unify(
-      const sass::vector<SimpleSelectorObj>& other);
+    virtual SimpleSelectors unify(
+      const SimpleSelectors& other);
 
     // Returns true if name equals '*'
     bool isUniversal() const {
       return name_ == "*";
     }
+
+    virtual bool isPseudoElement() const { return false; }
 
     // Checker if the name
     virtual bool nsMatch(const SimpleSelector& r) const { return true; }
@@ -222,8 +227,8 @@ namespace Sass {
 
     // Unify ID selector with multiple simple selectors
     // CompoundSelector* unifyWith(CompoundSelector*);
-    virtual sass::vector<SimpleSelectorObj> unify(
-      const sass::vector<SimpleSelectorObj>& other)
+    virtual SimpleSelectors unify(
+      const SimpleSelectors& other)
       override final;
 
     IMPLEMENT_SEL_COPY_IGNORE(CssParentSelector);
@@ -373,12 +378,12 @@ namespace Sass {
       return isUniversal() ? 0 : Constants::Specificity::Element;
     }
 
-    sass::vector<SimpleSelectorObj> unifyUniversal(const sass::vector<SimpleSelectorObj>& compound);
+    SimpleSelectors unifyUniversal(const SimpleSelectors& compound);
 
     // Unify Type selector with multiple simple selectors
     // CompoundSelector* unifyWith(CompoundSelector*);
-    virtual sass::vector<SimpleSelectorObj> unify(
-      const sass::vector<SimpleSelectorObj>& other)
+    virtual SimpleSelectors unify(
+      const SimpleSelectors& other)
         override final;
 
     // Unify two simple selectors with each other
@@ -451,8 +456,8 @@ namespace Sass {
 
     // Unify ID selector with multiple simple selectors
     // CompoundSelector* unifyWith(CompoundSelector*);
-    virtual sass::vector<SimpleSelectorObj> unify(
-      const sass::vector<SimpleSelectorObj>& other)
+    virtual SimpleSelectors unify(
+      const SimpleSelectors& other)
         override final;
 
     IMPLEMENT_SEL_COPY_IGNORE(IDSelector);
@@ -606,7 +611,7 @@ namespace Sass {
     // in CSS levels 1 and 2 (namely, :first-line, :first-letter, :before and
     // :after). This compatibility is not allowed for the new pseudo-elements
     // introduced in this specification.
-    bool isPseudoElement() const { return !isClass(); }
+    bool isPseudoElement() const override final { return !isClass(); }
 
     // Whether this is syntactically a pseudo-element selector.
     // This is `true` if and only if [isSyntacticClass] is `false`.
@@ -629,13 +634,14 @@ namespace Sass {
 
     // Unify Pseudo selector with multiple simple selectors
     // CompoundSelector* unifyWith(CompoundSelector*);
-    virtual sass::vector<SimpleSelectorObj> unify(
-      const sass::vector<SimpleSelectorObj>& other)
+    virtual SimpleSelectors unify(
+      const SimpleSelectors& other)
         override final;
 
     IMPLEMENT_SEL_COPY_IGNORE(PseudoSelector);
     IMPLEMENT_ACCEPT(void, Selector, PseudoSelector);
     IMPLEMENT_ACCEPT(bool, Selector, PseudoSelector);
+
     IMPLEMENT_EQ_OPERATOR(Selector, PseudoSelector);
 
     // Implement final up-casting method
@@ -704,8 +710,12 @@ namespace Sass {
       const ComplexSelector* ptr,
       bool childless = false);
 
-    ComplexSelector* withAdditionalCombinators(const SelectorCombinatorVector& others);
-    ComplexSelector* withAdditionalComponent(CplxSelComponent* component, SourceSpan& span, bool forceLineBreak) const;
+    ComplexSelector* withAdditionalCombinators(SelectorCombinatorVector&& combinators);
+    ComplexSelector* withAdditionalCombinators(const SelectorCombinatorVector& combinators)
+    { return withAdditionalCombinators(SelectorCombinatorVector(combinators)); }
+
+
+    ComplexSelector* withAdditionalComponent(CplxSelComponent* component, const SourceSpan& span, bool forceLineBreak) const;
 
     ComplexSelector* concatenate(ComplexSelector* child, const SourceSpan& span, bool forceLineBreak);
 
@@ -728,7 +738,7 @@ namespace Sass {
     // Convert to value list
     List* toList() const;
 
-    sass::vector<ComplexSelectorObj>
+    ComplexSelectors
       resolveParentSelectors(
         SelectorList* parent,
         BackTraces& traces,
@@ -825,6 +835,7 @@ namespace Sass {
 
     // To be implemented by specialization
     bool operator==(const CplxSelComponent& rhs) const;
+    bool operator<(const CplxSelComponent& rhs) const;
 
     const Selector* hasAnyExplicitParent() const;
 
@@ -874,6 +885,9 @@ namespace Sass {
     }
     bool operator!=(const SelectorCombinator& rhs) const {
       return combinator_ != rhs.combinator_;
+    }
+    bool operator<(const SelectorCombinator& rhs) const {
+      return combinator_ < rhs.combinator_;
     }
 
     const sass::string toString() const {
@@ -983,12 +997,12 @@ namespace Sass {
     // Value move Constructor
     CompoundSelector(
       const SourceSpan& pstate,
-      sass::vector<SimpleSelectorObj>&& selectors,
+      SimpleSelectors&& selectors,
       bool hasPostLineBreak = false);
 
     CompoundSelector(
       const SourceSpan& pstate,
-      const sass::vector<SimpleSelectorObj>& selectors,
+      const SimpleSelectors& selectors,
       bool hasPostLineBreak = false);
 
     // Copy constructor
@@ -1016,7 +1030,7 @@ namespace Sass {
     bool hasPlaceholder() const override final;
 
     // Resolve parents and form the final selector
-    sass::vector<ComplexSelectorObj>
+    ComplexSelectors
       resolveParentSelectors2(
         SelectorList* parent,
         BackTraces& traces,
@@ -1067,7 +1081,7 @@ namespace Sass {
     // Value move constructor
     SelectorList(
       const SourceSpan& pstate,
-      sass::vector<ComplexSelectorObj>&& = {});
+      ComplexSelectors && = {});
 
     // Copy constructor
     SelectorList(const SelectorList* ptr,
@@ -1106,7 +1120,7 @@ namespace Sass {
     unsigned long minSpecificity() const override final;
 
     SelectorList* produce() {
-      sass::vector<ComplexSelectorObj> copy;
+      ComplexSelectors copy;
       for (ComplexSelector* child : elements_) {
         copy.emplace_back(child->produce());
       }

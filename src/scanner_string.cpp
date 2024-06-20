@@ -29,9 +29,7 @@ namespace Sass {
     relevant(),
     logger(logger)
   {
-    // consume BOM?
-
-    // This can use up to 3% runtime (mostly under 1%)
+    // consume BOM before checking the full unicode range?
     auto invalid = utf8::find_invalid(startpos, endpos);
     if (invalid != endpos) {
       SourceSpan pstate(source);
@@ -52,7 +50,6 @@ namespace Sass {
   // Used to update scanner line/column position.
   void StringScanner::consumedChar(uint8_t character)
   {
-    // std::cerr << "COnsumed [" << character << "]\n";
     switch (character) {
     case $space:
     case $tab:
@@ -85,7 +82,7 @@ namespace Sass {
   // been fully consumed. It doesn't affect [lastMatch].
   uint8_t StringScanner::readChar()
   {
-    if (isDone()) _fail("more input");
+    if (isDone()) fail("more input");
     uint8_t ascii = *position;
     consumedChar(ascii);
     position += 1;
@@ -96,6 +93,8 @@ namespace Sass {
   // from [position]. [offset] defaults to zero, and may be negative
   // to inspect already-consumed characters. This returns `null` if
   // [offset] points outside the string. It doesn't affect [lastMatch].
+
+  // Note: passed offset may lead to out of bound memory access
   uint8_t StringScanner::peekChar(size_t offset) const
   {
     const char* cur = position + offset;
@@ -105,10 +104,32 @@ namespace Sass {
     return *cur;
   }
 
+  // Optimized for no offset argument
+  uint8_t StringScanner::peekChar() const
+  {
+    const char* cur = position;
+    if (cur < startpos || cur >= endpos) {
+      return 0;
+    }
+    return *cur;
+  }
+
   // Same as above, but stores next char into passed variable.
+  // Note: passed offset may lead to out of bound memory access
   bool StringScanner::peekChar(uint8_t& chr, size_t offset) const
   {
     const char* cur = position + offset;
+    if (cur < startpos || cur >= endpos) {
+      return false;
+    }
+    chr = *cur;
+    return true;
+  }
+
+  // Optimized for no offset argument
+  bool StringScanner::peekChar(uint8_t& chr) const
+  {
+    const char* cur = position;
     if (cur < startpos || cur >= endpos) {
       return false;
     }
@@ -141,15 +162,15 @@ namespace Sass {
       }
       if (name.empty()) {
         if (character == $quote) {
-          _fail("\"\\\"\"");
+          fail("\"\\\"\"");
         }
         else {
           sass::string msg("\"");
           msg += character;
-          _fail(msg + "\"");
+          fail(msg + "\"");
         }
       }
-      _fail(name);
+      fail(name);
     }
   }
 
@@ -178,9 +199,9 @@ namespace Sass {
   {
     if (!scan(pattern)) {
       if (name.empty()) {
-        _fail(pattern);
+        fail(pattern);
       }
-      _fail(name);
+      fail(name);
     }
   }
 
@@ -220,7 +241,7 @@ namespace Sass {
 
   // Throws a [FormatException] describing that [name] is
   // expected at the current position in the string.
-  void StringScanner::_fail(
+  void StringScanner::fail(
     const sass::string& name) const
   {
     SourceSpan span(relevantSpan());

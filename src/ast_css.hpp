@@ -223,7 +223,7 @@ namespace Sass {
     ADD_CONSTREF(bool, isPreserved);
   public:
     CssComment(const SourceSpan& pstate,
-      const sass::string& text,
+      sass::string&& text,
       bool preserve = false);
     CssComment(const CssComment* ptr);
 
@@ -387,16 +387,16 @@ namespace Sass {
 
   public:
 
-    // Value constructor
+    // Value move constructor
     CssAtRule(
       const SourceSpan& pstate,
       CssParentNode* parent,
-      const sass::string& name,
-      const sass::string& value,
+      sass::string&& name,
+      sass::string&& value,
       bool isChildless = false,
       CssNodeVector&& children = {});
 
-    // Copy constructor
+    // Copy by ptr constructor
     CssAtRule(
       const CssAtRule* ptr,
       bool childless = false);

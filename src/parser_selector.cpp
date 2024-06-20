@@ -61,7 +61,7 @@ namespace Sass {
     Offset start(scanner.offset);
     // const char* previousLine = scanner.position;
     size_t previousLine = scanner.offset.getRawLine();
-    sass::vector<ComplexSelectorObj> items;
+    ComplexSelectors items;
     items.emplace_back(readComplexSelector(start));
 
     scanWhitespace();

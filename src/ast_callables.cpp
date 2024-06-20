@@ -39,7 +39,7 @@ namespace Sass {
     CallableSignature* signature,
     const SassFnSig& callback,
     bool isInternal) :
-    Callable(SourceSpan::internal("[BUILTIN]")),
+    Callable(SourceSpan::internal32("[BUILTIN]")),
     envkey_(envkey),
     // Create a single entry in overloaded function
     function_(SassFnPair{ signature, callback }),
@@ -83,7 +83,7 @@ namespace Sass {
   BuiltInCallables::BuiltInCallables(
     const EnvKey& envkey,
     const SassFnPairs& overloads) :
-    Callable(SourceSpan::internal("[BUILTINS]")),
+    Callable(SourceSpan::internal32("[BUILTINS]")),
     envkey_(envkey),
     overloads_(overloads)
   {
@@ -162,7 +162,7 @@ namespace Sass {
     if (hash_ == 0) {
       hash_start(hash_, typeid(UserDefinedCallable).hash_code());
       hash_combine(hash_, stringHasher(envkey_.norm()));
-      hash_combine(hash_, ptrHasher(declaration_.ptr()));
+      hash_combine(hash_, hasher(declaration_.ptr()));
     }
     return hash_;
   }
@@ -174,7 +174,7 @@ namespace Sass {
     const EnvKey& fname,
     CallableSignature* parameters,
     SassFunctionLambda lambda) :
-    Callable(SourceSpan::internal("[EXTERNAL]")),
+    Callable(SourceSpan::internal32("[EXTERNAL]")),
     envkey_(fname),
     declaration_(parameters),
     lambda_(lambda),
@@ -196,9 +196,9 @@ namespace Sass {
     if (hash_ == 0) {
       hash_start(hash_, typeid(ExternalCallable).hash_code());
       hash_combine(hash_, stringHasher(envkey_.norm()));
-      hash_combine(hash_, ptrHasher(declaration_));
+      hash_combine(hash_, hasher(declaration_));
       hash_combine(hash_, lambdaHasher(lambda_));
-      hash_combine(hash_, ptrHasher(cookie_));
+      hash_combine(hash_, hasher(cookie_));
     }
     return hash_;
   }
