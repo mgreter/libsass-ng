@@ -1,6 +1,15 @@
 /*****************************************************************************/
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
+// We define all these boilerplate types in order to be able
+// to shift implementations accross the board for profiling.
+/*****************************************************************************/
+// We have two main traits we can optimize against:
+// ordered/unordered: insert vs lookup speed
+// guaranteed small vs potential big: cache locality
+/*****************************************************************************/
+// Main users are extend, environment and caching
+/*****************************************************************************/
 #ifndef SASS_SETTINGS_CONTAINERS_HPP
 #define SASS_SETTINGS_CONTAINERS_HPP
 
@@ -17,12 +26,15 @@
 /////////////////////////////////////////////////////////////////////////
 
 // Load standard containers
-// Mostly faster than unordered
+// Good insert, good lookup
+// Fair balance between them
 #include <set>
 #include <map>
 
 // Load unordered containers
-// Mostly not used anymore
+// Better lookup, worse insert
+// Rehash is performance enemy
+// Use when doing many lookups
 #include <unordered_map>
 #include <unordered_set>
 
@@ -106,21 +118,13 @@
 
 /////////////////////////////////////////////////////////////////////////
 // Load Tessil (MIT License) headers for stable map/set
-// These iterate over containers by insertion order
+// Containers iterate over entries by insertion order
 /////////////////////////////////////////////////////////////////////////
 
 #include "tessil/ordered_map.h"
 #include "tessil/ordered_set.h"
 
 /////////////////////////////////////////////////////////////////////////
-// We define all these boilerplate types in order to be able
-// to shift implementations accross the board for profiling.
-/////////////////////////////////////////////////////////////////////////
-// We have two main traits we can optimize against:
-// ordered/unordered: insert vs lookup speed
-// always small vs potential big: cache locality
-/////////////////////////////////////////////////////////////////////////
-// Main users are extend, environment and caching
 /////////////////////////////////////////////////////////////////////////
 
 namespace Sass {

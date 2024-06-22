@@ -9,7 +9,6 @@
 #include "capi_sass.hpp"
 
 #include "hashing.hpp"
-#include "flat_map.hpp"
 #include "ast_fwd_decl.hpp"
 #include "environment_key.hpp"
 #include "comparators.hpp"
