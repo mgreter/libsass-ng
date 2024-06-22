@@ -22,12 +22,17 @@ namespace Sass {
   bool CplxSelComponent::operator<(const CplxSelComponent& rhs) const
   {
     if (&rhs == this) return false;
-    return std::lexicographical_compare(
+    if (std::lexicographical_compare(
       combinators_.begin(), combinators_.end(),
       rhs.combinators_.begin(), rhs.combinators_.end(),
-      ObjLessThanFn<SelectorCombinatorObj>)
-    || (combinators_ == rhs.combinators_ &&
-      ObjLessThanFn(selector_, rhs.selector_));
+      ObjLessThanFn<SelectorCombinatorObj>)) return true;
+    // Use inverted compare to determine equality
+    // Could also use equality operator instead
+    if (std::lexicographical_compare(
+      rhs.combinators_.begin(), rhs.combinators_.end(),
+      combinators_.begin(), combinators_.end(),
+      ObjLessThanFn<SelectorCombinatorObj>)) return false;
+    return ObjLessThanFn(selector_, rhs.selector_);
   }
 
   bool SelectorList::operator<(const SelectorList& rhs) const
