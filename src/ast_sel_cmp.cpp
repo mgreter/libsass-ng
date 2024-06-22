@@ -61,6 +61,11 @@ namespace Sass {
   {
     // Do simple pointer compare first
     if (&rhs == this) return false;
+    // ToDo: has no hash interface?
+    // Check that prefix size matches
+    if (combinators_.size() <
+      rhs.combinators_.size())
+        return false;
     // Check if prefix is less than right hand
     if (std::lexicographical_compare(
       combinators_.begin(), combinators_.end(),
@@ -185,7 +190,11 @@ namespace Sass {
   bool CplxSelComponent::operator==(const CplxSelComponent& rhs) const
   {
     if (&rhs == this) return true;
-    if (combinators_.size() != rhs.combinators_.size()) return false;
+    // ToDo: has no hash interface?
+    // Check that prefix size matches
+    if (combinators_.size() !=
+      rhs.combinators_.size())
+        return false;
     // Check if prefix is different
     if (!std::equal(
       combinators_.begin(),
@@ -203,10 +212,11 @@ namespace Sass {
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
       if (hash() != rhs.hash()) return false;
-    return name() == rhs.name()
-      && argument() == rhs.argument()
-      && isClass() == rhs.isClass()
-      && ObjEqualityFn(selector(), rhs.selector());
+    // Check if prefix is different
+    if (std::tie(rhs.name_, rhs.argument_, rhs.isClass_)
+      != std::tie(name_, argument_, isClass_)) return false;
+    // Prefix proved to be equal, now go for the tie
+    return ObjEqualityFn(selector(), rhs.selector());
   }
 
   /////////////////////////////////////////////////////////////////////////
