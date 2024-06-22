@@ -35,7 +35,7 @@ namespace Sass {
     // The extension that created this [Extender]. Not all [Extender]s
     // are created by extensions. Some simply represent the
     // original selectors that exist in the document.
-    Extension* extension = nullptr;
+    ExtensionObj extension = nullptr;
 
     // The media query context to which this extend is restricted,
     // or `null` if it can apply within any context.
@@ -60,7 +60,8 @@ namespace Sass {
       selector({}),
       specificity(0),
       isOriginal(false),
-      extension(nullptr)
+      extension(nullptr),
+      mediaContext({})
     {}
 
     // Asserts that the [mediaContext] for a selector is 
