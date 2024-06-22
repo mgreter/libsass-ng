@@ -157,9 +157,7 @@ namespace Sass {
   bool ComplexSelector::operator== (const ComplexSelector& rhs) const
   {
     if (&rhs == this) return true;
-    size_t len = size();
-    size_t rlen = rhs.size();
-    if (len != rlen) return false;
+    if (size() != rhs.size()) return false;
     #ifndef SASS_FORCE_CMP_HASH
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
@@ -173,9 +171,7 @@ namespace Sass {
   bool CompoundSelector::operator== (const CompoundSelector& rhs) const
   {
     if (&rhs == this) return true;
-    size_t len = size();
-    size_t rlen = rhs.size();
-    if (len != rlen) return false;
+    if (size() != rhs.size()) return false;
     #ifndef SASS_FORCE_CMP_HASH
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
@@ -189,6 +185,7 @@ namespace Sass {
   bool CplxSelComponent::operator==(const CplxSelComponent& rhs) const
   {
     if (&rhs == this) return true;
+    if (combinators_.size() != rhs.combinators_.size()) return false;
     // Check if prefix is different
     if (!std::equal(
       combinators_.begin(),
@@ -206,11 +203,10 @@ namespace Sass {
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
       if (hash() != rhs.hash()) return false;
-    // Check if prefix is now equal to right hand
-    if (std::tie(rhs.name_, rhs.argument_, rhs.isClass_)
-      != std::tie(name_, argument_, isClass_)) return false;
-    // Prefix proved to be equal, now go for the tie
-    return ObjEqualityFn(selector_, rhs.selector_);
+    return name() == rhs.name()
+      && argument() == rhs.argument()
+      && isClass() == rhs.isClass()
+      && ObjEqualityFn(selector(), rhs.selector());
   }
 
   /////////////////////////////////////////////////////////////////////////
