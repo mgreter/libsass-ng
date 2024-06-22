@@ -86,12 +86,12 @@ namespace Sass {
     // Do simple pointer compare first
     if (&rhs == this) return false;
     // Check if prefix is less than right hand
-    if (std::tie(name_, argument_, isClass_)
-      < std::tie(rhs.name_, rhs.argument_, rhs.isClass_)) return true;
+    if (std::tie(name_, argument_, isClass_) <
+      std::tie(rhs.name_, rhs.argument_, rhs.isClass_)) return true;
     // Check if prefix is equal to right hand
     // We already know it is now less than ...
-    if (std::tie(name_, argument_, isClass_)
-      < std::tie(rhs.name_, rhs.argument_, rhs.isClass_)) return false;
+    if (std::tie(name_, argument_, isClass_) <
+      std::tie(rhs.name_, rhs.argument_, rhs.isClass_)) return false;
     // Prefix proved to be equal, now go for the tie
     return ObjLessThanFn(selector_, rhs.selector_);
   }
@@ -101,16 +101,16 @@ namespace Sass {
     // Do simple pointer compare first
     if (&rhs == this) return false;
     // Compare the set of values via tupple
-    return std::tie(ns_, hasNs_, name_, value_, op_, modifier_)
-      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_, rhs.value_, rhs.op_, rhs.modifier_);
+    return std::tie(ns_, hasNs_, name_, value_, op_, modifier_) <
+      std::tie(rhs.ns_, rhs.hasNs_, rhs.name_, rhs.value_, rhs.op_, rhs.modifier_);
   }
 
   bool TypeSelector::operator<(const TypeSelector& rhs) const
   {
     // Do simple pointer compare first
     if (&rhs == this) return false;
-    return std::tie(ns_, hasNs_, name_)
-      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
+    return std::tie(ns_, hasNs_, name_) <
+      std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
   }
 
   bool IDSelector::operator<(const IDSelector& rhs) const
@@ -120,17 +120,17 @@ namespace Sass {
     return name() < rhs.name();
   }
 
-  bool PlaceholderSelector::operator<(const PlaceholderSelector& rhs) const
-  {
-    if (&rhs == this) return false;
-    // Placeholder has no namespace
-    return name() < rhs.name();
-  }
-
   bool ClassSelector::operator<(const ClassSelector& rhs) const
   {
     if (&rhs == this) return false;
     // Class has no namespace
+    return name() < rhs.name();
+  }
+
+  bool PlaceholderSelector::operator<(const PlaceholderSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    // Placeholder has no namespace
     return name() < rhs.name();
   }
 
@@ -213,15 +213,35 @@ namespace Sass {
     #endif
       if (hash() != rhs.hash()) return false;
     // Check if prefix is different
-    if (std::tie(rhs.name_, rhs.argument_, rhs.isClass_)
-      != std::tie(name_, argument_, isClass_)) return false;
+    if (std::tie(rhs.name_, rhs.argument_, rhs.isClass_) !=
+      std::tie(name_, argument_, isClass_)) return false;
     // Prefix proved to be equal, now go for the tie
     return ObjEqualityFn(selector(), rhs.selector());
   }
 
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
+  bool AttributeSelector::operator== (const AttributeSelector& rhs) const
+  {
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
+    // Compare the set of values via tupple
+    return std::tie(ns_, hasNs_, name_, value_, op_, modifier_) ==
+      std::tie(rhs.ns_, rhs.hasNs_, rhs.name_, rhs.value_, rhs.op_, rhs.modifier_);
+  }
 
+  bool TypeSelector::operator== (const TypeSelector& rhs) const
+  {
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
+    // Compare the set of values via tupple
+    return std::tie(ns_, hasNs_, name_) ==
+      std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
+  }
 
   bool IDSelector::operator== (const IDSelector& rhs) const
   {
@@ -232,19 +252,6 @@ namespace Sass {
       if (hash() != rhs.hash()) return false;
     // ID has no namespace
     return name() == rhs.name();
-  }
-
-  bool TypeSelector::operator== (const TypeSelector& rhs) const
-  {
-    if (&rhs == this) return true;
-    #ifndef SASS_FORCE_CMP_HASH
-    if (hashed() != 0 && rhs.hashed() != 0)
-    #endif
-      if (hash() != rhs.hash()) return false;
-    // Match equality hard
-    return ns_ == rhs.ns_ &&
-      hasNs_ == rhs.hasNs_ &&
-      name_ == rhs.name_;
   }
 
   bool ClassSelector::operator== (const ClassSelector& rhs) const
@@ -268,21 +275,6 @@ namespace Sass {
     // Placeholder has no namespace
     return name() == rhs.name();
   }
-
-  bool AttributeSelector::operator== (const AttributeSelector& rhs) const
-  {
-    if (&rhs == this) return true;
-    #ifndef SASS_FORCE_CMP_HASH
-    if (hashed() != 0 && rhs.hashed() != 0)
-    #endif
-      if (hash() != rhs.hash()) return false;
-    return nsMatch(rhs)
-      && op() == rhs.op()
-      && name() == rhs.name()
-      && value() == rhs.value()
-      && modifier() == rhs.modifier();
-  }
-
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
