@@ -83,25 +83,25 @@ namespace Sass {
 
     // The selector that's being extended.
     // `null` for one-off extensions.
-    SimpleSelectorObj target;
+    SimpleSelectorObj target = nullptr;
 
     // The minimum specificity required for any
     // selector generated from this extender.
     size_t specificity;
 
     // Whether this extension is optional.
-    bool isOptional;
+    bool isOptional = false;
 
     // Whether this is a one-off extender representing a selector that was
     // originally in the document, rather than one defined with `@extend`.
-    bool isOriginal;
+    bool isOriginal = false;
 
     // Whether or not this extension was consumed.
-    bool isConsumed;
+    bool isConsumed = false;
 
     // The media query context to which this extend is restricted,
     // or `null` if it can apply within any context.
-    CssMediaQueryVectorObj mediaContext;
+    CssMediaQueryVectorObj mediaContext = nullptr;
 
     // Creates a one-off extension that's not intended to be modified over time.
     // If [specificity] isn't passed, it defaults to `extender.maxSpecificity`.

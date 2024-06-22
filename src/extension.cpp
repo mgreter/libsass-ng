@@ -75,6 +75,7 @@ namespace Sass {
   // Copy constructor
 
   Extension::Extension(const Extension & extension) :
+    pstate(extension.pstate),
     extender(extension.extender),
     target(extension.target),
     specificity(extension.specificity),
@@ -88,6 +89,7 @@ namespace Sass {
   }
 
   Extension::Extension() :
+    pstate(SourceSpan::internal32("Ext")),
     extender(SourceSpan::internal32("Ext"), {}, 0, false),
     target({}),
     specificity(0),

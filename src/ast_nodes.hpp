@@ -350,9 +350,17 @@ namespace Sass {
       last(it.last),
       cur(it.cur) {}
 
+    Iterator(Iterator&& it) noexcept :
+      val(std::move(it.val)),
+      type(std::move(it.type)),
+      last(std::move(it.last)),
+      cur(std::move(it.cur)) {}
+
     // Dereference current item
     reference operator*();
-    reference operator->();
+    inline reference operator->() {
+      return Iterator::operator*();
+    }
 
     // Move to the next item
     Iterator& operator++();
@@ -364,12 +372,16 @@ namespace Sass {
     bool isLast() const;
 
     // Compare operators
-    bool operator==(const Iterator& other) const;
-    bool operator!=(const Iterator& other) const;
+    inline bool operator==(const Iterator& other) const {
+      return val == other.val && cur == other.cur;
+    }
+    inline bool operator!=(const Iterator& other) const {
+      return val != other.val || cur != other.cur;
+    }
 
     // Get iterators to support regular C++ loops
-    const Iterator& begin() const { return *this; }
-    Iterator end() const { return Iterator(val, true); }
+    inline const Iterator& begin() const { return *this; }
+    inline Iterator end() const { return Iterator(val, true); }
 
   };
   // EO class Iterator

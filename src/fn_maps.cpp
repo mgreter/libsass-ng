@@ -342,7 +342,7 @@ namespace Sass {
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
         if (eval.assigne && eval.assigne->ptr() == map.ptr() && map->refcount < SassAssignableRefCount + 1) {
           map->erase(arguments[1]);
-          for (Value* key : arguments[2]->start()) {
+          for (const auto& key : arguments[2]->start()) {
             map->erase(key);
           }
           return map.detach();

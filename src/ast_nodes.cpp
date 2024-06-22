@@ -322,21 +322,6 @@ namespace Sass {
     return nullptr;
   }
 
-  Value* Iterator::operator->()
-  {
-    return Iterator::operator*();
-  }
-
-  bool Iterator::operator==(const Iterator& other) const
-  {
-    return val == other.val && cur == other.cur;
-  }
-
-  bool Iterator::operator!=(const Iterator& other) const
-  {
-    return val != other.val || cur != other.cur;
-  }
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
