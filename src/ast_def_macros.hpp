@@ -134,7 +134,7 @@ private:
     } \
     public: bool operator<(const subklass& rhs) const override final { \
       auto sel = rhs.isa##klass(); \
-      return sel ? *this < *sel : this < sel; \
+      return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
     } \
     public: bool operator==(const klass& rhs) const; \
     public: bool operator<(const klass& rhs) const; \
