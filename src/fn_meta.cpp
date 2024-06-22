@@ -556,6 +556,8 @@ namespace Sass {
             "$css and $module may not both be passed at once.");
         }
 
+        EnvKey varkey(name->value());
+
         if (css) {
           return SASS_MEMORY_NEW(Function, pstate, name->value());
         }
@@ -568,7 +570,7 @@ namespace Sass {
           auto pp = parent->module->moduse.find(ns->value());
           if (pp != parent->module->moduse.end()) {
             EnvRefs* module = pp->second.first;
-            auto it = module->fnIdxs.find(name->value());
+            auto it = module->fnIdxs.find(varkey);
             if (it != module->fnIdxs.end()) {
               EnvRef fidx({ module, it->second });
               callable = compiler.varRoot.getFunction(fidx);
@@ -581,12 +583,12 @@ namespace Sass {
         }
         else {
 
-          callable = _getFunction(name->value(), compiler);
+          callable = _getFunction(varkey, compiler);
 
           if (!callable) {
 
             for (auto global : parent->forwards) {
-              auto it = global->fnIdxs.find(name->value());
+              auto it = global->fnIdxs.find(varkey);
               if (it != global->fnIdxs.end()) {
                 if (callable) {
                   throw Exception::RuntimeException(compiler,
