@@ -108,17 +108,17 @@ namespace Sass {
     void writeWarnHead(
       bool deprecation = false);
 
-  public:
-
-    bool hasReportedWarning(
-      WarningType type) const;
-
     // Print to stderr stream
     void printWarning(
       const sass::string& message,
       const SourceSpan& pstate,
       WarningType type,
       bool deprecation = false);
+
+  public:
+
+    bool hasReportedWarning(
+      WarningType type) const;
 
   private:
 
@@ -160,16 +160,26 @@ namespace Sass {
     // Precision for numbers to be printed
     // void setPrecision(int precision);
 
-    // Print a warning without any SourceSpan (used by @warn)
-    void addWarning(const sass::string& message, WarningType);
-
     // Print a debug message without any SourceSpan (used by @debug)
     void addDebug(const sass::string& message, const SourceSpan& pstate);
 
+    // Print a warning without any SourceSpan (used by @warn)
+    void addWarning(const sass::string& message, WarningType);
+
     // Print a warning with SourceSpan attached (used internally)
-    void addWarning(const sass::string& message, const SourceSpan& pstate, WarningType type)
+    // Postpone the actual message creation to save performance
+    // Repeated deprecations will get swallowed by default
+    void addWarning(const SourceSpan& pstate,
+      WarningType type, std::function<sass::string()> message)
     {
-      printWarning(message, pstate, type, false);
+      if (reported[type]) {
+        if (type != WARN_RULE) {
+          suppressed += 1;
+          return;
+        }
+      }
+      printWarning(message(), pstate, type, false);
+      reported[type] = true;
     }
 
     // Repeated deprecations will get swallowed by default
@@ -186,6 +196,7 @@ namespace Sass {
         }
       }
       printWarning(message(), pstate, type, true);
+      reported[type] = true;
     }
 
   public:

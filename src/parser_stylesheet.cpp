@@ -329,9 +329,8 @@ namespace Sass {
       start, readStyleRule.ptr(), local.idxs);
 
     if (isIndented() && styles->empty()) {
-      compiler.addWarning(
-        "This selector doesn't have any properties and won't be rendered.",
-        itpl ? itpl->pstate() : SourceSpan{}, Logger::WARN_EMPTY_SELECTOR);
+      compiler.addWarning(itpl ? itpl->pstate() : SourceSpan{}, Logger::WARN_EMPTY_SELECTOR,
+        []() { return "This selector doesn't have any properties and won't be rendered."; });
     }
 
     // std::cerr << "FINAL\n";
@@ -408,9 +407,8 @@ namespace Sass {
       &StylesheetParser::readChildStatement,
       start, itpl.ptr(), local.idxs);
     if (isIndented() && rule->empty()) {
-      compiler.addWarning(
-        "This selector doesn't have any properties and won't be rendered.",
-        selectorPstate, Logger::WARN_EMPTY_SELECTOR);
+      compiler.addWarning(selectorPstate, Logger::WARN_EMPTY_SELECTOR,
+        []() { return "This selector doesn't have any properties and won't be rendered."; });
     }
     return rule.detach();
   }
@@ -3017,11 +3015,10 @@ namespace Sass {
     scanner.expectChar($ampersand);
 
     if (scanner.scanChar($ampersand)) {
-      compiler.addWarning(
-        "In Sass, \"&&\" means two copies of the parent selector."
-        "\nYou probably want to use \"and\" instead.",
-        scanner.relevantSpanFrom(start),
-        Logger::WARN_DOUBLE_PARENT);
+      compiler.addWarning(scanner.relevantSpanFrom(start), Logger::WARN_DOUBLE_PARENT, []() {
+          return "In Sass, \"&&\" means two copies of the parent selector."
+            "\nYou probably want to use \"and\" instead.";
+        });
       scanner.offset.column -= 1;
       scanner.position -= 1;
     }

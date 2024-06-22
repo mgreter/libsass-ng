@@ -163,9 +163,10 @@ namespace Sass {
   template <class T>
   // Compare the objects behind pointers
   inline bool PtrObjLessThanFn(const T* lhs, const T* rhs) {
-    if (lhs == nullptr) return rhs != nullptr;
+    if (lhs == rhs) return false;
+    if (lhs == nullptr) return true;
     else if (rhs == nullptr) return false;
-    else return lhs != rhs && *lhs < *rhs;
+    else return *lhs < *rhs;
   }
 
   struct PtrObjLessThan {

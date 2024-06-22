@@ -18,7 +18,9 @@ namespace Sass {
     // epsilon(std::pow(0.1, precision + 1)),
     columns(columns),
     support_colors(colors),
-    support_unicode(unicode)
+    support_unicode(unicode),
+    reported({0}),
+    suppressed(0)
   {}
 
   // Auto-detect if colors and unicode is supported
@@ -164,13 +166,6 @@ namespace Sass {
 
     CallStackFrame frame(*this, pstate);
 
-    if (reported[type]) {
-      if (type != WARN_RULE) {
-        suppressed += 1;
-        return;
-      }
-    }
-
     writeWarnHead(deprecation);
     logstrm << " on line " << pstate.getLine();
     logstrm << ", column " << pstate.getColumn();
@@ -183,8 +178,6 @@ namespace Sass {
 
     StackTraces stack(callStack.begin(), callStack.end());
     writeStackTraces(logstrm, stack, "    ", true);
-
-    reported[type] = true;
   }
   // EO printWarning
 

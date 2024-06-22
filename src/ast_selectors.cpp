@@ -372,6 +372,8 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(this).hash_code());
+      hash_combine(hash_, name_); // SimpleSelector
+      hash_combine(hash_, isClass_);
       hash_combine(hash_, argument_);
       if (selector_) hash_combine(
         hash_, selector_->hash());

@@ -841,15 +841,17 @@ namespace Sass {
             double numval = rgba->r() * 0x10000
               + rgba->g() * 0x100 + rgba->b();
             if (const char* disp = color_to_name((int)numval)) {
-              sass::sstream msg;
-              msg << "You probably don't mean to use the color value ";
-              msg << disp << " in interpolation here.\nIt may end up represented ";
-              msg << "as " << rgba->inspect() <<", which will likely produce invalid ";
-              msg << "CSS. Always quote color names when using them as strings or map ";
-              msg << "keys (for example, \"" << disp << "\"). If you really want to ";
-              msg << "use the color value, append it to an empty string to avoid ";
-              msg << "this warning (e.g. use '\"\" + " << disp << "').";
-              logger.addWarning(msg.str(), itpl->pstate(), Logger::WARN_COLOR_ITPL);
+              logger.addWarning(itpl->pstate(), Logger::WARN_COLOR_ITPL, [&]() {
+                sass::sstream msg;
+                msg << "You probably don't mean to use the color value ";
+                msg << disp << " in interpolation here.\nIt may end up represented ";
+                msg << "as " << rgba->inspect() << ", which will likely produce invalid ";
+                msg << "CSS. Always quote color names when using them as strings or map ";
+                msg << "keys (for example, \"" << disp << "\"). If you really want to ";
+                msg << "use the color value, append it to an empty string to avoid ";
+                msg << "this warning (e.g. use '\"\" + " << disp << "').";
+                return msg.str();
+              });
             }
           }
         }

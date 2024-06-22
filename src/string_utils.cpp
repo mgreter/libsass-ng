@@ -255,13 +255,13 @@ namespace Sass {
       default:
         size_t size = strings[0].size();
         size_t sep_len = ::strlen(separator);
-        for (size_t i = 1; i < strings.size(); i++) {
+        for (size_t i = 1, iL = strings.size(); i < iL; i++) {
           size += sep_len + strings[i].size();
         }
         sass::string os;
         os.reserve(size);
         os += strings[0];
-        for (size_t i = 1; i < strings.size(); i++) {
+        for (size_t i = 1, iL = strings.size(); i < iL; i++) {
           os += separator;
           os += strings[i];
         }
