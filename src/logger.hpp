@@ -179,12 +179,12 @@ namespace Sass {
     void addDeprecation(const SourceSpan& pstate, WarningType type,
       std::function<sass::string()> message)
     {
-      //if (reported[type]) {
-      //  if (type != WARN_RULE) {
-      //    suppressed += 1;
-      //    return;
-      //  }
-      //}
+      if (reported[type]) {
+        if (type != WARN_RULE) {
+          suppressed += 1;
+          return;
+        }
+      }
       printWarning(message(), pstate, type, true);
     }
 
