@@ -22,7 +22,7 @@ namespace Sass {
     SourceSpan pstate; // use from extender
 
     // The selector in which the `@extend` appeared.
-    ComplexSelectorObj selector;
+    ComplexSelectorObj selector = nullptr;
 
     // The minimum specificity required for any
     // selector generated from this extender.
@@ -35,11 +35,11 @@ namespace Sass {
     // The extension that created this [Extender]. Not all [Extender]s
     // are created by extensions. Some simply represent the
     // original selectors that exist in the document.
-    Extension* extension;
+    Extension* extension = nullptr;
 
     // The media query context to which this extend is restricted,
     // or `null` if it can apply within any context.
-    CssMediaQueryVectorObj mediaContext;
+    CssMediaQueryVectorObj mediaContext = nullptr;
 
     // Value constructor
     Extender(
@@ -73,7 +73,7 @@ namespace Sass {
 
   public:
 
-    sass::string toString() const;
+    // sass::string toString() const;
 
     SourceSpan pstate;
 

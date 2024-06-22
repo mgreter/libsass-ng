@@ -467,13 +467,17 @@ namespace Sass {
     // that points back to the `sources` vector from `extensions`.
     for (size_t i = 0, iL = oldExtensions.size(); i < iL; i += 1) {
 
-      Extension* extension = oldExtensions[i];
+      const ExtensionObj& extension = oldExtensions[i];
       if (extension == nullptr) {
         std::cerr << "WHAT THE 1\n";
         continue;
       }
-      Extender& extender = extension->extender;
-      SimpleSelector* target = extension->target;
+      const Extender& extender = extension->extender;
+      if (extension == nullptr) {
+        std::cerr << "WHAT THE 3\n";
+        continue;
+      }
+      const SimpleSelectorObj& target = extension->target;
       if (target == nullptr) {
         std::cerr << "WHAT THE 2\n";
         continue;

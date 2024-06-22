@@ -83,6 +83,10 @@
 // Optimization configurations
 /////////////////////////////////////////////////////////////////////////
 
+// Enable to flush each line when written to output
+// Not doing so can increase overall performance (5%)
+// #define SASS_FLUSH_OUTPUT_LINES
+
 // When enabled we use our custom memory pool allocator
 // With intense workloads this can double the performance
 // Max memory usage mostly only grows by a slight amount

@@ -224,11 +224,17 @@ namespace Terminal {
 
         if (error) {
           std::cerr << output[0];
-          if (output[0] == '\n') fflush(stderr);
+          #ifdef SASS_FLUSH_OUTPUT_LINES
+          if (output[0] == '\n')
+            fflush(stderr);
+          #endif
         }
         else {
           std::cout << output[0];
-          if (output[0] == '\n') fflush(stdout);
+          #ifdef SASS_FLUSH_OUTPUT_LINES
+          if (output[0] == '\n')
+            fflush(stdout);
+          #endif
         }
         output += 1;
       }
