@@ -10,6 +10,7 @@
 
 #include "ast_fwd_decl.hpp"
 #include "environment_cnt.hpp"
+#include "strings.hpp"
 
 namespace Sass {
 
@@ -380,15 +381,15 @@ namespace Sass {
 
     EnvRef findFnIdx(
       const EnvKey& name,
-      const sass::string& ns) const;
+      const sass::string& ns = Strings::empty) const;
 
     EnvRef findMixIdx(
       const EnvKey& name,
-      const sass::string& ns) const;
+      const sass::string& ns = Strings::empty) const;
 
     EnvRef findVarIdx(
       const EnvKey& name,
-      const sass::string& ns,
+      const sass::string& ns = Strings::empty,
       bool global = false) const;
 
 

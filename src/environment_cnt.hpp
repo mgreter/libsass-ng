@@ -21,19 +21,15 @@ namespace Sass {
 
   using EnvKeySet = sass::set::unordered::env<EnvKey>;
 
-  // Performance comparison on MSVC and bolt-bench:
-  // tsl::hopscotch_map is 10% slower than Sass::FlatMap
-  // std::unordered_map a bit faster than tsl::hopscotch_map
-  // Sass::FlapMap is 10% faster than any other container
-  // Note: only due to our very specific usage patterns!
-  class ValueFlatMap : public sass::flatmap::env<EnvKey, ValueObj, 0>, public RefCounted {};
-  class ExpressionFlatMap : public sass::flatmap::env<EnvKey, ExpressionObj, 0>, public RefCounted {};
+  // these may (or may not) profit from a flat map implementation (also have fair lookups)
+  class ValueFlatMap : public sass::map::unordered::env<EnvKey, ValueObj>, public RefCounted {};
+  class ExpressionFlatMap : public sass::map::unordered::env<EnvKey, ExpressionObj>, public RefCounted {};
 
   // Keeping them sorted helps to keep lookups O(logn)
   // There seems no real down-side to not doing this
-  typedef sass::flatmap::sorted::env<EnvKey, uint32_t, 0> VidxEnvKeyMap;
-  typedef sass::flatmap::sorted::env<EnvKey, uint32_t, 0> MidxEnvKeyMap;
-  typedef sass::flatmap::sorted::env<EnvKey, uint32_t, 0> FidxEnvKeyMap;
+  typedef sass::map::unordered::env<EnvKey, uint32_t> VidxEnvKeyMap;
+  typedef sass::map::unordered::env<EnvKey, uint32_t> MidxEnvKeyMap;
+  typedef sass::map::unordered::env<EnvKey, uint32_t> FidxEnvKeyMap;
 
   // These get barely any use in tight-loops (no gains from optimizing)
   template<typename T> using EnvKeyMap = sass::map::unordered::env<EnvKey, T>;

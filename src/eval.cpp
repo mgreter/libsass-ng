@@ -1396,8 +1396,10 @@ namespace Sass {
     // $a: 0; @for $i from 1 through 3 { @debug $a; $a: $i; } @debug $a
     // $b: 0; a { @for $i from 1 through 3 { @debug $b; $b: $i; } @debug $b }
     for (const EnvRef& vidx : variable->vidxs()) {
-      Value* value = compiler.varRoot.getVariable(vidx);
-      if (value != nullptr) return value->withoutSlash();
+      const ValueObj& value =
+        compiler.varRoot.getVariable(vidx);
+      if (value.isNull()) continue;
+      return value->withoutSlash();
     }
 
     // If we reach this point we have an error
@@ -1433,14 +1435,16 @@ namespace Sass {
     const sass::string& fname(function->name());
     const auto& args = function->arguments();
     const auto& list = args->positional();
-    CallableObj callable = nullptr;
-
-    if (function->fidx().isValid()) {
-      callable = compiler.varRoot.getFunction(function->fidx());
-    }
 
     Import* imp = compiler.import_stack.back();
     bool isPlainCss = imp->syntax == SASS_IMPORT_CSS;
+
+    Callable* callable = nullptr;
+
+    if (function->fidx().isValid()) {
+      callable = compiler.varRoot.getFunction (function->fidx());
+    }
+
 
     if (!callable && !function->ns().empty())
     {
@@ -1512,8 +1516,13 @@ namespace Sass {
 
     }
     else if (isPlainCss) {
-      callable = SASS_MEMORY_NEW(PlainCssCallable,
+      // Create inner new object to execute and throw away
+      CallableObj callable = SASS_MEMORY_NEW(PlainCssCallable,
         function->pstate(), function->name());
+      RAII_FLAG(inFunction, true);
+      CallStackFrame frame(logger, function->pstate(), true);
+      return callable->execute(*this,
+        args, function->pstate());
     }
 
     if (StringUtils::startsWith(fname, "--", 2) /* dart has some more conditions */) {
@@ -2009,7 +2018,7 @@ namespace Sass {
   Value* Eval::visitDebugRule(DebugRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::debugRule, "");
+    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::debugRule);
     if (fidx.isValid()) {
       CallableObj& fn = compiler.varRoot.getFunction(fidx);
       callExternalMessageOverloadFunction(fn, message);
@@ -2025,7 +2034,7 @@ namespace Sass {
   Value* Eval::visitWarnRule(WarnRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::warnRule, "");
+    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::warnRule);
     if (fidx.isValid()) {
       CallableObj& fn = compiler.varRoot.getFunction(fidx);
       callExternalMessageOverloadFunction(fn, message);
@@ -2041,7 +2050,7 @@ namespace Sass {
   Value* Eval::visitErrorRule(ErrorRule* node)
   {
     ValueObj message = node->expression()->accept(this);
-    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::errorRule, "");
+    EnvRef fidx = compiler.varRoot.findFnIdx(Keys::errorRule);
     if (fidx.isValid()) {
 
       CallableObj& fn = compiler.varRoot.getFunction(fidx);
@@ -2901,8 +2910,8 @@ namespace Sass {
     EnvScope envscope(compiler.varRoot, f->idxs);
     ValueObj low = f->lower_bound()->accept(this);
     ValueObj high = f->upper_bound()->accept(this);
-    NumberObj sass_start = low->assertNumber(logger, "");
-    NumberObj sass_end = high->assertNumber(logger, "");
+    NumberObj sass_start = low->assertNumber(logger);
+    NumberObj sass_end = high->assertNumber(logger);
     // Support compatible unit types (e.g. cm to mm)
     sass_end = sass_end->coerce(logger, sass_start);
     // Can only use integer ranges

@@ -549,40 +549,40 @@ namespace Sass {
     virtual Value* unaryNot(Logger& logger, const SourceSpan& pstate) const;
 
     // Assert and return a value or throws if incompatible
-    virtual Value* assertValue(Logger& logger, const sass::string& name);
+    virtual Value* assertValue(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a color or throws if incompatible
-    virtual const Color* assertColor(Logger& logger, const sass::string& name) const;
+    virtual const Color* assertColor(Logger& logger, const sass::string& name = Strings::empty) const;
 
     // Assert and return a function or throws if incompatible
-    virtual Function* assertFunction(Logger& logger, const sass::string& name);
+    virtual Function* assertFunction(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a map or throws if incompatible
-    virtual Map* assertMap(Logger& logger, const sass::string& name);
+    virtual Map* assertMap(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a number or throws if incompatible
-    virtual Number* assertNumber(Logger& logger, const sass::string& name);
+    virtual Number* assertNumber(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a number/nullptr or throws if incompatible
-    virtual Number* assertNumberOrNull(Logger& logger, const sass::string& name);
+    virtual Number* assertNumberOrNull(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a string or throws if incompatible
-    virtual String* assertString(Logger& logger, const sass::string& name);
+    virtual String* assertString(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a string/nullptr or throws if incompatible
-    String* assertStringOrNull(Logger& logger, const sass::string& name);
+    String* assertStringOrNull(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a string/nullptr or throws if incompatible
-    Map* assertMapOrNull(Logger& logger, const sass::string& name);
+    Map* assertMapOrNull(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return an argument list or throws if incompatible
-    virtual ArgumentList* assertArgumentList(Logger& logger, const sass::string& name);
+    virtual ArgumentList* assertArgumentList(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a calculation value or throws if incompatible
-    virtual Calculation* assertCalculation(Logger& logger, const sass::string& name);
+    virtual Calculation* assertCalculation(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a mixin value or throws if incompatible
-    virtual Mixin* assertMixin(Logger& logger, const sass::string& name);
+    virtual Mixin* assertMixin(Logger& logger, const sass::string& name = Strings::empty);
 
     // Only used for nth sass function
     // Single values act like lists with 1 item

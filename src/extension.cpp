@@ -63,18 +63,7 @@ namespace Sass {
     //std::cerr << "CREATED INIT " << this << "\n";
   }
 
-
-//  Extension::Extension(Extender extender) :
-//    extender(extender),
-//    specificity(0),
-//    isOptional(true),
-//    isOriginal(false),
-//    isConsumed(false)
-//  {}
-//
-  // Copy constructor
-
-  Extension::Extension(const Extension & extension) :
+  Extension::Extension(const Extension& extension) :
     pstate(extension.pstate),
     extender(extension.extender),
     target(extension.target),
@@ -104,6 +93,7 @@ namespace Sass {
 
   Extension& Extension::operator=(const Extension& other)
   {
+    pstate = other.pstate;
     extender = other.extender;
     target = other.target;
     specificity = other.specificity;

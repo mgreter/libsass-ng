@@ -532,19 +532,19 @@ namespace sass {
 
   namespace flatmap {
     // This may either use our own flat map or one from sfl
-    template <typename K, typename V, size_t N> using ptr = Sass::FLAT_PTR_MAP<K, V, N>;
-    template <typename K, typename V, size_t N> using obj = Sass::FLAT_OBJ_MAP<K, V, N>;
-    template <typename K, typename V, size_t N> using env = Sass::FLAT_ENV_MAP<K, V, N>;
-    template <typename K, typename V, size_t N> using str = Sass::FLAT_STR_MAP<K, V, N>;
-    template <typename K, typename V, size_t N> using stl = Sass::FLAT_STL_MAP<K, V, N>;
+    template <typename K, typename V, size_t N = 0> using ptr = Sass::FLAT_PTR_MAP<K, V, N>;
+    template <typename K, typename V, size_t N = 0> using obj = Sass::FLAT_OBJ_MAP<K, V, N>;
+    template <typename K, typename V, size_t N = 0> using env = Sass::FLAT_ENV_MAP<K, V, N>;
+    template <typename K, typename V, size_t N = 0> using str = Sass::FLAT_STR_MAP<K, V, N>;
+    template <typename K, typename V, size_t N = 0> using stl = Sass::FLAT_STL_MAP<K, V, N>;
 
     namespace sorted {
       // This may either use our own flat map or one from sfl
-      template <typename K, typename V, size_t N> using ptr = Sass::FLAT_SORTED_PTR_MAP<K, V, N>;
-      template <typename K, typename V, size_t N> using obj = Sass::FLAT_SORTED_OBJ_MAP<K, V, N>;
-      template <typename K, typename V, size_t N> using env = Sass::FLAT_SORTED_ENV_MAP<K, V, N>;
-      template <typename K, typename V, size_t N> using str = Sass::FLAT_SORTED_STR_MAP<K, V, N>;
-      template <typename K, typename V, size_t N> using stl = Sass::FLAT_SORTED_STL_MAP<K, V, N>;
+      template <typename K, typename V, size_t N = 0> using ptr = Sass::FLAT_SORTED_PTR_MAP<K, V, N>;
+      template <typename K, typename V, size_t N = 0> using obj = Sass::FLAT_SORTED_OBJ_MAP<K, V, N>;
+      template <typename K, typename V, size_t N = 0> using env = Sass::FLAT_SORTED_ENV_MAP<K, V, N>;
+      template <typename K, typename V, size_t N = 0> using str = Sass::FLAT_SORTED_STR_MAP<K, V, N>;
+      template <typename K, typename V, size_t N = 0> using stl = Sass::FLAT_SORTED_STL_MAP<K, V, N>;
     }
   }
 

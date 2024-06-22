@@ -121,7 +121,7 @@
 
 #if defined(_MSC_VER)
 #include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
+typedef size_t ssize_t;
 #endif
 
 namespace btree {
