@@ -120,14 +120,14 @@
 #define SASS_USE_SFL_ORDERED_FLAT_MAP
 #define SASS_USE_SFL_UNORDERED_FLAT_MAP
 
+// Comes with MIT license attached
 // Performance for on extreme extends
-// Comes with Apache 2.0 license attached
 // Improves heavy extend pretty well (5%)
 #define SASS_USE_TSL_BHOPSCOTCH_MAP
 #define SASS_USE_TSL_BHOPSCOTCH_SET
 
-// Performance for on extreme extends
 // Comes with Apache 2.0 license attached
+// Performance for on extreme extends
 // Improves heavy extend substantially (10%)
 #define SASS_USE_ABSEIL_BTREE_MAP
 #define SASS_USE_ABSEIL_BTREE_SET
