@@ -105,7 +105,7 @@ namespace Sass {
       }
       std::cerr << "destructr pool\n";
       // Delete current arena
-      if (&arena) free(arena);
+      /*if (&arena)*/ free(arena);
       std::cerr << "finish\n";
     }
 

@@ -107,7 +107,7 @@ namespace Sass {
     virtual Type getType() const = 0;
 
     // Declare up-casting methods
-    DECLARE_ISA_CASTER(Value);
+    OVERRIDE_ISA_CASTER(Value);
     OVERRIDE_ISA_CASTER(String);
     DECLARE_ISA_CASTER(ItplString);
     DECLARE_ISA_CASTER(Expression);
