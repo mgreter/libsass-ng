@@ -35,6 +35,7 @@ namespace Sass {
   // We must keep insertion order for these (check why?)
   /////////////////////////////////////////////////////////////////////////
 
+  // Use stable map as that gives better lookup performance
   typedef sass::stblmap::env<EnvKey, uint32_t> VidxEnvKeyMap;
   typedef sass::stblmap::env<EnvKey, uint32_t> MidxEnvKeyMap;
   typedef sass::stblmap::env<EnvKey, uint32_t> FidxEnvKeyMap;
@@ -45,6 +46,7 @@ namespace Sass {
   // we only expect a few named args per function call, so no gain in keeping it sorted
   /////////////////////////////////////////////////////////////////////////
 
+  // Use flat map as we expect very tiny input and not many lookups
   class ValueFlatMap : public sass::flatmap::env<EnvKey, ValueObj>, public RefCounted {};
   class ExpressionFlatMap : public sass::flatmap::env<EnvKey, ExpressionObj>, public RefCounted {};
 

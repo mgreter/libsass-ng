@@ -153,6 +153,11 @@ namespace Sass {
   }
   // EO addDebug
 
+  bool Logger::hasReportedWarning(WarningType type) const
+  {
+    return (type != WARN_RULE) && reported[type];
+  }
+
   // Print a regular warning or deprecation
   void Logger::printWarning(const sass::string& message, const SourceSpan& pstate, WarningType type, bool deprecation)
   {

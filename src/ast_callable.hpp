@@ -167,6 +167,12 @@ namespace Sass {
   // invocation. It must be valid in regard to the callable signature
   // of the invoked function (will throw an error otherwise).
   /////////////////////////////////////////////////////////////////////////
+  // Profiling shows that this can be quite a busy class
+  // We basically construct it for every function invocation
+  // First optimization is to make named arguments "optional"
+  // Meaning we only allocate the necessary container on demand
+  // Doesn't do much for positionals, as we seldomly have empty args
+  /////////////////////////////////////////////////////////////////////////
 
   class CallableArguments final : public AstNode
   {
@@ -199,8 +205,21 @@ namespace Sass {
       (*named_)[key] = value;
     }
 
-    size_t size() const;
+    void addNamed(EnvKey&& key, Expression* value) {
+      std::cerr << "move key for named\n";
+      if (!named_) named_ = SASS_MEMORY_NEW(ExpressionFlatMap);
+      (*named_)[key] = value;
+    }
 
+    // Rough estimation of positional results
+    // Profiling shows this can make 1% difference
+    inline size_t CallableArguments::est() const
+    {
+      return positional_.size() +
+        (restArg_ ? 1 : 0) +
+        (kwdRest_ ? 1 : 0) +
+        (named_ ? 1 : 0);
+    }
 
     // Value move constructor
     CallableArguments(SourceSpan&& pstate,

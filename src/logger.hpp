@@ -110,6 +110,9 @@ namespace Sass {
 
   public:
 
+    bool hasReportedWarning(
+      WarningType type) const;
+
     // Print to stderr stream
     void printWarning(
       const sass::string& message,

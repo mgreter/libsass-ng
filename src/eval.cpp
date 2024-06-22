@@ -78,11 +78,13 @@ namespace Sass {
           rv->rhsAsSlash(right->isaNumber());
         }
         else {
-          sass::string msg = "Using the division operator `/` outside of calc() is deprecated.";
-          msg += "\nThis will be removed in LibSass 5.0.0.\n";
-          msg += "\nRecommendation: " + node->recommendation() + " or " + node->toCalc() + "\n";
-          msg += "\nMore info and automated migrator: https://sass-lang.com/d/slash-div";
-          logger.addDeprecation(msg, pstate, Logger::WARN_MATH_DIV);
+          if (!logger.hasReportedWarning(Logger::WARN_MATH_DIV)) {
+            sass::string msg = "Using the division operator `/` outside of calc() is deprecated.";
+            msg += "\nThis will be removed in LibSass 5.0.0.\n";
+            msg += "\nRecommendation: " + node->recommendation() + " or " + node->toCalc() + "\n";
+            msg += "\nMore info and automated migrator: https://sass-lang.com/d/slash-div";
+            logger.addDeprecation(msg, pstate, Logger::WARN_MATH_DIV);
+          }
         }
       } 
     }
@@ -698,11 +700,10 @@ namespace Sass {
     CallableArguments* arguments)
   {
     ArgumentResults results;
-    results.reserve(
-      arguments->positional().size() +
-      (arguments->restArg() ? 1 : 0));
     // Get some items from passed parameters
     ValueVector& positional(results.positional());
+    // Reserve for estimatated number of positionals
+    positional.reserve(arguments->est() + 1);
 
     // Collect positional args by evaluating input arguments
     for (const auto& arg : arguments->positional())
@@ -2741,7 +2742,7 @@ namespace Sass {
     // convert ??= (value) = > value as T;
 
     for(const auto& kv : map->elements()) {
-      if (String* str = kv.first->isaString()) {
+      if (const String* str = kv.first->isaString()) {
         results.addNamed(str->value(), kv.second);
       }
       else {
@@ -2759,12 +2760,9 @@ namespace Sass {
     // convert ??= (value) = > value as T;
 
     for (const auto& kv : map->elements()) {
-      if (String* str = kv.first->isaString()) {
+      if (const String* str = kv.first->isaString()) {
         arguments->addNamed(str->value(), SASS_MEMORY_NEW(
           ValueExpression, map->pstate(), kv.second));
-        // if (!values) values = SASS_MEMORY_NEW(ExpressionFlatMap);
-        // values->insert(std::make_pair(str->value(), SASS_MEMORY_NEW(
-        //   ValueExpression, map->pstate(), kv.second)));
       }
       else {
         CallStackFrame frame(logger, pstate);

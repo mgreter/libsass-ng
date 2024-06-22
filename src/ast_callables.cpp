@@ -374,22 +374,6 @@ namespace Sass {
     kwdRest_(kwdRest)
   {}
 
-  size_t CallableArguments::size() const
-  {
-    size_t count = positional_.size();
-    if (restArg_) {
-      if (const ListExpression* list = restArg_->isaListExpression())
-        count += list->size();
-      else if (!restArg_->isaMapExpression()) {
-        count += 1;
-      }
-    }
-    if (kwdRest_) {
-      //count += 1;
-    }
-    return count;
-  }
-
   CallableArguments::CallableArguments(
     SourceSpan&& pstate,
     ExpressionVector&& positional,

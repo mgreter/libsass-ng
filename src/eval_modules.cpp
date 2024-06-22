@@ -17,8 +17,8 @@ namespace Sass {
 
   template <typename T>
   static void exposeUnfiltered(
-    T& merged, T expose,
-    const sass::string prefix,
+    T& merged, const T& expose,
+    const sass::string& prefix,
     const sass::string& errprefix,
     Logger& logger,
     bool viaImport)
@@ -42,8 +42,8 @@ namespace Sass {
 
   template <typename T>
   static void exposeFiltered(
-    T& merged, T expose,
-    const sass::string prefix,
+    T& merged, const T& expose,
+    const sass::string& prefix,
     const std::set<EnvKey>& filters,
     const sass::string& errprefix,
     Logger& logger,

@@ -31,6 +31,7 @@
 #include "ast_supports.hpp"
 #include "ast_values.hpp"
 
+#include "source_span.hpp"
 #include "ast_fwd_decl.hpp"
 #include "extender.hpp"
 #include "extension.hpp"
@@ -120,7 +121,7 @@ inline std::string debug_vec(EnvKey key) {
 inline std::string debug_vec(ComplexSelectors vec) {
   std::stringstream out;
   out << "[";
-  SelectorListObj slist = SASS_MEMORY_NEW(SelectorList, SourceSpan::internal("DBG"), std::move(vec));
+  SelectorListObj slist = SASS_MEMORY_NEW(SelectorList, SourceSpan::internal32("DBG"), std::move(vec));
   out << slist->inspect();
   out << "]";
   return out.str();
