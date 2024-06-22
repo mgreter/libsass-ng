@@ -166,13 +166,14 @@ namespace Sass {
       if (number == nullptr) return SASS_MEMORY_NEW(
         Calculation, pstate, str_abs, { simplified });
       if (number->hasUnit("%")) {
-        logger.addDeprecation(
-          "Passing percentage units to the global abs() function is deprecated.\n"
-          "In the future, this will emit a CSS abs() function to be resolved by the browser.\n"
-          "To preserve current behavior: math.abs(" + number->inspect() + ")\n"
-          "To emit a CSS abs() now: abs(#{" + number->inspect() + "})\n"
-          "More info: https://sass-lang.com/d/abs-percent",
-          number->pstate(), Logger::WARN_ABS_PERCENT);
+        logger.addDeprecation(number->pstate(),
+          Logger::WARN_ABS_PERCENT, [number]() {
+            return "Passing percentage units to the global abs() function is deprecated.\n"
+              "In the future, this will emit a CSS abs() function to be resolved by the browser.\n"
+              "To preserve current behavior: math.abs(" + number->inspect() + ")\n"
+              "To emit a CSS abs() now: abs(#{" + number->inspect() + "})\n"
+              "More info: https://sass-lang.com/d/abs-percent";
+          });
       }
       return number->copyWithNewValue(std::abs(number->value()));
     }

@@ -213,7 +213,7 @@ namespace Sass {
 
     // Rough estimation of positional results
     // Profiling shows this can make 1% difference
-    inline size_t CallableArguments::est() const
+    inline size_t est() const
     {
       return positional_.size() +
         (restArg_ ? 1 : 0) +

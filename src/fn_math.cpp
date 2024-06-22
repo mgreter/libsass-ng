@@ -86,13 +86,14 @@ namespace Sass {
       {
         Number* number = arguments[0]->assertNumber(compiler, "number");
         if (number->hasUnit("%")) {
-          compiler.addDeprecation(
-            "Passing percentage units to the global abs() function is deprecated.\n"
-            "In the future, this will emit a CSS abs() function to be resolved by the browser.\n"
-            "To preserve current behavior: math.abs(" + number->inspect() + ")\n"
-            "To emit a CSS abs() now: abs(#{" + number->inspect() + "})\n"
-            "More info: https://sass-lang.com/d/abs-percent",
-            number->pstate(), Logger::WARN_ABS_PERCENT);
+          compiler.addDeprecation(number->pstate(),
+            Logger::WARN_ABS_PERCENT, [number]() {
+              return "Passing percentage units to the global abs() function is deprecated.\n"
+                "In the future, this will emit a CSS abs() function to be resolved by the browser.\n"
+                "To preserve current behavior: math.abs(" + number->inspect() + ")\n"
+                "To emit a CSS abs() now: abs(#{" + number->inspect() + "})\n"
+                "More info: https://sass-lang.com/d/abs-percent";
+            });
         }
         return SASS_MEMORY_NEW(Number, pstate,
           std::abs(number->value()),

@@ -108,11 +108,13 @@ namespace Sass {
     {
      // if (!angle->hasUnits()) return;
       if (angle->hasCompatibleUnits(unit_deg, false)) return;
-      sass::string text = "$" + name + ": ";
-      text += "Passing a unit other than deg (" + angle->inspect() + ") is deprecated.\n";
-      text += "\nTo preserve current behavior: " + angle->unitSuggestion(name) + "\n";
-      text += "\nSee https://sass-lang.com/d/color-units";
-      logger.addDeprecation(text, angle->pstate(), Logger::WARN_ANGLE_CONVERT);
+      logger.addDeprecation(angle->pstate(), Logger::WARN_ANGLE_CONVERT, [&]() {
+        sass::string text = "$" + name + ": ";
+        text += "Passing a unit other than deg (" + angle->inspect() + ") is deprecated.\n";
+        text += "\nTo preserve current behavior: " + angle->unitSuggestion(name) + "\n";
+        text += "\nSee https://sass-lang.com/d/color-units";
+        return text;
+      });
     }
 
     // Helper function for debugging
@@ -880,10 +882,12 @@ namespace Sass {
       static BUILT_IN_FN(fnInvert)
       {
         if (arguments[0]->isaNumber()) {
-          compiler.addDeprecation("Passing a number (" +
-            arguments[0] + ") to color.invert() is deprecated.\n"
-            "\nRecommendation: grayscale(" + arguments[0] + ")",
-            arguments[0]->pstate(), Logger::WARN_NUMBER_ARG);
+          compiler.addDeprecation(arguments[0]->pstate(),
+            Logger::WARN_NUMBER_ARG, [arguments]() {
+              return "Passing a number (" +
+                arguments[0] + ") to color.invert() is deprecated.\n"
+                "\nRecommendation: grayscale(" + arguments[0] + ")";
+            });
         }
 
         if (isSpecialNumber(arguments[0])) {
@@ -1192,10 +1196,12 @@ namespace Sass {
       static BUILT_IN_FN(noGrayscale)
       {
         if (arguments[0]->isaNumber()) {
-          compiler.addDeprecation("Passing a number (" +
-            arguments[0] + ") to color.grayscale() is deprecated.\n"
-            "\nRecommendation: grayscale(" + arguments[0] + ")",
-            arguments[0]->pstate(), Logger::WARN_NUMBER_ARG);
+          compiler.addDeprecation(arguments[0]->pstate(),
+            Logger::WARN_NUMBER_ARG, [arguments]() {
+              return "Passing a number (" +
+                arguments[0] + ") to color.grayscale() is deprecated.\n"
+                "\nRecommendation: grayscale(" + arguments[0] + ")";
+            });
         }
         return grayscale(pstate, arguments, compiler, eval);
       }
@@ -1205,10 +1211,12 @@ namespace Sass {
       static BUILT_IN_FN(noOpacity)
       {
         if (arguments[0]->isaNumber()) {
-          compiler.addDeprecation("Passing a number (" +
-            arguments[0] + ") to color.opacity() is deprecated.\n"
-            "\nRecommendation: opacity(" + arguments[0] + ")",
-            arguments[0]->pstate(), Logger::WARN_NUMBER_ARG);
+          compiler.addDeprecation(arguments[0]->pstate(),
+            Logger::WARN_NUMBER_ARG, [arguments]() {
+              return "Passing a number (" +
+                arguments[0] + ") to color.opacity() is deprecated.\n"
+                "\nRecommendation: opacity(" + arguments[0] + ")";
+            });
         }
         return opacity(pstate, arguments, compiler, eval);
       }

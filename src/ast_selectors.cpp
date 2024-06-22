@@ -97,11 +97,13 @@ namespace Sass {
   void Selector::assertNotBogus(Logger& logger, const sass::string& name)
   {
     if (isBogusStrict()) {
-      sass::string msg = name.empty() ? "" : "$" + name + ": ";
-      msg += inspect() + " is not valid CSS.\n";
-      msg += "This will be an error in LibSass 5.0.0.\n\n";
-      msg += "More info: https://sass-lang.com/d/bogus-combinators";
-      logger.addDeprecation(msg, pstate(), Logger::WARN_SEL_BOGUS);
+      logger.addDeprecation(pstate(), Logger::WARN_SEL_BOGUS, [&]() {
+        sass::string msg = name.empty() ? "" : "$" + name + ": ";
+        msg += inspect() + " is not valid CSS.\n";
+        msg += "This will be an error in LibSass 5.0.0.\n\n";
+        msg += "More info: https://sass-lang.com/d/bogus-combinators";
+        return msg;
+      });
     }
   }
 

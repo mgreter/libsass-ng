@@ -1768,10 +1768,11 @@ namespace Sass {
 
     if (needsDeprecationWarning) {
 
-      compiler.addDeprecation(
-        "@-moz-document is deprecated and support will be removed in LibSass 5.0.0.\n"
-        "For details, see http://bit.ly/moz-document.",
-        atRule->pstate(), Logger::WARN_MOZ_DOC);
+      compiler.addDeprecation(atRule->pstate(),
+        Logger::WARN_MOZ_DOC, []() {
+          return "@-moz-document is deprecated and support will be removed in LibSass 5.0.0.\n"
+            "For details, see http://bit.ly/moz-document.";
+        });
     }
 
     return atRule;
@@ -4548,10 +4549,11 @@ namespace Sass {
       if (flag == "default") {
         if (guarded) {
           compiler.addDeprecation(
-            "!default should only be written once for each variable.\n"
-            "This will be an error in LibSass 5.0.0.",
             scanner.relevantSpanFrom(flagStart),
-            Logger::WARN_DUPE_VAR_FLAG);
+            Logger::WARN_DUPE_VAR_FLAG, []() {
+              return "!default should only be written once for each variable.\n"
+                "This will be an error in LibSass 5.0.0.";
+            });
         }
         guarded = true;
       }
@@ -4562,10 +4564,11 @@ namespace Sass {
         }
         else if (global) {
           compiler.addDeprecation(
-            "!global should only be written once for each variable.\n"
-            "This will be an error in LibSass 5.0.0.",
             scanner.relevantSpanFrom(flagStart),
-            Logger::WARN_DUPE_VAR_FLAG);
+            Logger::WARN_DUPE_VAR_FLAG, []() {
+              return "!global should only be written once for each variable.\n"
+                "This will be an error in LibSass 5.0.0.";
+            });
         }
         global = true;
       }
@@ -4633,11 +4636,12 @@ namespace Sass {
     StringToken name = readIdentifierToken();
 
     if (StringUtils::startsWith(name.str, "--", 2)) {
-      compiler.addDeprecation(
-        "Sass @mixin names beginning with -- are deprecated for forward-"
-        "compatibility with plain CSS mixins.\n"
-        "For details, see https://sass-lang.com/d/css-function-mixin",
-        name.pstate, Logger::WARN_DOUBLE_DASH_MIXIN);
+      compiler.addDeprecation(name.pstate,
+        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
+          return "Sass @mixin names beginning with -- are deprecated for forward-"
+            "compatibility with plain CSS mixins.\n"
+            "For details, see https://sass-lang.com/d/css-function-mixin";
+        });
     }
 
     scanWhitespace();
@@ -4693,11 +4697,12 @@ namespace Sass {
     StringToken name = readIdentifierToken();
 
     if (StringUtils::startsWith(name.str, "--", 2)) {
-      compiler.addDeprecation(
-        "Sass @function names beginning with -- are deprecated for forward-"
-        "compatibility with plain CSS mixins.\n"
-        "For details, see https://sass-lang.com/d/css-function-mixin",
-        name.pstate, Logger::WARN_DOUBLE_DASH_MIXIN);
+      compiler.addDeprecation(name.pstate,
+        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
+          return "Sass @function names beginning with -- are deprecated for forward-"
+            "compatibility with plain CSS mixins.\n"
+            "For details, see https://sass-lang.com/d/css-function-mixin";
+        });
     }
 
     sass::string normalized(name.str);

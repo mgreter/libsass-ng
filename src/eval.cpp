@@ -78,13 +78,13 @@ namespace Sass {
           rv->rhsAsSlash(right->isaNumber());
         }
         else {
-          if (!logger.hasReportedWarning(Logger::WARN_MATH_DIV)) {
+          logger.addDeprecation(pstate, Logger::WARN_MATH_DIV, [node]() {
             sass::string msg = "Using the division operator `/` outside of calc() is deprecated.";
             msg += "\nThis will be removed in LibSass 5.0.0.\n";
             msg += "\nRecommendation: " + node->recommendation() + " or " + node->toCalc() + "\n";
             msg += "\nMore info and automated migrator: https://sass-lang.com/d/slash-div";
-            logger.addDeprecation(msg, pstate, Logger::WARN_MATH_DIV);
-          }
+            return msg;
+          });
         }
       } 
     }
@@ -101,11 +101,13 @@ namespace Sass {
     // Only create a new variable if required
     if (!number->hasAsSlash()) return number;
     // Create a deprecation warning for this case
-    sass::string msg = "Using the division operator `/` is deprecated."
-      "\nThis will be removed in LibSass 5.0.0.\n"
-      "\nRecommendation: " + number->recommendation() + "\n"
-      "\nMore info and automated migrator: https://sass-lang.com/d/slash-div";
-    logger.addDeprecation(msg, number->pstate(), Logger::WARN_MATH_DIV);
+    logger.addDeprecation(number->pstate(),
+      Logger::WARN_MATH_DIV, [number]() {
+        return "Using the division operator `/` is deprecated."
+          "\nThis will be removed in LibSass 5.0.0.\n"
+          "\nRecommendation: " + number->recommendation() + "\n"
+          "\nMore info and automated migrator: https://sass-lang.com/d/slash-div";
+      });
     // Creates a new value (ensure to delete)
     return number->withoutSlash5();
   }
@@ -1527,11 +1529,12 @@ namespace Sass {
     }
 
     if (StringUtils::startsWith(fname, "--", 2) /* dart has some more conditions */) {
-      compiler.addDeprecation(
-        "Sass @function names beginning with -- are deprecated for forward-"
-        "compatibility with plain CSS functions.\n"
-        "For details, see https://sass-lang.com/d/css-function-mixin",
-        function->span(), Logger::WARN_DOUBLE_DASH_MIXIN);
+      compiler.addDeprecation(function->span(),
+        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
+          return "Sass @function names beginning with -- are deprecated for forward-"
+            "compatibility with plain CSS functions.\n"
+            "For details, see https://sass-lang.com/d/css-function-mixin";
+        });
     }
 
     // Check if function is already defined on the frame/scope
@@ -1905,11 +1908,12 @@ namespace Sass {
   {
 
     if (StringUtils::startsWith(include->name().orig(), "--", 2) /* dart has some more conditions */) {
-      compiler.addDeprecation(
-        "Sass @mixin names beginning with -- are deprecated for forward-"
-        "compatibility with plain CSS mixins.\n"
-        "For details, see https://sass-lang.com/d/css-function-mixin",
-        include->span(), Logger::WARN_DOUBLE_DASH_MIXIN);
+      compiler.addDeprecation(include->span(),
+        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
+          return "Sass @mixin names beginning with -- are deprecated for forward-"
+            "compatibility with plain CSS mixins.\n"
+            "For details, see https://sass-lang.com/d/css-function-mixin";
+        });
     }
 
     // Check if mixin expression was already resolved
@@ -2181,38 +2185,46 @@ namespace Sass {
           if (!complex->isBogusStrict()) continue;
 
           if (complex->isUseless()) {
-            logger.addDeprecation("The selector \""
-                + complex + "\" is invalid CSS.\n"
-              "It will be omitted from the generated CSS.\n"
-              "This will be an error in LibSass 5.0.0.\n\n"
-              "More info: https://sass-lang.com/d/bogus-combinators",
-              complex->pstate(), Logger::WARN_SEL_USELESS);
+            logger.addDeprecation(complex->pstate(),
+              Logger::WARN_SEL_USELESS, [complex]() {
+                return "The selector \""
+                  + complex + "\" is invalid CSS.\n"
+                  "It will be omitted from the generated CSS.\n"
+                  "This will be an error in LibSass 5.0.0.\n\n"
+                  "More info: https://sass-lang.com/d/bogus-combinators";
+              });
           }
           else if (!complex->leadingCombinators().empty()) {
             if (!wasCss) {
-            logger.addDeprecation("The selector \""
-                + complex + "\" is invalid CSS.\n"
-              "This will be an error in LibSass 5.0.0.\n\n"
-              "More info: https://sass-lang.com/d/bogus-combinators",
-              complex->pstate(), Logger::WARN_SEL_ERROR);
+            logger.addDeprecation(complex->pstate(),
+              Logger::WARN_SEL_ERROR, [complex]() {
+                return "The selector \""
+                  + complex + "\" is invalid CSS.\n"
+                  "This will be an error in LibSass 5.0.0.\n\n"
+                  "More info: https://sass-lang.com/d/bogus-combinators";
+              });
             }
           }
           else if (complex->isBogusOtherThanLeadingCombinator()) {
-            logger.addDeprecation("The selector \"" + complex + "\" "
-              "is only valid for nesting\nIt shouldn't "
-              "have children other than style rules.\n"
-              "It will be omitted from the generated CSS.\n"
-              "This will be an error in LibSass 5.0.0.\n\n"
-              "More info: https://sass-lang.com/d/bogus-combinators",
-              complex->pstate(), Logger::WARN_SEL_BOGUS);
+            logger.addDeprecation(complex->pstate(),
+              Logger::WARN_SEL_BOGUS, [complex]() {
+                return "The selector \"" + complex + "\" "
+                  "is only valid for nesting\nIt shouldn't "
+                  "have children other than style rules.\n"
+                  "It will be omitted from the generated CSS.\n"
+                  "This will be an error in LibSass 5.0.0.\n\n"
+                  "More info: https://sass-lang.com/d/bogus-combinators";
+              });
           }
           else {
-            logger.addDeprecation("The selector \"" + complex + "\" "
-              "is only valid for nesting\nIt shouldn't "
-              "have children other than style rules.\n"
-              "This will be an error in LibSass 5.0.0.\n\n"
-              "More info: https://sass-lang.com/d/bogus-combinators",
-              complex->pstate(), Logger::WARN_SEL_BOGUS);
+            logger.addDeprecation(complex->pstate(),
+              Logger::WARN_SEL_BOGUS, [complex]() {
+                return "The selector \"" + complex + "\" "
+                  "is only valid for nesting\nIt shouldn't "
+                  "have children other than style rules.\n"
+                  "This will be an error in LibSass 5.0.0.\n\n"
+                  "More info: https://sass-lang.com/d/bogus-combinators";
+              });
           }
         }
       }
@@ -2964,20 +2976,24 @@ namespace Sass {
     {
       if (!complex->isBogusStrict()) continue;
       if (complex->isUseless()) {
-        logger.addDeprecation("The selector \""
-          + complex + "\" is invalid CSS.\n"
-          "Therefore, it can't be an extender.\n"
-          "This will be an error in LibSass 5.0.0.\n\n"
-          "More info: https://sass-lang.com/d/bogus-combinators",
-          complex->pstate(), Logger::WARN_SEL_USELESS_EXTEND);
+        logger.addDeprecation(complex->pstate(),
+          Logger::WARN_SEL_USELESS_EXTEND, [complex]() {
+            return "The selector \""
+              + complex + "\" is invalid CSS.\n"
+              "Therefore, it can't be an extender.\n"
+              "This will be an error in LibSass 5.0.0.\n\n"
+              "More info: https://sass-lang.com/d/bogus-combinators";
+          });
       }
       else {
-        logger.addDeprecation("The selector \""
-          + complex + "\" is invalid CSS.\n"
-          "Therefore, it shouldn't be an extender.\n"
-          "This will be an error in LibSass 5.0.0.\n\n"
-          "More info: https://sass-lang.com/d/bogus-combinators",
-          complex->pstate(), Logger::WARN_SEL_USELESS_EXTEND);
+        logger.addDeprecation(complex->pstate(),
+          Logger::WARN_SEL_USELESS_EXTEND, [complex]() {
+            return "The selector \""
+              + complex + "\" is invalid CSS.\n"
+              "Therefore, it shouldn't be an extender.\n"
+              "This will be an error in LibSass 5.0.0.\n\n"
+              "More info: https://sass-lang.com/d/bogus-combinators";
+          });
       }
     }
 
@@ -3304,17 +3320,17 @@ namespace Sass {
 
         // Check if we are at the global scope
         if (compiler.envstack.size() == 1) {
-          logger.addDeprecation(
-            "As of LibSass 5.0.0, !global assignments won't be able to declare new variables.\n"
-            "\nSince this assignment is at the root of the stylesheet, the !global"
-            " flag is unnecessary and can safely be removed.",
-            a->pstate(), Logger::WARN_GLOBAL_ASSIGN);
+          logger.addDeprecation(a->pstate(), Logger::WARN_GLOBAL_ASSIGN, []() {
+            return "As of LibSass 5.0.0, !global assignments won't be able to declare new variables.\n"
+              "\nSince this assignment is at the root of the stylesheet, the !global"
+              " flag is unnecessary and can safely be removed.";
+            });
         }
         else {
-          logger.addDeprecation(
-            "As of LibSass 5.0.0, !global assignments won't be able to declare new variables.\n"
-            "\nRecommendation: add `$" + a->variable().orig() + ": null` at the stylesheet root.",
-            a->pstate(), Logger::WARN_GLOBAL_ASSIGN_ROOT);
+          logger.addDeprecation(a->pstate(), Logger::WARN_GLOBAL_ASSIGN_ROOT, [a]() {
+            return "As of LibSass 5.0.0, !global assignments won't be able to declare new variables.\n"
+              "\nRecommendation: add `$" + a->variable().orig() + ": null` at the stylesheet root.";
+          });
         }
 
       }

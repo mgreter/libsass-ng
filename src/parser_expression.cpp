@@ -132,21 +132,23 @@ namespace Sass {
         // Has only space on the left side?
         // This is considered ambiguous
         if (isCalcSafe == 1) {
-          sass::string opstr(sass_op_separator(op));
-          sass::string instr = op == SassOperator::ADD ?
-            "the plus sign (+)" : "the minus sign (-)";
-          sass::string text = "This operation is parsed as:\n\n";
-          text += "    " + left + " " + opstr + " " + right + "\n\n";
-          text += "but you may have intended it to mean:\n\n";
-          text += "    " + left + " (" + opstr + right + ")\n\n";
-          text += "Add a space after " + instr + " to clarify that ";
-          text += "it's meant to be a binary operation, or wrap ";
-          text += "it in parentheses to make it a unary operation.";
-          text += "\nThis will be an error in future versions of Sass.\n";
-          text += "\nMore info and automated migrator: https://sass-lang.com/d/strict-unary";
           CallStackFrame frame(parser.compiler, pstate);
-          parser.compiler.addDeprecation(text,
-            opstate, Logger::WARN_NUMBER_PERCENT);
+          parser.compiler.addDeprecation(opstate,
+            Logger::WARN_NUMBER_PERCENT, [&]() {
+              sass::string opstr(sass_op_separator(op));
+              sass::string instr = op == SassOperator::ADD ?
+                "the plus sign (+)" : "the minus sign (-)";
+              sass::string text = "This operation is parsed as:\n\n";
+              text += "    " + left + " " + opstr + " " + right + "\n\n";
+              text += "but you may have intended it to mean:\n\n";
+              text += "    " + left + " (" + opstr + right + ")\n\n";
+              text += "Add a space after " + instr + " to clarify that ";
+              text += "it's meant to be a binary operation, or wrap ";
+              text += "it in parentheses to make it a unary operation.";
+              text += "\nThis will be an error in future versions of Sass.\n";
+              text += "\nMore info and automated migrator: https://sass-lang.com/d/strict-unary";
+              return text;
+            });
         }
       }
       singleExpression = SASS_MEMORY_NEW(BinaryOpExpression,

@@ -202,36 +202,44 @@ namespace Sass {
           if (!complex->isBogusStrict()) continue;
 
           if (complex->isUseless()) {
-            logger.addDeprecation("The selector \""
-              + complex + "\" is invalid CSS.\n"
-              "It will be omitted from the generated CSS.\n"
-              "This will be an error in LibSass 5.0.0.\n\n"
-              "More info: https://sass-lang.com/d/bogus-combinators",
-              complex->pstate(), Logger::WARN_SEL_USELESS);
+            logger.addDeprecation(complex->pstate(),
+              Logger::WARN_SEL_USELESS, [complex]() {
+                return "The selector \""
+                  + complex + "\" is invalid CSS.\n"
+                  "It will be omitted from the generated CSS.\n"
+                  "This will be an error in LibSass 5.0.0.\n\n"
+                  "More info: https://sass-lang.com/d/bogus-combinators";
+              });
           }
           else if (!complex->leadingCombinators().empty()) {
-            logger.addDeprecation("The selector \""
-              + complex + "\" is invalid CSS.\n"
-              "This will be an error in LibSass 5.0.0.\n\n"
-              "More info: https://sass-lang.com/d/bogus-combinators",
-              complex->pstate(), Logger::WARN_SEL_ERROR);
+            logger.addDeprecation(complex->pstate(),
+              Logger::WARN_SEL_ERROR, [complex]() {
+                return "The selector \""
+                  + complex + "\" is invalid CSS.\n"
+                  "This will be an error in LibSass 5.0.0.\n\n"
+                  "More info: https://sass-lang.com/d/bogus-combinators";
+              });
           }
           else if (complex->isBogusOtherThanLeadingCombinator()) {
-            logger.addDeprecation("The selector \"" + complex + "\" "
-              "is only valid for nesting\nIt shouldn't "
-              "have children other than style rules.\n"
-              "It will be omitted from the generated CSS.\n"
-              "This will be an error in LibSass 5.0.0.\n\n"
-              "More info: https://sass-lang.com/d/bogus-combinators",
-              complex->pstate(), Logger::WARN_SEL_BOGUS);
+            logger.addDeprecation(complex->pstate(),
+              Logger::WARN_SEL_BOGUS, [complex]() {
+                return "The selector \"" + complex + "\" "
+                  "is only valid for nesting\nIt shouldn't "
+                  "have children other than style rules.\n"
+                  "It will be omitted from the generated CSS.\n"
+                  "This will be an error in LibSass 5.0.0.\n\n"
+                  "More info: https://sass-lang.com/d/bogus-combinators";
+              });
           }
           else {
-            logger.addDeprecation("The selector \"" + complex + "\" "
-              "is only valid for nesting\nIt shouldn't "
-              "have children other than style rules.\n"
-              "This will be an error in LibSass 5.0.0.\n\n"
-              "More info: https://sass-lang.com/d/bogus-combinators",
-              complex->pstate(), Logger::WARN_SEL_BOGUS);
+            logger.addDeprecation(complex->pstate(),
+              Logger::WARN_SEL_BOGUS, [complex]() {
+                return "The selector \"" + complex + "\" "
+                  "is only valid for nesting\nIt shouldn't "
+                  "have children other than style rules.\n"
+                  "This will be an error in LibSass 5.0.0.\n\n"
+                  "More info: https://sass-lang.com/d/bogus-combinators";
+              });
           }
 
         }

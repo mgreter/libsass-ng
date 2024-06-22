@@ -74,11 +74,13 @@ namespace Sass {
     if (scanner.scanChar($at)) {
       if (scanIdentifier("else", true)) return true;
       if (scanIdentifier("elseif", true)) {
-        compiler.addDeprecation("@elseif is deprecated "
-          "and will not be supported in future Sass versions.\n"
-          "\nRecommendation: @else if",
+        compiler.addDeprecation(
           scanner.relevantSpanFrom(beforeAt.offset),
-          Logger::WARN_ELSEIF);
+          Logger::WARN_ELSEIF, []() {
+            return "@elseif is deprecated "
+              "and will not be supported in future Sass versions.\n"
+              "\nRecommendation: @else if";
+          });
         scanner.offset.column -= 2;
         scanner.position -= 2;
         return true;

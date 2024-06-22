@@ -591,11 +591,13 @@ namespace Sass {
   {
     Number* nr = sassIndex->assertNumber(logger, name);
     if (nr->hasUnits()) {
-      logger.addDeprecation("$" + name + ": "
-        "Passing a number with unit " + nr->unit2() + " is deprecated.\n"
-        "\nTo preserve current behavior: " + nr->unitSuggestion(name) + "\n"
-        "\nMore info: https://sass-lang.com/d/function-units",
-        nr->pstate(), Logger::WARN_FN_UNITS);
+      logger.addDeprecation(nr->pstate(),
+        Logger::WARN_FN_UNITS, [name, nr]() {
+          return "$" + name + ": "
+            "Passing a number with unit " + nr->unit2() + " is deprecated.\n"
+            "\nTo preserve current behavior: " + nr->unitSuggestion(name) + "\n"
+            "\nMore info: https://sass-lang.com/d/function-units";
+        });
     }
     long index = nr->assertInt(logger, name);
     if (index == 0) throw Exception::SassScriptException(
