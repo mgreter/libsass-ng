@@ -10,18 +10,58 @@
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
+  // Getting the compare operators correctly is extremly important!
+  // Otherwise we cat get undefined behavior from STL containers!
+  // These bugs are hard to debug and give no indication at all!
+  // The less than check is rather nasty to implement, and we use
+  // std::tuples to help with the common cases. Gets complicated when
+  // we have mixed objects to compare by ptr value and regular values.
+  /////////////////////////////////////////////////////////////////////////
+  // For equality operator we can also use the hash value.
+  // If the hash is not equal, the values can't be either.
+  // And use cheap pointer check to eliminate self compare.
   /////////////////////////////////////////////////////////////////////////
 
-  bool CplxSelComponent::operator==(const CplxSelComponent& rhs) const
+  bool CssParentSelector::operator< (const CssParentSelector& rhs) const
   {
-    if (combinators_ != rhs.combinators_) return false;
-    if (selector_ && rhs.selector_) return *selector_ == *rhs.selector_;
-    return selector_ == nullptr && rhs.selector_ == nullptr;
+    return false;
+  }
+
+  bool SelectorList::operator<(const SelectorList& rhs) const
+  {
+    // Do simple pointer compare first
+    if (&rhs == this) return false;
+    // Compare the whole list by ptr value
+    return std::lexicographical_compare(
+      begin(), end(), rhs.begin(), rhs.end(),
+      ObjLessThanFn<ComplexSelectorObj>);
+  }
+
+  bool ComplexSelector::operator<(const ComplexSelector& rhs) const
+  {
+    // Do simple pointer compare first
+    if (&rhs == this) return false;
+    // Compare the whole list by ptr value
+    return std::lexicographical_compare(
+      begin(), end(), rhs.begin(), rhs.end(),
+      ObjLessThanFn<CplxSelComponentObj>);
+  }
+
+  bool CompoundSelector::operator<(const CompoundSelector& rhs) const
+  {
+    // Do simple pointer compare first
+    if (&rhs == this) return false;
+    // Compare the whole list by ptr value
+    return std::lexicographical_compare(
+      begin(), end(), rhs.begin(), rhs.end(),
+      ObjLessThanFn<SimpleSelectorObj>);
   }
 
   bool CplxSelComponent::operator<(const CplxSelComponent& rhs) const
   {
+    // Do simple pointer compare first
     if (&rhs == this) return false;
+    // Check if prefix is less than right hand
     if (std::lexicographical_compare(
       combinators_.begin(), combinators_.end(),
       rhs.combinators_.begin(), rhs.combinators_.end(),
@@ -32,31 +72,40 @@ namespace Sass {
       rhs.combinators_.begin(), rhs.combinators_.end(),
       combinators_.begin(), combinators_.end(),
       ObjLessThanFn<SelectorCombinatorObj>)) return false;
+    // Prefix proved to be equal, now go for the tie
     return ObjLessThanFn(selector_, rhs.selector_);
   }
 
-  bool SelectorList::operator<(const SelectorList& rhs) const
+  bool PseudoSelector::operator<(const PseudoSelector& rhs) const
   {
+    // Do simple pointer compare first
     if (&rhs == this) return false;
-    return std::lexicographical_compare(
-      begin(), end(), rhs.begin(), rhs.end(),
-      ObjLessThanFn<ComplexSelectorObj>);
+    // Check if prefix is less than right hand
+    if (std::tie(name_, argument_, isClass_)
+      < std::tie(rhs.name_, rhs.argument_, rhs.isClass_)) return true;
+    // Check if prefix is equal to right hand
+    // We already know it is now less than ...
+    if (std::tie(name_, argument_, isClass_)
+      < std::tie(rhs.name_, rhs.argument_, rhs.isClass_)) return false;
+    // Prefix proved to be equal, now go for the tie
+    return ObjLessThanFn(selector_, rhs.selector_);
   }
 
-  bool ComplexSelector::operator<(const ComplexSelector& rhs) const
+  bool AttributeSelector::operator<(const AttributeSelector& rhs) const
   {
+    // Do simple pointer compare first
     if (&rhs == this) return false;
-    return std::lexicographical_compare(
-      begin(), end(), rhs.begin(), rhs.end(),
-      ObjLessThanFn<CplxSelComponentObj>);
+    // Compare the set of values via tupple
+    return std::tie(ns_, hasNs_, name_, value_, op_, modifier_)
+      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_, rhs.value_, rhs.op_, rhs.modifier_);
   }
 
-  bool CompoundSelector::operator<(const CompoundSelector& rhs) const
+  bool TypeSelector::operator<(const TypeSelector& rhs) const
   {
+    // Do simple pointer compare first
     if (&rhs == this) return false;
-    return std::lexicographical_compare(
-      begin(), end(), rhs.begin(), rhs.end(),
-      ObjLessThanFn<SimpleSelectorObj>);
+    return std::tie(ns_, hasNs_, name_)
+      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
   }
 
   bool IDSelector::operator<(const IDSelector& rhs) const
@@ -66,20 +115,12 @@ namespace Sass {
     return name() < rhs.name();
   }
 
-  bool TypeSelector::operator<(const TypeSelector& rhs) const
-  {
-    if (&rhs == this) return false;
-    return std::tie(ns_, hasNs_, name_)
-      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
-  }
-
   bool PlaceholderSelector::operator<(const PlaceholderSelector& rhs) const
   {
     if (&rhs == this) return false;
     // Placeholder has no namespace
     return name() < rhs.name();
   }
-
 
   bool ClassSelector::operator<(const ClassSelector& rhs) const
   {
@@ -91,6 +132,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // CSS Parent selectors have no distinction feature
+  bool CssParentSelector::operator== (const CssParentSelector& rhs) const
+  {
+    return true;
+  }
+
   bool SelectorList::operator== (const SelectorList& rhs) const
   {
     if (&rhs == this) return true;
@@ -101,11 +148,10 @@ namespace Sass {
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
       if (hash() != rhs.hash()) return false;
-    for (size_t i = 0; i < len; i += 1) {
-      if (get(i)->hash() != rhs.get(i)->hash()) return false;
-      if (!(*get(i) == *rhs.get(i))) return false;
-    }
-    return true;
+    // Compare the whole list by ptr value
+    return std::equal(
+      begin(), end(), rhs.begin(),
+      ObjEqualityFn<ComplexSelectorObj>);
   }
 
   bool ComplexSelector::operator== (const ComplexSelector& rhs) const
@@ -118,10 +164,10 @@ namespace Sass {
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
       if (hash() != rhs.hash()) return false;
-    for (size_t i = 0; i < len; i += 1) {
-      if (!(*get(i) == *rhs.get(i))) return false;
-    }
-    return true;
+    // Compare the whole list by ptr value
+    return std::equal(
+      begin(), end(), rhs.begin(),
+      ObjEqualityFn<CplxSelComponentObj>);
   }
 
   bool CompoundSelector::operator== (const CompoundSelector& rhs) const
@@ -134,12 +180,42 @@ namespace Sass {
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
       if (hash() != rhs.hash()) return false;
-    for (size_t i = 0; i < len; i += 1) {
-      if (get(i)->hash() != rhs.get(i)->hash()) return false;
-      if (!(*get(i) == *rhs.get(i))) return false;
-    }
-    return true;
+    // Compare the whole list by ptr value
+    return std::equal(
+      begin(), end(), rhs.begin(),
+      ObjEqualityFn<SimpleSelectorObj>);
   }
+
+  bool CplxSelComponent::operator==(const CplxSelComponent& rhs) const
+  {
+    if (&rhs == this) return true;
+    // Check if prefix is different
+    if (!std::equal(
+      combinators_.begin(),
+      combinators_.end(),
+      rhs.combinators_.begin(),
+      ObjEqualityFn<SelectorCombinatorObj>)) return false;
+    // Prefix proved to be equal, now go for the tie
+    return ObjEqualityFn(selector_, rhs.selector_);
+  }
+
+  bool PseudoSelector::operator== (const PseudoSelector& rhs) const
+  {
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
+    // Check if prefix is now equal to right hand
+    if (std::tie(rhs.name_, rhs.argument_, rhs.isClass_)
+      != std::tie(name_, argument_, isClass_)) return false;
+    // Prefix proved to be equal, now go for the tie
+    return ObjEqualityFn(selector_, rhs.selector_);
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
 
   bool IDSelector::operator== (const IDSelector& rhs) const
   {
@@ -187,23 +263,6 @@ namespace Sass {
     return name() == rhs.name();
   }
 
-  bool AttributeSelector::operator<(const AttributeSelector& rhs) const
-  {
-    if (&rhs == this) return false;
-    return std::tie(ns_, hasNs_, name_, value_, op_, modifier_)
-      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_, rhs.value_, rhs.op_, rhs.modifier_);
-  }
-
-  bool PseudoSelector::operator<(const PseudoSelector& rhs) const
-  {
-    if (&rhs == this) return false;
-    return std::tie(name_, argument_, isClass_)
-      < std::tie(rhs.name_, rhs.argument_, rhs.isClass_)
-      || (!(std::tie(rhs.name_, rhs.argument_, rhs.isClass_)
-          < std::tie(name_, argument_, isClass_))
-          && ObjLessThanFn(selector_, rhs.selector_));
-  }
-
   bool AttributeSelector::operator== (const AttributeSelector& rhs) const
   {
     if (&rhs == this) return true;
@@ -218,29 +277,6 @@ namespace Sass {
       && modifier() == rhs.modifier();
   }
 
-  bool PseudoSelector::operator== (const PseudoSelector& rhs) const
-  {
-    if (&rhs == this) return true;
-    #ifndef SASS_FORCE_CMP_HASH
-    if (hashed() != 0 && rhs.hashed() != 0)
-    #endif
-      if (hash() != rhs.hash()) return false;
-    return name() == rhs.name()
-      && argument() == rhs.argument()
-      && isClass() == rhs.isClass()
-      && ObjEquality()(selector(), rhs.selector());
-  }
-
-  // CSS Parent selectors have no distinction feature
-  bool CssParentSelector::operator== (const CssParentSelector& rhs) const
-  {
-    return true;
-  }
-
-  bool CssParentSelector::operator< (const CssParentSelector& rhs) const
-  {
-    return false;
-  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
