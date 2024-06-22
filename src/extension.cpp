@@ -93,7 +93,9 @@ namespace Sass {
     specificity(0),
     isOptional(false),
     isOriginal(false),
-    isConsumed(false)
+    isConsumed(false),
+    mediaContext({}),
+    merged({})
   {
     // std::cerr << "CREATED NEW " << this << "\n";
   }
