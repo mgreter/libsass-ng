@@ -47,7 +47,7 @@ namespace Sass {
   Extension::Extension(
     const SourceSpan& pstate,
     ComplexSelectorObj& extender,
-    const SimpleSelectorObj& target,
+    SimpleSelector* target,
     CssMediaQueryVector* mediaContext,
     bool isOriginal, bool isOptional) :
     pstate(pstate),
