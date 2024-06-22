@@ -479,10 +479,10 @@ namespace Sass {
         continue;
       }
       CssMediaQueryVector* mediaContext = extension->mediaContext;
-      if (mediaContext == nullptr) {
-        std::cerr << "WHAT THE 3\n";
-        continue;
-      }
+      // if (mediaContext == nullptr) {
+      //   std::cerr << "WHAT THE 3\n";
+      //   continue;
+      // }
 
       // Get all registered extensions for this (SimpleSelector) target
       ExtSelExtMapEntry& sources = extensionsBySimpleSelector[target];
