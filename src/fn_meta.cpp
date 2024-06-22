@@ -124,11 +124,12 @@ namespace Sass {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
         auto parent = compiler.getCurrentModule();
+        EnvKey name(variable->value());
         if (plugin != nullptr) {
           auto pp = parent->module->moduse.find(plugin->value());
           if (pp != parent->module->moduse.end()) {
             EnvRefs* module = pp->second.first;
-            auto it = module->varIdxs.find(variable->value());
+            auto it = module->varIdxs.find(name);
             return SASS_MEMORY_NEW(Boolean, pstate,
               it != module->varIdxs.end());
           }
@@ -140,7 +141,7 @@ namespace Sass {
         }
         bool hasVar = false;
         for (auto& global : parent->forwards) {
-          if (global->varIdxs.count(variable->value()) != 0) {
+          if (global->varIdxs.count(name) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
                 "This variable is available from multiple global modules.");
@@ -149,7 +150,7 @@ namespace Sass {
           }
         }
         if (hasVar) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        EnvRef vidx = compiler.varRoot.findVarIdx(variable->value(), "", true);
+        EnvRef vidx = compiler.varRoot.findVarIdx(name, "", true);
         if (!vidx.isValid()) return SASS_MEMORY_NEW(Boolean, pstate, false);
         auto& var = compiler.varRoot.getVariable(vidx);
         return SASS_MEMORY_NEW(Boolean, pstate, !var.isNull());
@@ -161,12 +162,13 @@ namespace Sass {
       static BUILT_IN_FN(variableExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
-        EnvRef vidx = compiler.varRoot.findVarIdx(variable->value(), "");
+        EnvKey name(variable->value());
+        EnvRef vidx = compiler.varRoot.findVarIdx(name, "");
 
         bool hasVar = false;
         auto parent = compiler.getCurrentModule();
         for (auto& global : parent->forwards) {
-          if (global->varIdxs.count(variable->value()) != 0) {
+          if (global->varIdxs.count(name) != 0) {
             if (hasVar) {
               throw Exception::RuntimeException(compiler,
                 "This variable is available from multiple global modules.");
@@ -187,11 +189,12 @@ namespace Sass {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
         auto parent = compiler.getCurrentModule();
+        EnvKey name(variable->value());
         if (plugin != nullptr) {
           auto pp = parent->module->moduse.find(plugin->value());
           if (pp != parent->module->moduse.end()) {
             EnvRefs* module = pp->second.first;
-            auto it = module->fnIdxs.find(variable->value());
+            auto it = module->fnIdxs.find(name);
             return SASS_MEMORY_NEW(Boolean, pstate,
               it != module->fnIdxs.end());
           }
@@ -203,7 +206,7 @@ namespace Sass {
         }
         bool hasFn = false;
         for (auto& global : parent->forwards) {
-          if (global->fnIdxs.count(variable->value()) != 0) {
+          if (global->fnIdxs.count(name) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
                 "This function is available from multiple global modules.");
@@ -212,7 +215,7 @@ namespace Sass {
           }
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
-        EnvRef fidx = compiler.varRoot.findFnIdx(variable->value(), "");
+        EnvRef fidx = compiler.varRoot.findFnIdx(name, "");
         return SASS_MEMORY_NEW(Boolean, pstate, fidx.isValid());
       }
 
@@ -222,13 +225,14 @@ namespace Sass {
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
         String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
+        EnvKey name(variable->value());
 
         auto parent = compiler.getCurrentModule();
         if (plugin != nullptr) {
           auto pp = parent->module->moduse.find(plugin->value());
           if (pp != parent->module->moduse.end()) {
             EnvRefs* module = pp->second.first;
-            auto it = module->mixIdxs.find(variable->value());
+            auto it = module->mixIdxs.find(name);
             return SASS_MEMORY_NEW(Boolean, pstate,
               it != module->mixIdxs.end());
           }
@@ -240,7 +244,7 @@ namespace Sass {
         }
         bool hasFn = false;
         for (auto& global : parent->forwards) {
-          if (global->mixIdxs.count(variable->value()) != 0) {
+          if (global->mixIdxs.count(name) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
                 "This function is available from multiple global modules.");
@@ -250,7 +254,7 @@ namespace Sass {
         }
         if (hasFn) return SASS_MEMORY_NEW(Boolean, pstate, true);
 
-        auto midx = compiler.varRoot.findMixIdx(variable->value(), "");
+        auto midx = compiler.varRoot.findMixIdx(name, "");
         return SASS_MEMORY_NEW(Boolean, pstate, midx.isValid());
       }
 
