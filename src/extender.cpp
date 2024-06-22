@@ -554,8 +554,11 @@ namespace Sass {
     const ExtListSelSet& selectors,
     const ExtSelExtMap& newExtensions)
   {
+    // register may extend what we iterate
+    // sass::vector<SelectorList*> copy(
+    //   selectors.begin(), selectors.end());
     // Is a modifyableCssStyleRUle in dart sass
-    for (const SelectorListObj& selector : selectors) {
+    for (SelectorList* selector : selectors) {
       CssMediaQueryVector* mediaContext = nullptr;
       auto it = mediaContexts.find(selector);
       if (it != mediaContexts.end()) {
