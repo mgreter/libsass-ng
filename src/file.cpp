@@ -130,16 +130,14 @@ namespace Sass {
         if (rv > 32767) throw Exception::OperationError("Path is too long");
         if (rv == 0) throw Exception::OperationError("Path could not be resolved");
         DWORD dwAttrib = GetFileAttributesW(resolved.get()); // was 3%
-        bool result = (dwAttrib != INVALID_FILE_ATTRIBUTES
+        return cache[abspath] = (dwAttrib != INVALID_FILE_ATTRIBUTES
           && (!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY)));
       #else
         struct stat st_buf;
         // euidaccess might be faster
-        bool result = (stat (abspath.c_str(), &st_buf) == 0)
+        return cache[abspath] = (stat (abspath.c_str(), &st_buf) == 0)
           && (!S_ISDIR (st_buf.st_mode));
       #endif
-      cache[abspath] = result;
-      return result;
     }
 
     // return if given path is absolute

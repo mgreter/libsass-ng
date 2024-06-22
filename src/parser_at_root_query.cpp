@@ -33,7 +33,7 @@ namespace Sass {
     scanner.expectChar($colon);
     scanWhitespace();
 
-    StringSet atRules;
+    sass::stringset atRules;
     do {
       sass::string ident(readIdentifier());
       StringUtils::makeLowerCase(ident);

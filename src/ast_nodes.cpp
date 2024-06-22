@@ -728,7 +728,7 @@ namespace Sass {
 
   AtRootQuery::AtRootQuery(
     SourceSpan&& pstate,
-    StringSet&& names,
+    sass::stringset&& names,
     bool include) :
     AstNode(std::move(pstate)),
     names_(std::move(names)),
@@ -788,7 +788,7 @@ namespace Sass {
   // The default at-root query, which excludes only style rules.
   AtRootQuery* AtRootQuery::defaultQuery(SourceSpan&& pstate)
   {
-    StringSet wihtoutStyleRule;
+    sass::stringset wihtoutStyleRule;
     wihtoutStyleRule.insert("rule");
     return SASS_MEMORY_NEW(AtRootQuery, std::move(pstate),
       std::move(wihtoutStyleRule), false);

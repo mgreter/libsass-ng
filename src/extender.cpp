@@ -477,7 +477,7 @@ namespace Sass {
         std::cerr << "WHAT THE 3\n";
         continue;
       }
-      const SimpleSelectorObj& target = extension->target;
+      SimpleSelectorObj& target = extension->target;
       if (target == nullptr) {
         std::cerr << "WHAT THE 2\n";
         continue;

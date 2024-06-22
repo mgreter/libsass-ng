@@ -350,7 +350,6 @@ namespace Sass {
   typedef sass::vector<PseudoSelectorObj> PseudoSelectors;
   typedef sass::vector<StatementObj> StatementVector;
   typedef sass::vector<ExpressionObj> ExpressionVector;
-  typedef std::unordered_set<sass::string> StringSet;
 
   class CssMediaQueryVector : public sass::vector<CssMediaQueryObj>, public RefCounted {
   public:

@@ -89,6 +89,7 @@ namespace Sass {
 
   Extension::Extension() :
     extender(SourceSpan::internal32("Ext"), {}, 0, false),
+    target({}),
     specificity(0),
     isOptional(false),
     isOriginal(false),

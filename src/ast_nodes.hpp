@@ -13,6 +13,7 @@
 #include "visitor_expression.hpp"
 #include "environment_key.hpp"
 #include "environment_cnt.hpp"
+#include "containers.hpp"
 
 namespace Sass {
 
@@ -662,7 +663,7 @@ namespace Sass {
     // The names of the rules included or excluded by this query. There are 
     // two special names. "all" indicates that all rules are included or
     // excluded, and "rule" indicates style rules are included or excluded.
-    ADD_CONSTREF(StringSet, names);
+    ADD_CONSTREF(sass::stringset, names);
     // Whether the query includes or excludes rules with the specified names.
     ADD_CONSTREF(bool, include);
 
@@ -671,7 +672,7 @@ namespace Sass {
     // Value constructor
     AtRootQuery(
       SourceSpan&& pstate,
-      StringSet&& names,
+      sass::stringset&& names,
       bool include);
 
     // Whether this includes or excludes *all* rules.
