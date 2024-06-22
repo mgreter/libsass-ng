@@ -628,6 +628,7 @@ namespace Sass {
         String* ns = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
 
         CallableObj callable;
+        EnvKey varkey(name->value());
 
         auto parent = compiler.getCurrentModule();
 
@@ -635,7 +636,7 @@ namespace Sass {
           auto pp = parent->module->moduse.find(ns->value());
           if (pp != parent->module->moduse.end()) {
             EnvRefs* module = pp->second.first;
-            auto it = module->mixIdxs.find(name->value());
+            auto it = module->mixIdxs.find(varkey);
             if (it != module->mixIdxs.end()) {
               EnvRef fidx({ module, it->second });
               callable = compiler.varRoot.getMixin(fidx);
@@ -648,12 +649,12 @@ namespace Sass {
         }
         else {
 
-          callable = _getMixin(name->value(), compiler);
+          callable = _getMixin(varkey, compiler);
 
           if (!callable) {
 
             for (auto global : parent->forwards) {
-              auto it = global->mixIdxs.find(name->value());
+              auto it = global->mixIdxs.find(varkey);
               if (it != global->mixIdxs.end()) {
                 if (callable) {
                   throw Exception::RuntimeException(compiler,
