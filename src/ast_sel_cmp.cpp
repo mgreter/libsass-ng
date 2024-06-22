@@ -25,10 +25,9 @@ namespace Sass {
     return std::lexicographical_compare(
       combinators_.begin(), combinators_.end(),
       rhs.combinators_.begin(), rhs.combinators_.end(),
-      [](const SelectorCombinatorObj& a, const SelectorCombinatorObj& b) {
-        return ObjLessThanFn(a, b);
-      }) ||
-      ObjLessThanFn(selector_, rhs.selector_);
+      ObjLessThanFn<SelectorCombinatorObj>)
+    || (combinators_ == rhs.combinators_ &&
+      ObjLessThanFn(selector_, rhs.selector_));
   }
 
   bool SelectorList::operator<(const SelectorList& rhs) const
@@ -36,9 +35,7 @@ namespace Sass {
     if (&rhs == this) return false;
     return std::lexicographical_compare(
       begin(), end(), rhs.begin(), rhs.end(),
-      [](const ComplexSelectorObj& a, const ComplexSelectorObj& b) {
-        return ObjLessThanFn(a, b);
-      });
+      ObjLessThanFn<ComplexSelectorObj>);
   }
 
   bool ComplexSelector::operator<(const ComplexSelector& rhs) const
@@ -46,9 +43,7 @@ namespace Sass {
     if (&rhs == this) return false;
     return std::lexicographical_compare(
       begin(), end(), rhs.begin(), rhs.end(),
-      [](const CplxSelComponentObj& a, const CplxSelComponentObj& b) {
-        return ObjLessThanFn(a, b);
-      });
+      ObjLessThanFn<CplxSelComponentObj>);
   }
 
   bool CompoundSelector::operator<(const CompoundSelector& rhs) const
@@ -56,15 +51,35 @@ namespace Sass {
     if (&rhs == this) return false;
     return std::lexicographical_compare(
       begin(), end(), rhs.begin(), rhs.end(),
-      [](const SimpleSelectorObj& a, const SimpleSelectorObj& b) {
-        return ObjLessThanFn(a, b);
-      });
+      ObjLessThanFn<SimpleSelectorObj>);
   }
 
   bool IDSelector::operator<(const IDSelector& rhs) const
   {
     if (&rhs == this) return false;
     // ID has no namespace
+    return name() < rhs.name();
+  }
+
+  bool TypeSelector::operator<(const TypeSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    return std::tie(ns_, hasNs_, name_)
+      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
+  }
+
+  bool PlaceholderSelector::operator<(const PlaceholderSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    // Placeholder has no namespace
+    return name() < rhs.name();
+  }
+
+
+  bool ClassSelector::operator<(const ClassSelector& rhs) const
+  {
+    if (&rhs == this) return false;
+    // Class has no namespace
     return name() < rhs.name();
   }
 
@@ -144,29 +159,6 @@ namespace Sass {
       hasNs_ == rhs.hasNs_ &&
       name_ == rhs.name_;
   }
-
-  bool TypeSelector::operator<(const TypeSelector& rhs) const
-  {
-    if (&rhs == this) return false;
-    return std::tie(ns_, hasNs_, name_)
-      < std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
-  }
-
-  bool PlaceholderSelector::operator<(const PlaceholderSelector& rhs) const
-  {
-    if (&rhs == this) return false;
-    // Placeholder has no namespace
-    return name() < rhs.name();
-  }
-
-
-  bool ClassSelector::operator<(const ClassSelector& rhs) const
-  {
-    if (&rhs == this) return false;
-    // Class has no namespace
-    return name() < rhs.name();
-  }
-
 
   bool ClassSelector::operator== (const ClassSelector& rhs) const
   {

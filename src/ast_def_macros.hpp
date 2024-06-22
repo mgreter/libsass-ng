@@ -133,9 +133,8 @@ private:
       return sel ? *this == *sel : false; \
     } \
     public: bool operator<(const subklass& rhs) const override final { \
-      return typeid(rhs).before(typeid(*this)) || ( \
-        typeid(rhs) != typeid(*this) && \
-          *this < *rhs.isa##klass()); \
+      auto sel = rhs.isa##klass(); \
+      return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
     } \
     public: bool operator==(const klass& rhs) const; \
     public: bool operator<(const klass& rhs) const; \
