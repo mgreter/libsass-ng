@@ -350,6 +350,7 @@ namespace Sass {
   typedef sass::vector<PseudoSelectorObj> PseudoSelectors;
   typedef sass::vector<StatementObj> StatementVector;
   typedef sass::vector<ExpressionObj> ExpressionVector;
+  typedef sass::vector<EnvKey> EnvKeys;
 
   class CssMediaQueryVector : public sass::vector<CssMediaQueryObj>, public RefCounted {
   public:

@@ -484,7 +484,7 @@ namespace Sass {
     sass::vector<WithConfigVar> withConfigs;
 
     if (hasWith) {
-      sass::flatmap::env<EnvKey, ValueObj, 0> config;
+      sass::flatmap::env<EnvKey, ValueObj> config;
       config.reserve(withMap->elements().size());
       for (auto& kv : withMap->elements()) {
         String* name = kv.first->assertString(compiler, "with key");
