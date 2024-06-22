@@ -416,8 +416,10 @@ namespace Sass {
     if (existingExtensions != extensionsByExtender.end()) {
       if (hasExistingExtensions && !existingExtensions->second.empty()) {
         // Seems only relevant for sass 4.0 modules
+
         ExtSelExtMap additionalExtensions = _extendExistingExtensions(
           existingExtensions->second, newExtensionsByTarget);
+
         // Seems only relevant for sass 4.0 modules
         if (!additionalExtensions.empty()) {
           mapAddAllNested(newExtensionsByTarget, additionalExtensions);
@@ -466,9 +468,21 @@ namespace Sass {
     for (size_t i = 0, iL = oldExtensions.size(); i < iL; i += 1) {
 
       Extension* extension = oldExtensions[i];
+      if (extension == nullptr) {
+        std::cerr << "WHAT THE 1\n";
+        continue;
+      }
       Extender& extender = extension->extender;
       SimpleSelector* target = extension->target;
+      if (target == nullptr) {
+        std::cerr << "WHAT THE 2\n";
+        continue;
+      }
       CssMediaQueryVector* mediaContext = extension->mediaContext;
+      if (mediaContext == nullptr) {
+        std::cerr << "WHAT THE 3\n";
+        continue;
+      }
 
       // Get all registered extensions for this (SimpleSelector) target
       ExtSelExtMapEntry& sources = extensionsBySimpleSelector[target];

@@ -639,6 +639,7 @@ namespace Sass {
   // single list. If there are no combinators to be merged, returns an
   // empty list. If the sequences can't be merged, returns `null`.
   /////////////////////////////////////////////////////////////////////////
+  /*
   static bool mergeFinalCombinators(
     CplxSelComponentVector& components1,
     CplxSelComponentVector& components2,
@@ -703,7 +704,7 @@ namespace Sass {
 
   }
   // EO mergeFinalCombinators
-
+  */
 
   ComplexSelectors weaveParents(
     ComplexSelector* prefix, ComplexSelector* base)
