@@ -13,16 +13,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////#
   /////////////////////////////////////////////////////////////////////////#
 
-  template <typename T>
-  class Equatable
+  template <typename T> class Equatable
   {
   public:
     virtual bool operator==(const T& rhs) const = 0;
     bool operator!=(const T& rhs) const { return !(*this == rhs); }
   };
 
-  template <typename T>
-  class Comparable
+  template <typename T> class Comparable
   {
   public:
     virtual bool operator<(const T& rhs) const = 0;
@@ -31,40 +29,21 @@ namespace Sass {
     bool operator>=(const T& rhs) const { return !(*this < rhs); }
   };
 
-  template <typename T, typename B>
-  class EquatableBase
-  {
-  public:
-    bool operator==(const B& rhs) const {
-      std::cerr << "this is called\n";
-      if (const T& up = dynamic_cast<T&>(rhs)) {
-        return this == up;
-      }
-      return typeid(this) == typeid(rhs);
-    }
-    bool operator!=(const T& rhs) const { return !(*this == rhs); }
-  };
-
-  template <typename T, typename B>
-  class ComparableBase
-  {
-  public:
-    bool operator<(const B& rhs) const {
-      std::cerr << "this is called\n";
-      if (const T& up = dynamic_cast<T&>(rhs)) {
-        return this < up;
-      }
-      return typeid(this).before(rhs);
-    }
-    bool operator>(const T& rhs) const { return rhs < *this; }
-    bool operator<=(const T& rhs) const { return !(rhs < *this); }
-    bool operator>=(const T& rhs) const { return !(*this < rhs); }
-  };
+  /////////////////////////////////////////////////////////////////////////#
+  /////////////////////////////////////////////////////////////////////////#
 
   class HashCodeProvider {
+
+    // Implement hash functionality
+    virtual size_t hash() const = 0;
+
   };
 
-  class Hashable {
+  // Interface for base class
+  // Provides cached hashing
+  // Requires `hash()` method
+  class Hashable : public HashCodeProvider
+  {
 
   public:
 
@@ -79,9 +58,6 @@ namespace Sass {
     // Returns zero if not yet hashed
     // Useful to speed up comparisons
     size_t hashed() const { return hash_; }
-
-    // Implement hash functionality
-    virtual size_t hash() const = 0;
 
   };
 
@@ -98,9 +74,7 @@ namespace Sass {
   }
 
   static inline size_t hasher(void* ptr) {
-    static const uint64_t SEED = getHashSeed();
-    static const std::hash<void*> ptrHasher;
-    return splitmix64(ptrHasher(ptr) + SEED);
+    return splitmix64(std::hash<void*>{}(ptr) + getHashSeed());
   }
 
   template <class T>

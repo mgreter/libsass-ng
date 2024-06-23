@@ -22,18 +22,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // This should be thread-safe
-  // static std::hash<void*> ptrHasher;
-  static std::hash<bool> boolHasher;
-  //static std::hash<double> doubleHasher;
-  static std::hash<SassFnSig> fnHasher;
-  //static std::hash<std::size_t> sizetHasher;
-  static std::hash<sass::string> stringHasher;
-  static std::hash<SassFunctionLambda> lambdaHasher;
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   BuiltInCallable::BuiltInCallable(
     const EnvKey& envkey,
     CallableSignature* signature,
@@ -70,8 +58,8 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(BuiltInCallable).hash_code());
-      hash_combine(hash_, stringHasher(envkey_.norm()));
-      hash_combine(hash_, fnHasher(function_.second));
+      hash_combine(hash_, envkey_.norm());
+      hash_combine(hash_, std::hash<SassFnSig>{}(function_.second));
       hash_combine(hash_, function_.first->hash());
     }
     return hash_;
@@ -123,9 +111,9 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(BuiltInCallables).hash_code());
-      hash_combine(hash_, stringHasher(envkey_.norm()));
+      hash_combine(hash_, envkey_.norm());
       for (const SassFnPair& pair : overloads_) {
-        hash_combine(hash_, fnHasher(pair.second));
+        hash_combine(hash_, std::hash<SassFnSig>{}(pair.second));
         hash_combine(hash_, pair.first->hash());
       }
     }
@@ -161,8 +149,8 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(UserDefinedCallable).hash_code());
-      hash_combine(hash_, stringHasher(envkey_.norm()));
-      hash_combine(hash_, hasher(declaration_.ptr()));
+      hash_combine(hash_, envkey_.norm());
+      hash_combine(hash_, std::hash<void*>{}(declaration_.ptr()));
     }
     return hash_;
   }
@@ -195,10 +183,10 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(ExternalCallable).hash_code());
-      hash_combine(hash_, stringHasher(envkey_.norm()));
-      hash_combine(hash_, hasher(declaration_));
-      hash_combine(hash_, lambdaHasher(lambda_));
-      hash_combine(hash_, hasher(cookie_));
+      hash_combine(hash_, envkey_.norm());
+      hash_combine(hash_, declaration_->hash());
+      hash_combine(hash_, std::hash<SassFunctionLambda>{}(lambda_));
+      hash_combine(hash_, std::hash<void*>{}(cookie_));
     }
     return hash_;
   }
@@ -346,12 +334,12 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(CallableSignature).hash_code());
-      hash_combine(hash_, stringHasher(restArg_.norm()));
+      hash_combine(hash_, restArg_.norm());
       for (const Argument* param : arguments_) {
         if (param == nullptr) continue;
-        hash_combine(hash_, stringHasher(param->name().norm()));
-        hash_combine(hash_, boolHasher(param->is_rest_argument()));
-        hash_combine(hash_, boolHasher(param->is_keyword_argument()));
+        hash_combine(hash_, param->name().norm());
+        hash_combine(hash_, param->is_rest_argument());
+        hash_combine(hash_, param->is_keyword_argument());
       }
     }
     return hash_;
@@ -489,7 +477,7 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(PlainCssCallable).hash_code());
-      hash_combine(hash_, stringHasher(envkey_.norm()));
+      hash_combine(hash_, envkey_.norm());
     }
     return hash_;
   }

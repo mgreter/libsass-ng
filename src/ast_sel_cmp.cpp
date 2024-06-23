@@ -5,7 +5,6 @@
 /*****************************************************************************/
 #include "ast_selectors.hpp"
 #include "ast_statements.hpp"
-#include "callstack.hpp"
 
 namespace Sass {
 
@@ -180,16 +179,39 @@ namespace Sass {
 
   size_t CplxSelComponent::hash() const
   {
-size_t hash_ = 0;
     if (hash_ == 0) {
       hash_start(hash_, typeid(this).hash_code());
-      //for (const auto& combinator : combinators_) {
-      //  hash_combine(hash_, combinator);
-      //}
+      for (const auto& combinator : combinators_) {
+        hash_combine(hash_, combinator->hash());
+      }
     }
     return hash_;
   }
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  bool SelectorCombinator::operator==(const SelectorCombinator& rhs) const
+  {
+    if (&rhs == this) return true;
+    return combinator_ == rhs.combinator_;
+  }
+
+  bool SelectorCombinator::operator<(const SelectorCombinator& rhs) const
+  {
+    if (&rhs == this) return false;
+    return combinator_ < rhs.combinator_;
+  }
+
+  size_t SelectorCombinator::hash() const
+  {
+    switch (combinator_) {
+    case CHILD: return size_t(2329817243) + getHashSeed();
+    case FOLLOWING: return size_t(24768578) + getHashSeed();
+    case SIBLING: return size_t(2387651244) + getHashSeed();
+    default: return size_t(7345484764) + getHashSeed();
+    }
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -201,8 +223,8 @@ size_t hash_ = 0;
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
       if (hash() != rhs.hash()) return false;
-    // Check if prefix is different
-    if (std::tie(rhs.name_, rhs.argument_, rhs.isClass_) != // no isSyntacticClass
+    // Check if prefix is different (without isSyntacticClass)
+    if (std::tie(rhs.name_, rhs.argument_, rhs.isClass_) != 
       std::tie(name_, argument_, isClass_)) return false;
     // Prefix proved to be equal, now go for the tie
     return ObjEqualityFn(selector(), rhs.selector());
@@ -217,8 +239,8 @@ size_t hash_ = 0;
       std::tie(rhs.name_, rhs.argument_, rhs.isClass_)) return true;
     // Check if prefix is equal to right hand
     // We already know it is now less than ...
-    if (std::tie(rhs.name_, rhs.argument_, rhs.isClass_)
-      < std::tie(name_, argument_, isClass_)) return false;
+    if (std::tie(rhs.name_, rhs.argument_, rhs.isClass_) <
+      std::tie(name_, argument_, isClass_)) return false;
     // Prefix proved to be equal, now go for the tie
     return ObjLessThanFn(selector_, rhs.selector_);
   }
@@ -237,6 +259,7 @@ size_t hash_ = 0;
   }
 
   /////////////////////////////////////////////////////////////////////////
+  // Could re-use "some" code from SelectorNS, but implement fully
   /////////////////////////////////////////////////////////////////////////
 
   bool AttributeSelector::operator==(const AttributeSelector& rhs) const
@@ -276,92 +299,8 @@ size_t hash_ = 0;
   }
 
   /////////////////////////////////////////////////////////////////////////
+  // Could re-use code from SelectorNS, but implement fully
   /////////////////////////////////////////////////////////////////////////
-
-  bool SelectorNS::operator==(const SelectorNS& rhs) const
-  {
-    // Do simple pointer compare first
-    if (&rhs == this) return false;
-    // Compare the set of values via tupple
-    return std::tie(ns_, hasNs_, name_) ==
-      std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
-  }
-
-  bool SelectorNS::operator<(const SelectorNS& rhs) const
-  {
-    // Do simple pointer compare first
-    if (&rhs == this) return false;
-    // Compare the set of values via tupple
-    return std::tie(ns_, hasNs_, name_) <
-      std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
-  }
-
-  size_t SelectorNS::hash() const
-  {
-    if (hash_ == 0) {
-      hash_start(hash_, typeid(this).hash_code());
-      hash_combine(hash_, SimpleSelector::hash());
-      hash_combine(hash_, (name_));
-      hash_combine(hash_, (hasNs_));
-      hash_combine(hash_, (ns_));
-    }
-    return hash_;
-  }
-
-  bool SimpleSelector::operator==(const SimpleSelector& rhs) const
-  {
-    if (&rhs == this) return true;
-    #ifndef SASS_FORCE_CMP_HASH
-    if (hashed() != 0 && rhs.hashed() != 0)
-    #endif
-      if (hash() != rhs.hash()) return false;
-    // ID has no namespace
-    return name() == rhs.name();
-  }
-  
-  bool SimpleSelector::operator<(const SimpleSelector& rhs) const
-  {
-    if (&rhs == this) return false;
-    // ID has no namespace
-    return name() < rhs.name();
-  }
-
-  size_t SimpleSelector::hash() const
-  {
-    if (hash_ == 0) {
-      hash_start(hash_, typeid(this).hash_code());
-      hash_combine(hash_, name_);
-    }
-    return hash_;
-  }
-
-  bool TypeSelector::operator<(const TypeSelector& rhs) const
-  {
-    // Do simple pointer compare first
-    if (&rhs == this) return false;
-    return std::tie(ns_, hasNs_, name_) <
-      std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
-  }
-
-
-
-  bool CssParentSelector::operator< (const CssParentSelector& rhs) const
-  {
-    return false;
-  }
-
-
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  // CSS Parent selectors have no distinction feature
-  bool CssParentSelector::operator==(const CssParentSelector& rhs) const
-  {
-    return true;
-  }
-
-
 
   bool TypeSelector::operator==(const TypeSelector& rhs) const
   {
@@ -375,35 +314,208 @@ size_t hash_ = 0;
       std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
   }
 
+  bool TypeSelector::operator<(const TypeSelector& rhs) const
+  {
+    // Do simple pointer compare first
+    if (&rhs == this) return false;
+    return std::tie(ns_, hasNs_, name_) <
+      std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
+  }
+
+  size_t TypeSelector::hash() const
+  {
+    if (hash_ == 0) {
+      hash_start(hash_, typeid(this).hash_code());
+      hash_combine(hash_, ns_);
+      hash_combine(hash_, hasNs_);
+      hash_combine(hash_, name_);
+    }
+    return hash_;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // Could re-use code from SimpleSelector, but implement fully
+  /////////////////////////////////////////////////////////////////////////
+
   bool IDSelector::operator==(const IDSelector& rhs) const
   {
-    return SimpleSelector::operator==(rhs);
-  }
-
-  bool ClassSelector::operator==(const ClassSelector& rhs) const
-  {
-    return SimpleSelector::operator==(rhs);
-  }
-
-  bool PlaceholderSelector::operator==(const PlaceholderSelector& rhs) const
-  {
-    return SimpleSelector::operator==(rhs);
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
+    // ID has no namespace
+    return name() == rhs.name();
   }
 
   bool IDSelector::operator<(const IDSelector& rhs) const
   {
-    return SimpleSelector::operator<(rhs);
+    if (&rhs == this) return false;
+    // ID has no namespace
+    return name() < rhs.name();
+  }
+
+  size_t IDSelector::hash() const
+  {
+    if (hash_ == 0) {
+      hash_start(hash_, typeid(this).hash_code());
+      hash_combine(hash_, name_);
+    }
+    return hash_;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // Could re-use code from SimpleSelector, but implement fully
+  /////////////////////////////////////////////////////////////////////////
+
+  bool ClassSelector::operator==(const ClassSelector& rhs) const
+  {
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
+    // ID has no namespace
+    return name() == rhs.name();
   }
 
   bool ClassSelector::operator<(const ClassSelector& rhs) const
   {
-    return SimpleSelector::operator<(rhs);
+    if (&rhs == this) return false;
+    // ID has no namespace
+    return name() < rhs.name();
+  }
+
+  size_t ClassSelector::hash() const
+  {
+    if (hash_ == 0) {
+      hash_start(hash_, typeid(this).hash_code());
+      hash_combine(hash_, name_);
+    }
+    return hash_;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // Could re-use code from SimpleSelector, but implement fully
+  /////////////////////////////////////////////////////////////////////////
+
+  bool PlaceholderSelector::operator==(const PlaceholderSelector& rhs) const
+  {
+    if (&rhs == this) return true;
+    #ifndef SASS_FORCE_CMP_HASH
+    if (hashed() != 0 && rhs.hashed() != 0)
+    #endif
+      if (hash() != rhs.hash()) return false;
+    // ID has no namespace
+    return name() == rhs.name();
   }
 
   bool PlaceholderSelector::operator<(const PlaceholderSelector& rhs) const
   {
-    return SimpleSelector::operator<(rhs);
+    if (&rhs == this) return false;
+    // ID has no namespace
+    return name() < rhs.name();
   }
+
+  size_t PlaceholderSelector::hash() const
+  {
+    if (hash_ == 0) {
+      hash_start(hash_, typeid(this).hash_code());
+      hash_combine(hash_, name_);
+    }
+    return hash_;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // CSS Parent selectors have no distinction feature
+  bool CssParentSelector::operator< (const CssParentSelector& rhs) const
+  {
+    return false;
+  }
+
+  // CSS Parent selectors have no distinction feature
+  bool CssParentSelector::operator==(const CssParentSelector& rhs) const
+  {
+    return true;
+  }
+
+  size_t CssParentSelector::hash() const
+  {
+    if (hash_ == 0) {
+      hash_start(hash_, typeid(this).hash_code());
+    }
+    return hash_;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  // Dont implement anything for abstract classes
+  // Not sure typeid would work as expected for us
+  // Although that is just a problem for `hash()`
+  /////////////////////////////////////////////////////////////////////////
+
+  // bool SimpleSelector::operator==(const SimpleSelector& rhs) const
+  // {
+  //   if (&rhs == this) return true;
+  //   #ifndef SASS_FORCE_CMP_HASH
+  //   if (hashed() != 0 && rhs.hashed() != 0)
+  //   #endif
+  //     if (hash() != rhs.hash()) return false;
+  //   // ID has no namespace
+  //   return name() == rhs.name();
+  // }
+
+  // bool SimpleSelector::operator<(const SimpleSelector& rhs) const
+  // {
+  //   if (&rhs == this) return false;
+  //   // ID has no namespace
+  //   return name() < rhs.name();
+  // }
+
+  // size_t SimpleSelector::hash() const
+  // {
+  //   if (hash_ == 0) {
+  //     hash_start(hash_, typeid(this).hash_code());
+  //     hash_combine(hash_, name_);
+  //   }
+  //   return hash_;
+  // }
+
+  /////////////////////////////////////////////////////////////////////////
+  // Dont implement anything for abstract classes
+  // Not sure typeid would work as expected for us
+  // Although that is just a problem for `hash()`
+  /////////////////////////////////////////////////////////////////////////
+
+  // bool SelectorNS::operator==(const SelectorNS& rhs) const
+  // {
+  //   // Do simple pointer compare first
+  //   if (&rhs == this) return false;
+  //   // Compare the set of values via tupple
+  //   return std::tie(ns_, hasNs_, name_) ==
+  //     std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
+  // }
+  // 
+  // bool SelectorNS::operator<(const SelectorNS& rhs) const
+  // {
+  //   // Do simple pointer compare first
+  //   if (&rhs == this) return false;
+  //   // Compare the set of values via tupple
+  //   return std::tie(ns_, hasNs_, name_) <
+  //     std::tie(rhs.ns_, rhs.hasNs_, rhs.name_);
+  // }
+  // 
+  // size_t SelectorNS::hash() const
+  // {
+  //   if (hash_ == 0) {
+  //     hash_start(hash_, typeid(this).hash_code());
+  //     hash_combine(hash_, ns_);
+  //     hash_combine(hash_, hasNs_);
+  //     hash_combine(hash_, name_);
+  //   }
+  //   return hash_;
+  // }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

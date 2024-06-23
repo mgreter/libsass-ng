@@ -59,7 +59,7 @@ namespace Sass {
       // Don't trust anyone to be random, so we
       // add a little entropy of our own.
       seed ^= std::time(NULL) ^ std::clock() ^
-        std::hash<std::thread::id>()
+        std::hash<std::thread::id>{}
         (std::this_thread::get_id());
       // Return entropy
       #endif

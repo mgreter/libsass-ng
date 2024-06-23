@@ -129,8 +129,8 @@
 // Comes with Apache 2.0 license attached
 // Performance for on extreme extends
 // Improves heavy extend substantially (10%)
-// #define SASS_USE_ABSEIL_BTREE_MAP
-// #define SASS_USE_ABSEIL_BTREE_SET
+#define SASS_USE_ABSEIL_BTREE_MAP
+#define SASS_USE_ABSEIL_BTREE_SET
 
 
 // Some headers may not be included

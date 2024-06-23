@@ -16,18 +16,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // This should be thread-safe
-  //static std::hash<void*> ptrHasher;
-  static std::hash<bool> boolHasher;
-  //static std::hash<double> doubleHasher;
-  //static std::hash<SassFnSig> fnHasher;
-  //static std::hash<std::size_t> sizetHasher;
-  static std::hash<sass::string> stringHasher;
-  //static std::hash<SassFunctionLambda> lambdaHasher;
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   sass::string Selector::inspect(int precision) const
   {
     OutputOptions out(
@@ -45,14 +33,12 @@ namespace Sass {
 
   Selector::Selector(
     const SourceSpan& pstate) :
-    AstNode(pstate),
-    hash_(0)
+    AstNode(pstate)
   {}
 
   Selector::Selector(
     const Selector* ptr) :
-    AstNode(ptr),
-    hash_(0)
+    AstNode(ptr)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -1355,11 +1341,6 @@ namespace Sass {
   CssParentSelector::CssParentSelector(const CssParentSelector* ptr)
     : SimpleSelector(this)
   {
-  }
-
-  size_t CssParentSelector::hash() const
-  {
-    return size_t(61290965);
   }
 
   sass::vector<SimpleSelectorObj> CssParentSelector::unify(const sass::vector<SimpleSelectorObj>& other)

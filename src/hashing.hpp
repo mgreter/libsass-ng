@@ -20,13 +20,37 @@
 
 namespace Sass {
 
-  template <typename T>
-  inline void hash_combine(std::size_t& hash, const T& val)
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Our base implementation to hash strings
+  inline size_t hash_string(const sass::string& str)
   {
-    hash ^= std::hash<T>()(val) + getHashSeed()
-      + (hash << 6) + (hash >> 2);
+    return MurmurHash3(
+      (void*)str.c_str(),
+      (int)str.size(),
+      getHashSeed());
   }
-  // EO hash_combine
+  // EO hash_string
+
+  // Implement simple hash for booleans
+  inline size_t hash_bool(bool val)
+  {
+    return (val ? size_t(142123423)
+      : size_t(9987235)) + getHashSeed();
+  }
+  // EO hash_string
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  //template <typename T>
+  //inline void hash_combine(std::size_t& hash, const T& val)
+  //{
+  //  hash ^= std::hash<T>()(val) + getHashSeed()
+  //    + (hash << 6) + (hash >> 2);
+  //}
+  //// EO hash_combine
 
   template <typename T>
   inline void hash_start(std::size_t& hash, const T& val)
@@ -41,7 +65,21 @@ namespace Sass {
     hash ^= val + getHashSeed()
       + (hash << 6) + (hash >> 2);
   }
-  // EO hash_combine
+  // EO hash_combine(size_t)
+
+  // Not sure if calling std::hash<size_t> has any overhead!?
+  inline void hash_combine(std::size_t& hash, const sass::string& val)
+  {
+    hash_combine(hash, hash_string(val));
+  }
+  // EO hash_combine(sass::string)
+
+  // Not sure if calling std::hash<size_t> has any overhead!?
+  // inline void hash_combine(std::size_t& hash, bool val)
+  // {
+  //   hash_combine(hash, hash_bool(val));
+  // }
+  // EO hash_combine(sass::string)
 
   // Not sure if calling std::hash<size_t> has any overhead!?
   inline void hash_start(std::size_t& hash, std::size_t val)
@@ -50,15 +88,6 @@ namespace Sass {
   }
   // EO hash_start
 
-  // Our base implementation to hash strings
-  inline size_t hash_string(const sass::string& str)
-  {
-    return MurmurHash3(
-      (void*)str.c_str(),
-      (int)str.size(),
-      getHashSeed());
-  }
-  // EO StringHasher
 
 }
 

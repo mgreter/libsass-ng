@@ -50,22 +50,9 @@ namespace Sass {
     public SelectorVisitable<void>,
     public SelectorVisitable<bool>,
     public Equatable<Selector>,
-    public Comparable<Selector>
+    public Comparable<Selector>,
+    public Hashable
   {
-  public:
-
-    // Hash is only calculated once and afterwards the value
-    // must not be mutated, which is the case with how sass
-    // works, although we must be a bit careful not to alter
-    // any value that has already been added to a set or map.
-    // Must create a copy if you need to alter such an object.
-    // Selectors are mostly used as keys in @extend rules.
-    mutable size_t hash_;
-
-    // Returns zero if not yet hashed
-    // Useful to speed up comparisons
-    size_t hashed() const { return hash_; }
-
   public:
 
     // Base value constructor
@@ -87,7 +74,6 @@ namespace Sass {
     void assertNotBogus(Logger& logger, const sass::string& name);
 
     // To be implemented by specialization
-    virtual size_t hash() const = 0;
     virtual unsigned long specificity() const = 0;
     // By default we return the regular specificity
     // Override this for selectors with children
@@ -171,7 +157,7 @@ namespace Sass {
     CompoundSelector* wrapInCompound();
 
     // Implement hash functionality
-    virtual size_t hash() const override;
+    virtual size_t hash() const override = 0;
 
     // Implement for cleanup phase
     virtual bool empty() const {
@@ -227,7 +213,7 @@ namespace Sass {
     CssParentSelector(const CssParentSelector* ptr);
 
     // Implement hash functionality
-    virtual size_t hash() const override;
+    size_t hash() const override final;
 
     // This is a very interesting line, as it seems pointless, since the base class
 // already marks this as an unimplemented interface methods, but by defining this
@@ -290,7 +276,7 @@ namespace Sass {
       const SelectorNS* ptr);
 
     // Implement hash functionality
-    virtual size_t hash() const override;
+    virtual size_t hash() const override = 0;
 
     // Implement for cleanup phase
     virtual bool empty() const override {
@@ -375,6 +361,8 @@ namespace Sass {
     IMPLEMENT_BASE_CMP_OPERATOR(Selector, PlaceholderSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, PlaceholderSelector);
 
+    size_t hash() const override final;
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(PlaceholderSelector);
     FINALIZE_AST_NODE(PlaceholderSelector);
@@ -420,6 +408,8 @@ namespace Sass {
     // Unify two simple selectors with each other
     // SimpleSelector* unifyWith(const SimpleSelector*);
 
+    size_t hash() const override final;
+
     IMPLEMENT_SEL_COPY_IGNORE(TypeSelector);
     IMPLEMENT_ACCEPT(void, Selector, TypeSelector);
     IMPLEMENT_ACCEPT(bool, Selector, TypeSelector);
@@ -460,6 +450,8 @@ namespace Sass {
     virtual unsigned long specificity() const override {
       return Constants::Specificity::Class;
     }
+
+    size_t hash() const override final;
 
     IMPLEMENT_SEL_COPY_IGNORE(ClassSelector);
     IMPLEMENT_ACCEPT(void, Selector, ClassSelector);
@@ -504,6 +496,8 @@ namespace Sass {
     virtual SimpleSelectors unify(
       const SimpleSelectors& other)
         override final;
+
+    size_t hash() const override final;
 
     IMPLEMENT_SEL_COPY_IGNORE(IDSelector);
     IMPLEMENT_ACCEPT(void, Selector, IDSelector);
@@ -843,7 +837,8 @@ namespace Sass {
 
   class CplxSelComponent : public AstNode,
     public Equatable<CplxSelComponent>,
-    public Comparable<CplxSelComponent>
+    public Comparable<CplxSelComponent>,
+    public Hashable
   {
 
     ADD_CONSTREF(SelectorCombinatorVector, combinators);
@@ -921,7 +916,8 @@ namespace Sass {
 
   class SelectorCombinator : public AstNode,
     public Equatable<SelectorCombinator>,
-    public Comparable<SelectorCombinator>
+    public Comparable<SelectorCombinator>,
+    public HashCodeProvider
   {
 
     ADD_CONSTREF(SelectorPrefix, combinator);
@@ -948,15 +944,9 @@ namespace Sass {
     bool isFollowingSibling() const { return combinator_ == FOLLOWING; }
 
     // Simple equality operators
-    bool operator==(const SelectorCombinator& rhs) const {
-      return combinator_ == rhs.combinator_;
-    }
-    bool operator!=(const SelectorCombinator& rhs) const {
-      return combinator_ != rhs.combinator_;
-    }
-    bool operator<(const SelectorCombinator& rhs) const {
-      return combinator_ < rhs.combinator_;
-    }
+    bool operator==(const SelectorCombinator& rhs) const override final;
+    bool operator<(const SelectorCombinator& rhs) const override final;
+    size_t hash() const override final;
 
     const sass::string toString() const {
       switch (combinator_) {

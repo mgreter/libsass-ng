@@ -19,12 +19,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // This should be thread-safe
-  static std::hash<bool> boolHasher;
-  static std::hash<double> doubleHasher;
-  static std::hash<std::size_t> sizetHasher;
-  static std::hash<sass::string> stringHasher;
-
   const double NaN = std::numeric_limits<double>::quiet_NaN();
 
   /////////////////////////////////////////////////////////////////////////
@@ -429,10 +423,10 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(ColorRgba).hash_code());
-      hash_combine(hash_, doubleHasher(a_));
-      hash_combine(hash_, doubleHasher(r_));
-      hash_combine(hash_, doubleHasher(g_));
-      hash_combine(hash_, doubleHasher(b_));
+      hash_combine(hash_, std::hash<double>{}(a_));
+      hash_combine(hash_, std::hash<double>{}(r_));
+      hash_combine(hash_, std::hash<double>{}(g_));
+      hash_combine(hash_, std::hash<double>{}(b_));
     }
     return hash_;
   }
@@ -580,10 +574,10 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(ColorHsla).hash_code());
-      hash_combine(hash_, doubleHasher(a_));
-      hash_combine(hash_, doubleHasher(h_));
-      hash_combine(hash_, doubleHasher(s_));
-      hash_combine(hash_, doubleHasher(l_));
+      hash_combine(hash_, std::hash<double>{}(a_));
+      hash_combine(hash_, std::hash<double>{}(h_));
+      hash_combine(hash_, std::hash<double>{}(s_));
+      hash_combine(hash_, std::hash<double>{}(l_));
     }
     return hash_;
   }
@@ -635,10 +629,10 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(ColorHsla).hash_code());
-      hash_combine(hash_, doubleHasher(a_));
-      hash_combine(hash_, doubleHasher(h_));
-      hash_combine(hash_, doubleHasher(w_));
-      hash_combine(hash_, doubleHasher(b_));
+      hash_combine(hash_, std::hash<double>{}(a_));
+      hash_combine(hash_, std::hash<double>{}(h_));
+      hash_combine(hash_, std::hash<double>{}(w_));
+      hash_combine(hash_, std::hash<double>{}(b_));
     }
     return hash_;
   }
@@ -872,11 +866,11 @@ namespace Sass {
   size_t Number::hash() const
   {
     if (hash_ == 0) {
-      hash_start(hash_, doubleHasher(value_));
+      hash_start(hash_, std::hash<double>{}(value_));
       for (const auto& numerator : numerators)
-        hash_combine(hash_, stringHasher(numerator));
+        hash_combine(hash_, numerator);
       for (const auto& denominator : denominators)
-        hash_combine(hash_, stringHasher(denominator));
+        hash_combine(hash_, denominator);
     }
     return hash_;
   }
@@ -1517,7 +1511,7 @@ namespace Sass {
   size_t Boolean::hash() const
   {
     if (hash_ == 0) {
-      hash_ = boolHasher(value_);
+      hash_ = hash_bool(value_);
     }
     return hash_;
   }
@@ -1581,7 +1575,7 @@ namespace Sass {
   size_t String::hash() const
   {
     if (hash_ == 0) {
-      hash_ = stringHasher(value_);
+      hash_ = hash_string(value_);
     }
     return hash_;
   }
@@ -1758,8 +1752,8 @@ namespace Sass {
     if (Vectorized<Value>::hash_ == 0) {
       hash_start(Value::hash_, typeid(List).hash_code());
       hash_combine(Value::hash_, Vectorized<Value>::hash());
-      hash_combine(Value::hash_, sizetHasher(separator()));
-      hash_combine(Value::hash_, boolHasher(hasBrackets()));
+      hash_combine(Value::hash_, separator());
+      hash_combine(Value::hash_, hasBrackets());
     }
     return Value::hash_;
   }
