@@ -117,8 +117,8 @@
 // Comes with Zlib license attached
 // Improved environment lookups (5%)
 // Better O(logn) worst-case behavior
-// #define SASS_USE_SFL_ORDERED_FLAT_MAP
-// #define SASS_USE_SFL_UNORDERED_FLAT_MAP
+#define SASS_USE_SFL_ORDERED_FLAT_MAP
+#define SASS_USE_SFL_UNORDERED_FLAT_MAP
 
 // Comes with MIT license attached
 // Performance for on extreme extends
@@ -175,6 +175,8 @@
 #  undef SASS_CUSTOM_ALLOCATOR
 #  undef SASS_USE_TSL_ROBIN_MAP
 #  undef SASS_USE_TSL_ROBIN_SET
+#  undef SASS_USE_TSL_BHOPSCOTCH_MAP
+#  undef SASS_USE_TSL_BHOPSCOTCH_SET
 # endif
 #endif
 
