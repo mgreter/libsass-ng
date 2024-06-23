@@ -111,8 +111,8 @@
 #define USE_STD_THREAD_LOCAL 1
 
 // Implementation for unordered map/set
-// #define SASS_USE_TSL_ROBIN_MAP
-// #define SASS_USE_TSL_ROBIN_SET
+#define SASS_USE_TSL_ROBIN_MAP
+#define SASS_USE_TSL_ROBIN_SET
 
 // Comes with Zlib license attached
 // Improved environment lookups (5%)
