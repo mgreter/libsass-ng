@@ -103,7 +103,7 @@ CFLAGS   += $(EXTRA_CFLAGS)
 CXXFLAGS += $(EXTRA_CXXFLAGS)
 LDFLAGS  += $(EXTRA_LDFLAGS)
 
-LDLIBS = -lm
+LDLIBS = -lm -lpthread
 ifneq ($(BUILD),shared)
 	ifneq ($(STATIC_LIBSTDCPP),1)
 		LDLIBS += -lstdc++
