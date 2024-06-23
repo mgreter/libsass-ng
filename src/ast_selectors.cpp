@@ -45,14 +45,12 @@ namespace Sass {
 
   Selector::Selector(
     const SourceSpan& pstate) :
-    AstNode(pstate),
-    hash_(0)
+    AstNode(pstate)
   {}
 
   Selector::Selector(
     const Selector* ptr) :
-    AstNode(ptr),
-    hash_(0)
+    AstNode(ptr)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -130,15 +128,6 @@ namespace Sass {
     name_(ptr->name_)
   {}
 
-  size_t SimpleSelector::hash() const
-  {
-    if (hash_ == 0) {
-      hash_start(hash_, typeid(this).hash_code());
-      hash_combine(hash_, stringHasher(name_));
-    }
-    return hash_;
-  }
-
   CompoundSelector* SimpleSelector::wrapInCompound()
   {
     return SASS_MEMORY_NEW(CompoundSelector, pstate(), { this }, false);
@@ -202,18 +191,6 @@ namespace Sass {
     hasNs_(ptr->hasNs_),
     ns_(ptr->ns_)
   {}
-
-  size_t SelectorNS::hash() const
-  {
-    if (hash_ == 0) {
-      hash_start(hash_, typeid(this).hash_code());
-      hash_combine(hash_, SimpleSelector::hash());
-      hash_combine(hash_, stringHasher(name_));
-      hash_combine(hash_, boolHasher(hasNs_));
-      hash_combine(hash_, stringHasher(ns_));
-    }
-    return hash_;
-  }
 
   /////////////////////////////////////////////////////////////////////////
 
@@ -366,19 +343,6 @@ namespace Sass {
   bool PseudoSelector::hasInvisible() const
   {
     return selector() && selector()->empty() && name() != "not";
-  }
-
-  size_t PseudoSelector::hash() const
-  {
-    if (hash_ == 0) {
-      hash_start(hash_, typeid(this).hash_code());
-      hash_combine(hash_, name_); // SimpleSelector
-      hash_combine(hash_, isClass_);
-      hash_combine(hash_, argument_);
-      if (selector_) hash_combine(
-        hash_, selector_->hash());
-    }
-    return hash_;
   }
 
   // Implement for cleanup phase
@@ -587,14 +551,6 @@ namespace Sass {
     return SASS_MEMORY_NEW(SelectorList, pstate(), { this });
   }
 
-  size_t ComplexSelector::hash() const
-  {
-    if (Vectorized<CplxSelComponent>::hash_ == 0) {
-      Selector::hash_ = Vectorized<CplxSelComponent>::hash();
-    }
-    return Selector::hash_;
-  }
-
   const Selector* ComplexSelector::getExplicitParent() const
   {
     const Selector* rv = nullptr;
@@ -634,11 +590,6 @@ namespace Sass {
     selector_(ptr->selector_),
     hasPostLineBreak_(ptr->hasPostLineBreak())
   {}
-
-  size_t CplxSelComponent::hash() const
-  {
-    return 123123;
-  }
 
   /////////////////////////////////////////////////////////////////////////
   // A specific combinator between compound selectors
@@ -713,14 +664,6 @@ namespace Sass {
     withExplicitParent_(ptr->withExplicitParent()),
     hasPostLineBreak_(ptr->hasPostLineBreak_)
   {}
-
-  size_t CompoundSelector::hash() const
-  {
-    if (Vectorized<SimpleSelector>::hash_ == 0) {
-      Selector::hash_ = Vectorized<SimpleSelector>::hash();
-    }
-    return Selector::hash_;
-  }
 
   unsigned long CompoundSelector::specificity() const
   {
@@ -820,14 +763,6 @@ namespace Sass {
     Selector(ptr),
     Vectorized(ptr, childless)
   {}
-
-  size_t SelectorList::hash() const
-  {
-    if (Vectorized<ComplexSelector>::hash_ == 0) {
-      Selector::hash_ = Vectorized<ComplexSelector>::hash();
-    }
-    return Selector::hash_;
-  }
 
   unsigned long SelectorList::maxSpecificity() const
   {
@@ -1418,11 +1353,6 @@ namespace Sass {
   CssParentSelector::CssParentSelector(const CssParentSelector* ptr)
     : SimpleSelector(this)
   {
-  }
-
-  size_t CssParentSelector::hash() const
-  {
-    return size_t(61290965);
   }
 
   sass::vector<SimpleSelectorObj> CssParentSelector::unify(const sass::vector<SimpleSelectorObj>& other)

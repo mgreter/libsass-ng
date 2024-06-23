@@ -127,12 +127,12 @@ private:
       return visitor->visit##klass(this); \
     } \
 
-  #define IMPLEMENT_EQ_OPERATOR(subklass, klass) \
-    public: bool operator==(const subklass& rhs) const override final { \
+  #define IMPLEMENT_EQ_OPERATOR(subklass, klass, keywords) \
+    public: bool operator==(const subklass& rhs) const keywords { \
       auto sel = rhs.isa##klass(); \
       return sel ? *this == *sel : false; \
     } \
-    public: bool operator<(const subklass& rhs) const override final { \
+    public: bool operator<(const subklass& rhs) const keywords { \
       auto sel = rhs.isa##klass(); \
       return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
     } \

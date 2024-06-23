@@ -50,6 +50,11 @@ namespace Sass {
   }
   // EO hash_start
 
+  inline void hash_start(std::size_t& hash, const type_info& type)
+  {
+    hash = type.hash_code() + getHashSeed();
+  }
+
   // Our base implementation to hash strings
   inline size_t hash_string(const sass::string& str)
   {
