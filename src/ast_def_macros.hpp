@@ -127,12 +127,26 @@ private:
       return visitor->visit##klass(this); \
     } \
 
-  #define IMPLEMENT_EQ_OPERATOR(subklass, klass, keywords) \
-    public: bool operator==(const subklass& rhs) const keywords { \
+  #define IMPLEMENT_BASE_CMP_OPERATOR(subklass, klass) \
+    public: bool operator==(const subklass& rhs) const override final { \
       auto sel = rhs.isa##klass(); \
       return sel ? *this == *sel : false; \
     } \
-    public: bool operator<(const subklass& rhs) const keywords { \
+    public: bool operator<(const subklass& rhs) const override final { \
+      auto sel = rhs.isa##klass(); \
+      return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
+    }
+
+  #define DECLARE_CMP_OPERATOR(klass) \
+    public: bool operator==(const klass& rhs) const; \
+    public: bool operator<(const klass& rhs) const; \
+
+  #define IMPLEMENT_EQ_OPERATOR(subklass, klass) \
+    public: bool operator==(const subklass& rhs) const override final { \
+      auto sel = rhs.isa##klass(); \
+      return sel ? *this == *sel : false; \
+    } \
+    public: bool operator<(const subklass& rhs) const override final { \
       auto sel = rhs.isa##klass(); \
       return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
     } \

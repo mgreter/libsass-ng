@@ -19,7 +19,7 @@ namespace Sass {
   {
   }
 
-    bool CssMediaQueryVector::operator== (const sass::vector<CssMediaQueryObj>& rhs) const
+    bool CssMediaQueryVector::operator==(const sass::vector<CssMediaQueryObj>& rhs) const
     {
       // Abort early if sizes do not match
       if (size() != rhs.size()) return false;

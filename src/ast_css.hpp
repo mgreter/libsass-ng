@@ -202,7 +202,7 @@ namespace Sass {
     }
 
     // Check if two instances are considered equal
-    bool operator== (const CssMediaQuery& rhs) const;
+    bool operator==(const CssMediaQuery& rhs) const;
 
     // Merges this with [other] and adds a query that matches the intersection
     // of both inputs to [result]. Returns false if the result is unrepresentable
@@ -642,7 +642,7 @@ namespace Sass {
 
     // Check if two instances are considered equal
     // Used by Extension::assertCompatibleMediaContext
-    bool operator== (const CssMediaRule& rhs) const;
+    bool operator==(const CssMediaRule& rhs) const;
 
     // Declare via macro to allow line/col debugging
     CssMediaRule* copy(SASS_MEMORY_ARGS bool childless) const override final {

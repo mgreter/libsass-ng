@@ -418,7 +418,7 @@ namespace Sass {
   {}
 
   // Used by Extension::assertCompatibleMediaContext
-  bool CssMediaRule::operator== (const CssMediaRule& rhs) const {
+  bool CssMediaRule::operator==(const CssMediaRule& rhs) const {
     return PtrObjEqualityFn<CssMediaQueryVector>(queries_, rhs.queries_);
   }
   bool CssMediaRule::equalsIgnoringChildren(CssNode* rhs) const

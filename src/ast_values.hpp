@@ -43,9 +43,9 @@ namespace Sass {
     const sass::string& type() const override final { return Strings::error; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const CustomError& rhs) const;
+    bool operator==(const CustomError& rhs) const;
 
     // Main entry point for Value Visitor pattern
     void accept(ValueVisitor<void>* visitor) override final;
@@ -85,9 +85,9 @@ namespace Sass {
     const sass::string& type() const override final { return Strings::warning; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const CustomWarning& rhs) const;
+    bool operator==(const CustomWarning& rhs) const;
 
     // Main entry point for Value Visitor pattern
     void accept(ValueVisitor<void>* visitor) override final;
@@ -126,7 +126,7 @@ namespace Sass {
     const sass::string& type() const override final { return Strings::null; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
 
     // Main entry point for Value Visitor pattern
     void accept(ValueVisitor<void>* visitor) override final {
@@ -243,9 +243,9 @@ namespace Sass {
     size_t hash() const override final;
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const ColorRgba& rhs) const;
+    bool operator==(const ColorRgba& rhs) const;
 
     // Copy operations for childless items
     ColorRgba* copy(SASS_MEMORY_ARGS bool childless) const override final {
@@ -292,9 +292,9 @@ namespace Sass {
     size_t hash() const override final;
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const ColorHsla& rhs) const;
+    bool operator==(const ColorHsla& rhs) const;
 
     // Copy operations for childless items
     ColorHsla* copy(SASS_MEMORY_ARGS bool childless) const override final {
@@ -340,9 +340,9 @@ namespace Sass {
     size_t hash() const override final;
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const ColorHwba& rhs) const;
+    bool operator==(const ColorHwba& rhs) const;
 
     // Copy operations for childless items
     ColorHwba* copy(SASS_MEMORY_ARGS bool childless) const override final {
@@ -494,9 +494,9 @@ namespace Sass {
     const Number* checkPercent(Logger& logger, const sass::string& name) const;
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const Number& rhs) const;
+    bool operator==(const Number& rhs) const;
 
     // Main entry point for Value Visitor pattern
     void accept(ValueVisitor<void>* visitor) override final {
@@ -548,9 +548,9 @@ namespace Sass {
     const sass::string& type() const override final { return Strings::boolean; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const Boolean& rhs) const;
+    bool operator==(const Boolean& rhs) const;
 
     // Main entry point for Value Visitor pattern
     void accept(ValueVisitor<void>* visitor) override final {
@@ -611,9 +611,9 @@ namespace Sass {
     const sass::string& type() const override { return Strings::string; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const String& rhs) const;
+    bool operator==(const String& rhs) const;
 
     // Implement type fetcher for base value class (throws in base implementation)
     String* assertString(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
@@ -687,9 +687,9 @@ namespace Sass {
     const sass::string& type() const override final { return Strings::map; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const Map& rhs) const;
+    bool operator==(const Map& rhs) const;
 
     // Implement type fetcher for base value class (throws in base implementation)
     Map* assertMap(Logger& logger, const sass::string& name) override { return this; }
@@ -793,9 +793,9 @@ namespace Sass {
     virtual const sass::string& type() const override { return Strings::list; }
 
     // Implement equality comparators for base value class
-    virtual bool operator== (const Value& rhs) const override;
+    virtual bool operator==(const Value& rhs) const override;
     // Implement same class compare operator
-    bool operator== (const List& rhs) const;
+    bool operator==(const List& rhs) const;
 
     // Implement type fetcher for base value class (throws in base implementation)
     Map* assertMap(Logger& logger, const sass::string& name) override final;
@@ -881,9 +881,9 @@ namespace Sass {
 
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const ArgumentList& rhs) const;
+    bool operator==(const ArgumentList& rhs) const;
 
     // Copy operations for childless items
     ArgumentList* copy(SASS_MEMORY_ARGS bool childless) const override final {
@@ -936,9 +936,9 @@ namespace Sass {
     const sass::string& type() const override final { return Strings::function; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator== (const Function& rhs) const;
+    bool operator==(const Function& rhs) const;
 
     Function* assertFunction(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
 
@@ -997,7 +997,7 @@ namespace Sass {
     const sass::string& type() const override final { return Strings::calculation; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
 
     Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
     Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
@@ -1066,8 +1066,8 @@ namespace Sass {
     const sass::string& type() const override final { return Strings::mixin; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
-    bool operator== (const Mixin& rhs) const;
+    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Mixin& rhs) const;
 
     // Main entry point for Value Visitor pattern
     void accept(ValueVisitor<void>* visitor) override final {
@@ -1126,7 +1126,7 @@ namespace Sass {
     const sass::string& type() const override final { return Strings::calcoperation; }
 
     // Implement equality comparators for base value class
-    bool operator== (const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const override final;
 
     // Main entry point for Value Visitor pattern
     void accept(ValueVisitor<void>* visitor) override final {

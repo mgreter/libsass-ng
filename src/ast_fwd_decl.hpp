@@ -359,7 +359,7 @@ namespace Sass {
     CssMediaQueryVector(sass::vector<CssMediaQueryObj>&& queries);
 
     // Check underlying containers for equality
-    bool operator== (const sass::vector<CssMediaQueryObj>& rhs) const;
+    bool operator==(const sass::vector<CssMediaQueryObj>& rhs) const;
 
     // Derive unequal operator from equality check
     bool operator!= (const sass::vector<CssMediaQueryObj>& rhs) const

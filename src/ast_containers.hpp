@@ -121,7 +121,7 @@ namespace Sass {
     bool empty() const { return elements_.empty(); }
 
     // Check underlying containers for equality
-    bool operator== (const Vectorized2<V>& rhs) const
+    bool operator==(const Vectorized2<V>& rhs) const
     {
       // Abort early if sizes do not match
       if (size() != rhs.size()) return false;
@@ -278,7 +278,7 @@ namespace Sass {
     }
 
     // Check underlying containers for equality
-    bool operator== (const Vectorized<V>& rhs) const
+    bool operator==(const Vectorized<V>& rhs) const
     {
       // Abort early if sizes do not match
       if (size() != rhs.size()) return false;

@@ -113,7 +113,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  bool CustomError::operator== (const Value& rhs) const
+  bool CustomError::operator==(const Value& rhs) const
   {
     if (auto right = rhs.isaCustomError()) {
       return *this == *right;
@@ -121,7 +121,7 @@ namespace Sass {
     return false;
   }
 
-  bool CustomError::operator== (const CustomError& rhs) const
+  bool CustomError::operator==(const CustomError& rhs) const
   {
     return message() == rhs.message();
   }
@@ -151,7 +151,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  bool CustomWarning::operator== (const Value& rhs) const
+  bool CustomWarning::operator==(const Value& rhs) const
   {
     if (auto right = rhs.isaCustomWarning()) {
       return *this == *right;
@@ -159,7 +159,7 @@ namespace Sass {
     return false;
   }
 
-  bool CustomWarning::operator== (const CustomWarning& rhs) const
+  bool CustomWarning::operator==(const CustomWarning& rhs) const
   {
     return message() == rhs.message();
   }
@@ -253,7 +253,7 @@ namespace Sass {
     return this;
   }
 
-  bool Calculation::operator== (const Value& rhs) const
+  bool Calculation::operator==(const Value& rhs) const
   {
     throw std::logic_error("Calculation::operator==");
     return this == &rhs; // or compare to pointers?
@@ -306,7 +306,7 @@ namespace Sass {
     : Value(ptr)
   {}
 
-  bool Null::operator== (const Value& rhs) const
+  bool Null::operator==(const Value& rhs) const
   {
     return rhs.isNull();
   }
@@ -408,7 +408,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  bool ColorRgba::operator== (const Value& rhs) const
+  bool ColorRgba::operator==(const Value& rhs) const
   {
     if (const Color* color = rhs.isaColor()) {
       ColorRgba* rgba = color->toRGBA();
@@ -417,7 +417,7 @@ namespace Sass {
     return false;
   }
 
-  bool ColorRgba::operator== (const ColorRgba& rhs) const
+  bool ColorRgba::operator==(const ColorRgba& rhs) const
   {
     return r_ == rhs.r() &&
       g_ == rhs.g() &&
@@ -559,7 +559,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  bool ColorHsla::operator== (const Value& rhs) const
+  bool ColorHsla::operator==(const Value& rhs) const
   {
     if (const Color* color = rhs.isaColor()) {
       ColorHsla* hsla = color->toHSLA();
@@ -568,7 +568,7 @@ namespace Sass {
     return false;
   }
 
-  bool ColorHsla::operator== (const ColorHsla& rhs) const
+  bool ColorHsla::operator==(const ColorHsla& rhs) const
   {
     return h_ == rhs.h() &&
       s_ == rhs.s() &&
@@ -614,7 +614,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  bool ColorHwba::operator== (const Value& rhs) const
+  bool ColorHwba::operator==(const Value& rhs) const
   {
     if (const Color* color = rhs.isaColor()) {
       ColorHwba* hwba = color->toHWBA();
@@ -623,7 +623,7 @@ namespace Sass {
     return false;
   }
 
-  bool ColorHwba::operator== (const ColorHwba& rhs) const
+  bool ColorHwba::operator==(const ColorHwba& rhs) const
   {
     return h_ == rhs.h() &&
       w_ == rhs.w() &&
@@ -842,7 +842,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  bool Number::operator== (const Value& rhs) const
+  bool Number::operator==(const Value& rhs) const
   {
     if (const Number* number = rhs.isaNumber()) {
       return *this == *number;
@@ -850,7 +850,7 @@ namespace Sass {
     return false;
   }
 
-  bool Number::operator== (const Number& rhs) const
+  bool Number::operator==(const Number& rhs) const
   {
     if (isUnitless() && rhs.isUnitless()) {
       return NEAR_EQUAL_INF(value(), rhs.value());
@@ -1501,7 +1501,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  bool Boolean::operator== (const Value& rhs) const
+  bool Boolean::operator==(const Value& rhs) const
   {
     if (auto right = rhs.isaBoolean()) {
       return *this == *right;
@@ -1509,7 +1509,7 @@ namespace Sass {
     return false;
   }
 
-  bool Boolean::operator== (const Boolean& rhs) const
+  bool Boolean::operator==(const Boolean& rhs) const
   {
     return value() == rhs.value();
   }
@@ -1559,7 +1559,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  bool String::operator== (const Value& rhs) const
+  bool String::operator==(const Value& rhs) const
   {
     if (auto right = rhs.isaString()) {
       return *this == *right;
@@ -1567,7 +1567,7 @@ namespace Sass {
     return false;
   }
 
-  bool String::operator== (const String& rhs) const
+  bool String::operator==(const String& rhs) const
   {
     return value() == rhs.value();
   }
@@ -1619,7 +1619,7 @@ namespace Sass {
 
   // Maps are equal if they have the same items
   // at the same key, order is not important.
-  bool Map::operator== (const Value& rhs) const
+  bool Map::operator==(const Value& rhs) const
   {
     if (const Map* right = rhs.isaMap()) {
       return *this == *right;
@@ -1632,7 +1632,7 @@ namespace Sass {
 
   // Maps are equal if they have the same items
   // at the same key, order is not important.
-  bool Map::operator== (const Map& rhs) const
+  bool Map::operator==(const Map& rhs) const
   {
     if (size() != rhs.size()) return false;
     for (const auto& kv : elements_) {
@@ -1876,7 +1876,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  bool Function::operator== (const Value& rhs) const
+  bool Function::operator==(const Value& rhs) const
   {
     if (const Function* fn = rhs.isaFunction()) {
       return *this == *fn;
@@ -1884,7 +1884,7 @@ namespace Sass {
     return false;
   }
 
-  bool Function::operator== (const Function& rhs) const
+  bool Function::operator==(const Function& rhs) const
   {
     return ObjEqualityFn(callable_, rhs.callable());
   }
@@ -1951,7 +1951,7 @@ namespace Sass {
     return false;
   }
 
-  bool Mixin::operator== (const Mixin& rhs) const
+  bool Mixin::operator==(const Mixin& rhs) const
   {
     return ObjEqualityFn(callable_, rhs.callable());
   }

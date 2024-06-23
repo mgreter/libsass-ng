@@ -45,12 +45,14 @@ namespace Sass {
 
   Selector::Selector(
     const SourceSpan& pstate) :
-    AstNode(pstate)
+    AstNode(pstate),
+    hash_(0)
   {}
 
   Selector::Selector(
     const Selector* ptr) :
-    AstNode(ptr)
+    AstNode(ptr),
+    hash_(0)
   {}
 
   /////////////////////////////////////////////////////////////////////////
@@ -1353,6 +1355,11 @@ namespace Sass {
   CssParentSelector::CssParentSelector(const CssParentSelector* ptr)
     : SimpleSelector(this)
   {
+  }
+
+  size_t CssParentSelector::hash() const
+  {
+    return size_t(61290965);
   }
 
   sass::vector<SimpleSelectorObj> CssParentSelector::unify(const sass::vector<SimpleSelectorObj>& other)

@@ -263,7 +263,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Compare units (without any normalizing)
-  bool Units::operator== (const Units& rhs) const
+  bool Units::operator==(const Units& rhs) const
   {
     return (numerators == rhs.numerators) &&
            (denominators == rhs.denominators);

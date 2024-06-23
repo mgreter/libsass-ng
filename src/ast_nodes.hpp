@@ -501,7 +501,7 @@ namespace Sass {
     }
 
     // The SassScript `==` operation (never throws).
-    virtual bool operator== (const Value& rhs) const = 0;
+    virtual bool operator==(const Value& rhs) const = 0;
 
     // The SassScript `>` operation.
     virtual bool greaterThan(const Value* other, Logger& logger, const SourceSpan& pstate) const;

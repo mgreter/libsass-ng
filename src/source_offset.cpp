@@ -136,7 +136,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Implement equality operators
-  bool Offset::operator== (const Offset& rhs) const
+  bool Offset::operator==(const Offset& rhs) const
   {
     return line == rhs.line
       && column == rhs.column;

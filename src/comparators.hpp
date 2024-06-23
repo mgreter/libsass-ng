@@ -11,6 +11,81 @@
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////#
+  /////////////////////////////////////////////////////////////////////////#
+
+  template <typename T>
+  class Equatable
+  {
+  public:
+    virtual bool operator==(const T& rhs) const = 0;
+    bool operator!=(const T& rhs) const { return !(*this == rhs); }
+  };
+
+  template <typename T>
+  class Comparable
+  {
+  public:
+    virtual bool operator<(const T& rhs) const = 0;
+    bool operator>(const T& rhs) const { return rhs < *this; }
+    bool operator<=(const T& rhs) const { return !(rhs < *this); }
+    bool operator>=(const T& rhs) const { return !(*this < rhs); }
+  };
+
+  template <typename T, typename B>
+  class EquatableBase
+  {
+  public:
+    bool operator==(const B& rhs) const {
+      std::cerr << "this is called\n";
+      if (const T& up = dynamic_cast<T&>(rhs)) {
+        return this == up;
+      }
+      return typeid(this) == typeid(rhs);
+    }
+    bool operator!=(const T& rhs) const { return !(*this == rhs); }
+  };
+
+  template <typename T, typename B>
+  class ComparableBase
+  {
+  public:
+    bool operator<(const B& rhs) const {
+      std::cerr << "this is called\n";
+      if (const T& up = dynamic_cast<T&>(rhs)) {
+        return this < up;
+      }
+      return typeid(this).before(rhs);
+    }
+    bool operator>(const T& rhs) const { return rhs < *this; }
+    bool operator<=(const T& rhs) const { return !(rhs < *this); }
+    bool operator>=(const T& rhs) const { return !(*this < rhs); }
+  };
+
+  class HashCodeProvider {
+  };
+
+  class Hashable {
+
+  public:
+
+    // Hash is only calculated once and afterwards the value
+    // must not be mutated, which is the case with how sass
+    // works, although we must be a bit careful not to alter
+    // any value that has already been added to a set or map.
+    // Must create a copy if you need to alter such an object.
+    // Selectors are mostly used as keys in @extend rules.
+    mutable size_t hash_ = 0;
+
+    // Returns zero if not yet hashed
+    // Useful to speed up comparisons
+    size_t hashed() const { return hash_; }
+
+    // Implement hash functionality
+    virtual size_t hash() const = 0;
+
+  };
+
+  /////////////////////////////////////////////////////////////////////////#
   // Implement compare and hashing operations for raw pointers
   /////////////////////////////////////////////////////////////////////////#
 

@@ -46,12 +46,12 @@ namespace Sass {
   // Abstract base class for CSS selectors.
   /////////////////////////////////////////////////////////////////////////
 
-  class Comparable {
-
-  };
-
-  class Hashable {
-
+  class Selector : public AstNode,
+    public SelectorVisitable<void>,
+    public SelectorVisitable<bool>,
+    public Equatable<Selector>,
+    public Comparable<Selector>
+  {
   public:
 
     // Hash is only calculated once and afterwards the value
@@ -60,23 +60,11 @@ namespace Sass {
     // any value that has already been added to a set or map.
     // Must create a copy if you need to alter such an object.
     // Selectors are mostly used as keys in @extend rules.
-    mutable size_t hash_ = 0;
+    mutable size_t hash_;
 
     // Returns zero if not yet hashed
     // Useful to speed up comparisons
     size_t hashed() const { return hash_; }
-
-    // Implement hash functionality
-    virtual size_t hash() const = 0;
-
-  };
-
-  class Selector : public AstNode,
-    public SelectorVisitable<void>,
-    public SelectorVisitable<bool>,
-    public Hashable,
-    public Comparable
-  {
 
   public:
 
@@ -125,9 +113,10 @@ namespace Sass {
     virtual void accept(SelectorVisitor<void>* visitor) override = 0;
     virtual bool accept(SelectorVisitor<bool>* visitor) override = 0;
 
-    // To be implemented by specialization
-    virtual bool operator==(const Selector& rhs) const = 0;
-    virtual bool operator<(const Selector& rhs) const = 0;
+    // Make these explicitly unambigous to the compiler (even if fully abstract)
+    // Compiler may not know if it should use `Equatable<Selector>` of parent
+    virtual bool operator==(const Selector& rhs) const override = 0;
+    virtual bool operator<(const Selector& rhs) const override = 0;
 
     // Base copy method with [childless] being void most of the times
     virtual Selector* copy(SASS_MEMORY_ARGS bool childless = false) const = 0;
@@ -153,7 +142,9 @@ namespace Sass {
   // Abstract base class for simple selectors.
   /////////////////////////////////////////////////////////////////////////
 
-  class SimpleSelector : public Selector
+  class SimpleSelector : public Selector,
+    public Equatable<SimpleSelector>,
+    public Comparable<SimpleSelector>
   {
   private:
 
@@ -212,7 +203,12 @@ namespace Sass {
     // line here, we make sure that callers know the return is a bit more specific.
     virtual SimpleSelector* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
 
-    IMPLEMENT_EQ_OPERATOR(Selector, SimpleSelector, override);
+    // Make these explicitly unambigous to the compiler (even if fully abstract)
+    // Compiler may not know if it should use `Equatable<Selector>` of parent
+    virtual bool operator==(const SimpleSelector& rhs) const override = 0;
+    virtual bool operator<(const SimpleSelector& rhs) const override = 0;
+
+    //IMPLEMENT_BASE_CMP_OPERATOR(Selector, SimpleSelector);
 
     IMPLEMENT_ISA_CASTER(SimpleSelector);
     FINALIZE_AST_NODE(SimpleSelector);
@@ -221,7 +217,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  class CssParentSelector : public SimpleSelector
+  class CssParentSelector : public SimpleSelector,
+    public Equatable<CssParentSelector>,
+    public Comparable<CssParentSelector>
   {
   public:
     CssParentSelector(const SourceSpan& pstate);
@@ -229,7 +227,7 @@ namespace Sass {
     CssParentSelector(const CssParentSelector* ptr);
 
     // Implement hash functionality
-    // virtual size_t hash() const override;
+    virtual size_t hash() const override;
 
     // This is a very interesting line, as it seems pointless, since the base class
 // already marks this as an unimplemented interface methods, but by defining this
@@ -251,7 +249,9 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, CssParentSelector);
     IMPLEMENT_ACCEPT(bool, Selector, CssParentSelector);
 
-    // IMPLEMENT_EQ_OPERATOR(Selector, CssParentSelector, override);
+    DECLARE_CMP_OPERATOR(CssParentSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(Selector, CssParentSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, CssParentSelector);
 
     IMPLEMENT_ISA_CASTER(CssParentSelector);
     FINALIZE_AST_NODE(CssParentSelector);
@@ -267,7 +267,9 @@ namespace Sass {
     bool hasNs;
   };
 
-  class SelectorNS : public SimpleSelector
+  class SelectorNS : public SimpleSelector,
+    public Equatable<SelectorNS>,
+    public Comparable<SelectorNS>
   {
   private:
 
@@ -318,7 +320,10 @@ namespace Sass {
     // line here, we make sure that callers know the return is a bit more specific.
     virtual SelectorNS* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
 
-    IMPLEMENT_EQ_OPERATOR(Selector, SelectorNS, override);
+    // Make these explicitly unambigous to the compiler (even if fully abstract)
+    // Compiler may not know if it should use `Equatable<Selector>` of parent
+    virtual bool operator==(const SelectorNS& rhs) const override = 0;
+    virtual bool operator<(const SelectorNS& rhs) const override = 0;
 
     IMPLEMENT_ISA_CASTER(SelectorNS);
     FINALIZE_AST_NODE(SelectorNS);
@@ -331,7 +336,9 @@ namespace Sass {
   // It's intended to be extended using `@extend`. It's not a plain CSS
   // selector — it should be removed before emitting a CSS document.
   /////////////////////////////////////////////////////////////////////////
-  class PlaceholderSelector final : public SimpleSelector
+  class PlaceholderSelector final : public SimpleSelector,
+    public Equatable<PlaceholderSelector>,
+    public Comparable<PlaceholderSelector>
   {
   public:
 
@@ -364,6 +371,10 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, PlaceholderSelector);
     IMPLEMENT_ACCEPT(bool, Selector, PlaceholderSelector);
 
+    DECLARE_CMP_OPERATOR(PlaceholderSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(Selector, PlaceholderSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, PlaceholderSelector);
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(PlaceholderSelector);
     FINALIZE_AST_NODE(PlaceholderSelector);
@@ -374,7 +385,9 @@ namespace Sass {
   // This selects elements whose name equals the given name.
   /////////////////////////////////////////////////////////////////////////
 
-  class TypeSelector final : public SelectorNS
+  class TypeSelector final : public SelectorNS,
+    public Equatable<TypeSelector>,
+    public Comparable<TypeSelector>
   {
   public:
 
@@ -410,7 +423,14 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_IGNORE(TypeSelector);
     IMPLEMENT_ACCEPT(void, Selector, TypeSelector);
     IMPLEMENT_ACCEPT(bool, Selector, TypeSelector);
-    // IMPLEMENT_EQ_OPERATOR(Selector, TypeSelector, override final);
+
+    DECLARE_CMP_OPERATOR(TypeSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(Selector, TypeSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(SelectorNS, TypeSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, TypeSelector);
+
+    // bool operator==(const TypeSelector& rhs) const;
+    // bool operator==(const TypeSelector& rhs) const;
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(TypeSelector);
@@ -421,7 +441,9 @@ namespace Sass {
   // Class selectors  -- i.e., .foo.
   /////////////////////////////////////////////////////////////////////////
 
-  class ClassSelector final : public SimpleSelector
+  class ClassSelector final : public SimpleSelector,
+    public Equatable<ClassSelector>,
+    public Comparable<ClassSelector>
   {
   public:
 
@@ -443,6 +465,10 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, ClassSelector);
     IMPLEMENT_ACCEPT(bool, Selector, ClassSelector);
 
+    DECLARE_CMP_OPERATOR(ClassSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(Selector, ClassSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, ClassSelector);
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ClassSelector);
     FINALIZE_AST_NODE(ClassSelector);
@@ -453,7 +479,9 @@ namespace Sass {
   // whose `id` attribute exactly matches the given name.
   /////////////////////////////////////////////////////////////////////////
 
-  class IDSelector final : public SimpleSelector
+  class IDSelector final : public SimpleSelector,
+    public Equatable<IDSelector>,
+    public Comparable<IDSelector>
   {
   public:
 
@@ -481,6 +509,10 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, IDSelector);
     IMPLEMENT_ACCEPT(bool, Selector, IDSelector);
 
+    DECLARE_CMP_OPERATOR(IDSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(Selector, IDSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, IDSelector);
+
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(IDSelector);
     FINALIZE_AST_NODE(IDSelector);
@@ -492,7 +524,9 @@ namespace Sass {
   // value matching certain conditions as well.
   /////////////////////////////////////////////////////////////////////////
 
-  class AttributeSelector final : public SelectorNS
+  class AttributeSelector final : public SelectorNS,
+    public Equatable<AttributeSelector>,
+    public Comparable<AttributeSelector>
   {
 
     // The operator that defines the semantics of [value].
@@ -543,7 +577,11 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_IGNORE(AttributeSelector);
     IMPLEMENT_ACCEPT(void, Selector, AttributeSelector);
     IMPLEMENT_ACCEPT(bool, Selector, AttributeSelector);
-    IMPLEMENT_EQ_OPERATOR(Selector, AttributeSelector, override final);
+
+    DECLARE_CMP_OPERATOR(AttributeSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(Selector, AttributeSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(SelectorNS, AttributeSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, AttributeSelector);
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(AttributeSelector);
@@ -559,7 +597,9 @@ namespace Sass {
   // extension and other selector operations work properly.
   /////////////////////////////////////////////////////////////////////////
 
-  class PseudoSelector final : public SimpleSelector
+  class PseudoSelector final : public SimpleSelector,
+    public Equatable<PseudoSelector>,
+    public Comparable<PseudoSelector>
   {
 
     // Like [name], but without any vendor prefixes.
@@ -661,7 +701,9 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, PseudoSelector);
     IMPLEMENT_ACCEPT(bool, Selector, PseudoSelector);
 
-    IMPLEMENT_EQ_OPERATOR(Selector, PseudoSelector, override final);
+    DECLARE_CMP_OPERATOR(PseudoSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(Selector, PseudoSelector);
+    IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, PseudoSelector);
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(PseudoSelector);
@@ -676,7 +718,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   class ComplexSelector final : public Selector,
-    public Vectorized<CplxSelComponent>
+    public Vectorized<CplxSelComponent>,
+    public Equatable<ComplexSelector>,
+    public Comparable<ComplexSelector>
   {
 
 
@@ -781,7 +825,7 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_CHILDREN(ComplexSelector);
     IMPLEMENT_ACCEPT(void, Selector, ComplexSelector);
     IMPLEMENT_ACCEPT(bool, Selector, ComplexSelector);
-    IMPLEMENT_EQ_OPERATOR(Selector, ComplexSelector, override final)
+    IMPLEMENT_EQ_OPERATOR(Selector, ComplexSelector)
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ComplexSelector);
@@ -797,7 +841,9 @@ namespace Sass {
   // discrepancy with dart-sass. Opted to name them as in CSS33
   enum SelectorPrefix : unsigned char { CHILD /* > */, FOLLOWING /* ~ */, SIBLING /* + */ };
 
-  class CplxSelComponent : public AstNode, public Hashable, public Comparable
+  class CplxSelComponent : public AstNode,
+    public Equatable<CplxSelComponent>,
+    public Comparable<CplxSelComponent>
   {
 
     ADD_CONSTREF(SelectorCombinatorVector, combinators);
@@ -813,8 +859,6 @@ namespace Sass {
     sass::string inspect() const;
 
     sass::string inspecter() const;
-
-    size_t hash() const override final;
 
     void appendCombinators(SelectorCombinatorVector trails);
 
@@ -837,7 +881,7 @@ namespace Sass {
       const CplxSelComponent* ptr);
 
     // Implement hash functionality
-    // virtual size_t hash() const;
+    virtual size_t hash() const;
     //void cloneChildren(const Selector*) override;
 
     // By default we consider instances not empty
@@ -875,7 +919,10 @@ namespace Sass {
   // A specific combinator between compound selectors
   /////////////////////////////////////////////////////////////////////////
 
-  class SelectorCombinator : public AstNode, public Hashable, public Comparable {
+  class SelectorCombinator : public AstNode,
+    public Equatable<SelectorCombinator>,
+    public Comparable<SelectorCombinator>
+  {
 
     ADD_CONSTREF(SelectorPrefix, combinator);
 
@@ -895,20 +942,21 @@ namespace Sass {
 
   public:
 
-    size_t hash() const override final;
-
     // Some convenient boolean checkers
     bool isChild() const { return combinator_ == CHILD; }
     bool isNextSibling() const { return combinator_ == SIBLING; }
     bool isFollowingSibling() const { return combinator_ == FOLLOWING; }
 
     // Simple equality operators
+    bool operator==(const SelectorCombinator& rhs) const {
+      return combinator_ == rhs.combinator_;
+    }
     bool operator!=(const SelectorCombinator& rhs) const {
       return combinator_ != rhs.combinator_;
     }
-
-    bool operator==(const SelectorCombinator& rhs) const;
-    bool operator<(const SelectorCombinator& rhs) const;
+    bool operator<(const SelectorCombinator& rhs) const {
+      return combinator_ < rhs.combinator_;
+    }
 
     const sass::string toString() const {
       switch (combinator_) {
@@ -990,7 +1038,10 @@ namespace Sass {
   // up the pseudo selectors from being virtual, as they must be last always.
   // https://github.com/sass/libsass/pull/3101
   /////////////////////////////////////////////////////////////////////////
-  class CompoundSelector final : public Selector, public Vectorized<SimpleSelector>
+  class CompoundSelector final : public Selector,
+    public Vectorized<SimpleSelector>,
+    public Equatable<CompoundSelector>,
+    public Comparable<CompoundSelector>
   {
 
     // This is one of the most important flags for selectors.
@@ -1077,7 +1128,7 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_CHILDREN(CompoundSelector);
     IMPLEMENT_ACCEPT(void, Selector, CompoundSelector);
     IMPLEMENT_ACCEPT(bool, Selector, CompoundSelector);
-    IMPLEMENT_EQ_OPERATOR(Selector, CompoundSelector, override final);
+    IMPLEMENT_EQ_OPERATOR(Selector, CompoundSelector);
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(CompoundSelector);
@@ -1088,7 +1139,9 @@ namespace Sass {
   // Comma-separated selector groups.
   /////////////////////////////////////////////////////////////////////////
   class SelectorList final : public Selector,
-    public Vectorized<ComplexSelector>
+    public Vectorized<ComplexSelector>,
+    public Equatable<SelectorList>,
+    public Comparable<SelectorList>
   {
   private:
 
@@ -1155,7 +1208,7 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_CHILDREN(SelectorList);
     IMPLEMENT_ACCEPT(void, Selector, SelectorList);
     IMPLEMENT_ACCEPT(bool, Selector, SelectorList);
-    IMPLEMENT_EQ_OPERATOR(Selector, SelectorList, override final);
+    IMPLEMENT_EQ_OPERATOR(Selector, SelectorList);
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SelectorList);
