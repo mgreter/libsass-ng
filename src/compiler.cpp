@@ -63,6 +63,7 @@ namespace Sass {
     srcmap(nullptr),
     error()
   {
+    // std::cerr << "GOT compiler and dir is " << PWD << "\n";
     #ifdef DEBUG_MSVC_CRT_MEM
     _CrtMemCheckpoint(&memState);
     #endif
@@ -132,7 +133,7 @@ namespace Sass {
           "No entry-point to compile given");
       }
       // Do initial loading
-      entry_point->loadIfNeeded(*this);
+      entry_point->loadIfNeeded(*this, PWD);
       // Now parse the entry point stylesheet
       sheet = parseRoot(entry_point);
       // Update the compiler state
@@ -226,7 +227,7 @@ namespace Sass {
     }
     // Create resulting footer and return a copy
     return sass_copy_string("\n/*# sourceMappingURL=" +
-      File::abs2rel(mapopt.path, mapopt.origin) + " */");
+      File::abs2rel(mapopt.path, mapopt.origin, PWD) + " */");
 
   }
   // EO renderSrcMapLink
@@ -289,7 +290,7 @@ namespace Sass {
     // Create file reference to whom our mappings apply
     /**********************************************/
     sass::string origin(mapopt.origin);
-    origin = File::abs2rel(origin, CWD());
+    origin = File::abs2rel(origin, PWD, PWD);
     JsonNode* json_file_name = json_mkstring(origin.c_str());
     json_append_member(json_srcmap, "file", json_file_name);
 
@@ -308,7 +309,7 @@ namespace Sass {
     for (size_t i = 0; i < included_sources.size(); ++i) {
       const SourceData* source(included_sources[i]);
       sass::string path(source->getAbsPath());
-      path = File::rel2abs(path, ".", CWD());
+      path = File::rel2abs(path, ".", PWD);
       // Optionally convert to file urls
       if (mapopt.file_urls) {
         if (path[0] == '/') {
@@ -324,7 +325,7 @@ namespace Sass {
           json_mkstring(path.c_str()));
       }
       else {
-        path = File::abs2rel(path, ".", CWD());
+        path = File::abs2rel(path, ".", PWD);
         // Append item to json array
         json_append_element(json_sources,
           json_mkstring(path.c_str()));
@@ -843,8 +844,8 @@ namespace Sass {
         sass::string msg("An @import loop has been found:");
         // CallStackFrame frame(compiler, import->pstate());
         for (size_t n = i; n < stack.size() - 1; ++n) {
-          msg += "\n    " + sass::string(File::abs2rel(stack[n]->source->getAbsPath(), CWD(), CWD())) +
-            " imports " + sass::string(File::abs2rel(stack[n + 1]->source->getAbsPath(), CWD(), CWD()));
+          msg += "\n    " + sass::string(File::abs2rel(stack[n]->source->getAbsPath(), compiler.PWD, compiler.PWD)) +
+            " imports " + sass::string(File::abs2rel(stack[n + 1]->source->getAbsPath(), compiler.PWD, compiler.PWD));
         }
         // implement error throw directly until we
         // decided how to handle full stack traces
@@ -937,7 +938,7 @@ namespace Sass {
     sass::vector<sass::string> incpaths(1 + includePaths.size());
     incpaths.emplace_back(File::dir_name(import.source->getAbsPath()));
     incpaths.insert(incpaths.end(), includePaths.begin(), includePaths.end());
-    return File::find_file(path, CWD(), incpaths, fileExistsCache);
+    return File::find_file(path, PWD, incpaths, fileExistsCache);
   }
 
   // Look for all possible filename variants (e.g. partials)
@@ -949,18 +950,18 @@ namespace Sass {
     if (it != resolveCache.end()) return it->second;
 
     // make sure we resolve against an absolute path
-    sass::string base_path(File::rel2abs(import.base_path, ".", CWD()));
+    sass::string base_path(File::rel2abs(import.base_path, ".", PWD));
 
     // first try to resolve the load path relative to the base path
     sass::vector<ResolvedImport>& vec(resolveCache[import]);
 
-    vec = File::resolve_includes(base_path, import.imp_path, CWD(), forImport, fileExistsCache);
+    vec = File::resolve_includes(base_path, import.imp_path, PWD, forImport, fileExistsCache);
 
     // then search in every include path (but only if nothing found yet)
     for (size_t i = 0, S = includePaths.size(); vec.size() == 0 && i < S; ++i)
     {
       sass::vector<ResolvedImport> resolved(File::resolve_includes(
-        includePaths[i], import.imp_path, CWD(), forImport, fileExistsCache));
+        includePaths[i], import.imp_path, PWD, forImport, fileExistsCache));
       vec.insert(vec.end(), resolved.begin(), resolved.end());
     }
     // return vector
@@ -981,7 +982,7 @@ namespace Sass {
     // Throw error if read has failed
     throw Exception::IoError(*this,
       "File not found or unreadable",
-        File::abs2rel(import.abs_path));
+        File::abs2rel(import.abs_path, PWD, PWD));
   }
   // EO loadImport
 

@@ -20,12 +20,12 @@ extern "C" {
   // Change the current working directory
   // LibSass will fetch this once initially
   // Underlying `CWD` is a thread-local var
-  void ADDCALL sass_chdir(const char* path)
-  {
-    if (path != nullptr) {
-      set_cwd(File::rel2abs(path, CWD()) + "/");
-    }
-  }
+  // void ADDCALL sass_chdir(const char* path)
+  // {
+  //   if (path != nullptr) {
+  //     set_cwd(File::rel2abs(path, CWD(), CWD()) + "/");
+  //   }
+  // }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

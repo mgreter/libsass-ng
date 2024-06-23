@@ -93,6 +93,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  extern sass::string get_pwd();
+
   // sass inspect options
   class InspectOptions
   {
@@ -210,6 +212,8 @@ namespace Sass {
 
     // Sourcemap related options
     SrcMapOptions mapopt;
+
+    sass::string PWD = get_pwd();
 
     // initialization list (constructor with defaults)
     OutputOptions(const InspectOptions& opt,

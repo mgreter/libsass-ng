@@ -57,6 +57,8 @@ namespace Sass {
       const sass::string& abs_path,
       size_t idx = sass::string::npos);
 
+    void resolveAbsPath(const sass::string& pwd) override;
+
     // Returns the requested line. Will take interpolations into
     // account to show more accurate debug messages. Calling this
     // can be rather expensive, so only use it for debugging.
@@ -121,8 +123,8 @@ namespace Sass {
     // Copied: imp_path and abs_path
     // Moved: content and srcmaps data
     SourceFile(
-      const char* imp_path, // copy
-      const char* abs_path, // copy
+      const char* imp_path, // copy (use sass::string)
+      const char* abs_path, // copy (use sass::string)
       char* content, // take ownership
       char* srcmaps, // take ownership
       size_t srcidx = sass::string::npos);

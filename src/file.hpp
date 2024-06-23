@@ -27,10 +27,10 @@ namespace Sass {
 
   // return the current directory
   // always with forward slashes
-  extern void set_cwd(const sass::string& path);
+  // extern void set_cwd(const sass::string& path);
 
   // Should be thread_local?
-  extern const sass::string& CWD();
+  // extern const sass::string& CWD();
 
   namespace File {
 
@@ -57,11 +57,11 @@ namespace Sass {
     sass::string join_paths(sass::string root, sass::string name);
 
     // create an absolute path by resolving relative paths with cwd
-    sass::string rel2abs(const sass::string& path, const sass::string& base = Sass::CWD(), const sass::string& CWD = Sass::CWD());
+    sass::string rel2abs(const sass::string& path, const sass::string& base, const sass::string& CWD);
 
     // create a path that is relative to the given base directory
     // path and base will first be resolved against cwd to make them absolute
-    sass::string abs2rel(const sass::string& path, const sass::string& base = Sass::CWD(), const sass::string& CWD = Sass::CWD());
+    sass::string abs2rel(const sass::string& path, const sass::string& base, const sass::string& CWD);
 
     // helper function to resolve a filename
     // searching without variations in all paths
@@ -77,7 +77,7 @@ namespace Sass {
 
     // try to load the given filename
     // returned memory must be freed
-    char* slurp_file(const sass::string& file, const sass::string& CWD);
+    char* slurp_file(const sass::string& path);
 
     // Read and return resolved import
     Import* read_import(const ResolvedImport& import);

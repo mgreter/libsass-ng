@@ -8,6 +8,7 @@
 #include "charcode.hpp"
 #include "character.hpp"
 #include "source_span.hpp"
+#include "file.hpp"
 
 namespace Sass {
 
@@ -51,6 +52,10 @@ namespace Sass {
     srcidx(idx),
     lfs()
   {}
+
+  void SourceWithPath::resolveAbsPath(const sass::string& pwd) {
+      abs_path = File::rel2abs(imp_path, pwd, pwd);
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -228,7 +233,7 @@ namespace Sass {
   {
     SourceData* source(pstate.getSource());
     // Calculate last line of insert
-    size_t lastLine = pstate.position.line - 1
+    size_t lastLine = size_t(pstate.position.line) - 1
       + SourceString::countLines();
 
     // Calculate line difference
@@ -293,8 +298,8 @@ namespace Sass {
           line - lineDelta));
       // Calculate column to cut appending line
       size_t col = pstate.span.line == 0
-        ? pstate.position.column + pstate.span.column
-        : pstate.span.column;
+        ? size_t(pstate.position.column) + pstate.span.column
+        : size_t(pstate.span.column);
 
       // Append to last line to insert
       return SourceString::getLine(

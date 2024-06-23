@@ -205,6 +205,9 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Returns status code for compiler (0 meaning success, anything else is an error)
+  ADDAPI void ADDCALL sass_compiler_set_work_directory(struct SassCompiler* compiler, const char* cwd);
+
 #ifdef __cplusplus
 } // EO extern "C".
 #endif

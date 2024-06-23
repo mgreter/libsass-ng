@@ -32,9 +32,9 @@ namespace Sass {
       base_path(File::dir_name(ctx_path)),
       considerImports(considerImports)
     {
-      if (base_path == "stream://") {
-        base_path = CWD();
-      }
+      //if (base_path == "stream://") {
+      //  base_path = PWD();
+      //}
     }
 
     bool operator==(const ImportRequest& other) const {
@@ -75,7 +75,7 @@ namespace Sass {
     SourceDataObj source;
     SassImportSyntax syntax;
     char* error = nullptr;
-    void loadIfNeeded(BackTraces& traces);
+    void loadIfNeeded(BackTraces& traces, const sass::string& pwd);
     bool isLoaded() const;
     const char* getImpPath() const;
     const char* getAbsPath() const;

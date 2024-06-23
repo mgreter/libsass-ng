@@ -72,28 +72,28 @@ namespace Sass {
   // Has proven to be the most stable, but the memory
   // will kinda leak (not relevant since long living).
   // One known offender is mingw v8.1.0 x86/i686
-  static THREAD_LOCAL(sass::string*) cwd;
+  // static THREAD_LOCAL(sass::string*) cwd;
 
   // Initialize current directory once
-  extern void set_cwd(const sass::string& path)
-  {
-    if (cwd == nullptr) {
-      // Create object on the heap
-      cwd = new sass::string();
-    }
-    // Assign to heap object
-    *cwd = path;
-  }
+  // extern void set_cwd(const sass::string& path)
+  // {
+  //   if (cwd == nullptr) {
+  //     // Create object on the heap
+  //     cwd = new sass::string();
+  //   }
+  //   // Assign to heap object
+  //   *cwd = path;
+  // }
   // EO extern set_cwd
 
   // Initialize current directory once
-  extern const sass::string& CWD()
-  {
-    if (cwd == nullptr) {
-      cwd = new sass::string(get_pwd());
-    }
-    return *cwd;
-  }
+  // extern const sass::string& CWD()
+  // {
+  //   if (cwd == nullptr) {
+  //     cwd = new sass::string(get_pwd());
+  //   }
+  //   return *cwd;
+  // }
   // EO extern CWD
 
   /////////////////////////////////////////////////////////////////////////
@@ -279,6 +279,7 @@ namespace Sass {
     // EO join_paths
 
     // create an absolute path by resolving relative paths with cwd
+    // Note: differs if path has trainling slash or not (output follows suit)
     sass::string rel2abs(const sass::string& path, const sass::string& base, const sass::string& CWD)
     {
       return make_canonical_path(join_paths(join_paths(CWD + "/", base + "/"), path));
@@ -510,13 +511,13 @@ namespace Sass {
 
     // try to load the given filename
     // returned memory must be freed
-    char* slurp_file(const sass::string& path, const sass::string& CWD)
+    char* slurp_file(const sass::string& path)
     {
       #ifdef _WIN32
         char* contents;
         DWORD dwBytes;
         // windows unicode file-paths are encoded in utf16
-        sass::string abspath(join_paths(CWD, path));
+        sass::string abspath(path); // (join_paths(CWD, path));
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
@@ -572,7 +573,7 @@ namespace Sass {
     {
       // try to read the content of the resolved file entry
       // the memory buffer returned to us must be freed by us!
-      if (char* contents = slurp_file(import.abs_path, CWD())) {
+      if (char* contents = slurp_file(import.abs_path)) {
         // Return LoadedImport object
         // ToDo: Add sourcemap parsing
         return SASS_MEMORY_NEW(Import,

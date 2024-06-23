@@ -34,10 +34,10 @@ extern "C" {
   // Create import entry to load the passed input path.
   struct SassImport* ADDCALL sass_make_file_import(const char* imp_path)
   {
-    sass::string abs_path(File::rel2abs(imp_path, CWD()));
+    /// sass::string abs_path(imp_path);
     Import* loaded = SASS_MEMORY_NEW(Import,
       SASS_MEMORY_NEW(SourceFile,
-        imp_path, abs_path.c_str(),
+        imp_path, imp_path,
         nullptr, nullptr),
       SASS_IMPORT_AUTO);
     loaded->refcount += 1;

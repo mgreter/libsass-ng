@@ -52,6 +52,8 @@ namespace Sass {
     // Return path as it was resolved by importer
     virtual const char* getAbsPath() const = 0;
 
+    virtual void resolveAbsPath(const sass::string& pwd) = 0;
+
     // Return only the filename part
     // ToDo: utilize base_name function
     const char* getFileName() const

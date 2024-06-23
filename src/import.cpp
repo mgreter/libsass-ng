@@ -11,19 +11,27 @@ namespace Sass {
   // Entry point for top level file import
   // Don't load like other includes, we do not
   // check inside include paths for this file!
-  void Import::loadIfNeeded(BackTraces& traces)
+  void Import::loadIfNeeded(BackTraces& traces,
+    const sass::string& pwd)
   {
     // Only load once
     if (isLoaded()) return;
     // Check if entry file-path is given
     // Use err string of LoadedImport
+    if (getImpPath() == nullptr) {
+      throw std::runtime_error(
+        "No file path given to be loaded.");
+    }
+
+    source->resolveAbsPath(pwd);
+
     if (getAbsPath() == nullptr) {
       throw std::runtime_error(
         "No file path given to be loaded.");
     }
     // try to read the content of the resolved file entry
     // the memory buffer returned to us must be freed by us!
-    if (char* contents = File::slurp_file(getAbsPath(), CWD())) {
+    if (char* contents = File::slurp_file(getAbsPath())) {
       // Upgrade to a source file
       // ToDo: Add sourcemap parsing
       source = SASS_MEMORY_NEW(SourceFile,
@@ -36,7 +44,7 @@ namespace Sass {
       // Throw error if read has failed
       throw Exception::IoError(traces,
         "File not found or unreadable",
-        File::abs2rel(source->getAbsPath()));
+        File::abs2rel(source->getAbsPath(), pwd, pwd));
     }
   }
 

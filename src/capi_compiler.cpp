@@ -181,7 +181,7 @@ namespace Sass {
           std::ofstream fh(path, std::ios::out | std::ios::binary);
           if (!fh) throw Exception::IoError(compiler,
             "Error opening output file",
-            File::abs2rel(path));
+            File::abs2rel(path, compiler.PWD, compiler.PWD));
           // Write stuff to the output file
           if (content) { fh << content; }
           if (footer) { fh << footer; }
@@ -191,7 +191,7 @@ namespace Sass {
           // This should report also write errors
           if (!fh) throw Exception::IoError(compiler,
             "Error writing output file",
-            File::abs2rel(path));
+            File::abs2rel(path, compiler.PWD, compiler.PWD));
         }
         else {
           // Simply print results to stdout
@@ -208,7 +208,7 @@ namespace Sass {
       if (compiler.error.status && !fh) return;
       if (!fh) throw Exception::IoError(compiler,
         "Error opening output file",
-        File::abs2rel(path));
+        File::abs2rel(path, compiler.PWD, compiler.PWD));
       // Write stuff to the output file
       compiler.error.writeCss(fh);
       // Close file-handle
@@ -217,7 +217,7 @@ namespace Sass {
       // This should report also write errors
       if (!fh) throw Exception::IoError(compiler,
         "Error writing output file",
-        File::abs2rel(path));
+        File::abs2rel(path, compiler.PWD, compiler.PWD));
     }
 
   }
@@ -754,5 +754,11 @@ extern "C" {
   //   {
   //     Compiler::unwrap(compiler).source_comments = source_comments;
   //   }
+
+  void ADDCALL sass_compiler_set_work_directory(struct SassCompiler* compiler, const char* cwd)
+  {
+    auto& pwd = Compiler::unwrap(compiler).PWD;
+    pwd = File::rel2abs(sass::string(cwd) + "/", pwd, pwd);
+  }
 
 }

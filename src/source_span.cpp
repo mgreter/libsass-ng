@@ -64,11 +64,11 @@ namespace Sass {
 
   // Either return path relative to cwd if path is
   // inside cwd, otherwise return absolute path.
-  sass::string SourceSpan::getDebugPath() const
+  sass::string SourceSpan::getDebugPath(const sass::string& cwd) const
   {
     const char* path = getAbsPath();
     // Convert (potential) absolute path to relative path
-    sass::string rel_path(File::abs2rel(path, CWD(), CWD()));
+    sass::string rel_path(File::abs2rel(path, cwd, cwd));
     return StringUtils::startsWith(rel_path, "../", 3) ? path : rel_path;
   }
 

@@ -149,7 +149,7 @@ namespace Sass {
   // Print a debug message without any SourceSpan (used by @debug)
   void Logger::addDebug(const sass::string& message, const SourceSpan& pstate)
   {
-    logstrm << pstate.getDebugPath() << ":" <<
+    logstrm << pstate.getDebugPath(PWD) << ":" <<
       pstate.getLine() << " DEBUG: " << message;
     logstrm << STRMLF;
   }
@@ -169,7 +169,7 @@ namespace Sass {
     writeWarnHead(deprecation);
     logstrm << " on line " << pstate.getLine();
     logstrm << ", column " << pstate.getColumn();
-    logstrm << " of " << pstate.getDebugPath() << ':' << STRMLF;
+    logstrm << " of " << pstate.getDebugPath(PWD) << ':' << STRMLF;
 
     // Capped at 80 to keep specs backward compatible
     print_wrapped(message, 80, logstrm);
@@ -597,7 +597,7 @@ namespace Sass {
       const Traced& trace = traces[i];
 
       // make path relative to the current directory
-      sass::string rel_path(File::abs2rel(trace.getPstate().getAbsPath(), CWD(), CWD()));
+      sass::string rel_path(File::abs2rel(trace.getPstate().getAbsPath(), PWD, PWD));
 
       strm.str(sass::string());
       strm << rel_path << ' ';
@@ -631,7 +631,7 @@ namespace Sass {
       const Traced& trace = traces[i];
 
       // make path relative to the current directory
-      sass::string rel_path(File::abs2rel(trace.getPstate().getAbsPath(), CWD(), CWD()));
+      sass::string rel_path(File::abs2rel(trace.getPstate().getAbsPath(), PWD, PWD));
 
       // skip functions on error cases (unsure why ruby sass does this)
       // if (trace.caller.substr(0, 6) == ", in f") continue;
