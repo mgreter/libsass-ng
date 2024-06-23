@@ -66,6 +66,12 @@ class btree_container {
   reverse_iterator rend() { return tree_.rend(); }
   const_reverse_iterator rend() const { return tree_.rend(); }
 
+  // Const iterator routines.
+  const_iterator cbegin() const { return begin(); }
+  const_iterator cend() const { return end(); }
+  const_reverse_iterator crbegin() const { return rbegin(); }
+  const_reverse_iterator crend() const { return rend(); }
+
   // Lookup routines.
   iterator lower_bound(const key_type &key) {
     return tree_.lower_bound(key);
@@ -127,10 +133,14 @@ class btree_container {
     return true;
   }
 
+#if !(defined(__cplusplus) && __cplusplus >= 202002L)
   bool operator!=(const self_type& other) const {
     return !operator==(other);
   }
+#endif
 
+  // Functor retrieval
+  key_compare key_comp() const { return tree_.key_comp(); }
 
  protected:
   Tree tree_;
@@ -193,8 +203,14 @@ class btree_unique_container : public btree_container<Tree> {
   std::pair<iterator,bool> insert(const value_type &x) {
     return this->tree_.insert_unique(x);
   }
+  std::pair<iterator,bool> insert(value_type &&x) {
+    return this->tree_.insert_unique(std::move(x));
+  }
   iterator insert(iterator position, const value_type &x) {
     return this->tree_.insert_unique(position, x);
+  }
+  iterator insert(iterator position, value_type &&x) {
+    return this->tree_.insert_unique(position, std::move(x));
   }
   template <typename InputIterator>
   void insert(InputIterator b, InputIterator e) {
@@ -230,21 +246,6 @@ class btree_map_container : public btree_unique_container<Tree> {
   typedef typename Tree::key_compare key_compare;
   typedef typename Tree::allocator_type allocator_type;
 
- private:
-  // A pointer-like object which only generates its value when
-  // dereferenced. Used by operator[] to avoid constructing an empty data_type
-  // if the key already exists in the map.
-  struct generate_value {
-    generate_value(const key_type &k)
-        : key(k) {
-    }
-    value_type operator*() const {
-      return std::make_pair(key, data_type());
-    }
-    const key_type &key;
-  };
-
- public:
   // Default constructor.
   btree_map_container(const key_compare &comp = key_compare(),
                       const allocator_type &alloc = allocator_type())
@@ -266,7 +267,7 @@ class btree_map_container : public btree_unique_container<Tree> {
 
   // Insertion routines.
   data_type& operator[](const key_type &key) {
-    return this->tree_.insert_unique(key, generate_value(key)).first->second;
+    return this->tree_.insert_unique_args(key, std::piecewise_construct, std::forward_as_tuple(key), std::make_tuple()).first->second;
   }
 };
 
@@ -321,8 +322,14 @@ class btree_multi_container : public btree_container<Tree> {
   iterator insert(const value_type &x) {
     return this->tree_.insert_multi(x);
   }
+  iterator insert(value_type &&x) {
+    return this->tree_.insert_multi(std::move(x));
+  }
   iterator insert(iterator position, const value_type &x) {
     return this->tree_.insert_multi(position, x);
+  }
+  iterator insert(iterator position, value_type &&x) {
+    return this->tree_.insert_multi(position, std::move(x));
   }
   template <typename InputIterator>
   void insert(InputIterator b, InputIterator e) {
