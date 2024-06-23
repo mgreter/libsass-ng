@@ -387,7 +387,7 @@ class hopscotch_bucket : public hopscotch_bucket_hash<StoreHash> {
 
  private:
   neighborhood_bitmap m_neighborhood_infos;
-//  alignas(value_type) unsigned char m_value[sizeof(value_type)];
+  alignas(value_type) unsigned char m_value[sizeof(value_type)];
 };
 
 /**
