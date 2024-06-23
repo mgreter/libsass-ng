@@ -123,8 +123,8 @@
 // Comes with MIT license attached
 // Performance for on extreme extends
 // Improves heavy extend pretty well (5%)
-// #define SASS_USE_TSL_BHOPSCOTCH_MAP
-// #define SASS_USE_TSL_BHOPSCOTCH_SET
+#define SASS_USE_TSL_BHOPSCOTCH_MAP
+#define SASS_USE_TSL_BHOPSCOTCH_SET
 
 // Comes with Apache 2.0 license attached
 // Performance for on extreme extends
@@ -159,6 +159,23 @@
 // Specially helps in tight loops with control vars.
 #ifndef SassAssignableRefCount
 #define SassAssignableRefCount 3
+#endif
+
+/////////////////////////////////////////////////////////////////////////
+// Keep the following safe-guards in place
+// Disables optimization for older compilers
+/////////////////////////////////////////////////////////////////////////
+
+#if defined(__MINGW32__)
+#elif (__clang__ + 0)
+#elif (_MSC_VER+0) >= 1900
+# define CC_HAS_THREAD_LOCAL 1
+#elif (__GNUC__*100+__GNUC_MINOR__) <= 407 // can't be clang
+# if defined(__GNUC__) && __GNUC__ < 5
+#  undef SASS_CUSTOM_ALLOCATOR
+#  undef SASS_USE_TSL_ROBIN_MAP
+#  undef SASS_USE_TSL_ROBIN_SET
+# endif
 #endif
 
 /////////////////////////////////////////////////////////////////////////

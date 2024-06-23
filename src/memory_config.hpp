@@ -83,8 +83,8 @@
 #elif (__GNUC__*100+__GNUC_MINOR__) >= 408 // can't be clang
 # if defined(__GNUC__) && __GNUC__ < 5
 // Disable custom allocator for gcc before 5.0
-#  define SASS_NO_PTHREAD
-#  undef SASS_CUSTOM_ALLOCATOR
+// #  define SASS_NO_PTHREAD
+// #  undef SASS_CUSTOM_ALLOCATOR
 # endif
 # define CC_HAS_THREAD_LOCAL 1
 #endif
