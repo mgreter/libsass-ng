@@ -25,20 +25,20 @@ jobs:
           # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.5', cxx: 'g++-4.5', autotools: 'no', cppstd: 'gnu++0x'}
           # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.6', cxx: 'g++-4.6', autotools: 'no', cppstd: 'gnu++0x'}
           - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.7', cxx: 'g++-4.7', autotools: 'no', cppstd: 'gnu++11'}
-          #- {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.8', cxx: 'g++-4.8', autotools: 'no', cppstd: 'c++11'}
-          #- {os: ubuntu-20.04, build: 'static', cc: 'gcc-5', cxx: 'g++-5', autotools: 'no', cppstd: 'c++11'}
+          - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.8', cxx: 'g++-4.8', autotools: 'no', cppstd: 'c++11'}
+          - {os: ubuntu-20.04, build: 'static', cc: 'gcc-5', cxx: 'g++-5', autotools: 'no', cppstd: 'c++11'}
           # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-6', cxx: 'g++-6', autotools: 'no', cppstd: 'c++11'}
-          #- {os: ubuntu-20.04, build: 'static', cc: 'gcc-7', cxx: 'g++-7', autotools: 'no', cppstd: 'c++11'}
-          #- {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
-          #- {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
-          #- {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11'}
-          #- {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11'}
-          #- {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
-          #- {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
-          #- {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
-          #- {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
-          #- {os: macOS-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
-          #- {os: macOS-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
+          - {os: ubuntu-20.04, build: 'static', cc: 'gcc-7', cxx: 'g++-7', autotools: 'no', cppstd: 'c++11'}
+          - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
+          - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
+          - {os: ubuntu-latest, build: 'shared', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11'}
+          - {os: ubuntu-latest, build: 'static', cc: 'gcc', cxx: 'g++', autotools: 'no', cppstd: 'c++11'}
+          - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
+          - {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
+          - {os: ubuntu-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
+          - {os: ubuntu-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
+          - {os: macOS-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
+          - {os: macOS-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'yes', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
           - {os: macOS-latest, build: 'shared', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
           - {os: macOS-latest, build: 'static', cc: 'clang', cxx: 'clang++', autotools: 'no', cppstd: 'c++11', cflags: '-g -fsanitize=address'}
 
@@ -137,7 +137,7 @@ jobs:
   windows-msvc:
     runs-on: ${{ matrix.config.os }}
     name: MSVC
-    if: ${{ false }}
+    # if: ${{ false }}
 
     strategy:
       fail-fast: false
@@ -214,7 +214,7 @@ jobs:
   windows-mingw:
     runs-on: windows-latest
     name: MinGW
-    if: ${{ false }}
+    # if: ${{ false }}
 
     strategy:
       fail-fast: false
