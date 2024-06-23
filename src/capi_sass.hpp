@@ -66,7 +66,8 @@
 // ToDo: remove before release
 #define _CRT_SECURE_NO_WARNINGS
 
-#include <math.h>
+#include <cmath>
+#include <stdexcept>
 
 // Include C-API headers
 #include "sass/base.h"
