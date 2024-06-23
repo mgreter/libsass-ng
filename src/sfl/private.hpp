@@ -1925,7 +1925,7 @@ ForwardIt uninitialized_move(InputIt first, InputIt last, ForwardIt d_first)
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-[[noreturn]]
+// [[noreturn]]
 inline void throw_length_error(const char* msg)
 {
     #ifdef SFL_NO_EXCEPTIONS
@@ -1937,7 +1937,7 @@ inline void throw_length_error(const char* msg)
     #endif
 }
 
-[[noreturn]]
+// [[noreturn]]
 inline void throw_out_of_range(const char* msg)
 {
     #ifdef SFL_NO_EXCEPTIONS

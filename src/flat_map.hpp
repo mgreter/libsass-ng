@@ -8,6 +8,7 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+#include <stdexcept>
 #include <cmath>
 
 namespace Sass {
@@ -227,7 +228,7 @@ namespace Sass {
     // EO insert
 
     // Access element at specific key
-    // Throws of key is not known in map
+    // Throws if key is not known in map
     const Value& at(const Key& key) const
     {
       const_iterator cur = items.begin();
