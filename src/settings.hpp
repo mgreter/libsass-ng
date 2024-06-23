@@ -110,8 +110,6 @@
 // When using shim, we must link to pthread
 #define USE_STD_THREAD_LOCAL 1
 
-/*
-
 // Implementation for unordered map/set
 #define SASS_USE_TSL_ROBIN_MAP
 #define SASS_USE_TSL_ROBIN_SET
@@ -131,10 +129,10 @@
 // Comes with Apache 2.0 license attached
 // Performance for on extreme extends
 // Improves heavy extend substantially (10%)
-#define SASS_USE_ABSEIL_BTREE_MAP
-#define SASS_USE_ABSEIL_BTREE_SET
+// #define SASS_USE_ABSEIL_BTREE_MAP
+// #define SASS_USE_ABSEIL_BTREE_SET
 
-*/
+
 // Some headers may not be included
 // #define SASS_USE_TSL_BHOPSCOTCH_MAP
 // #define SASS_USE_TSL_BHOPSCOTCH_SET
