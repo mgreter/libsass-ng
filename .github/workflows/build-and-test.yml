@@ -25,6 +25,7 @@ jobs:
           # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.5', cxx: 'g++-4.5', autotools: 'no', cppstd: 'gnu++0x'}
           # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.6', cxx: 'g++-4.6', autotools: 'no', cppstd: 'gnu++0x'}
           - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.7', cxx: 'g++-4.7', autotools: 'no', cppstd: 'gnu++11'}
+          - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.7', cxx: 'g++-4.7', autotools: 'yes', cppstd: 'gnu++11'}
           - {os: ubuntu-20.04, build: 'static', cc: 'gcc-4.8', cxx: 'g++-4.8', autotools: 'no', cppstd: 'c++11'}
           - {os: ubuntu-20.04, build: 'static', cc: 'gcc-5', cxx: 'g++-5', autotools: 'no', cppstd: 'c++11'}
           # NO-CI - {os: ubuntu-20.04, build: 'static', cc: 'gcc-6', cxx: 'g++-6', autotools: 'no', cppstd: 'c++11'}
