@@ -63,6 +63,17 @@ extern "C" {
     ASSIGN, IESEQ                      // special IE single equal
   };
 
+  // Color Spaces
+  enum SassColorSpace {
+    RGB, HSL, HWB,
+    SRGB, SRGB_LINEAR,
+    DISPLAY_P3, A98RGB,
+    PROPHOTO_RGB,REC2020,
+    XYZ_D65, XYZ_D50,
+    LAB, LCH, LMS,
+    OKLAB, OKLCH
+  };
+
   // Creator functions for all value types
   ADDAPI struct SassValue* ADDCALL sass_make_null(void);
   ADDAPI struct SassValue* ADDCALL sass_make_boolean(bool val);

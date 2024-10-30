@@ -444,6 +444,8 @@ namespace Sass {
     // Whether the value will be represented in CSS as the empty string.
     virtual bool isBlank() const { return false; }
 
+    virtual ValueVector asList();
+
     // Return the length of this item as a list
     virtual size_t lengthAsList() const { return 1; }
 
@@ -615,6 +617,8 @@ namespace Sass {
     /// (without the `$`). It's used for error reporting.
     CompoundSelector* assertCompoundSelector(Compiler& ctx, const sass::string& name = Strings::empty, bool allowParent = false) const;
 
+    ValueVector assertCommonListStyle(Compiler& ctx, const sass::string& name = Strings::empty, bool allowSlash = false);
+
     /// Returns a valid CSS representation of [this].
     ///
     /// Throws a [SassScriptException] if [this] can't be represented in plain
@@ -648,6 +652,7 @@ namespace Sass {
     DECLARE_ISA_CASTER(ColorRgba);
     DECLARE_ISA_CASTER(ColorHsla);
     DECLARE_ISA_CASTER(ColorHwba);
+    DECLARE_ISA_CASTER(ColorSpaced);
     DECLARE_ISA_CASTER(Boolean);
     DECLARE_ISA_CASTER(Function);
     DECLARE_ISA_CASTER(CustomError);

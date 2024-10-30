@@ -621,7 +621,7 @@ namespace Sass {
   {
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
-      if (current->isImport) continue;
+      //if (current->isImport) continue;
       Module* mod = current->module;
       if (mod == nullptr) continue;
       auto it = mod->moduse.find(ns);
@@ -632,6 +632,7 @@ namespace Sass {
           return { idxs, it->second };
         }
       }
+      //if (current->isImport) continue;
       if (Module* mod = it->second.second) {
         auto fwd = mod->mergedFwdFn.find(name);
         if (fwd != mod->mergedFwdFn.end()) {

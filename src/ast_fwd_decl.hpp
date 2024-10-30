@@ -157,6 +157,7 @@ namespace Sass {
   class ColorRgba;
   class ColorHsla;
   class ColorHwba;
+  class ColorSpaced;
   class Boolean;
   class Null;
 
@@ -293,6 +294,7 @@ namespace Sass {
   IMPL_MEM_OBJ(ColorRgba);
   IMPL_MEM_OBJ(ColorHsla);
   IMPL_MEM_OBJ(ColorHwba);
+  IMPL_MEM_OBJ(ColorSpaced);
   IMPL_MEM_OBJ(Boolean);
   IMPL_MEM_OBJ(String);
   IMPL_MEM_OBJ(Interpolation);

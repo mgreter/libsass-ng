@@ -337,6 +337,11 @@ namespace Sass {
     hash_(0)
   {}
 
+  ValueVector Value::asList()
+  {
+    return ValueVector{ this };
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -647,6 +652,34 @@ namespace Sass {
     SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, pstate(), std::move(text));
     SelectorParser parser(compiler, source, allowParent);
     return parser.parseCompoundSelector();
+  }
+
+
+  ValueVector Value::assertCommonListStyle(Compiler& ctx, const sass::string& name, bool allowSlash)
+  {
+    auto invalidSeparator = separator() == SassSeparator::SASS_COMMA ||
+      (!allowSlash && separator() == SassSeparator::SASS_DIV);
+    if (!invalidSeparator && !hasBrackets()) return asList();
+
+    /*
+      // Check for invalid input arguments
+      bool isBracketed = list->hasBrackets();
+      bool isCommaSeparated = list->hasCommaSeparator();
+      if (isCommaSeparated || isBracketed) {
+        sass::sstream msg;
+        msg << "$channels must be";
+        if (isBracketed) msg << " an unbracketed";
+        if (isCommaSeparated) {
+          msg << (isBracketed ? "," : " a");
+          msg << " space-separated";
+        }
+        msg << " list.";
+        CallStackFrame csf(compiler, list->pstate());
+        throw Exception::RuntimeException(compiler, msg.str());
+      }
+    */
+
+    throw Exception::SassScriptException("not valid list", ctx, pstate());
   }
 
   /////////////////////////////////////////////////////////////////////////

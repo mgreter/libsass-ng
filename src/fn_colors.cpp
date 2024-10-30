@@ -6,7 +6,7 @@
 #include <iomanip>
 #include "compiler.hpp"
 #include "exceptions.hpp"
-#include "ast_values.hpp"
+#include "ast_colors.hpp"
 
 namespace Sass {
 
@@ -106,7 +106,7 @@ namespace Sass {
 /// Prints a deprecation warning if [hue] has a unit other than `deg`.
     static void checkAngle(Logger& logger, const Number* angle, const sass::string& name)
     {
-     // if (!angle->hasUnits()) return;
+      // if (!angle->hasUnits()) return;
       if (angle->hasCompatibleUnits(unit_deg, false)) return;
       logger.addDeprecation(angle->pstate(), Logger::WARN_ANGLE_CONVERT, [&]() {
         sass::string text = "$" + name + ": ";
@@ -114,7 +114,7 @@ namespace Sass {
         text += "\nTo preserve current behavior: " + angle->unitSuggestion(name) + "\n";
         text += "\nSee https://sass-lang.com/d/color-units";
         return text;
-      });
+        });
     }
 
     // Helper function for debugging
@@ -153,6 +153,164 @@ namespace Sass {
         pstate, fncall.str());
     }
     // EO getFunctionString
+
+
+    static bool _parseSlashChannels(
+      const sass::string& name,
+      Value* channels,
+      ValueObj& components,
+      ValueObj& alphaValue,
+      const SourceSpan& pstate,
+      Compiler& compiler)
+    {
+      // Get the list from the channels input variable (or throw)
+      ValueVector list = channels->assertCommonListStyle(compiler, name, true);
+
+      if (channels->hasSlashSeparator()) {
+
+      }
+      else {
+
+      }
+
+      return false;
+    }
+
+    static Value* parseChannels(
+      const sass::string& name,
+      Value* channels,
+      SassColorSpace space,
+      const sass::string& vname,
+      const SourceSpan& pstate,
+      Compiler& compiler)
+    {
+
+      // Check for css var
+      if (isVar(channels)) {
+        return SASS_MEMORY_NEW(
+          String, pstate, name + "(" +
+          channels->inspect() + ")");
+      }
+
+      auto originalChannels = channels;
+      ValueObj alphaFromSlashList;
+      if (channels->separator() == SASS_DIV) {
+
+        // std::cerr << "List from slash\n";
+
+        ListObj args = SASS_MEMORY_NEW(List, channels->pstate(),
+          { channels->start(), channels->stop() });
+        if (args->size() != 2) {
+          sass::sstream message;
+          message << "Only 2 slash-separated elements allowed, but ";
+          message << channels->lengthAsList() << " ";
+          message << pluralize("was", channels->lengthAsList(), "were");
+          message << " passed.";
+          throw Exception::SassScriptException(message.str(), compiler, pstate);
+        }
+
+        alphaFromSlashList = args->get(1);
+        if (!isSpecialNumber(alphaFromSlashList)) {
+          alphaFromSlashList->assertNumber(compiler, "alpha");
+        }
+        if (isVar(args->get(0))) {
+          // std::cerr << "Doing shenanigans\n";
+          return getFunctionString(name, pstate, { originalChannels });
+          // return _functionString(name, [originalChannels]);
+        }
+
+        channels = args->get(0);
+
+        // list = args;
+      }
+
+      // Check if argument is already a list
+      ListObj list = channels->isaList();
+      // If not create one and wrap value in it
+      if (!list) {
+        list = SASS_MEMORY_NEW(List,
+          pstate, { channels->start(), channels->stop() });
+      }
+
+      // Check for invalid input arguments
+      bool isBracketed = list->hasBrackets();
+      bool isCommaSeparated = list->hasCommaSeparator();
+      if (isCommaSeparated || isBracketed) {
+        sass::sstream msg;
+        msg << "$channels must be";
+        if (isBracketed) msg << " an unbracketed";
+        if (isCommaSeparated) {
+          msg << (isBracketed ? "," : " a");
+          msg << " space-separated";
+        }
+        msg << " list.";
+        CallStackFrame csf(compiler, list->pstate());
+        throw Exception::RuntimeException(compiler, msg.str());
+      }
+
+      // Check if we have a string as first argument
+      if (list->size() > 0) {
+        if (auto prefix = list->get(0)->isaString()) {
+          if (prefix->hasQuotes() == false) {
+            if (StringUtils::equalsIgnoreCase(prefix->value(), "from", 4)) {
+              return new String(pstate, name + "(" + originalChannels->inspect() + ")");
+            }
+          }
+        }
+      }
+
+      // Check if we have too many arguments
+      if (list->size() > 3) {
+        CallStackFrame csf(compiler, list->pstate());
+        throw Exception::TooManyArguments(compiler, list->size(), 3);
+      }
+      // Check for not enough arguments
+      if (list->size() < 3) {
+        // Check if we have any css vars
+        bool hasVar = false;
+        for (Value* item : list->elements()) {
+          if (isVar(item)) {
+            hasVar = true;
+            break;
+          }
+        }
+        // Return function as-is back to be rendered as css
+        if (hasVar || (!list->empty() && isVarSlash(list->last()))) {
+          return getFunctionString(name, pstate, { originalChannels });
+        }
+        // Throw error for missing argument
+        throw Exception::MissingArgument(compiler,
+          getColorArgName(list->size(), name));
+      }
+
+      if (alphaFromSlashList) {
+        ListObj copy = SASS_MEMORY_COPY(list);
+        list->append(alphaFromSlashList);
+        return list.detach();
+      }
+
+
+      // Check for the second argument
+      Number* secondNumber = list->get(2)->isaNumber();
+      String* secondString = list->get(2)->isaString();
+      if (secondNumber && secondNumber->hasAsSlash()) {
+        return SASS_MEMORY_NEW(List, pstate, {
+          list->get(0), list->get(1),
+          secondNumber->lhsAsSlash().ptr(),
+          secondNumber->rhsAsSlash().ptr()
+          });
+      }
+      if (secondString && !secondString->hasQuotes()
+        && secondString->value().find('/') != NPOS) {
+        return getFunctionString(name, pstate,
+          list->elements(), list->separator());
+      }
+      // Return arguments
+      return list.detach();
+
+    }
+    // EO parseChannels
+
 
     static Value* parseColorChannels(
       const sass::string& name,
@@ -284,6 +442,37 @@ namespace Sass {
       return list.detach();
     }
     // EO parseColorChannels
+
+    // Handle one argument function invocation
+    // Used by color functions rgb, hsl and hwb
+    static Value* handleOneArgColorFn2(
+      const sass::string& name,
+      Value* argument,
+      colFn function,
+      Compiler& compiler,
+      SassColorSpace space,
+      const sass::string& vname,
+      SourceSpan pstate,
+      bool strict)
+    {
+      // Parse the color channel arguments
+      ValueObj parsed = parseChannels(name, argument,
+        space, vname, pstate, compiler);
+      // Return if it is a string
+      if (parsed->isaString()) {
+        return parsed.detach();
+      }
+      // Execute function with list of arguments
+      if (const List* list = parsed->isaList()) {
+        return (*function)(name, list->elements(), pstate, compiler, strict);
+      }
+      // Otherwise return
+      return argument;
+      // Not sure if we must stringify
+      // return SASS_MEMORY_NEW(String,
+      //   pstate, argument->inspect());
+    }
+    // EO handleOneArgColorFn
 
     // Handle one argument function invocation
     // Used by color functions rgb, hsl and hwb
@@ -772,6 +961,31 @@ namespace Sass {
 
       /*******************************************************************/
 
+      static BUILT_IN_FN(oklab)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "lighten", "$lightness: ");
+      }
+      static BUILT_IN_FN(oklch)
+      {
+        return handleOneArgColorFn2(Strings::oklch,
+          arguments[0], &okLchFn, compiler,
+          SassColorSpace::OKLAB, "channels",
+          pstate, false);
+      }
+      static BUILT_IN_FN(lab)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "lighten", "$lightness: ");
+      }
+      static BUILT_IN_FN(lch)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "lighten", "$lightness: ");
+      }
+
+      /*******************************************************************/
+
       // static BUILT_IN_FN(hwba4arg)
       // {
       //   return hwbFn(Strings::hwba, arguments, pstate, compiler, false);
@@ -1126,6 +1340,14 @@ namespace Sass {
         throw Exception::DeprecatedColorAdjustFn(compiler,
           arguments, "opacify", "$alpha: ");
       }
+
+
+      static BUILT_IN_FN(toGamut)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "opacify", "$alpha: ");
+      }
+
       /*
       static BUILT_IN_FN(noTransparentize)
       {
@@ -1579,12 +1801,19 @@ namespace Sass {
           // std::make_pair("$color, $alpha", fnHwb2arg),
           std::make_pair("$channels", fnHwb1arg),
         });
+
         uint32_t idx_hwb_loose = ctx.createBuiltInOverloadFns(key_hwb, {
           std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", hwb4arg),
           // std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
           // std::make_pair("$color, $alpha", hwb2arg),
           std::make_pair("$channels", hwb1arg),
         });
+
+        uint32_t idx_oklab_strict = ctx.createBuiltInFunction(key_oklab, "$channels", oklab);
+        uint32_t idx_oklch_strict = ctx.createBuiltInFunction(key_oklch, "$channels", oklch);
+        uint32_t idx_lab_strict = ctx.createBuiltInFunction(key_lab, "$channels", lab);
+        uint32_t idx_lch_strict = ctx.createBuiltInFunction(key_lch, "$channels", lch);
+
         // uint32_t idx_hwba_strict = ctx.createBuiltInOverloadFns(key_hwba, {
         //   std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwba4arg),
         //   std::make_pair("$hue, $whiteness, $blackness", fnHwba3arg),
@@ -1628,6 +1857,10 @@ namespace Sass {
         uint32_t idx_change = ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
         uint32_t idx_scale = ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale);
         uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix);
+
+
+        uint32_t idx_to_gamut = ctx.createBuiltInFunction(key_to_gamut, "$color, $space, $method", toGamut);
+
         uint32_t idx_opacify_strict = ctx.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify);
         uint32_t idx_opacify_loose = ctx.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
         uint32_t idx_fade_in_strict = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", noFadeIn);
@@ -1650,6 +1883,12 @@ namespace Sass {
         ctx.exposeFunction(key_hsl, idx_hsl_loose);
         ctx.exposeFunction(key_hsla, idx_hsla_loose);
         ctx.exposeFunction(key_hwb, idx_hwb_loose);
+
+        ctx.exposeFunction(key_oklab, idx_oklab_strict);
+        ctx.exposeFunction(key_oklch, idx_oklch_strict);
+        ctx.exposeFunction(key_lab, idx_lab_strict);
+        ctx.exposeFunction(key_lch, idx_lch_strict);
+
         // ctx.exposeFunction(key_hwba, idx_hwba_loose);
         ctx.exposeFunction(key_red, idx_red);
         ctx.exposeFunction(key_green, idx_green);
@@ -1671,6 +1910,7 @@ namespace Sass {
         ctx.exposeFunction(key_change_color, idx_change);
         ctx.exposeFunction(key_scale_color, idx_scale);
         ctx.exposeFunction(key_mix, idx_mix);
+        // ctx.exposeFunction(key_to_gamut, idx_to_gamut);
         ctx.exposeFunction(key_opacify, idx_opacify_loose);
         ctx.exposeFunction(key_fade_in, idx_fade_in_loose);
         ctx.exposeFunction(key_fade_out, idx_fade_out_loose);
@@ -1685,6 +1925,12 @@ namespace Sass {
         module.addFunction(key_hsl, idx_hsl_strict);
         module.addFunction(key_hsla, idx_hsla_strict);
         module.addFunction(key_hwb, idx_hwb_strict);
+
+        module.addFunction(key_oklab, idx_oklab_strict);
+        module.addFunction(key_oklch, idx_oklch_strict);
+        module.addFunction(key_lab, idx_lab_strict);
+        module.addFunction(key_lch, idx_lch_strict);
+
         // module.addFunction(key_hwba, idx_hwba_strict);
         module.addFunction(key_red, idx_red);
         module.addFunction(key_green, idx_green);
@@ -1706,6 +1952,7 @@ namespace Sass {
         module.addFunction(key_change, idx_change);
         module.addFunction(key_scale, idx_scale);
         module.addFunction(key_mix, idx_mix);
+        module.addFunction(key_to_gamut, idx_to_gamut);
         module.addFunction(key_opacify, idx_opacify_strict);
         module.addFunction(key_fade_in, idx_fade_in_strict);
         module.addFunction(key_fade_out, idx_fade_out_strict);
@@ -1751,6 +1998,45 @@ namespace Sass {
         fuzzyRound(_percentageOrUnitless(g, 255, "$green", logger), logger.epsilon),
         fuzzyRound(_percentageOrUnitless(b, 255, "$blue", logger), logger.epsilon),
         _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
+
+    }
+
+
+    Value* okLchFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    {
+      Value* _h = arguments[0];
+      Value* _w = arguments[1];
+      Value* _b = arguments[2];
+      Value* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        fncall << _h->inspect() << ", ";
+        fncall << _w->inspect() << ", ";
+        fncall << _b->inspect();
+        if (_a) { fncall << ", " << _a->inspect(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(String, pstate, fncall.str());
+      }
+
+      // Number* h = _h->assertNumber(logger, Strings::hue);
+      // Number* w = _w->assertNumber(logger, Strings::whiteness)
+      //   ->assertHasUnits(logger, "%", Strings::whiteness);
+      // Number* b = _b->assertNumber(logger, Strings::blackness)
+      //   ->assertHasUnits(logger, "%", Strings::blackness);
+      // Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+
+      // checkAngle(logger, h, Strings::hue);
+      return SASS_MEMORY_NEW(ColorSpaced,
+        pstate, SassColorSpace::OKLCH,
+        _h->assertNumber(logger, Strings::hue)->value(),
+        _w->assertNumber(logger, Strings::hue)->value(),
+        _b->assertNumber(logger, Strings::hue)->value(),
+        _a ? _a->assertNumber(logger, Strings::hue)->value() : 1);
 
     }
 

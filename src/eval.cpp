@@ -1677,7 +1677,7 @@ namespace Sass {
     else {
       const ListExpression* list = node->isaListExpression();
       if (list && !list->hasBrackets() && list->separator() == SASS_SPACE && list->size() > 1) {
-        sass::vector<ValueObj> elements;
+        ValueVector elements;
         for (const auto& child : list->items()) {
           elements.push_back(_visitCalculationExpression(child, inLegacySassFunction));
         }

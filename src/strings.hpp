@@ -107,11 +107,24 @@ namespace Sass {
 
   // For color functions
   extern const sass::string str_rgb;
+  extern const sass::string str_srgb;
   extern const sass::string str_rgba;
   extern const sass::string str_hsl;
   extern const sass::string str_hsla;
   extern const sass::string str_hwb;
   extern const sass::string str_hwba;
+  extern const sass::string str_lab;
+  extern const sass::string str_lch;
+  extern const sass::string str_lms;
+  extern const sass::string str_oklab;
+  extern const sass::string str_oklch;
+  extern const sass::string str_prophoto_rgb;
+  extern const sass::string str_rec2020;
+  extern const sass::string str_a98_rgb;
+  extern const sass::string str_display_p3;
+  extern const sass::string str_srgb_linear;
+  extern const sass::string str_xyz_d50;
+  extern const sass::string str_xyz_d65;
   extern const sass::string str_red;
   extern const sass::string str_green;
   extern const sass::string str_blue;
@@ -136,6 +149,7 @@ namespace Sass {
   extern const sass::string str_change;
   extern const sass::string str_scale;
   extern const sass::string str_mix;
+  extern const sass::string str_to_gamut;
   extern const sass::string str_opacify;
   extern const sass::string str_fade_in;
   extern const sass::string str_fade_out;
@@ -301,6 +315,12 @@ namespace Sass {
   extern const EnvKey key_hsla;
   extern const EnvKey key_hwb;
   extern const EnvKey key_hwba;
+
+  extern const EnvKey key_oklab;
+  extern const EnvKey key_oklch;
+  extern const EnvKey key_lab;
+  extern const EnvKey key_lch;
+
   extern const EnvKey key_red;
   extern const EnvKey key_green;
   extern const EnvKey key_blue;
@@ -325,6 +345,7 @@ namespace Sass {
   extern const EnvKey key_scale;
   extern const EnvKey key_mix;
   extern const EnvKey key_opacify;
+  extern const EnvKey key_to_gamut;
   extern const EnvKey key_fade_in;
   extern const EnvKey key_fade_out;
   extern const EnvKey key_transparentize;
@@ -422,6 +443,11 @@ namespace Sass {
     extern const sass::string rgba;
     extern const sass::string hsla;
     extern const sass::string hwba;
+
+    extern const sass::string oklab;
+    extern const sass::string oklch;
+    extern const sass::string lab;
+    extern const sass::string lch;
 
     extern const sass::string deg;
     extern const sass::string red;

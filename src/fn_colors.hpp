@@ -38,6 +38,13 @@ namespace Sass {
       Logger& logger,
       bool strict = false);
 
+    Value* okLchFn(
+      const sass::string& name,
+      const ValueVector& arguments,
+      const SourceSpan& pstate,
+      Logger& logger,
+      bool strict = false);
+
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 

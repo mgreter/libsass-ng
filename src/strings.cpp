@@ -100,11 +100,26 @@ namespace Sass
 
   // For color functions
   const sass::string str_rgb("rgb");
+  const sass::string str_srgb("srgb");
   const sass::string str_rgba("rgba");
   const sass::string str_hsl("hsl");
   const sass::string str_hsla("hsla");
   const sass::string str_hwb("hwb");
   const sass::string str_hwba("hwba");
+  const sass::string str_lab("lab");
+  const sass::string str_lch("lch");
+  const sass::string str_lms("lms");
+  const sass::string str_oklab("oklab");
+  const sass::string str_oklch("oklch");
+  const sass::string str_prophoto_rgb("prophoto-rgb");
+  const sass::string str_rec2020("rec2020");
+  const sass::string str_a98_rgb("a98-rgb");
+  const sass::string str_display_p3("display-p3");
+  const sass::string str_srgb_linear("srgb-linear");
+  const sass::string str_xyz_d50("xyz-d50");
+  const sass::string str_xyz_d65("xyz-d65");
+
+
   const sass::string str_red("red");
   const sass::string str_green("green");
   const sass::string str_blue("blue");
@@ -129,6 +144,7 @@ namespace Sass
   const sass::string str_change("change");
   const sass::string str_scale("scale");
   const sass::string str_mix("mix");
+  const sass::string str_to_gamut("to-gamut");
   const sass::string str_opacify("opacify");
   const sass::string str_fade_in("fade-in");
   const sass::string str_fade_out("fade-out");
@@ -281,6 +297,12 @@ namespace Sass
   const EnvKey key_hsla(str_hsla);
   const EnvKey key_hwb(str_hwb);
   const EnvKey key_hwba(str_hwba);
+
+  const EnvKey key_oklab(str_oklab);
+  const EnvKey key_oklch(str_oklch);
+  const EnvKey key_lab(str_lab);
+  const EnvKey key_lch(str_lch);
+
   const EnvKey key_red(str_red);
   const EnvKey key_green(str_green);
   const EnvKey key_blue(str_blue);
@@ -304,6 +326,7 @@ namespace Sass
   const EnvKey key_change(str_change);
   const EnvKey key_scale(str_scale);
   const EnvKey key_mix(str_mix);
+  const EnvKey key_to_gamut(str_to_gamut);
   const EnvKey key_opacify(str_opacify);
   const EnvKey key_fade_in(str_fade_in);
   const EnvKey key_fade_out(str_fade_out);
@@ -393,6 +416,11 @@ namespace Sass
     const sass::string rgba("rgba");
     const sass::string hsla("hsla");
     const sass::string hwba("hwba");
+
+    const sass::string oklab("oklab");
+    const sass::string oklch("oklch");
+    const sass::string lab("lab");
+    const sass::string lch("lch");
 
     const sass::string deg("deg");
     const sass::string red("red");
