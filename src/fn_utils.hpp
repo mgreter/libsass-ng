@@ -9,7 +9,9 @@
 #include "capi_sass.hpp"
 
 // Make some macros available
-#include "ast_fwd_decl.hpp" 
+#include "ast_fwd_decl.hpp"
+#include "shim/optional.hpp"
+#include "exceptions.hpp"
 
 namespace Sass {
 
@@ -74,6 +76,28 @@ namespace Sass {
     return (number > min && number < max)
       || fuzzyEquals(number, min, epsilon)
       || fuzzyEquals(number, max, epsilon);
+  }
+
+  // Returns [number] if it's within [min] and [max], or `null` if it's not.
+  // If [number] is [fuzzyEquals] to [min] or [max], it's clamped to the appropriate value.
+  inline tl::optional<double> fuzzyCheckRangeVal(double number, double min, double max, double epsilon)
+  {
+    if (fuzzyEquals(number, min, epsilon)) return min;
+    if (fuzzyEquals(number, max, epsilon)) return max;
+    if (number > min && number < max) return number;
+    return tl::optional<double>();
+  }
+
+  // Throws a [RangeError] if [number] isn't within [min] and [max].
+  // If [number] is [fuzzyEquals] to [min] or [max], it's clamped to the
+  // appropriate value. [name] is used in error reporting.
+  inline double fuzzyAssertRange(double number, double min, double max, Logger& logger)
+  {
+    tl::optional<double> result = fuzzyCheckRange(number, min, max, logger.epsilon);
+    if (result.has_value() == true) return result.value();
+    // throw RangeError.range(
+    throw Exception::RuntimeException(logger, "$vname: must be between $min and $max");
+    //   number, min, max, name, "must be between $min and $max");
   }
 
   /////////////////////////////////////////////////////////////////////////

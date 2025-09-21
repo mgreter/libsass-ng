@@ -99,6 +99,7 @@ namespace Sass
   const sass::string str_call("call");
 
   // For color functions
+  const sass::string str_none("none");
   const sass::string str_rgb("rgb");
   const sass::string str_srgb("srgb");
   const sass::string str_rgba("rgba");
@@ -120,6 +121,7 @@ namespace Sass
   const sass::string str_xyz_d65("xyz-d65");
 
 
+  const sass::string str_space("space");
   const sass::string str_red("red");
   const sass::string str_green("green");
   const sass::string str_blue("blue");
@@ -303,6 +305,7 @@ namespace Sass
   const EnvKey key_lab(str_lab);
   const EnvKey key_lch(str_lch);
 
+  const EnvKey key_space(str_space);
   const EnvKey key_red(str_red);
   const EnvKey key_green(str_green);
   const EnvKey key_blue(str_blue);

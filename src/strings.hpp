@@ -106,6 +106,7 @@ namespace Sass {
   extern const sass::string str_call;
 
   // For color functions
+  extern const sass::string str_none;
   extern const sass::string str_rgb;
   extern const sass::string str_srgb;
   extern const sass::string str_rgba;
@@ -321,6 +322,7 @@ namespace Sass {
   extern const EnvKey key_lab;
   extern const EnvKey key_lch;
 
+  extern const EnvKey key_space;
   extern const EnvKey key_red;
   extern const EnvKey key_green;
   extern const EnvKey key_blue;

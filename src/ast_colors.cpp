@@ -415,16 +415,61 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+  
+  tl::optional<double> ColorSpaced::getChannel0OrNull() const { return c0_; }
+  tl::optional<double> ColorSpaced::getChannel1OrNull() const { return c1_; }
+  tl::optional<double> ColorSpaced::getChannel2OrNull() const { return c2_; }
 
   double ColorSpaced::getChannel0() const { return c0_.value_or(0); }
   double ColorSpaced::getChannel1() const { return c1_.value_or(0); }
   double ColorSpaced::getChannel2() const { return c2_.value_or(0); }
+  double ColorSpaced::getAlpha() const { return alpha_.value_or(0); }
+
+  double ColorSpaced::getChannel(int idx) const
+  {
+    switch (idx) {
+      case 0: return c0_.value_or(0);
+      case 1: return c1_.value_or(0);
+      case 2: return c2_.value_or(0);
+    }
+    return 0.0;
+  }
 
   bool ColorSpaced::isChannel0Missing() const { return !c0_.has_value(); }
   bool ColorSpaced::isChannel1Missing() const { return !c1_.has_value(); }
   bool ColorSpaced::isChannel2Missing() const { return !c2_.has_value(); }
+  bool ColorSpaced::isAlphaMissing() const { return !alpha_.has_value(); }
 
-  ColorSpaced::ColorSpaced(const SourceSpan& pstate, const SassColorSpace space, double c0, double c1, double c2, double alpha, const sass::string& disp, bool parsed)
+  bool ColorSpaced::isChannelMissing(int idx) const
+  {
+    switch (idx) {
+    case 0: return !c0_.has_value();
+    case 1: return !c1_.has_value();
+    case 2: return !c2_.has_value();
+    }
+    return true;
+  }
+
+  ColorSpacedObj ColorSpaced::toSpace(Logger& logger, const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
+  {
+    if (space == this->space_) {
+      return SASS_MEMORY_NEW(ColorSpaced, this);
+    }
+    ColorSpacedObj converted = space.convert(logger, space, pstate, c0_, c1_, c2_, alpha_);
+
+    //return !legacyMissing &&
+    //  converted->space().isLegacy() &&
+    //  (converted->isChannel0Missing() ||
+    //    converted->isChannel1Missing() ||
+    //    converted->isChannel2Missing() ||
+    //    converted.isAlphaMissing)
+    //  ? SassColor.forSpaceInternal(converted.space, converted.channel0,
+    //    converted.channel1, converted.channel2, converted.alpha)
+    //  : converted;
+    return converted;
+  }
+
+  ColorSpaced::ColorSpaced(const SourceSpan& pstate, const ColorSpace& space, double c0, double c1, double c2, double alpha, const sass::string& disp, bool parsed)
     : Color(pstate), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
   {
 
@@ -432,9 +477,32 @@ namespace Sass {
 
   }
 
+  ColorSpaced::ColorSpaced(
+    const SourceSpan& pstate,
+    const ColorSpace& space,
+    tl::optional<double> c0,
+    tl::optional<double> c1,
+    tl::optional<double> c2,
+    tl::optional<double> alpha,
+    const sass::string& disp,
+    bool parsed)
+    : Color(pstate), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
+  {
+  }
+
   ColorSpaced::ColorSpaced(const ColorSpaced* ptr)
     : Color(ptr), space_(ptr->space_), c0_(ptr->c0_), c1_(ptr->c1_), c2_(ptr->c2_), alpha_(ptr->alpha_)
   {
+  }
+
+  double ColorSpaced::channel(const sass::string& channel) const
+  {
+    auto qwe = space_._channels;
+    if (channel == space_._channels[0].name) return c0_.value_or(0);
+    if (channel == space_._channels[1].name) return c1_.value_or(0);
+    if (channel == space_._channels[2].name) return c2_.value_or(0);
+    if (channel == str_alpha) return alpha_.value_or(0);
+    throw std::runtime_error("Has not channel");
   }
 
 
@@ -498,23 +566,53 @@ namespace Sass {
     return nullptr;
   }
 
-  double ColorSpace::toLinear(double channel)
+  const ColorSpace* ColorSpace::fromName(Logger& logger, const String& name)
+  {
+    if (StringUtils::equalsIgnoreCase(name.value(), "rgb")) return &ColorSpace::rgb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "hwb")) return &ColorSpace::hwb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "hsl")) return &ColorSpace::hsl;
+    if (StringUtils::equalsIgnoreCase(name.value(), "srgb")) return &ColorSpace::srgb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "srgb-linear")) return &ColorSpace::srgb_linear;
+
+    // if (StringUtils::equalsIgnoreCase(name.value(), "display-p3")) return &ColorSpace::;
+    // if (StringUtils::equalsIgnoreCase(name.value(), "a98-rgb")) return &ColorSpace::a98;
+    // if (StringUtils::equalsIgnoreCase(name.value(), "prophoto-rgb")) return &ColorSpace::protophoto_rgb;
+    // if (StringUtils::equalsIgnoreCase(name.value(), "rec2020")) return &ColorSpace::rec2020;
+    // if (StringUtils::equalsIgnoreCase(name.value(), "xyz")) return &ColorSpace::xyzd65;
+    // if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d65")) return &ColorSpace::xyzd65;
+
+    if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d50")) return &ColorSpace::xyzd50;
+    if (StringUtils::equalsIgnoreCase(name.value(), "lab")) return &ColorSpace::lab;
+    if (StringUtils::equalsIgnoreCase(name.value(), "lch")) return &ColorSpace::lch;
+    if (StringUtils::equalsIgnoreCase(name.value(), "oklab")) return &ColorSpace::oklab;
+    if (StringUtils::equalsIgnoreCase(name.value(), "oklch")) return &ColorSpace::oklch;
+
+    CallStackFrame csf(logger, name.pstate());
+    throw Exception::SassScriptException(
+      sass::string("Unknown color space"),
+      logger, name.pstate());
+
+  }
+
+  double ColorSpace::toLinear(double channel) const
   {
     throw std::runtime_error("toLinear not implemented");
   }
 
-  double ColorSpace::fromLinear(double channel)
+  double ColorSpace::fromLinear(double channel) const
   {
     throw std::runtime_error("toLinear not implemented");
   }
-
-  double* ColorSpace::transformationMatrix(ColorSpace dest)
+  
+  double* ColorSpace::transformationMatrix(ColorSpace dest) const
   {
     throw std::runtime_error("matrix not implemented");
   }
 
-  Color* ColorSpace::convertLinear(
+  ColorSpaced* ColorSpace::convertLinear(
+    Logger& logger,
     const ColorSpace& dest,
+    const SourceSpan& pstate,
     tl::optional<double> red,
     tl::optional<double> green,
     tl::optional<double> blue,
@@ -523,7 +621,7 @@ namespace Sass {
     bool missingChroma,
     bool missingHue,
     bool missingA,
-    bool missingB)
+    bool missingB) const
   {
 
     ColorSpace linearDest = dest;
@@ -545,23 +643,122 @@ namespace Sass {
       double linearRed = toLinear(red.value_or(0));
       double linearGreen = toLinear(green.value_or(0));
       double linearBlue = toLinear(blue.value_or(0));
+      double* matrix = transformationMatrix(linearDest);
+
+      transformedRed = linearDest.fromLinear(
+        matrix[0] * linearRed +
+        matrix[1] * linearGreen +
+        matrix[2] * linearBlue);
+      transformedGreen = linearDest.fromLinear(
+        matrix[3] * linearRed +
+        matrix[4] * linearGreen +
+        matrix[5] * linearBlue);
+      transformedBlue = linearDest.fromLinear(
+        matrix[6] * linearRed +
+        matrix[7] * linearGreen +
+        matrix[8] * linearBlue);
+    }
+
+    if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
+      return ColorSpace::srgb.convert(logger, dest, pstate,
+        transformedRed, transformedGreen, transformedBlue,
+        alpha, missingLightness, missingChroma, missingHue);
+    }
+    else if (dest == ColorSpace::lab || dest == ColorSpace::lch) {
+
+    }
+    else if (dest == ColorSpace::oklab || dest == ColorSpace::oklch) {
+
     }
 
       return nullptr;
   }
 
 
-  const ColorSpace ColorSpace::hwb = HwbColorSpace();
-  const ColorSpace ColorSpace::hsl = HslColorSpace();
-  const ColorSpace ColorSpace::lab = LabColorSpace();
-  const ColorSpace ColorSpace::lch = LchColorSpace();
-  const ColorSpace ColorSpace::oklab = OkLabColorSpace();
-  const ColorSpace ColorSpace::oklch = OkLchColorSpace();
+  const HwbColorSpace ColorSpace::hwb = HwbColorSpace();
+  const HslColorSpace ColorSpace::hsl = HslColorSpace();
+  const LabColorSpace ColorSpace::lab = LabColorSpace();
+  const LchColorSpace ColorSpace::lch = LchColorSpace();
+  const OkLabColorSpace ColorSpace::oklab = OkLabColorSpace();
+  const OkLchColorSpace ColorSpace::oklch = OkLchColorSpace();
 
-  const ColorSpace ColorSpace::srgb = SrgbColorSpace();
-  const ColorSpace ColorSpace::xyzd50 = XyzD50ColorSpace();
-  const ColorSpace ColorSpace::lms = LmsColorSpace();
+  const RgbColorSpace ColorSpace::rgb = RgbColorSpace();
+  const SrgbColorSpace ColorSpace::srgb = SrgbColorSpace();
+  const SrgbLinearColorSpace ColorSpace::srgb_linear = SrgbLinearColorSpace();
+  const XyzD50ColorSpace ColorSpace::xyzd50 = XyzD50ColorSpace();
+  const LmsColorSpace ColorSpace::lms = LmsColorSpace();
 
   //const ColorSpace ColorSpacings::SRGB(str_srgb, SassColorSpace::SRGB, srgb_channels);
+
+  ColorSpaced* SrgbColorSpace::convert(
+    Logger& logger,
+    const ColorSpace& dest,
+    const SourceSpan& pstate,
+    tl::optional<double> red,
+    tl::optional<double> green,
+    tl::optional<double> blue,
+    tl::optional<double> alpha,
+    bool missingLightness,
+    bool missingChroma,
+    bool missingHue) const
+  {
+    if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
+      double nr_red = red.value_or(0);
+      double nr_green = green.value_or(0);
+      double nr_blue = blue.value_or(0);
+      double max = std::max(std::max(nr_red, nr_green), nr_blue);
+      double min = std::min(std::min(nr_red, nr_green), nr_blue);
+      double delta = max - min;
+
+      double hue;
+      if (max == min) {
+        hue = 0;
+      }
+      else if (max == nr_red) {
+        hue = 60 * (nr_green - nr_blue) / delta + 360;
+      }
+      else if (max == green) {
+        hue = 60 * (nr_blue - nr_red) / delta + 120;
+      }
+      else {
+        // max == blue
+        hue = 60 * (nr_red - nr_green) / delta + 240;
+      }
+
+      if (dest == ColorSpace::hsl) {
+        double lightness = (min + max) / 2;
+        double saturation = lightness == 0 || lightness == 1
+          ? 0.0
+          : 100 * (max - lightness) / std::min(lightness, 1 - lightness);
+        if (saturation < 0) {
+          hue += 180;
+          saturation = std::abs(saturation);
+        }
+
+        tl::optional<double> c0 = std::fmod(hue, 360.0);
+        tl::optional<double> c1 = saturation;
+        tl::optional<double> c2 = lightness * 100;
+
+          return ColorSpaced::_forSpace(pstate, dest, c0, c1, c2, alpha, logger);
+
+        std::cerr << "other";
+      }
+      else {
+        std::cerr << "other";
+      }
+
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
+    }
+    else if (dest == ColorSpace::rgb) {
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
+    }
+    else if (dest == ColorSpace::srgb_linear) {
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
+    }
+    else {
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
+    }
+    return nullptr;
+  }
 
 }

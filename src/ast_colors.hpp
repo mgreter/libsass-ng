@@ -21,11 +21,12 @@ namespace Sass {
 
   class ColorChannel {
 
+  public:
+
     sass::string name;
     bool isPolarAngle;
     sass::string unit;
 
-  public:
 
     ColorChannel(sass::string name, bool isPolarAngle, sass::string unit)
       : name(name), isPolarAngle(isPolarAngle), unit(unit)
@@ -56,26 +57,45 @@ namespace Sass {
 
   };
 
+  class HwbColorSpace;
+  class HslColorSpace;
+  class LabColorSpace;
+  class LchColorSpace;
+  class OkLabColorSpace;
+  class OkLchColorSpace;
+  class RgbColorSpace;
+
+  class SrgbColorSpace;
+  class SrgbLinearColorSpace;
+  class XyzD50ColorSpace;
+  class LmsColorSpace;
+
   class ColorSpace {
 
     ADD_CONSTREF(sass::string, name);
     ADD_CONSTREF(SassColorSpace, space);
 
-    const ColorChannel* _channels;
   public:
 
-    ColorSpace(const sass::string name, SassColorSpace space, const ColorChannel* channels)
-      : name_(name), space_(space), _channels(channels)
+    int _channelSize;
+    const ColorChannel* _channels;
+
+    static const ColorSpace* fromName(Logger& logger, const String& name);
+
+    ColorSpace(const sass::string name, SassColorSpace space, const ColorChannel* channels, int channelSize)
+      : name_(name), space_(space), _channels(channels), _channelSize(channelSize)
     {
 
     }
 
-    virtual double toLinear(double channel);
-    virtual double fromLinear(double channel);
-    virtual double* transformationMatrix(ColorSpace dest);
+    virtual double toLinear(double channel) const;
+    virtual double fromLinear(double channel) const;
+    virtual double* transformationMatrix(ColorSpace dest) const;
 
-    virtual Color* convertLinear(
+    virtual ColorSpaced* convertLinear(
+      Logger& logger,
       const ColorSpace& dest,
+      const SourceSpan& pstate,
       tl::optional<double> red,
       tl::optional<double> green,
       tl::optional<double> blue,
@@ -84,38 +104,48 @@ namespace Sass {
       bool missingChroma = false,
       bool missingHue = false,
       bool missingA = false,
-      bool missingB = false);
+      bool missingB = false) const;
 
     
-    virtual Color* convert(SassColorSpace dest,
+    virtual ColorSpaced* convert(
+      Logger& logger,
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
       tl::optional<double> channel0,
       tl::optional<double> channel1,
       tl::optional<double> channel2,
-      tl::optional<double> alpha)
+      tl::optional<double> alpha) const
     {
-     // return convertLinear(dest, channel0, channel1, channel2, alpha);
-      return nullptr;
+      return convertLinear(logger, dest, pstate, channel0, channel1, channel2, alpha);
     }
 
     bool operator==(const ColorSpace& rhs) const {
       return rhs.space_ == space_;
     }
 
-    static const ColorSpace hwb;
-    static const ColorSpace hsl;
-    static const ColorSpace lab;
-    static const ColorSpace lch;
-    static const ColorSpace oklab;
-    static const ColorSpace oklch;
+    bool operator!=(const ColorSpace& rhs) const {
+      return rhs.space_ == space_;
+    }
 
-    static const ColorSpace srgb;
-    static const ColorSpace xyzd50;
-    static const ColorSpace lms;
+    static const HwbColorSpace hwb;
+    static const HslColorSpace hsl;
+    static const LabColorSpace lab;
+    static const LchColorSpace lch;
+    static const OkLabColorSpace oklab;
+    static const OkLchColorSpace oklch;
+
+    static const RgbColorSpace rgb;
+    static const SrgbColorSpace srgb;
+    static const SrgbLinearColorSpace srgb_linear;
+    static const XyzD50ColorSpace xyzd50;
+    static const LmsColorSpace lms;
 
   };
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+
+  const LinearChannel AlphaChannel("alpha", 0, 1, false, false, false);
 
   const ColorChannel hsl_channels[3]{
     ColorChannel("hue", true, "deg"),
@@ -191,7 +221,7 @@ namespace Sass {
     A98RgbColorSpace() : ColorSpace(
       str_a98_rgb,
       SassColorSpace::A98RGB,
-      rgb_channels)
+      rgb_channels, 3)
     {}
   };
 
@@ -200,7 +230,7 @@ namespace Sass {
     DisplayP3ColorSpace() : ColorSpace(
       str_display_p3,
       SassColorSpace::DISPLAY_P3,
-      rgb_channels)
+      rgb_channels, 3)
     {}
   };
 
@@ -209,7 +239,7 @@ namespace Sass {
     HslColorSpace() : ColorSpace(
       str_hsl,
       SassColorSpace::HSL,
-      rgb_channels)
+      rgb_channels, 3)
     {}
   };
 
@@ -218,7 +248,7 @@ namespace Sass {
     HwbColorSpace() : ColorSpace(
       str_hwb,
       SassColorSpace::HWB,
-      hsl_channels)
+      hsl_channels, 3)
     {}
   };
 
@@ -227,7 +257,7 @@ namespace Sass {
     LabColorSpace() : ColorSpace(
       str_lab,
       SassColorSpace::LAB,
-      lab_channels)
+      lab_channels, 3)
     {}
   };
 
@@ -236,7 +266,7 @@ namespace Sass {
     LchColorSpace() : ColorSpace(
       str_lch,
       SassColorSpace::LCH,
-      lch_channels)
+      lch_channels, 3)
     {}
   };
 
@@ -245,7 +275,7 @@ namespace Sass {
     LmsColorSpace() : ColorSpace(
       str_lms,
       SassColorSpace::LMS,
-      lms_channels)
+      lms_channels, 3)
     {}
   };
 
@@ -254,7 +284,7 @@ namespace Sass {
     OkLabColorSpace() : ColorSpace(
       str_oklab,
       SassColorSpace::OKLAB,
-      oklab_channels)
+      oklab_channels, 3)
     {}
   };
 
@@ -263,7 +293,7 @@ namespace Sass {
     OkLchColorSpace() : ColorSpace(
       str_oklch,
       SassColorSpace::OKLCH,
-      oklch_channels)
+      oklch_channels, 3)
     {}
   };
 
@@ -272,7 +302,7 @@ namespace Sass {
     ProphotoRgbColorSpace() : ColorSpace(
       str_prophoto_rgb,
       SassColorSpace::PROPHOTO_RGB,
-      rgb_channels)
+      rgb_channels, 3)
     {}
   };
 
@@ -281,7 +311,7 @@ namespace Sass {
     Rec2020ColorSpace() : ColorSpace(
       str_rec2020,
       SassColorSpace::REC2020,
-      rgb_channels)
+      rgb_channels, 3)
     {}
   };
 
@@ -290,7 +320,7 @@ namespace Sass {
     RgbColorSpace() : ColorSpace(
       str_rgb,
       SassColorSpace::RGB,
-      rgb255_channels)
+      rgb255_channels, 3)
     {}
   };
 
@@ -299,7 +329,7 @@ namespace Sass {
     SrgbLinearColorSpace() : ColorSpace(
       str_srgb_linear,
       SassColorSpace::SRGB_LINEAR,
-      rgb_channels)
+      rgb_channels, 3)
     {}
   };
 
@@ -308,8 +338,19 @@ namespace Sass {
     SrgbColorSpace() : ColorSpace(
       str_srgb,
       SassColorSpace::SRGB,
-      rgb_channels)
+      rgb_channels, 3)
     {}
+    ColorSpaced* convert(
+      Logger& logger,
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha,
+      bool missingLightness = false,
+      bool missingChroma = false,
+      bool missingHue = false) const;
   };
 
   class XyzD50ColorSpace : public ColorSpace {
@@ -317,7 +358,7 @@ namespace Sass {
     XyzD50ColorSpace() : ColorSpace(
       str_xyz_d50,
       SassColorSpace::XYZ_D50,
-      xyz_channels)
+      xyz_channels, 3)
     {}
   };
 
@@ -326,7 +367,7 @@ namespace Sass {
     XyzD65ColorSpace() : ColorSpace(
       str_xyz_d65,
       SassColorSpace::XYZ_D65,
-      xyz_channels)
+      xyz_channels, 3)
     {}
   };
 
@@ -800,36 +841,80 @@ namespace Sass {
   {
   private:
 
-    ADD_CONSTREF(SassColorSpace, space);
-    ADD_CONSTREF(tl::optional<double>, c0);
-    ADD_CONSTREF(tl::optional<double>, c1);
-    ADD_CONSTREF(tl::optional<double>, c2);
-    ADD_CONSTREF(tl::optional<double>, alpha);
+    ADD_CONSTREF(ColorSpace, space);
+    ADD_PROPERTY(tl::optional<double>, c0);
+    ADD_PROPERTY(tl::optional<double>, c1);
+    ADD_PROPERTY(tl::optional<double>, c2);
+    ADD_PROPERTY(tl::optional<double>, alpha);
 
-  protected:
+  public:
+
+    tl::optional<double> getChannel0OrNull() const;
+    tl::optional<double> getChannel1OrNull() const;
+    tl::optional<double> getChannel2OrNull() const;
 
     double getChannel0() const;
     double getChannel1() const;
     double getChannel2() const;
+    double getChannel(int idx) const;
+    double getAlpha() const;
 
     bool isChannel0Missing() const;
     bool isChannel1Missing() const;
     bool isChannel2Missing() const;
+    bool isChannelMissing(int idx) const;
+    bool isAlphaMissing() const;
+
+    virtual ColorSpacedObj toSpace(Logger& logger, const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
 
   public:
 
+    static ColorSpacedObj _forSpace(
+      const SourceSpan& pstate, const ColorSpace& space,
+      tl::optional<double> c0, tl::optional<double> c1,
+      tl::optional<double> c2, tl::optional<double> alpha,
+      Logger& logger/*, format */)
+    {
+      ColorSpacedObj color = SASS_MEMORY_NEW(ColorSpaced, pstate, space, c0, c1, c2,
+        alpha.and_then([&](double a) { return tl::optional<double>(fuzzyAssertRange(a, 0, 1, logger)); }));
+      // assert(space == ColorSpace::rgb);
+      // assert(space != ColorSpace::lms);
+      return color;
+    }
 
-
+    // static ColorSpacedObj _forSpaceInternal(
+    //   const SourceSpan& pstate, const ColorSpace& space,
+    //   tl::optional<double>* c, tl::optional<double> alpha,
+    //   Logger& logger/*, format */)
+    // {
+    //   ColorSpacedObj color = SASS_MEMORY_NEW(ColorSpaced, pstate, space, c[0], c[1], c[2],
+    //     alpha.and_then([&](double a) { return tl::optional<double>(fuzzyAssertRange(a, 0, 1, logger)); }));
+    //   // assert(space == ColorSpace::rgb);
+    //   assert(space != ColorSpace::lms);
+    //   return color.detach();
+    // }
 
     // Value constructor
     ColorSpaced(const SourceSpan& pstate,
-      const SassColorSpace space,
-      double c1, double c2, double c3, double alpha = 1.0,
+      const ColorSpace& space,
+      double c0, double c1,
+      double c2, double alpha = 1.0,
+      const sass::string& disp = "",
+      bool parsed = false);
+
+    ColorSpaced(const SourceSpan& pstate,
+      const ColorSpace& space,
+      tl::optional<double> c0,
+      tl::optional<double> c1,
+      tl::optional<double> c2,
+      tl::optional<double> alpha,
       const sass::string& disp = "",
       bool parsed = false);
 
     // Copy constructor
     ColorSpaced(const ColorSpaced* ptr);
+
+    double channel(const sass::string& channel) const;
 
     // Convert and copy only if necessary
     ColorRgba* toRGBA() const override final;
@@ -847,6 +932,9 @@ namespace Sass {
     bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
     bool operator==(const ColorSpaced& rhs) const;
+
+    const ColorSpaced* assertColorSpaced(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
+    ColorSpaced* assertColorSpaced2(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
 
     // Copy operations for childless items
     ColorSpaced* copy(SASS_MEMORY_ARGS bool childless) const override final {

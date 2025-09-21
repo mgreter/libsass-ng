@@ -638,7 +638,7 @@ namespace Sass {
 
       static BUILT_IN_FN(rgb4arg)
       {
-        return rgbFn(Strings::rgb,
+        return rgbFn2(Strings::rgb,
           arguments, pstate, compiler, false);
       }
 
@@ -963,25 +963,32 @@ namespace Sass {
 
       static BUILT_IN_FN(oklab)
       {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "lighten", "$lightness: ");
+        return handleOneArgColorFn2(Strings::oklab,
+          arguments[0], &okLabFn, compiler,
+          SassColorSpace::OKLAB, "channels",
+          pstate, false);
       }
+
       static BUILT_IN_FN(oklch)
       {
         return handleOneArgColorFn2(Strings::oklch,
           arguments[0], &okLchFn, compiler,
-          SassColorSpace::OKLAB, "channels",
+          SassColorSpace::OKLCH, "channels",
           pstate, false);
       }
       static BUILT_IN_FN(lab)
       {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "lighten", "$lightness: ");
+        return handleOneArgColorFn2(Strings::lab,
+          arguments[0], &labFn, compiler,
+          SassColorSpace::LAB, "channels",
+          pstate, false);
       }
       static BUILT_IN_FN(lch)
       {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "lighten", "$lightness: ");
+        return handleOneArgColorFn2(Strings::lch,
+          arguments[0], &lchFn, compiler,
+          SassColorSpace::LCH, "channels",
+          pstate, false);
       }
 
       /*******************************************************************/
@@ -1461,7 +1468,7 @@ namespace Sass {
         return SASS_MEMORY_NEW(String, pstate, ss.str());
       }
 
-      static Number* getKwdArg(ValueFlatMap* keywords, const EnvKey& name, Logger& logger)
+      static Number* getKwdNumber(ValueFlatMap* keywords, const EnvKey& name, Logger& logger)
       {
         if (keywords == nullptr) return nullptr;
         auto kv = keywords->find(name);
@@ -1475,9 +1482,82 @@ namespace Sass {
         return num;
       }
 
+      static String* getKwdString(ValueFlatMap* keywords, const EnvKey& name, Logger& logger)
+      {
+        if (keywords == nullptr) return nullptr;
+        auto kv = keywords->find(name);
+        // Return null since args are optional
+        if (kv == keywords->end()) return nullptr;
+        // Get the number object from found keyword
+        String* num = kv->second->assertString(logger, name.orig());
+        // Only consume keyword once
+        keywords->erase(kv);
+        // Return the number
+        return num;
+      }
+
+      /*
+      Sass::Value* _updateComponents(const Sass::ValueVector& arguments,
+        bool adjust = false, bool scale = false, bool change = false)
+      {
+        return arguments[0];
+      }
+      */
+
+      const ColorSpace* _sniffLegacyColorSpace(const ValueFlatMap* kwds)
+      {
+        for each(auto kv in *kwds)
+        {
+          const sass::string& key = kv.first.norm();
+          if (key == "red") return &ColorSpace::rgb;
+          if (key == "green") return &ColorSpace::rgb;
+          if (key == "blue") return &ColorSpace::rgb;
+          if (key == "saturation") return &ColorSpace::hsl;
+          if (key == "lightness") return &ColorSpace::hsl;
+          if (key == "whiteness") return &ColorSpace::hwb;
+          if (key == "blackness") return &ColorSpace::hwb;
+        }
+        if (kwds->count(key_hue) != 0)
+          return &ColorSpace::hsl;
+        else return nullptr;
+      }
+
+      ColorSpaced* _colorInSpace(ColorSpaced* colorUntyped, const String* spaceUntyped, Compiler& compiler, bool legacyMissing = true)
+      {
+        ColorSpaced* color = colorUntyped->assertColorSpaced2(compiler, "color");
+        if (spaceUntyped == nullptr) return color;
+        if (spaceUntyped->isNull()) return color;
+        const ColorSpace* space = ColorSpace::fromName(compiler, *spaceUntyped);
+        ColorSpacedObj rv = color->toSpace(compiler, *space, colorUntyped->pstate(), legacyMissing);
+        return rv.detach();
+      }
+
+      tl::optional<double> _adjustChannel(ColorSpaced* color, ColorChannel channel, tl::optional<double> oldValue, Number* adjustmentArg)
+      {
+        return 0;
+      }
+
+      ColorSpaced* _adjustColor(Logger& logger, ColorSpaced* color, Number** channelArgs, Number* alphaArg)
+      {
+        ColorSpacedObj rv = ColorSpaced::_forSpace(color->pstate(), color->space(),
+          _adjustChannel(color, color->space()._channels[0], color->getChannel0(), channelArgs[0]),
+          _adjustChannel(color, color->space()._channels[1], color->getChannel1(), channelArgs[1]),
+          _adjustChannel(color, color->space()._channels[2], color->getChannel2(), channelArgs[2]),
+          _adjustChannel(color, AlphaChannel, color->getAlpha(), alphaArg)
+            .and_then([&](tl::optional<double> a) { return a; }),
+          logger
+        );
+        return rv.detach();
+      }
+
       static BUILT_IN_FN(adjust)
       {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+
+        Color* color2 = arguments[0]
+          ->assertColor2(compiler, Strings::color);
+
+        const Color* color = arguments[0]
+          ->assertColor(compiler, Strings::color);
         ArgumentList* argumentList = arguments[1]
           ->assertArgumentList(compiler, "kwargs");
         if (!argumentList->empty()) {
@@ -1490,79 +1570,146 @@ namespace Sass {
         }
 
         // ToDo: solve without erase ...
-        ValueFlatMap* kwds(argumentList->keywords());
+        ValueFlatMap* kwds = argumentList->keywords();
 
-        Number* nr_r = getKwdArg(kwds, key_red, compiler);
-        Number* nr_g = getKwdArg(kwds, key_green, compiler);
-        Number* nr_b = getKwdArg(kwds, key_blue, compiler);
-        Number* nr_h = getKwdArg(kwds, key_hue, compiler);
-        Number* nr_s = getKwdArg(kwds, key_saturation, compiler);
-        Number* nr_l = getKwdArg(kwds, key_lightness, compiler);
-        Number* nr_a = getKwdArg(kwds, key_alpha, compiler);
-        Number* nr_wn = getKwdArg(kwds, key_whiteness, compiler);
-        Number* nr_bn = getKwdArg(kwds, key_blackness, compiler);
+        String* str_space = getKwdString(kwds, key_space, compiler);
 
-        if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
-        if (nr_s) nr_s->checkPercent(compiler, Strings::saturation);
-        if (nr_l) nr_l->checkPercent(compiler, Strings::lightness);
+        if (dynamic_cast<ColorSpaced*>(color2)) {
+          auto col = dynamic_cast<ColorSpaced*>(color2);
+          std::cerr << "ASDASDASDASD " << col->space().name() << "\n";
+          const ColorSpace* legacy = _sniffLegacyColorSpace(kwds);
 
-        double r = nr_r ? nr_r->assertRange(-255.0, 255.0, unit_none, compiler, Strings::red) : 0.0;
-        double g = nr_g ? nr_g->assertRange(-255.0, 255.0, unit_none, compiler, Strings::green) : 0.0;
-        double b = nr_b ? nr_b->assertRange(-255.0, 255.0, unit_none, compiler, Strings::blue) : 0.0;
-        double s = nr_s ? nr_s->assertRange(-100.0, 100.0, unit_percent, compiler, Strings::saturation) : 0.0;
-        double l = nr_l ? nr_l->assertRange(-100.0, 100.0, unit_percent, compiler, Strings::lightness) : 0.0;
+          ColorSpacedObj bar = legacy != nullptr ?
+            col->toSpace(compiler, *legacy, pstate, false) :
+            _colorInSpace(col, str_space, compiler);
 
-        double wn = nr_wn ? nr_wn->assertHasUnits(compiler, Strings::percent, Strings::whiteness)->assertRange(-100.0, 100.0, nr_wn, compiler, Strings::whiteness) : 0.0;
-        double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange(-100.0, 100.0, nr_bn, compiler, Strings::blackness) : 0.0;
+          {
 
-        double a = nr_a ? nr_a->assertRange(-1.0, 1.0, nr_a, compiler, Strings::alpha) : 0.0;
+            for (int i = 0; i < bar->space()._channelSize; i++)
+            {
 
-        double h = nr_h ? coerceToDeg(nr_h) : 0.0; // Hue is a very special case
+              const double oldChannel = bar->getChannel(i);
+              double* channelArg = nullptr;
+              const ColorChannel& channelInfo0 = bar->space()._channels[i];
 
-        if (kwds && !kwds->empty()) {
-          throw Exception::UnknownNamedArgument(compiler, kwds);
+            }
+
+            const double oldChannels[] = {
+              bar->getChannel0(),
+              bar->getChannel1(),
+              bar->getChannel2()
+            };
+
+            Number* channelArgs[] = {
+              nullptr,
+              nullptr,
+              nullptr
+            };
+
+            auto qwe = kwds->find(key_lightness);
+            if (qwe != kwds->end()) {
+              channelArgs[0] = qwe->second->assertNumber(compiler, str_lightness);
+            }
+
+            for each(auto kv in *kwds)
+            {
+
+            }
+
+            for (int i = 0; i < bar->space()._channelSize; i++)
+            {
+              // std::cerr << ""
+            }
+
+            const ColorChannel& channelInfo0 = bar->space()._channels[0];
+            const ColorChannel& channelInfo1 = bar->space()._channels[1];
+            const ColorChannel& channelInfo2 = bar->space()._channels[2];
+
+            return _adjustColor(compiler, bar, channelArgs, nullptr);
+          }
+
         }
 
-        bool hasRgb = nr_r || nr_g || nr_b;
-        bool hasHsl = nr_s || nr_l;
-        bool hasHwb = nr_wn || nr_bn;
-        bool hasHue = nr_h != nullptr;
+        if (str_space != nullptr /*  && color->space() */ ) {
 
-        if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
-        else if (hasRgb && hasHue) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL/HWB" });
-        else if (hasRgb && hasHsl) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL" });
-        else if (hasRgb && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HWB" });
-        else if (hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
-        else if (hasHwb && hasHsl) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
+        }
+        else {
 
-        if (hasRgb) {
-          ColorRgbaObj rgba = color->copyAsRGBA();
-          if (nr_r) rgba->r(clamp(rgba->r() + r, 0.0, 255.0));
-          if (nr_g) rgba->g(clamp(rgba->g() + g, 0.0, 255.0));
-          if (nr_b) rgba->b(clamp(rgba->b() + b, 0.0, 255.0));
-          if (nr_a) rgba->a(clamp(rgba->a() + a, 0.0, 1.0));
-          return rgba.detach();
+          Number* nr_r = getKwdNumber(kwds, key_red, compiler);
+          Number* nr_g = getKwdNumber(kwds, key_green, compiler);
+          Number* nr_b = getKwdNumber(kwds, key_blue, compiler);
+          Number* nr_h = getKwdNumber(kwds, key_hue, compiler);
+          Number* nr_s = getKwdNumber(kwds, key_saturation, compiler);
+          Number* nr_l = getKwdNumber(kwds, key_lightness, compiler);
+          Number* nr_a = getKwdNumber(kwds, key_alpha, compiler);
+          Number* nr_wn = getKwdNumber(kwds, key_whiteness, compiler);
+          Number* nr_bn = getKwdNumber(kwds, key_blackness, compiler);
+
+          if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
+          if (nr_s) nr_s->checkPercent(compiler, Strings::saturation);
+          if (nr_l) nr_l->checkPercent(compiler, Strings::lightness);
+
+          double r = nr_r ? nr_r->assertRange(-255.0, 255.0, unit_none, compiler, Strings::red) : 0.0;
+          double g = nr_g ? nr_g->assertRange(-255.0, 255.0, unit_none, compiler, Strings::green) : 0.0;
+          double b = nr_b ? nr_b->assertRange(-255.0, 255.0, unit_none, compiler, Strings::blue) : 0.0;
+          double s = nr_s ? nr_s->assertRange(-100.0, 100.0, unit_percent, compiler, Strings::saturation) : 0.0;
+          double l = nr_l ? nr_l->assertRange(-100.0, 100.0, unit_percent, compiler, Strings::lightness) : 0.0;
+
+          double wn = nr_wn ? nr_wn->assertHasUnits(compiler, Strings::percent, Strings::whiteness)->assertRange(-100.0, 100.0, nr_wn, compiler, Strings::whiteness) : 0.0;
+          double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange(-100.0, 100.0, nr_bn, compiler, Strings::blackness) : 0.0;
+
+          double a = nr_a ? nr_a->assertRange(-1.0, 1.0, nr_a, compiler, Strings::alpha) : 0.0;
+
+          double h = nr_h ? coerceToDeg(nr_h) : 0.0; // Hue is a very special case
+
+          if (kwds && !kwds->empty()) {
+            throw Exception::UnknownNamedArgument(compiler, kwds);
+          }
+
+          bool hasRgb = nr_r || nr_g || nr_b;
+          bool hasHsl = nr_s || nr_l;
+          bool hasHwb = nr_wn || nr_bn;
+          bool hasHue = nr_h != nullptr;
+
+          if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
+          else if (hasRgb && hasHue) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL/HWB" });
+          else if (hasRgb && hasHsl) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL" });
+          else if (hasRgb && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HWB" });
+          else if (hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
+          else if (hasHwb && hasHsl) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
+
+          if (hasRgb) {
+            ColorRgbaObj rgba = color->copyAsRGBA();
+            if (nr_r) rgba->r(clamp(rgba->r() + r, 0.0, 255.0));
+            if (nr_g) rgba->g(clamp(rgba->g() + g, 0.0, 255.0));
+            if (nr_b) rgba->b(clamp(rgba->b() + b, 0.0, 255.0));
+            if (nr_a) rgba->a(clamp(rgba->a() + a, 0.0, 1.0));
+            return rgba.detach();
+          }
+          else if (hasHsl) {
+            ColorHslaObj hsla = color->copyAsHSLA();
+            if (nr_h) hsla->h(absmod(hsla->h() + h, 360.0));
+            if (nr_s) hsla->s(clamp(hsla->s() + s, 0.0, 100.0));
+            if (nr_l) hsla->l(clamp(hsla->l() + l, 0.0, 100.0));
+            if (nr_a) hsla->a(clamp(hsla->a() + a, 0.0, 1.0));
+            return hsla.detach();
+          }
+          else if (hasHwb || nr_h) { // hue can be shared!
+            ColorHwbaObj hwba = color->copyAsHWBA();
+            if (nr_h) hwba->h(absmod(hwba->h() + h, 360.0));
+            if (nr_wn) hwba->w(clamp(hwba->w() + wn, 0.0, 100.0));
+            if (nr_bn) hwba->b(clamp(hwba->b() + bn, 0.0, 100.0));
+            if (nr_a) hwba->a(clamp(hwba->a() + a, 0.0, 1.0));
+            return hwba.detach();
+          }
+          else if (nr_a) {
+            ColorObj copy = SASS_MEMORY_COPY(color);
+            if (nr_a) copy->a(clamp(copy->a() + a, 0.0, 1.0));
+            return copy.detach();
+          }
+
         }
-        else if (hasHsl) {
-          ColorHslaObj hsla = color->copyAsHSLA();
-          if (nr_h) hsla->h(absmod(hsla->h() + h, 360.0));
-          if (nr_s) hsla->s(clamp(hsla->s() + s, 0.0, 100.0));
-          if (nr_l) hsla->l(clamp(hsla->l() + l, 0.0, 100.0));
-          if (nr_a) hsla->a(clamp(hsla->a() + a, 0.0, 1.0));
-          return hsla.detach();
-        } else if (hasHwb || nr_h) { // hue can be shared!
-          ColorHwbaObj hwba = color->copyAsHWBA();
-          if (nr_h) hwba->h(absmod(hwba->h() + h, 360.0));
-          if (nr_wn) hwba->w(clamp(hwba->w() + wn, 0.0, 100.0));
-          if (nr_bn) hwba->b(clamp(hwba->b() + bn, 0.0, 100.0));
-          if (nr_a) hwba->a(clamp(hwba->a() + a, 0.0, 1.0));
-          return hwba.detach();
-        }
-        else if (nr_a) {
-          ColorObj copy = SASS_MEMORY_COPY(color);
-          if (nr_a) copy->a(clamp(copy->a() + a, 0.0, 1.0));
-          return copy.detach();
-        }
+
         return arguments[0];
       }
 
@@ -1583,15 +1730,15 @@ namespace Sass {
         // ToDo: solve without erase ...
         ValueFlatMap* keywords(argumentList->keywords());
 
-        Number* nr_r = getKwdArg(keywords, key_red, compiler);
-        Number* nr_g = getKwdArg(keywords, key_green, compiler);
-        Number* nr_b = getKwdArg(keywords, key_blue, compiler);
-        Number* nr_h = getKwdArg(keywords, key_hue, compiler);
-        Number* nr_s = getKwdArg(keywords, key_saturation, compiler);
-        Number* nr_l = getKwdArg(keywords, key_lightness, compiler);
-        Number* nr_a = getKwdArg(keywords, key_alpha, compiler);
-        Number* nr_wn = getKwdArg(keywords, key_whiteness, compiler);
-        Number* nr_bn = getKwdArg(keywords, key_blackness, compiler);
+        Number* nr_r = getKwdNumber(keywords, key_red, compiler);
+        Number* nr_g = getKwdNumber(keywords, key_green, compiler);
+        Number* nr_b = getKwdNumber(keywords, key_blue, compiler);
+        Number* nr_h = getKwdNumber(keywords, key_hue, compiler);
+        Number* nr_s = getKwdNumber(keywords, key_saturation, compiler);
+        Number* nr_l = getKwdNumber(keywords, key_lightness, compiler);
+        Number* nr_a = getKwdNumber(keywords, key_alpha, compiler);
+        Number* nr_wn = getKwdNumber(keywords, key_whiteness, compiler);
+        Number* nr_bn = getKwdNumber(keywords, key_blackness, compiler);
 
         if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
 
@@ -1670,14 +1817,14 @@ namespace Sass {
         // ToDo: solve without erase ...
         ValueFlatMap* keywords(argumentList->keywords());
 
-        Number* nr_r = getKwdArg(keywords, key_red, compiler);
-        Number* nr_g = getKwdArg(keywords, key_green, compiler);
-        Number* nr_b = getKwdArg(keywords, key_blue, compiler);
-        Number* nr_s = getKwdArg(keywords, key_saturation, compiler);
-        Number* nr_l = getKwdArg(keywords, key_lightness, compiler);
-        Number* nr_wn = getKwdArg(keywords, key_whiteness, compiler);
-        Number* nr_bn = getKwdArg(keywords, key_blackness, compiler);
-        Number* nr_a = getKwdArg(keywords, key_alpha, compiler);
+        Number* nr_r = getKwdNumber(keywords, key_red, compiler);
+        Number* nr_g = getKwdNumber(keywords, key_green, compiler);
+        Number* nr_b = getKwdNumber(keywords, key_blue, compiler);
+        Number* nr_s = getKwdNumber(keywords, key_saturation, compiler);
+        Number* nr_l = getKwdNumber(keywords, key_lightness, compiler);
+        Number* nr_wn = getKwdNumber(keywords, key_whiteness, compiler);
+        Number* nr_bn = getKwdNumber(keywords, key_blackness, compiler);
+        Number* nr_a = getKwdNumber(keywords, key_alpha, compiler);
 
         double r = nr_r ? nr_r->assertHasUnits(compiler, Strings::percent, Strings::red)->assertRange(-100.0, 100.0, nr_r, compiler, Strings::red) / 100.0 : 0.0;
         double g = nr_g ? nr_g->assertHasUnits(compiler, Strings::percent, Strings::green)->assertRange(-100.0, 100.0, nr_g, compiler, Strings::green) / 100.0 : 0.0;
@@ -1967,6 +2114,42 @@ namespace Sass {
 
     /*******************************************************************/
 
+
+    Value* rgbFn2(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    {
+
+      Value* _r = arguments[0];
+      Value* _g = arguments[1];
+      Value* _b = arguments[2];
+      Value* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (!strict && (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        fncall << _r->inspect() << ", ";
+        fncall << _g->inspect() << ", ";
+        fncall << _b->inspect();
+        if (_a) { fncall << ", " << _a->inspect(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(String, pstate, fncall.str());
+      }
+
+      Number* r = _r->assertNumber(logger, Strings::red);
+      Number* g = _g->assertNumber(logger, Strings::green);
+      Number* b = _b->assertNumber(logger, Strings::blue);
+      Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb,
+        fuzzyRound(_percentageOrUnitless(r, 255, "$red", logger), logger.epsilon),
+        fuzzyRound(_percentageOrUnitless(g, 255, "$green", logger), logger.epsilon),
+        fuzzyRound(_percentageOrUnitless(b, 255, "$blue", logger), logger.epsilon),
+        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
+
+    }
+
     Value* rgbFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       Value* _r = arguments[0];
@@ -2002,6 +2185,120 @@ namespace Sass {
     }
 
 
+    Value* labFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    {
+      Value* _h = arguments[0];
+      Value* _w = arguments[1];
+      Value* _b = arguments[2];
+      Value* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        fncall << _h->inspect() << ", ";
+        fncall << _w->inspect() << ", ";
+        fncall << _b->inspect();
+        if (_a) { fncall << ", " << _a->inspect(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(String, pstate, fncall.str());
+      }
+
+      // Number* h = _h->assertNumber(logger, Strings::hue);
+      // Number* w = _w->assertNumber(logger, Strings::whiteness)
+      //   ->assertHasUnits(logger, "%", Strings::whiteness);
+      // Number* b = _b->assertNumber(logger, Strings::blackness)
+      //   ->assertHasUnits(logger, "%", Strings::blackness);
+      // Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+
+      // checkAngle(logger, h, Strings::hue);
+      return SASS_MEMORY_NEW(ColorSpaced,
+        pstate, ColorSpace::lab,
+        _h->assertNumber(logger, Strings::hue)->value(),
+        _w->assertNumber(logger, Strings::hue)->value(),
+        _b->assertNumber(logger, Strings::hue)->value(),
+        _a ? _a->assertNumber(logger, Strings::hue)->value() : 1);
+
+    }
+
+    Value* okLabFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    {
+      Value* _h = arguments[0];
+      Value* _w = arguments[1];
+      Value* _b = arguments[2];
+      Value* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        fncall << _h->inspect() << ", ";
+        fncall << _w->inspect() << ", ";
+        fncall << _b->inspect();
+        if (_a) { fncall << ", " << _a->inspect(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(String, pstate, fncall.str());
+      }
+
+      // Number* h = _h->assertNumber(logger, Strings::hue);
+      // Number* w = _w->assertNumber(logger, Strings::whiteness)
+      //   ->assertHasUnits(logger, "%", Strings::whiteness);
+      // Number* b = _b->assertNumber(logger, Strings::blackness)
+      //   ->assertHasUnits(logger, "%", Strings::blackness);
+      // Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+
+      // checkAngle(logger, h, Strings::hue);
+      return SASS_MEMORY_NEW(ColorSpaced,
+        pstate, ColorSpace::oklab,
+        _h->assertNumber(logger, Strings::hue)->value(),
+        _w->assertNumber(logger, Strings::hue)->value(),
+        _b->assertNumber(logger, Strings::hue)->value(),
+        _a ? _a->assertNumber(logger, Strings::hue)->value() : 1);
+
+    }
+
+    Value* lchFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    {
+      Value* _h = arguments[0];
+      Value* _w = arguments[1];
+      Value* _b = arguments[2];
+      Value* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        fncall << _h->inspect() << ", ";
+        fncall << _w->inspect() << ", ";
+        fncall << _b->inspect();
+        if (_a) { fncall << ", " << _a->inspect(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(String, pstate, fncall.str());
+      }
+
+      // Number* h = _h->assertNumber(logger, Strings::hue);
+      // Number* w = _w->assertNumber(logger, Strings::whiteness)
+      //   ->assertHasUnits(logger, "%", Strings::whiteness);
+      // Number* b = _b->assertNumber(logger, Strings::blackness)
+      //   ->assertHasUnits(logger, "%", Strings::blackness);
+      // Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+
+      // checkAngle(logger, h, Strings::hue);
+      return SASS_MEMORY_NEW(ColorSpaced,
+        pstate, ColorSpace::lch,
+        _h->assertNumber(logger, Strings::hue)->value(),
+        _w->assertNumber(logger, Strings::hue)->value(),
+        _b->assertNumber(logger, Strings::hue)->value(),
+        _a ? _a->assertNumber(logger, Strings::hue)->value() : 1);
+
+    }
+
     Value* okLchFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       Value* _h = arguments[0];
@@ -2032,7 +2329,7 @@ namespace Sass {
 
       // checkAngle(logger, h, Strings::hue);
       return SASS_MEMORY_NEW(ColorSpaced,
-        pstate, SassColorSpace::OKLCH,
+        pstate, ColorSpace::oklch,
         _h->assertNumber(logger, Strings::hue)->value(),
         _w->assertNumber(logger, Strings::hue)->value(),
         _b->assertNumber(logger, Strings::hue)->value(),

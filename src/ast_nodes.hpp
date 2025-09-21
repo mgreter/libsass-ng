@@ -555,6 +555,11 @@ namespace Sass {
 
     // Assert and return a color or throws if incompatible
     virtual const Color* assertColor(Logger& logger, const sass::string& name = Strings::empty) const;
+    virtual Color* assertColor2(Logger& logger, const sass::string& name = Strings::empty);
+
+    // Assert and return a color or throws if incompatible
+    virtual const ColorSpaced* assertColorSpaced(Logger& logger, const sass::string& name = Strings::empty) const;
+    virtual ColorSpaced* assertColorSpaced2(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a function or throws if incompatible
     virtual Function* assertFunction(Logger& logger, const sass::string& name = Strings::empty);

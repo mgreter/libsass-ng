@@ -189,6 +189,7 @@ namespace Sass {
     Value* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
 
     // Implement type fetcher for base value class (throws in base implementation)
+    Color* assertColor2(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
     const Color* assertColor(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
 
     // Main entry point for Value Visitor pattern

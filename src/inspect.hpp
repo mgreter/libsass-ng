@@ -28,6 +28,7 @@ namespace Sass {
   public:
 
     static sass::string PrintNumber(double nr, const OutputOptions& outopt);
+    static sass::string PrintChannel(tl::optional<double> nr, const OutputOptions& outopt);
 
     // Whether quoted strings should be emitted with quotes.
     bool quotes;
@@ -39,7 +40,7 @@ namespace Sass {
 
     // We should probably pass an emitter, so we can switch implementation?
     Inspect(const OutputOptions& opt);
-    Inspect(Logger& logger, const OutputOptions& opt);
+    // Inspect(Logger& logger, const OutputOptions& opt);
 
     void visitBlockStatements(CssNodeVector children);
     
@@ -68,6 +69,11 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     // Implement Value Visitors
     /////////////////////////////////////////////////////////////////////////
+
+    virtual void _writeHsl(ColorSpaced* color);
+    virtual void _writeHwb(ColorSpaced* color);
+    virtual void _writeRgb(ColorSpaced* color);
+    virtual void _writeLegacyColor(ColorSpaced* color);
 
     virtual void visitBoolean(Boolean* value) override;
     virtual void visitColor(Color* value) override;

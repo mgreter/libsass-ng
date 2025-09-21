@@ -25,7 +25,7 @@ namespace Sass {
     // Avoid streams
     char buf[1024];
 
-    snprintf(buf, 1024,
+    snprintf(buf, 1024, 
       outopt.nr_sprintf,
       nr);
 
@@ -53,15 +53,52 @@ namespace Sass {
 
   }
 
+  sass::string Inspect::PrintChannel(tl::optional<double> nr, const OutputOptions& outopt)
+  {
+
+    if (!nr.has_value()) {
+      return str_none;
+    }
+
+    // Avoid streams
+    char buf[1024];
+
+    snprintf(buf, 1024,
+      outopt.nr_sprintf,
+      nr.value());
+
+    // Operate from behind
+    char* end = buf;
+
+    // Move to last position
+    while (*end != 0) ++end;
+    if (end != buf) end--;
+    // Delete trailing zeros
+    while (*end == '0') {
+      *end = 0;
+      end--;
+    }
+    // Delete trailing decimal separator
+    if (*end == '.') *end = 0;
+
+    // Some final cosmetics
+    if (buf[0] == '-' && buf[1] == '0' && buf[2] == 0) {
+      buf[0] = '0'; buf[1] = 0;
+    }
+
+    // add units later
+    return sass::string(buf);
+  }
+
   Inspect::Inspect(const OutputOptions& outopt)
     : Emitter(outopt), quotes(true), inspect(false)
   {
   }
 
-  Inspect::Inspect(Logger& logger, const OutputOptions& outopt)
-    : Emitter(outopt), quotes(true), inspect(false)
-  {
-  }
+  // Inspect::Inspect(Logger& logger, const OutputOptions& outopt)
+  //   : Emitter(outopt), quotes(true), inspect(false)
+  // {
+  // }
 
   void Inspect::acceptCssString(const sass::string& node)
   {
@@ -863,18 +900,126 @@ namespace Sass {
     return is_hex_doublet(r) && is_hex_doublet(g) && is_hex_doublet(b);
   }
 
+  void Inspect::_writeHsl(ColorSpaced* color)
+  {
+    sass::string ss;
+    /*
+    ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
+      ss += "hsl(";
+      ss += PrintNumber(rgb->channel(str_hue), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_saturation), outopt); ss += "%, ";
+      ss += PrintNumber(rgb->channel(str_lightness), outopt); ss += "%)";
+    }
+    else {
+      ss += "hsla(";
+      ss += PrintNumber(rgb->channel(str_hue), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_saturation), outopt); ss += "%, ";
+      ss += PrintNumber(rgb->channel(str_lightness), outopt); ss += "%, ";
+      ss += PrintNumber(rgb->channel(str_alpha), outopt); ss += ")";
+    }
+    append_token(ss, color);
+    */
+  }
+
+  void Inspect::_writeHwb(ColorSpaced* color)
+  {
+    /*
+    sass::string ss;
+    ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
+      ss += "hwb(";
+      ss += PrintNumber(rgb->channel(str_hue), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_whiteness), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_blackness), outopt); ss += ")";
+    }
+    else {
+      ss += "hwba(";
+      ss += PrintNumber(rgb->channel(str_hue), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_whiteness), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_blackness), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_alpha), outopt); ss += ")";
+    }
+    append_token(ss, color);
+    */
+  }
+
+  void Inspect::_writeRgb(ColorSpaced* color)
+  {
+    
+    sass::string ss;
+    ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
+      ss += "rgb(";
+      ss += PrintNumber(rgb->channel(str_red), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_green), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_blue), outopt); ss += ")";
+    }
+    else {
+      ss += "rgba(";
+      ss += PrintNumber(rgb->channel(str_red), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_green), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_blue), outopt); ss += ", ";
+      ss += PrintNumber(rgb->channel(str_alpha), outopt); ss += ")";
+    }
+    append_token(ss, color);
+  }
+
+  void Inspect::_writeLegacyColor(ColorSpaced* color)
+  {
+    // Check if resulting color is considered fully opaque
+    bool opaque = fuzzyEquals(color->a(), 1, outopt.epsilon);
+
+    if (outopt.output_style == SASS_STYLE_COMPRESSED) {
+      std::cerr << "COMPRESSED OUTPUT\n";
+    }
+
+    if (color->space() == ColorSpace::hsl) {
+      _writeHsl(color);
+      return;
+    }
+    else if (outopt.output_style == SASS_STYLE_COMPRESSED) {
+      if (color->space() == ColorSpace::hwb) {
+        _writeHwb(color);
+        return;
+      }
+    }
+    else if (color->parsed() && !color->isaColorHwba()) {
+      std::cerr << "FOOBAR\n";
+    }
+    else {
+      std::cerr << "BAZ\n";
+      _writeRgb(color);
+      return;
+    }
+
+  }
+
   // T visitColorRGBA(SassColor value);
   void Inspect::visitColor(Color* color)
   {
 
     if (auto spaced = color->isaColorSpaced()) {
 
+      if (spaced->space() == ColorSpace::rgb || spaced->space() == ColorSpace::hsl || spaced->space() == ColorSpace::hwb) {
+        if (!spaced->isChannel0Missing() && !spaced->isChannel1Missing() && !spaced->isChannel2Missing() && !spaced->isAlphaMissing()) {
+          _writeLegacyColor(spaced);
+          return;
+        }
+      }
+
       // output the final token
       // is sass::string faster?
       sass::sstream ss;
-
+      /*
       switch (spaced->space()) {
       case SassColorSpace::RGB:
+        ss << "rgb(";
+        ss << PrintChannel(spaced->c0(), outopt) << ", ";
+        ss << PrintChannel(spaced->c1(), outopt) << ", ";
+        ss << PrintChannel(spaced->c2(), outopt) << ")";
+        append_token(ss.str(), color);
+        break;
       case SassColorSpace::HSL:
       case SassColorSpace::HWB:
         break;
@@ -900,7 +1045,7 @@ namespace Sass {
         append_token(ss.str(), color);
         break;
       }
-
+      */
       return;
     }
 
