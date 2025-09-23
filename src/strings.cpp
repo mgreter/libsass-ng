@@ -121,7 +121,19 @@ namespace Sass
   const sass::string str_xyz_d65("xyz-d65");
 
 
+  const sass::string str_color("color");
   const sass::string str_space("space");
+
+
+  const sass::string str_same("same");
+  const sass::string str_channel("channel");
+  const sass::string str_to_space("to-space");
+  const sass::string str_is_legacy("is-legacy");
+  const sass::string str_is_missing("is-missing");
+  const sass::string str_is_in_gamut("is-in-gamut");
+  const sass::string str_is_powerless("is-powerless");
+
+
   const sass::string str_red("red");
   const sass::string str_green("green");
   const sass::string str_blue("blue");
@@ -306,6 +318,17 @@ namespace Sass
   const EnvKey key_lch(str_lch);
 
   const EnvKey key_space(str_space);
+
+  const EnvKey key_same(str_same);
+  const EnvKey key_channel(str_channel);
+  const EnvKey key_to_space(str_to_space);
+  const EnvKey key_to_gamut(str_to_gamut);
+  const EnvKey key_is_legacy(str_is_legacy);
+  const EnvKey key_is_missing(str_is_missing);
+  const EnvKey key_is_in_gamut(str_is_in_gamut);
+  const EnvKey key_is_powerless(str_is_powerless);
+
+  const EnvKey key_color(str_color);
   const EnvKey key_red(str_red);
   const EnvKey key_green(str_green);
   const EnvKey key_blue(str_blue);
@@ -329,7 +352,6 @@ namespace Sass
   const EnvKey key_change(str_change);
   const EnvKey key_scale(str_scale);
   const EnvKey key_mix(str_mix);
-  const EnvKey key_to_gamut(str_to_gamut);
   const EnvKey key_opacify(str_opacify);
   const EnvKey key_fade_in(str_fade_in);
   const EnvKey key_fade_out(str_fade_out);

@@ -95,10 +95,10 @@ namespace Sass {
   {
   }
 
-  // Inspect::Inspect(Logger& logger, const OutputOptions& outopt)
-  //   : Emitter(outopt), quotes(true), inspect(false)
-  // {
-  // }
+  //Inspect::Inspect(Logger& logger, const OutputOptions& outopt)
+  //  : Emitter(outopt), quotes(true), inspect(false)
+  //{
+  //}
 
   void Inspect::acceptCssString(const sass::string& node)
   {
@@ -903,7 +903,6 @@ namespace Sass {
   void Inspect::_writeHsl(ColorSpaced* color)
   {
     sass::string ss;
-    /*
     ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
     if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
       ss += "hsl(";
@@ -919,12 +918,10 @@ namespace Sass {
       ss += PrintNumber(rgb->channel(str_alpha), outopt); ss += ")";
     }
     append_token(ss, color);
-    */
   }
 
   void Inspect::_writeHwb(ColorSpaced* color)
   {
-    /*
     sass::string ss;
     ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
     if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
@@ -941,12 +938,10 @@ namespace Sass {
       ss += PrintNumber(rgb->channel(str_alpha), outopt); ss += ")";
     }
     append_token(ss, color);
-    */
   }
 
   void Inspect::_writeRgb(ColorSpaced* color)
   {
-    
     sass::string ss;
     ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
     if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
@@ -995,17 +990,101 @@ namespace Sass {
 
   }
 
+  void Inspect::_maybeWriteSlashAlpha(const ColorSpaced* color)
+  {
+    auto alpha = color->alpha();
+    if (!alpha.has_value()) {
+      append_optional_space();
+      append_char('/');
+      append_optional_space();
+      append_string("none");
+    }
+    else if (!fuzzyEquals(alpha.value(), 1, outopt.epsilon)) {
+      append_optional_space();
+      append_char('/');
+      append_optional_space();
+      append_string(PrintNumber(alpha.value(), outopt));
+    }
+  }
+
+  // Writes [color] using the `color()` function syntax.
+  void Inspect::_writeColorFunction(const ColorSpaced* color)
+  {
+    if (color->space() == ColorSpace::rgb ||
+        color->space() == ColorSpace::hsl ||
+        color->space() == ColorSpace::hwb ||
+        color->space() == ColorSpace::lab ||
+        color->space() == ColorSpace::oklab ||
+        color->space() == ColorSpace::lch ||
+        color->space() == ColorSpace::oklch)
+    {
+      std::cerr << "Wrong color space for writeColorFunction\n";
+    }
+
+    append_string("color(");
+    append_string(color->space().name());
+    append_mandatory_space();
+    write_channel(color->getChannel0OrNull(), nullptr);
+    append_mandatory_space();
+    write_channel(color->getChannel1OrNull(), nullptr);
+    append_mandatory_space();
+    write_channel(color->getChannel2OrNull(), nullptr);
+    _maybeWriteSlashAlpha(color);
+    append_string(")");
+  }
+
   // T visitColorRGBA(SassColor value);
   void Inspect::visitColor(Color* color)
   {
 
     if (auto spaced = color->isaColorSpaced()) {
 
+      // Get the associated color space
+      const ColorSpace& space = spaced->space();
+
       if (spaced->space() == ColorSpace::rgb || spaced->space() == ColorSpace::hsl || spaced->space() == ColorSpace::hwb) {
         if (!spaced->isChannel0Missing() && !spaced->isChannel1Missing() && !spaced->isChannel2Missing() && !spaced->isAlphaMissing()) {
           _writeLegacyColor(spaced);
           return;
         }
+      }
+
+      if (space == ColorSpace::rgb) {
+        append_string("rgb(");
+        append_string(")");
+      }
+
+      else if (spaced->space() == ColorSpace::lab || spaced->space() == ColorSpace::oklab ||
+          spaced->space() == ColorSpace::lch || spaced->space() == ColorSpace::oklch) {
+
+        add_open_mapping(color, true);
+
+        write_string(spaced->space().name());
+        append_string("(");
+
+
+
+        // parentheses_opened = true;
+        double max = 100.0; //  spaced->space()._channels[0]
+        append_string(PrintChannel(spaced->getChannel0() * 100 / max, outopt));
+        write_string("%");
+        append_mandatory_space();
+        append_string(PrintChannel(spaced->getChannel1(), outopt));
+        append_mandatory_space();
+
+        bool polar = spaced->space()._channels[2].isPolarAngle;
+        write_channel(spaced->getChannel2OrNull(), polar ? "deg" : nullptr);
+
+        _maybeWriteSlashAlpha(spaced);
+
+        append_string(")");
+
+        add_close_mapping(color, true);
+
+
+      }
+      else {
+        _writeColorFunction(spaced);
       }
 
       // output the final token
@@ -1400,6 +1479,22 @@ namespace Sass {
     else if (op->op() == DIV) append_string(" / ");
     append_token(op->right()->toString(), op->right());
   }
+
+  void Inspect::write_channel(tl::optional<double> value, const char* unit)
+  {
+    // write space/lf
+    flush_schedules();
+    if (!value.has_value()) {
+      write_string("none");
+    }
+    else if (std::isinf(value.value())) {
+      write_string("inf"); // todo
+    }
+    else {
+      write_string(PrintChannel(value.value(), outopt));
+    }
+  }
+
 
   void Inspect::visitNumber(Number* value)
   {

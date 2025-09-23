@@ -75,6 +75,10 @@ namespace Sass {
     virtual void _writeRgb(ColorSpaced* color);
     virtual void _writeLegacyColor(ColorSpaced* color);
 
+    void _maybeWriteSlashAlpha(const ColorSpaced* color);
+
+    void _writeColorFunction(const ColorSpaced* color);
+
     virtual void visitBoolean(Boolean* value) override;
     virtual void visitColor(Color* value) override;
     virtual void visitFunction(Function* value) override;
@@ -89,6 +93,8 @@ namespace Sass {
     // Private helper for "messy" calc values
     void _writeCalculationValue(AstNode* node, bool wrap = true);
     void _writeCalculationUnits(Units* units);
+
+    void write_channel(tl::optional<double> value, const char* unit);
 
     /////////////////////////////////////////////////////////////////////////
     // Implement CSS Visitors

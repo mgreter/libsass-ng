@@ -3,6 +3,7 @@
 #include "charcode.hpp"
 #include "character.hpp"
 #include "string_utils.hpp"
+#include "shim/optional.hpp"
 
 namespace Sass {
     // Default constructor

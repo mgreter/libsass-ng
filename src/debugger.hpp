@@ -1273,6 +1273,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << ind << "Number " << expression;
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << expression->value() << expression->unit() << "]" <<
+      " [sep: " << expression->separator() << "] " <<
       " [hash: " << expression->hash() << "] " <<
       std::endl;
     debug_ast(expression->lhsAsSlash(), ind + "[lhs] ");

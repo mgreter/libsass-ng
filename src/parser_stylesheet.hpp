@@ -96,6 +96,9 @@ namespace Sass {
     // But the right side is evaluated in the parent scope.
     CallableSignature* parseArgumentDeclaration();
 
+    // Consumes a number value.
+    Number* readSingleNumber();
+
     // Whether this is a plain CSS stylesheet.
     virtual bool parsingCss() const { return false; }
 
@@ -427,6 +430,9 @@ namespace Sass {
 
     // Consumes a number expression.
     NumberExpression* readNumberExpression();
+
+    // Consumes a number value.
+    Number* readNumberValue();
 
     // Consumes the decimal component of a number and returns its value, or 0
     // if there is no decimal component. If [allowTrailingDot] is `false`, this

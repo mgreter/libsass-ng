@@ -224,6 +224,10 @@ namespace Sass {
 
   public:
 
+    SassSeparator separator() const override final {
+      return lhsAsSlash_ && rhsAsSlash_ ? SASS_DIV : SASS_UNDEF;
+    }
+
     // Value constructor
     Number(
       const SourceSpan& pstate,
@@ -448,6 +452,11 @@ namespace Sass {
       sass::string&& value,
       bool hasQuotes = false);
 
+    String(
+      const SourceSpan& pstate,
+      const sass::string& value,
+      bool hasQuotes = false);
+
     // Copy constructor
     String(const String* ptr);
 
@@ -473,6 +482,9 @@ namespace Sass {
 
     // Implement type fetcher for base value class (throws in base implementation)
     String* assertString(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
+
+    // Implement type fetcher for base value class (throws in base implementation)
+    String* assertUnquoted(Logger& logger, const sass::string& name = Strings::empty);
 
     // Implement some operations for base value class
     Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;

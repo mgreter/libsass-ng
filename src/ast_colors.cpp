@@ -425,12 +425,24 @@ namespace Sass {
   double ColorSpaced::getChannel2() const { return c2_.value_or(0); }
   double ColorSpaced::getAlpha() const { return alpha_.value_or(0); }
 
+  tl::optional<double> ColorSpaced::getChannelOrNull(int idx) const
+  {
+    switch (idx) {
+    case 0: return c0_;
+    case 1: return c1_;
+    case 2: return c2_;
+    case -1: return alpha_;
+    }
+    return 0.0;
+  }
+
   double ColorSpaced::getChannel(int idx) const
   {
     switch (idx) {
       case 0: return c0_.value_or(0);
       case 1: return c1_.value_or(0);
       case 2: return c2_.value_or(0);
+      case -1: return alpha_.value_or(0);
     }
     return 0.0;
   }
@@ -439,6 +451,37 @@ namespace Sass {
   bool ColorSpaced::isChannel1Missing() const { return !c1_.has_value(); }
   bool ColorSpaced::isChannel2Missing() const { return !c2_.has_value(); }
   bool ColorSpaced::isAlphaMissing() const { return !alpha_.has_value(); }
+
+  int ColorSpaced::getChannelIndex(
+    Logger& logger, const String* channel,
+    const char* colorName,
+    const char* channelName) const
+  {
+    // channel must not be nullptr
+    auto channels = space_._channels;
+    if (channel->value() == channels[0].name) return 0;
+    if (channel->value() == channels[1].name) return 1;
+    if (channel->value() == channels[2].name) return 2;
+    if (channel->value() == "alpha") return -1;
+    throw Exception::RuntimeException(logger,
+      "Color $color has no channel named $channelName.");
+  }
+
+  bool ColorSpaced::isChannelMissing(
+    Logger& logger, const String* channel,
+    const char* colorName,
+    const char* channelName) const
+  {
+    // channel must not be nullptr
+    auto channels = space_._channels;
+    if (channel->value() == channels[0].name) return isChannel0Missing();
+    if (channel->value() == channels[1].name) return isChannel1Missing();
+    if (channel->value() == channels[2].name) return isChannel2Missing();
+    if (channel->value() == "alpha") return isAlphaMissing();
+    throw Exception::RuntimeException(logger,
+      "Only one argument may be passed "
+      "to the plain-CSS invert() function.");
+  }
 
   bool ColorSpaced::isChannelMissing(int idx) const
   {
@@ -450,12 +493,12 @@ namespace Sass {
     return true;
   }
 
-  ColorSpacedObj ColorSpaced::toSpace(Logger& logger, const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
+  ColorSpacedObj ColorSpaced::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
   {
     if (space == this->space_) {
       return SASS_MEMORY_NEW(ColorSpaced, this);
     }
-    ColorSpacedObj converted = space.convert(logger, space, pstate, c0_, c1_, c2_, alpha_);
+    ColorSpacedObj converted = space.convert(space, pstate, c0_, c1_, c2_, alpha_);
 
     //return !legacyMissing &&
     //  converted->space().isLegacy() &&
@@ -527,10 +570,14 @@ namespace Sass {
   {
     if (hash_ == 0) {
       hash_start(hash_, typeid(ColorHsla).hash_code());
-      //hash_combine(hash_, std::hash<double>{}(c1_));
-      //hash_combine(hash_, std::hash<double>{}(c2_));
-      //hash_combine(hash_, std::hash<double>{}(c3_));
-      //hash_combine(hash_, std::hash<double>{}(c4_));
+      hash_combine(hash_, std::hash<double>{}(c0_.has_value()));
+      hash_combine(hash_, std::hash<double>{}(c0_.value_or(0)));
+      hash_combine(hash_, std::hash<double>{}(c1_.has_value()));
+      hash_combine(hash_, std::hash<double>{}(c1_.value_or(0)));
+      hash_combine(hash_, std::hash<double>{}(c2_.has_value()));
+      hash_combine(hash_, std::hash<double>{}(c2_.value_or(0)));
+      hash_combine(hash_, std::hash<double>{}(alpha_.value_or(0)));
+      hash_combine(hash_, std::hash<double>{}(alpha_.value_or(0)));
     }
     return hash_;
   }
@@ -610,7 +657,6 @@ namespace Sass {
   }
 
   ColorSpaced* ColorSpace::convertLinear(
-    Logger& logger,
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> red,
@@ -660,7 +706,7 @@ namespace Sass {
     }
 
     if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
-      return ColorSpace::srgb.convert(logger, dest, pstate,
+      return ColorSpace::srgb.convert(dest, pstate,
         transformedRed, transformedGreen, transformedBlue,
         alpha, missingLightness, missingChroma, missingHue);
     }
@@ -691,7 +737,6 @@ namespace Sass {
   //const ColorSpace ColorSpacings::SRGB(str_srgb, SassColorSpace::SRGB, srgb_channels);
 
   ColorSpaced* SrgbColorSpace::convert(
-    Logger& logger,
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> red,
@@ -739,7 +784,7 @@ namespace Sass {
         tl::optional<double> c1 = saturation;
         tl::optional<double> c2 = lightness * 100;
 
-          return ColorSpaced::_forSpace(pstate, dest, c0, c1, c2, alpha, logger);
+          return ColorSpaced::_forSpace(pstate, dest, c0, c1, c2, alpha);
 
         std::cerr << "other";
       }

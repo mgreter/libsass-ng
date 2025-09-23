@@ -106,6 +106,18 @@ namespace Sass {
   extern const sass::string str_call;
 
   // For color functions
+  extern const sass::string str_color;
+  extern const sass::string str_space;
+
+  extern const sass::string str_same;
+  extern const sass::string str_channel;
+  extern const sass::string str_to_space;
+  extern const sass::string str_to_gamut;
+  extern const sass::string str_is_legacy;
+  extern const sass::string str_is_missing;
+  extern const sass::string str_is_in_gamut;
+  extern const sass::string str_is_powerless;
+
   extern const sass::string str_none;
   extern const sass::string str_rgb;
   extern const sass::string str_srgb;
@@ -323,6 +335,17 @@ namespace Sass {
   extern const EnvKey key_lch;
 
   extern const EnvKey key_space;
+
+  extern const EnvKey key_same;
+  extern const EnvKey key_channel;
+  extern const EnvKey key_to_space;
+  extern const EnvKey key_to_gamut;
+  extern const EnvKey key_is_legacy;
+  extern const EnvKey key_is_missing;
+  extern const EnvKey key_is_in_gamut;
+  extern const EnvKey key_is_powerless;
+
+  extern const EnvKey key_color;
   extern const EnvKey key_red;
   extern const EnvKey key_green;
   extern const EnvKey key_blue;

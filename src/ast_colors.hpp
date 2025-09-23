@@ -33,10 +33,12 @@ namespace Sass {
     {
     }
 
+    virtual ~ColorChannel() = default;
   };
 
   class LinearChannel : public ColorChannel {
 
+  public:
     double min;
     double max;
     bool requiresPercent;
@@ -46,8 +48,8 @@ namespace Sass {
   public:
     LinearChannel(sass::string name, double min, double max,
       bool requiresPercent, bool lowerClamped, bool upperClamped,
-      bool conventionallyPercent = false)
-      : ColorChannel(name, false, ""),
+      bool conventionallyPercent = false, sass::string unit = "")
+      : ColorChannel(name, false, unit),
         min(min), max(max),
         requiresPercent(requiresPercent),
         lowerClamped(lowerClamped),
@@ -93,7 +95,6 @@ namespace Sass {
     virtual double* transformationMatrix(ColorSpace dest) const;
 
     virtual ColorSpaced* convertLinear(
-      Logger& logger,
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -108,7 +109,6 @@ namespace Sass {
 
     
     virtual ColorSpaced* convert(
-      Logger& logger,
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> channel0,
@@ -116,7 +116,7 @@ namespace Sass {
       tl::optional<double> channel2,
       tl::optional<double> alpha) const
     {
-      return convertLinear(logger, dest, pstate, channel0, channel1, channel2, alpha);
+      return convertLinear(dest, pstate, channel0, channel1, channel2, alpha);
     }
 
     bool operator==(const ColorSpace& rhs) const {
@@ -178,7 +178,7 @@ namespace Sass {
   };
 
   const ColorChannel oklab_channels[3]{
-    LinearChannel("lightness", 0, 1, false, true, true, true),
+    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
     LinearChannel("a", -0.4, 0.4, false, false, false),
     LinearChannel("b", -0.4, 0.4, false, false, false)
   };
@@ -341,7 +341,6 @@ namespace Sass {
       rgb_channels, 3)
     {}
     ColorSpaced* convert(
-      Logger& logger,
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -852,6 +851,7 @@ namespace Sass {
     tl::optional<double> getChannel0OrNull() const;
     tl::optional<double> getChannel1OrNull() const;
     tl::optional<double> getChannel2OrNull() const;
+    tl::optional<double> getChannelOrNull(int idx) const;
 
     double getChannel0() const;
     double getChannel1() const;
@@ -865,18 +865,23 @@ namespace Sass {
     bool isChannelMissing(int idx) const;
     bool isAlphaMissing() const;
 
-    virtual ColorSpacedObj toSpace(Logger& logger, const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
+    int getChannelIndex(Logger& logger, const String* channel,
+      const char* colorName, const char* channelName) const;
+    bool isChannelMissing(Logger& logger, const String* channel,
+      const char* colorName, const char* channelName) const;
+
+    virtual ColorSpacedObj toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
 
   public:
 
     static ColorSpacedObj _forSpace(
       const SourceSpan& pstate, const ColorSpace& space,
       tl::optional<double> c0, tl::optional<double> c1,
-      tl::optional<double> c2, tl::optional<double> alpha,
-      Logger& logger/*, format */)
+      tl::optional<double> c2, tl::optional<double> alpha
+      /*,Logger& logger, format */)
     {
       ColorSpacedObj color = SASS_MEMORY_NEW(ColorSpaced, pstate, space, c0, c1, c2,
-        alpha.and_then([&](double a) { return tl::optional<double>(fuzzyAssertRange(a, 0, 1, logger)); }));
+        alpha/*.and_then([&](double a) { return tl::optional<double>(fuzzyAssertRange(a, 0, 1, logger)); })*/);
       // assert(space == ColorSpace::rgb);
       // assert(space != ColorSpace::lms);
       return color;

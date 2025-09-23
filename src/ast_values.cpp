@@ -1150,6 +1150,15 @@ namespace Sass {
     hasQuotes_(hasQuotes)
   {}
 
+  String::String(
+    const SourceSpan& pstate,
+    const sass::string& value,
+    bool hasQuotes) :
+    Value(pstate),
+    value_(value),
+    hasQuotes_(hasQuotes)
+  {}
+
   String::String(const String* ptr) :
     Value(ptr),
     value_(ptr->value_),
@@ -1193,6 +1202,13 @@ namespace Sass {
   }
 
   /////////////////////////////////////////////////////////////////////////
+
+  String* String::assertUnquoted(Logger& logger, const sass::string& name)
+  {
+    if (hasQuotes_ == false) return this;
+    throw Exception::SassScriptException(logger, pstate_,
+      "Expected " + inspect() + " to be an unquoted string.");
+  }
 
   Value* String::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {

@@ -2794,8 +2794,8 @@ namespace Sass {
   }
   // EO readUnaryOpExpression
 
-  // Consumes a number expression.
-  NumberExpression* StylesheetParser::readNumberExpression()
+  // Consumes a number value.
+  Number* StylesheetParser::readNumberValue()
   {
     StringScannerState start = scanner.state();
     uint8_t first = scanner.peekChar();
@@ -2822,8 +2822,23 @@ namespace Sass {
     }
 
     auto pstate(scanner.relevantSpanFrom(start.offset));
-    return SASS_MEMORY_NEW(NumberExpression, pstate,
-      SASS_MEMORY_NEW(Number, pstate, sign * number, unit));
+    return SASS_MEMORY_NEW(Number, pstate, sign * number, unit);
+  }
+
+  Number* StylesheetParser::readSingleNumber()
+  {
+    Number* number = readNumberValue();
+    scanner.expectDone();
+    return number;
+  }
+  
+
+  // Consumes a number expression.
+  NumberExpression* StylesheetParser::readNumberExpression()
+  {
+    Number* number = readNumberValue();
+    return SASS_MEMORY_NEW(NumberExpression,
+      number->pstate(), number);
   }
 
   /* Locale unspecific atof function. */

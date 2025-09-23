@@ -167,6 +167,12 @@ namespace Sass {
       const char* path,
       sass::string&& data);
 
+    // Value copy constructor without srcmaps
+    // ToDo: should we try to parse srcmaps?
+    SourceString(
+      const char* path,
+      const sass::string& data);
+
     // Value move constructor with srcmaps
     SourceString(
       const char* imp_path,
