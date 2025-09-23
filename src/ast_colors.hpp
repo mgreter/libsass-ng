@@ -9,8 +9,7 @@
 #include "capi_sass.hpp"
 
 #include "ast_nodes.hpp"
-#include "ast_values.hpp"
-#include "shim/optional.hpp"
+#include "col_channel.hpp"
 
 namespace Sass {
 
@@ -19,133 +18,14 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  class ColorChannel {
 
-  public:
-
-    sass::string name;
-    bool isPolarAngle;
-    sass::string unit;
-
-
-    ColorChannel(sass::string name, bool isPolarAngle, sass::string unit)
-      : name(name), isPolarAngle(isPolarAngle), unit(unit)
-    {
-    }
-
-    virtual ~ColorChannel() = default;
-  };
-
-  class LinearChannel : public ColorChannel {
-
-  public:
-    double min;
-    double max;
-    bool requiresPercent;
-    bool lowerClamped;
-    bool upperClamped;
-    bool conventionallyPercent;
-  public:
-    LinearChannel(sass::string name, double min, double max,
-      bool requiresPercent, bool lowerClamped, bool upperClamped,
-      bool conventionallyPercent = false, sass::string unit = "")
-      : ColorChannel(name, false, unit),
-        min(min), max(max),
-        requiresPercent(requiresPercent),
-        lowerClamped(lowerClamped),
-        upperClamped(upperClamped),
-        conventionallyPercent(conventionallyPercent)
-    {}
-
-  };
-
-  class HwbColorSpace;
-  class HslColorSpace;
-  class LabColorSpace;
-  class LchColorSpace;
-  class OkLabColorSpace;
-  class OkLchColorSpace;
-  class RgbColorSpace;
-
-  class SrgbColorSpace;
-  class SrgbLinearColorSpace;
-  class XyzD50ColorSpace;
-  class LmsColorSpace;
-
-  class ColorSpace {
-
-    ADD_CONSTREF(sass::string, name);
-    ADD_CONSTREF(SassColorSpace, space);
-
-  public:
-
-    int _channelSize;
-    const ColorChannel* _channels;
-
-    static const ColorSpace* fromName(Logger& logger, const String& name);
-
-    ColorSpace(const sass::string name, SassColorSpace space, const ColorChannel* channels, int channelSize)
-      : name_(name), space_(space), _channels(channels), _channelSize(channelSize)
-    {
-
-    }
-
-    virtual double toLinear(double channel) const;
-    virtual double fromLinear(double channel) const;
-    virtual double* transformationMatrix(ColorSpace dest) const;
-
-    virtual ColorSpaced* convertLinear(
-      const ColorSpace& dest,
-      const SourceSpan& pstate,
-      tl::optional<double> red,
-      tl::optional<double> green,
-      tl::optional<double> blue,
-      tl::optional<double> alpha,
-      bool missingLightness = false,
-      bool missingChroma = false,
-      bool missingHue = false,
-      bool missingA = false,
-      bool missingB = false) const;
-
-    
-    virtual ColorSpaced* convert(
-      const ColorSpace& dest,
-      const SourceSpan& pstate,
-      tl::optional<double> channel0,
-      tl::optional<double> channel1,
-      tl::optional<double> channel2,
-      tl::optional<double> alpha) const
-    {
-      return convertLinear(dest, pstate, channel0, channel1, channel2, alpha);
-    }
-
-    bool operator==(const ColorSpace& rhs) const {
-      return rhs.space_ == space_;
-    }
-
-    bool operator!=(const ColorSpace& rhs) const {
-      return rhs.space_ == space_;
-    }
-
-    static const HwbColorSpace hwb;
-    static const HslColorSpace hsl;
-    static const LabColorSpace lab;
-    static const LchColorSpace lch;
-    static const OkLabColorSpace oklab;
-    static const OkLchColorSpace oklch;
-
-    static const RgbColorSpace rgb;
-    static const SrgbColorSpace srgb;
-    static const SrgbLinearColorSpace srgb_linear;
-    static const XyzD50ColorSpace xyzd50;
-    static const LmsColorSpace lms;
-
-  };
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   const LinearChannel AlphaChannel("alpha", 0, 1, false, false, false);
+
+
 
   const ColorChannel hsl_channels[3]{
     ColorChannel("hue", true, "deg"),

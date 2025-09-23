@@ -1054,6 +1054,7 @@ namespace Sass {
         append_string(")");
       }
 
+      // We know these spaces have first channel as convenient percent
       else if (spaced->space() == ColorSpace::lab || spaced->space() == ColorSpace::oklab ||
           spaced->space() == ColorSpace::lch || spaced->space() == ColorSpace::oklch) {
 
@@ -1069,10 +1070,13 @@ namespace Sass {
         if (spaced->isChannel0Missing()) {
           append_string("none");
         }
+        else if (spaced->space()._channels[0].isLinear) {
+          double max = spaced->space()._channels[0].max;
+          append_string(PrintChannel(spaced->getChannel0() * 100 / max, outopt));
+          write_string("%");
+        }
         else {
           write_channel(spaced->getChannel0OrNull(), nullptr);
-          // append_string(PrintChannel(spaced->getChannel0() * 100 / max, outopt));
-          // write_string("%");
         }
         append_mandatory_space();
         append_string(PrintChannel(spaced->getChannel1OrNull(), outopt));
@@ -1498,6 +1502,7 @@ namespace Sass {
     }
     else {
       write_string(PrintChannel(value.value(), outopt));
+      if (unit != nullptr) write_string(unit);
     }
   }
 

@@ -582,8 +582,8 @@ namespace Sass {
           name + ": Expected " + number->inspect()
           + " to have no units or \"%\".");
       }
-      if (value < 0.0) return 0.0;
-      if (value > max) return max;
+      // if (value < 0.0) return 0.0;
+      // if (value > max) return max;
       return value;
     }
 
@@ -977,34 +977,33 @@ namespace Sass {
           return tl::optional<double>();
         }
 
-        LinearChannel qwe("lightness", 0, 1, false, true, true, true);
-        ColorChannel foo = qwe;
-
-        const LinearChannel* lin = dynamic_cast<LinearChannel*>(&foo);
+        std::cerr << "channel " << chnInfo.name << " from value " << chnValue->value() << "\n";
 
 
-        if (const LinearChannel* linear = dynamic_cast<const LinearChannel*>(&chnInfo)) {
-          if (linear->requiresPercent && !chnValue->hasUnit("%")) {
+        if (chnInfo.isLinear) {
+          std::cerr << " Channel is linear\n";
+          if (chnInfo.requiresPercent && !chnValue->hasUnit("%")) {
             std::cerr << "Must have unit of percent\n";
           }
-          else if (linear->lowerClamped == false && linear->upperClamped == false) {
-            // return chnValue->value();
-            return _percentageOrUnitless(chnValue, linear->max, chnInfo.name, logger);
+          else if (chnInfo.lowerClamped == false && chnInfo.upperClamped == false) {
+            return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
           }
           else if (clamp == false) {
-            return _percentageOrUnitless(chnValue, linear->max, chnInfo.name, logger);
+            return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
           }
-          else if (linear->lowerClamped == true || linear->upperClamped == true) {
-            double val = _percentageOrUnitless(chnValue, linear->max, chnInfo.name, logger);
-            double min = linear->lowerClamped ? linear->min : -std::numeric_limits<double>::infinity();
-            double max = linear->upperClamped ? linear->min : +std::numeric_limits<double>::infinity();
-            return std::max(std::min(val, min), max);
+          else if (chnInfo.lowerClamped == true || chnInfo.upperClamped == true) {
+            double val = _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
+            double min = chnInfo.lowerClamped ? chnInfo.min : -std::numeric_limits<double>::infinity();
+            double max = chnInfo.upperClamped ? chnInfo.max : +std::numeric_limits<double>::infinity();
+            return std::min(std::max(val, min), max);
           }
-          return chnValue->value();
+          else {
+            return chnValue->value();
+          }
         }
         else {
           // Coerce into degrees
-          return chnValue->value(); // absmod(coerceToDeg(chnValue), 360.0);
+          return absmod(coerceToDeg(chnValue), 360.0);
         }
       }
 
@@ -1032,12 +1031,21 @@ namespace Sass {
           std::cerr << "not implemented rgb\n";
         }
         else {
-          return SASS_MEMORY_NEW(ColorSpaced,
+          auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
+          auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
+          auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
+          std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
+          auto rv = SASS_MEMORY_NEW(ColorSpaced,
             pstate, *space,
-            _channelFromValue(logger, space->_channels[0], chn0, clamp),
-            _channelFromValue(logger, space->_channels[1], chn1, clamp),
-            _channelFromValue(logger, space->_channels[2], chn2, clamp),
+            a,
+            b,
+            c,
             alpha);
+
+          std::cerr << " => " << rv->getChannel0() << ", " <<
+            rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+
+          return rv;
         }
         return nullptr;
       }
@@ -1445,8 +1453,8 @@ namespace Sass {
         double chnValue = color->getChannel(idx);
 
         if (chnInfo.unit == "%") {
-          if (auto lin = dynamic_cast<LinearChannel*>(&chnInfo)) {
-            if (lin->max != 0) chnValue = chnValue * 100 / lin->max;
+          if (chnInfo.isLinear) {
+            if (chnInfo.max != 0) chnValue = chnValue * 100 / chnInfo.max;
           }
         }
         return SASS_MEMORY_NEW(Number, pstate, chnValue, chnInfo.unit);
