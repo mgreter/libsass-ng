@@ -1066,10 +1066,16 @@ namespace Sass {
 
         // parentheses_opened = true;
         double max = 100.0; //  spaced->space()._channels[0]
-        append_string(PrintChannel(spaced->getChannel0() * 100 / max, outopt));
-        write_string("%");
+        if (spaced->isChannel0Missing()) {
+          append_string("none");
+        }
+        else {
+          write_channel(spaced->getChannel0OrNull(), nullptr);
+          // append_string(PrintChannel(spaced->getChannel0() * 100 / max, outopt));
+          // write_string("%");
+        }
         append_mandatory_space();
-        append_string(PrintChannel(spaced->getChannel1(), outopt));
+        append_string(PrintChannel(spaced->getChannel1OrNull(), outopt));
         append_mandatory_space();
 
         bool polar = spaced->space()._channels[2].isPolarAngle;

@@ -966,23 +966,50 @@ namespace Sass {
 
       /*******************************************************************/
 
-      double _channelFromValue(
+      tl::optional<double> _channelFromValue(
+        Logger& logger,
         const ColorChannel& chnInfo,
         const Number* chnValue,
         bool clamp = true
       )
       {
-        if (const LinearChannel* linear = static_cast<const LinearChannel*>(&chnInfo)) {
+        if (chnValue == nullptr) {
+          return tl::optional<double>();
+        }
+
+        LinearChannel qwe("lightness", 0, 1, false, true, true, true);
+        ColorChannel foo = qwe;
+
+        const LinearChannel* lin = dynamic_cast<LinearChannel*>(&foo);
+
+
+        if (const LinearChannel* linear = dynamic_cast<const LinearChannel*>(&chnInfo)) {
+          if (linear->requiresPercent && !chnValue->hasUnit("%")) {
+            std::cerr << "Must have unit of percent\n";
+          }
+          else if (linear->lowerClamped == false && linear->upperClamped == false) {
+            // return chnValue->value();
+            return _percentageOrUnitless(chnValue, linear->max, chnInfo.name, logger);
+          }
+          else if (clamp == false) {
+            return _percentageOrUnitless(chnValue, linear->max, chnInfo.name, logger);
+          }
+          else if (linear->lowerClamped == true || linear->upperClamped == true) {
+            double val = _percentageOrUnitless(chnValue, linear->max, chnInfo.name, logger);
+            double min = linear->lowerClamped ? linear->min : -std::numeric_limits<double>::infinity();
+            double max = linear->upperClamped ? linear->min : +std::numeric_limits<double>::infinity();
+            return std::max(std::min(val, min), max);
+          }
           return chnValue->value();
         }
         else {
           // Coerce into degrees
-          return chnValue->value();
+          return chnValue->value(); // absmod(coerceToDeg(chnValue), 360.0);
         }
       }
 
       ColorSpaced* _colorFromChannels(
-        const SourceSpan& pstate, const ColorSpace* space,
+        Logger& logger, const SourceSpan& pstate, const ColorSpace* space,
         Number* chn0, Number* chn1, Number* chn2,
         tl::optional<double> alpha,
         bool clamp = true, bool fromRgbFunction = false)
@@ -1007,9 +1034,9 @@ namespace Sass {
         else {
           return SASS_MEMORY_NEW(ColorSpaced,
             pstate, *space,
-            _channelFromValue(space->_channels[0], chn0, clamp),
-            _channelFromValue(space->_channels[1], chn1, clamp),
-            _channelFromValue(space->_channels[2], chn2, clamp),
+            _channelFromValue(logger, space->_channels[0], chn0, clamp),
+            _channelFromValue(logger, space->_channels[1], chn1, clamp),
+            _channelFromValue(logger, space->_channels[2], chn2, clamp),
             alpha);
         }
         return nullptr;
@@ -1072,8 +1099,11 @@ namespace Sass {
           }
         }
 
+        // debug_ast(list.back());
+
         // Check if last element is a number with slashes
         if (Number* back = list.back()->isaNumber()) {
+          std::cerr << "Has As Slash " << back->hasAsSlash() << "\n";
           if (back->hasAsSlash() == true) {
             auto initial = SASS_MEMORY_NEW(List, pstate, {
               list.begin(), list.end() - 1 }, SASS_SPACE);
@@ -1082,7 +1112,7 @@ namespace Sass {
           }
         }
 
-        return { nullptr, nullptr };
+        return { input, nullptr };
       }
 
       bool isNone(Value* value) {
@@ -1113,8 +1143,8 @@ namespace Sass {
         // If last can look like "1/none", which is passed as string
         auto sp = _parseSlashChannels2(ctx, pstate, input, fname);
 
-        debug_ast(sp.first);
-        debug_ast(sp.second);
+        // debug_ast(sp.first);
+        // debug_ast(sp.second);
 
         // If parsing failed, return the function string
         if (sp.first == nullptr && sp.second == nullptr) {
@@ -1251,14 +1281,16 @@ namespace Sass {
             ctx, pstate);
         }
 
-        return _colorFromChannels(
-          pstate, space,
+        auto rv = _colorFromChannels(
+          ctx, pstate, space,
           channels[0]->isaNumber(),
           channels[1]->isaNumber(),
           channels[2]->isaNumber(),
           alpha, true,
           space == &ColorSpace::rgb
         );
+
+        return rv;
 
         // Return arguments
         // return list.detach();
@@ -1319,23 +1351,24 @@ namespace Sass {
 
       static BUILT_IN_FN(oklab)
       {
-        return _parseChannels(str_color, arguments[0],
+        auto rv = _parseChannels(str_oklab, arguments[0],
           "channels", pstate, compiler, &ColorSpace::oklab);
+        return rv;
       }
 
       static BUILT_IN_FN(oklch)
       {
-        return _parseChannels(str_color, arguments[0],
+        return _parseChannels(str_oklch, arguments[0],
           "channels", pstate, compiler, &ColorSpace::oklch);
       }
       static BUILT_IN_FN(lab)
       {
-        return _parseChannels(str_color, arguments[0],
+        return _parseChannels(str_lab, arguments[0],
           "channels", pstate, compiler, &ColorSpace::lab);
       }
       static BUILT_IN_FN(lch)
       {
-        return _parseChannels(str_color, arguments[0],
+        return _parseChannels(str_lch, arguments[0],
           "channels", pstate, compiler, &ColorSpace::lch);
       }
 
