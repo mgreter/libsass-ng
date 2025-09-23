@@ -607,22 +607,22 @@ namespace Sass {
           name, pstate, arguments);
       }
       else if (isVar(arguments[1])) {
-        if (const Color* first = arguments[0]->isaColor()) {
-          ColorRgbaObj rgba = first->toRGBA();
-          return _functionRgbString(name,
-            rgba, arguments[1], pstate);
-        }
-        else {
-          return getFunctionString(
-            name, pstate, arguments);
-        }
+        // if (const ColorSpaced* first = arguments[0]->isaColorSpaced()) {
+        //   ColorRgbaObj rgba = first->toRGBA();
+        //   return _functionRgbString(name,
+        //     rgba, arguments[1], pstate);
+        // }
+        // else {
+        //   return getFunctionString(
+        //     name, pstate, arguments);
+        // }
       }
       else if (!strict && isSpecialNumber(arguments[1])) {
-        if (const Color* color = arguments[0]->assertColor(logger, Strings::color)) {
-          ColorRgbaObj rgba = color->toRGBA();
-          return _functionRgbString(name,
-            rgba, arguments[1], pstate);
-        }
+        // if (const ColorSpaced* color = arguments[0]->assertColorSpaced(logger, Strings::color)) {
+        //   ColorRgbaObj rgba = color->toRGBA();
+        //   return _functionRgbString(name,
+        //     rgba, arguments[1], pstate);
+        // }
       }
 
       if (arguments[0]->isaColorSpaced()) {
@@ -820,6 +820,8 @@ namespace Sass {
     {
       // Get the list from the channels input variable (or throw)
       ValueVector list = input->assertCommonListStyle(ctx, fname, true);
+
+      if (list.empty()) return { nullptr, nullptr };
 
       // Check if list is seperated by a slash
       if (input->separator() == SASS_DIV) {
