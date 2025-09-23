@@ -995,7 +995,7 @@ namespace Sass {
             double val = _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
             double min = chnInfo.lowerClamped ? chnInfo.min : -std::numeric_limits<double>::infinity();
             double max = chnInfo.upperClamped ? chnInfo.max : +std::numeric_limits<double>::infinity();
-            return std::min(std::max(val, min), max);
+            return std::isnan(val) ? min : std::min(std::max(val, min), max);
           }
           else {
             return chnValue->value();

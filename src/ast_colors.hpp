@@ -40,13 +40,13 @@ namespace Sass {
   };
 
   const ColorChannel lab_channels[3]{
-    LinearChannel("lightness", 0, 100, false, true, true),
+    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
     LinearChannel("a", -125, 125, false, false, false),
     LinearChannel("b", -125, 125, false, false, false)
   };
 
   const ColorChannel lch_channels[3]{
-    LinearChannel("lightness", 0, 100, false, true, true),
+    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
     LinearChannel("chroma", 0, 150, false, true, false),
     ColorChannel("hue", true, "deg"),
   };
@@ -64,7 +64,7 @@ namespace Sass {
   };
 
   const ColorChannel oklch_channels[3]{
-    LinearChannel("lightness", 0, 1, false, true, true, true),
+    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
     LinearChannel("chroma", 0, 0.4, false, true, false),
     ColorChannel("hue", true, "deg"),
   };

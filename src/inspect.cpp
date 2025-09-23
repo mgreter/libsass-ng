@@ -1079,7 +1079,7 @@ namespace Sass {
           write_channel(spaced->getChannel0OrNull(), nullptr);
         }
         append_mandatory_space();
-        append_string(PrintChannel(spaced->getChannel1OrNull(), outopt));
+        write_channel(spaced->getChannel1OrNull(), nullptr);
         append_mandatory_space();
 
         bool polar = spaced->space()._channels[2].isPolarAngle;
@@ -1497,15 +1497,84 @@ namespace Sass {
     if (!value.has_value()) {
       write_string("none");
     }
-    else if (std::isinf(value.value())) {
-      write_string("inf"); // todo
-    }
     else {
-      write_string(PrintChannel(value.value(), outopt));
-      if (unit != nullptr) write_string(unit);
+      visitNumber(value.value(), unit);
+      // write_string(PrintChannel(value.value(), outopt));
+      // if (unit != nullptr) write_string(unit);
     }
   }
 
+  void Inspect::visitNumber(double value, const char* unit)
+  {
+
+    if (std::isnan(value)) {
+      append_string("calc(");
+      if (value < 0) {
+        append_string("-NaN");
+      }
+      else {
+        append_string("NaN");
+      }
+      if (unit != nullptr) {
+        append_string(" * 1");
+        append_string(unit);
+      }
+      append_string(")");
+      return;
+    }
+
+    if (std::isinf(value)) {
+      append_string("calc(");
+      if (value < 0) {
+        append_string("-infinity");
+      }
+      else {
+        append_string("infinity");
+      }
+      if (unit != nullptr) {
+        append_string(" * 1");
+        append_string(unit);
+      }
+      append_string(")");
+      return;
+    }
+
+    sass::string res = PrintNumber(value, outopt);
+
+    // if (true)
+    // {
+    //   size_t iL = value->numerators.size();
+    //   size_t nL = value->denominators.size();
+    //   if (iL != 0) res += value->numerators[0];
+    //   for (size_t i = 1; i < iL; i += 1) {
+    //     res += " * 1";
+    //     res += value->numerators[i];
+    //   }
+    //   for (size_t i = 0; i < nL; i += 1) {
+    //     res += " / 1";
+    //     res += value->denominators[i];
+    //   }
+    // }
+    // else {
+    //   res += value->unit();
+    // }
+
+    // if (value->isValidCssUnit()) {
+    //   // output the final token
+    //   append_token(res, value);
+    // }
+    // else {
+    //   append_string("calc(");
+    //   append_token(res, value);
+    //   append_string(")");
+    // }
+
+    write_string(res);
+    if (unit != nullptr) {
+      write_string(unit);
+    }
+
+  }
 
   void Inspect::visitNumber(Number* value)
   {
