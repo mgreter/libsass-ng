@@ -944,7 +944,7 @@ namespace Sass {
   {
     sass::string ss;
     ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
-    if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
+    if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {
       ss += "rgb(";
       ss += PrintNumber(rgb->channel(str_red), outopt); ss += ", ";
       ss += PrintNumber(rgb->channel(str_green), outopt); ss += ", ";
@@ -963,7 +963,7 @@ namespace Sass {
   void Inspect::_writeLegacyColor(ColorSpaced* color)
   {
     // Check if resulting color is considered fully opaque
-    bool opaque = fuzzyEquals(color->a(), 1, outopt.epsilon);
+    // bool opaque = fuzzyEquals(color->alpha(), 1, outopt.epsilon);
 
     if (outopt.output_style == SASS_STYLE_COMPRESSED) {
       std::cerr << "COMPRESSED OUTPUT\n";
@@ -1051,6 +1051,12 @@ namespace Sass {
 
       if (space == ColorSpace::rgb) {
         append_string("rgb(");
+        write_channel(spaced->getChannel0OrNull(), nullptr);
+        append_mandatory_space();
+        write_channel(spaced->getChannel1OrNull(), nullptr);
+        append_mandatory_space();
+        write_channel(spaced->getChannel2OrNull(), nullptr);
+        _maybeWriteSlashAlpha(spaced);
         append_string(")");
       }
 
@@ -1217,10 +1223,10 @@ namespace Sass {
 
     // get color from given name (if one was given at all)
     if (name != "" && name_to_color(name)) {
-      const ColorRgba* n = name_to_color(name);
-      r = round64(clamp(n->r(), 0.0, 255.0), epsilon);
-      g = round64(clamp(n->g(), 0.0, 255.0), epsilon);
-      b = round64(clamp(n->b(), 0.0, 255.0), epsilon);
+      const ColorSpaced* n = name_to_color(name);
+      r = round64(clamp(n->getChannel0(), 0.0, 255.0), epsilon);
+      g = round64(clamp(n->getChannel1(), 0.0, 255.0), epsilon);
+      b = round64(clamp(n->getChannel2(), 0.0, 255.0), epsilon);
       a = clamp(n->a(), 0.0, 1.0);
     }
     // otherwise get the possible resolved color name

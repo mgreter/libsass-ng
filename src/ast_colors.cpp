@@ -425,6 +425,35 @@ namespace Sass {
   double ColorSpaced::getChannel2() const { return c2_.value_or(0); }
   double ColorSpaced::getAlpha() const { return alpha_.value_or(0); }
 
+  bool isChannelInGamut(double value, const ColorChannel& channel)
+  {
+    if (channel.isLinear) {
+      return fuzzyLessThanOrEquals(value, channel.max, 0.00001)
+        && fuzzyGreaterThanOrEquals(value, channel.min, 0.00001);
+    }
+    return true;
+  }
+
+  bool ColorSpaced::isInGamut() const
+  {
+    if (space_.name() == "rgb") return true;
+    if (space_.name() == "hwb") return true;
+    if (space_.name() == "hsl") return true;
+
+    // There aren't (currently) any color spaces that are bounded
+    // but not STRICTLY bounded, and have polar-angle channels.
+   return isChannelInGamut(getChannel0(), space_._channels[0])
+      && isChannelInGamut(getChannel1(), space_._channels[1])
+      && isChannelInGamut(getChannel2(), space_._channels[2]);
+  }
+
+  bool ColorSpaced::isLegacy() const
+  {
+    return space_.name() == "rgb"
+      || space_.name() == "hwb"
+      || space_.name() == "hsl";
+  }
+
   tl::optional<double> ColorSpaced::getChannelOrNull(int idx) const
   {
     switch (idx) {
@@ -463,8 +492,25 @@ namespace Sass {
     if (channel->value() == channels[1].name) return 1;
     if (channel->value() == channels[2].name) return 2;
     if (channel->value() == "alpha") return -1;
-    throw Exception::RuntimeException(logger,
-      "Color $color has no channel named $channelName.");
+    throw Exception::SassScriptException(logger, channel->pstate(),
+      "Color " + inspect() + " has no channel named " +
+      channel->value() + ".", channelName);
+  }
+
+  bool ColorSpaced::isChannelPowerless(
+    Logger& logger, const String* channel,
+    const char* colorName,
+    const char* channelName) const
+  {
+    // channel must not be nullptr
+    auto channels = space_._channels;
+    if (channel->value() == channels[0].name) return isChannel0Powerless();
+    if (channel->value() == channels[1].name) return isChannel1Powerless();
+    if (channel->value() == channels[2].name) return isChannel2Powerless();
+    if (channel->value() == "alpha") return false;
+    throw Exception::SassScriptException(logger, pstate(),
+      "Color " + inspect() + " doesn't have a channel named " + channel->inspect() + ".\n",
+      channelName);
   }
 
   bool ColorSpaced::isChannelMissing(
@@ -483,6 +529,30 @@ namespace Sass {
       "to the plain-CSS invert() function.");
   }
 
+  bool ColorSpaced::isChannel0Powerless() const
+  {
+    if (space_.name() == "hsl") {
+      return fuzzyEquals(getChannel1(), 0, 0.00001);
+    }
+    else if (space_.name() == "hwb") {
+      return fuzzyGreaterThanOrEquals(getChannel1() + getChannel2(), 100, 0.00001);
+    }
+    return false;
+  }
+
+  bool ColorSpaced::isChannel1Powerless() const
+  {
+    return false;
+  }
+
+  bool ColorSpaced::isChannel2Powerless() const
+  {
+    if (space_.name() == "lch" || space_.name() == "oklch") {
+      return fuzzyEquals(getChannel1(), 0, 0.00001);
+    }
+    return false;
+  }
+
   bool ColorSpaced::isChannelMissing(int idx) const
   {
     switch (idx) {
@@ -498,7 +568,13 @@ namespace Sass {
     if (space == this->space_) {
       return SASS_MEMORY_NEW(ColorSpaced, this);
     }
-    ColorSpacedObj converted = space.convert(space, pstate, c0_, c1_, c2_, alpha_);
+
+    std::cerr << "Do toSpace " << getChannel0() << ", "
+      << getChannel1() << ", " << getChannel2() << "\n";
+
+    // return SASS_MEMORY_NEW(ColorSpaced, this);
+    std::cerr << "Convert from " << space_.name() << " to " << space.name() << "\n";
+    ColorSpacedObj converted = space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
 
     //return !legacyMissing &&
     //  converted->space().isLegacy() &&
@@ -613,6 +689,35 @@ namespace Sass {
     return nullptr;
   }
 
+  const ColorSpace& ColorSpace::fromNameRef(Logger& logger, const String& name)
+  {
+    if (StringUtils::equalsIgnoreCase(name.value(), "rgb")) return ColorSpace::rgb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "hwb")) return ColorSpace::hwb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "hsl")) return ColorSpace::hsl;
+    if (StringUtils::equalsIgnoreCase(name.value(), "srgb")) return ColorSpace::srgb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "srgb-linear")) return ColorSpace::srgb_linear;
+
+    if (StringUtils::equalsIgnoreCase(name.value(), "display-p3")) return ColorSpace::displayP3;
+    if (StringUtils::equalsIgnoreCase(name.value(), "a98-rgb")) return ColorSpace::a98rgb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "prophoto-rgb")) return ColorSpace::protophotoRgb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "rec2020")) return ColorSpace::rec2020;
+
+    if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d65")) return ColorSpace::xyzd65;
+    if (StringUtils::equalsIgnoreCase(name.value(), "xyz")) return ColorSpace::xyzd65;
+
+    if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d50")) return ColorSpace::xyzd50;
+    if (StringUtils::equalsIgnoreCase(name.value(), "lab")) return ColorSpace::lab;
+    if (StringUtils::equalsIgnoreCase(name.value(), "lch")) return ColorSpace::lch;
+    if (StringUtils::equalsIgnoreCase(name.value(), "oklab")) return ColorSpace::oklab;
+    if (StringUtils::equalsIgnoreCase(name.value(), "oklch")) return ColorSpace::oklch;
+
+    CallStackFrame csf(logger, name.pstate());
+    throw Exception::SassScriptException(
+      sass::string("Unknown color space"),
+      logger, name.pstate());
+
+  }
+
   const ColorSpace* ColorSpace::fromName(Logger& logger, const String& name)
   {
     if (StringUtils::equalsIgnoreCase(name.value(), "rgb")) return &ColorSpace::rgb;
@@ -621,12 +726,11 @@ namespace Sass {
     if (StringUtils::equalsIgnoreCase(name.value(), "srgb")) return &ColorSpace::srgb;
     if (StringUtils::equalsIgnoreCase(name.value(), "srgb-linear")) return &ColorSpace::srgb_linear;
 
-    // if (StringUtils::equalsIgnoreCase(name.value(), "display-p3")) return &ColorSpace::;
-    // if (StringUtils::equalsIgnoreCase(name.value(), "a98-rgb")) return &ColorSpace::a98;
-    // if (StringUtils::equalsIgnoreCase(name.value(), "prophoto-rgb")) return &ColorSpace::protophoto_rgb;
-    // if (StringUtils::equalsIgnoreCase(name.value(), "rec2020")) return &ColorSpace::rec2020;
-    // if (StringUtils::equalsIgnoreCase(name.value(), "xyz")) return &ColorSpace::xyzd65;
-    // if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d65")) return &ColorSpace::xyzd65;
+    if (StringUtils::equalsIgnoreCase(name.value(), "display-p3")) return &ColorSpace::displayP3;
+    if (StringUtils::equalsIgnoreCase(name.value(), "a98-rgb")) return &ColorSpace::a98rgb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "prophoto-rgb")) return &ColorSpace::protophotoRgb;
+    if (StringUtils::equalsIgnoreCase(name.value(), "rec2020")) return &ColorSpace::rec2020;
+    if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d65")) return &ColorSpace::xyzd65;
 
     if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d50")) return &ColorSpace::xyzd50;
     if (StringUtils::equalsIgnoreCase(name.value(), "lab")) return &ColorSpace::lab;
@@ -651,9 +755,17 @@ namespace Sass {
     throw std::runtime_error("toLinear not implemented");
   }
   
-  double* ColorSpace::transformationMatrix(ColorSpace dest) const
+  const double* ColorSpace::transformationMatrix(ColorSpace dest) const
   {
     throw std::runtime_error("matrix not implemented");
+  }
+
+  const ColorSpace& getLinearDest(const ColorSpace& dest)
+  {
+    if (dest.name() == "hsl" || dest.name() == "hwb") { return ColorSpace::srgb; }
+    else if (dest.name() == "lab" || dest.name() == "lch") { return ColorSpace::xyzd50; }
+    else if (dest.name() == "oklab" || dest.name() == "oklch") { return ColorSpace::lms; }
+    return dest;
   }
 
   ColorSpaced* ColorSpace::convertLinear(
@@ -670,27 +782,36 @@ namespace Sass {
     bool missingB) const
   {
 
-    ColorSpace linearDest = dest;
 
-    if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) { linearDest == ColorSpace::srgb; }
-    else if (dest == ColorSpace::lab || dest == ColorSpace::lch) { linearDest == ColorSpace::xyzd50; }
-    else if (dest == ColorSpace::oklab || dest == ColorSpace::oklch) { linearDest == ColorSpace::lms; }
+    const ColorSpace& linearDest = getLinearDest(dest);
+
+    // if (dest.name_ == "hsl" || dest.name_ == "hwb") { linearDest = ColorSpace::srgb; }
+    // else if (dest.name_ == "lab" || dest.name_ == "lch") { linearDest = ColorSpace::xyzd50; }
+    // else if (dest.name_ == "oklab" || dest.name_ == "oklch") { linearDest = ColorSpace::lms; }
 
     tl::optional<double> transformedRed;
     tl::optional<double> transformedGreen;
     tl::optional<double> transformedBlue;
 
-    if (linearDest == *this) {
+    if (linearDest.name_ == name_) {
+      // std::cerr << "Do no linear conversion from " << name_ << " to " << linearDest.name_ << "\n";
       transformedRed = red;
       transformedGreen = green;
       transformedBlue = blue;
     }
     else {
+
+
+      std::cerr << "Do linear conversion from " << name_ << " to " << linearDest.name_ << "\n";
+      std::cerr << "Input " << red.value_or(0) << ", " << green.value_or(0) << ", " << blue.value_or(0) << "\n";
+
       double linearRed = toLinear(red.value_or(0));
       double linearGreen = toLinear(green.value_or(0));
       double linearBlue = toLinear(blue.value_or(0));
-      double* matrix = transformationMatrix(linearDest);
+      const double* matrix = this->transformationMatrix(linearDest);
 
+      std::cerr << "Do conversion " << linearDest.name() << " => " << linearRed << ", " << linearGreen << ", " << linearBlue << "\n";
+      std::cerr << "Matrix " << matrix[0] << ", " << matrix[1] << ", " << matrix[2] << ", " << matrix[3] << "\n";
       transformedRed = linearDest.fromLinear(
         matrix[0] * linearRed +
         matrix[1] * linearGreen +
@@ -705,19 +826,36 @@ namespace Sass {
         matrix[8] * linearBlue);
     }
 
+    std::cerr << "default conversion "
+      << transformedRed.value_or(-42) << ", "
+      << transformedGreen.value_or(-42) << ", "
+      << transformedBlue.value_or(-42) << "\n";
+
     if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
-      return ColorSpace::srgb.convert(dest, pstate,
+      return ColorSpace::srgb.translate(dest, pstate,
         transformedRed, transformedGreen, transformedBlue,
         alpha, missingLightness, missingChroma, missingHue);
     }
     else if (dest == ColorSpace::lab || dest == ColorSpace::lch) {
-
+      return ColorSpace::xyzd50.translate(dest, pstate,
+        transformedRed, transformedGreen, transformedBlue,
+        alpha, missingLightness, missingChroma, missingHue);
     }
-    else if (dest == ColorSpace::oklab || dest == ColorSpace::oklch) {
-
+    else if (dest.name() == "oklab" || dest.name() == "oklch") {
+      return ColorSpace::lms.translate(dest, pstate,
+        transformedRed, transformedGreen, transformedBlue,
+        alpha, missingLightness, missingChroma, missingHue);
     }
 
-      return nullptr;
+    return ColorSpaced::_forSpace(
+      pstate, dest,
+      transformedRed,
+      transformedGreen,
+      transformedBlue,
+      alpha);
+    // auto rv = ColorSpaced::_forSpace(pstate, dest, 1, 1, 1, 1, )
+
+    // return ColorSpaced::forSpaceInternal(;
   }
 
 
@@ -732,11 +870,17 @@ namespace Sass {
   const SrgbColorSpace ColorSpace::srgb = SrgbColorSpace();
   const SrgbLinearColorSpace ColorSpace::srgb_linear = SrgbLinearColorSpace();
   const XyzD50ColorSpace ColorSpace::xyzd50 = XyzD50ColorSpace();
+  const XyzD65ColorSpace ColorSpace::xyzd65 = XyzD65ColorSpace();
   const LmsColorSpace ColorSpace::lms = LmsColorSpace();
+
+  const Rec2020ColorSpace ColorSpace::rec2020 = Rec2020ColorSpace();
+  const DisplayP3ColorSpace ColorSpace::displayP3 = DisplayP3ColorSpace();
+  const A98RgbColorSpace ColorSpace::a98rgb = A98RgbColorSpace();
+  const ProphotoRgbColorSpace ColorSpace::protophotoRgb = ProphotoRgbColorSpace();
 
   //const ColorSpace ColorSpacings::SRGB(str_srgb, SassColorSpace::SRGB, srgb_channels);
 
-  ColorSpaced* SrgbColorSpace::convert(
+  ColorSpaced* SrgbColorSpace::translate(
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> red,
@@ -747,6 +891,10 @@ namespace Sass {
     bool missingChroma,
     bool missingHue) const
   {
+
+    std::cerr << "CALL SRGB translate " << red.value_or(0) << ", "
+      << green.value_or(0) << ", " << blue.value_or(0) << ", " << "\n";
+
     if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
       double nr_red = red.value_or(0);
       double nr_green = green.value_or(0);
@@ -784,26 +932,263 @@ namespace Sass {
         tl::optional<double> c1 = saturation;
         tl::optional<double> c2 = lightness * 100;
 
-          return ColorSpaced::_forSpace(pstate, dest, c0, c1, c2, alpha);
+        return ColorSpaced::_forSpace(pstate, dest, c0, c1, c2, alpha);
 
         std::cerr << "other";
       }
       else {
-        std::cerr << "other";
-      }
+        double whiteness = min * 100;
+        double blackness = 100 - max * 100;
+        return ColorSpaced::forSpaceInternal(
+          pstate, dest,
+          missingHue || fuzzyGreaterThanOrEquals(whiteness + blackness, 100, 0.00001)
+          ? tl::optional<double>()
+          : std::fmod(hue, 360),
+          whiteness,
+          blackness,
+          alpha);
 
+      }
       return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
     }
     else if (dest == ColorSpace::rgb) {
-      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
+      return ColorSpaced::rgb(pstate,
+        red.has_value() ? red.value() * 255.0 : red,
+        green.has_value() ? green.value() * 255.0 : green,
+        blue.has_value() ? blue.value() * 255.0 : blue,
+        alpha);
     }
     else if (dest == ColorSpace::srgb_linear) {
-      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
+      return ColorSpaced::forSpaceInternal(pstate, dest,
+        red.has_value() ? toLinear(red.value()) : red,
+        green.has_value() ? toLinear(green.value()) : green,
+        blue.has_value() ? toLinear(blue.value()) : blue,
+        alpha);
     }
     else {
-      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
+      return ColorSpace::convertLinear(dest,
+        pstate, red, green, blue, alpha,
+        missingLightness, missingChroma, missingHue);
     }
     return nullptr;
+  }
+
+  ColorSpaced* RgbColorSpace::convert(
+    const ColorSpace& dest,
+    const SourceSpan& pstate,
+    tl::optional<double> channel0,
+    tl::optional<double> channel1,
+    tl::optional<double> channel2,
+    tl::optional<double> alpha) const
+  {
+    std::cerr << "CALL RGB convert " << channel0.value_or(0) << ", "
+      << channel1.value_or(0) << ", " << channel2.value_or(0) << ", " << "\n";
+    auto rv = ColorSpace::srgb.translate(dest, pstate,
+      channel0.has_value() ? channel0.value() / 255.0 : channel0,
+      channel1.has_value() ? channel1.value() / 255.0 : channel1,
+      channel2.has_value() ? channel2.value() / 255.0 : channel2,
+      alpha);
+    std::cerr << "OUT RGB convert " << rv->getChannel(0) << ", "
+      << rv->getChannel(1) << ", " << rv->getChannel(2) << ", " << "\n";
+    return rv;
+  }
+
+  /// A constant used to convert Lab to/from XYZ.
+  const double labKappa = 24389.0 / 27.0; // 29^3/3^3;
+
+  /// A constant used to convert Lab to/from XYZ.
+  const double labEpsilon = 216.0 / 24389.0; // 6^3/29^3;
+
+  const double d50[] = { 0.3457 / 0.3585, 1.00000, (1.0 - 0.3457 - 0.3585) / 0.3585 };
+
+  /// Does a partial conversion of a single XYZ component to Lab.
+  double _convertComponentToLabF(double component) {
+
+    if (component > labEpsilon)
+      return std::pow(component, 1.0 / 3.0) + 0.0;
+    return (labKappa * component + 16.0) / 116.0;
+  }
+
+
+  ColorSpaced* XyzD50ColorSpace::translate(
+    const ColorSpace& dest,
+    const SourceSpan& pstate,
+    tl::optional<double> x,
+    tl::optional<double> y,
+    tl::optional<double> z,
+    tl::optional<double> alpha,
+    bool missingLightness,
+    bool missingChroma,
+    bool missingHue,
+    bool missingA,
+    bool missingB) const
+  {
+
+    // std::cerr << "CALL XYZD50 translate " << x.value_or(0) << ", "
+    //   << y.value_or(0) << ", " << z.value_or(0) << ", " << "\n";
+
+    if (dest.name() == "lab" || dest.name() == "lch") {
+      // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
+      // and http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+      double f0 = _convertComponentToLabF(x.value_or(0) / d50[0]);
+      double f1 = _convertComponentToLabF(y.value_or(0) / d50[1]);
+      double f2 = _convertComponentToLabF(z.value_or(0) / d50[2]);
+
+      tl::optional<double> a;
+      tl::optional<double> b;
+      tl::optional<double> lightness;
+      if (!missingA) { a = 500 * (f0 - f1); }
+      if (!missingB) { b = 200 * (f1 - f2); }
+      if (!missingLightness) { lightness = (116.0 * f1) - 16.0; }
+
+      if (dest.name() == "lab") {
+        return ColorSpaced::lab(pstate, lightness, a, b, alpha);
+      }
+      else {
+        return ColorSpaced::labToLch(pstate,
+          ColorSpace::lch, lightness, a, b, alpha);
+      }
+    }
+
+    return ColorSpace::convertLinear(
+      dest, pstate,
+      x, y, z, alpha,
+      missingLightness,
+      missingChroma,
+      missingHue,
+      missingA,
+      missingB);
+  }
+
+  double _cubeRootPreservingSign(double number)
+  {
+    return (std::signbit(number) ? -1.0 : +1.0) 
+      * std::pow(std::abs(number), 1.0 / 3.0);
+  }
+
+  ColorSpaced* LmsColorSpace::translate(
+    const ColorSpace& dest,
+    const SourceSpan& pstate,
+    tl::optional<double> lng,
+    tl::optional<double> med,
+    tl::optional<double> shrt,
+    tl::optional<double> alpha,
+    bool missingLightness,
+    bool missingChroma,
+    bool missingHue,
+    bool missingA,
+    bool missingB) const
+  {
+
+    std::cerr << "CALL LMS translate " << lng.value_or(0) << ", "
+      << med.value_or(0) << ", " << shrt.value_or(0) << ", " << "\n";
+
+    if (dest.name() == "oklab") {
+      // Algorithm from https://drafts.csswg.org/css-color-4/#color-conversion-code
+      double longScaled = _cubeRootPreservingSign(lng.value_or(0));
+      double mediumScaled = _cubeRootPreservingSign(med.value_or(0));
+      double shortScaled = _cubeRootPreservingSign(shrt.value_or(0));
+
+      return ColorSpaced::oklab(pstate, dest,
+        missingLightness ? tl::optional<double>() :
+        ColorSpaces::lmsToOklab[0] * longScaled
+        + ColorSpaces::lmsToOklab[1] * mediumScaled
+        + ColorSpaces::lmsToOklab[2] * shortScaled,
+        missingA ? tl::optional<double>() :
+        ColorSpaces::lmsToOklab[3] * longScaled
+        + ColorSpaces::lmsToOklab[4] * mediumScaled
+        + ColorSpaces::lmsToOklab[5] * shortScaled,
+        missingB ? tl::optional<double>() :
+        ColorSpaces::lmsToOklab[6] * longScaled
+        + ColorSpaces::lmsToOklab[7] * mediumScaled
+        + ColorSpaces::lmsToOklab[8] * shortScaled,
+        alpha);
+
+      return nullptr;
+    }
+    else if (dest.name() == "oklch") {
+      // This is equivalent to converting to OKLab and then to OKLCH, but we
+      // do it inline to avoid extra list allocations since we expect
+      // conversions to and from OKLCH to be very common.
+      double longScaled = _cubeRootPreservingSign(lng.value_or(0));
+      double mediumScaled = _cubeRootPreservingSign(med.value_or(0));
+      double shortScaled = _cubeRootPreservingSign(shrt.value_or(0));
+
+      return ColorSpaced::labToLch(pstate, dest,
+        missingLightness ? tl::optional<double>() :
+        ColorSpaces::lmsToOklab[0] * longScaled
+        + ColorSpaces::lmsToOklab[1] * mediumScaled
+        + ColorSpaces::lmsToOklab[2] * shortScaled,
+        ColorSpaces::lmsToOklab[3] * longScaled
+        + ColorSpaces::lmsToOklab[4] * mediumScaled
+        + ColorSpaces::lmsToOklab[5] * shortScaled,
+        ColorSpaces::lmsToOklab[6] * longScaled
+        + ColorSpaces::lmsToOklab[7] * mediumScaled
+        + ColorSpaces::lmsToOklab[8] * shortScaled,
+        alpha, missingChroma, missingHue);
+
+    }
+
+    return ColorSpace::convertLinear(
+      dest, pstate,
+      lng, med, shrt, alpha,
+      missingLightness,
+      missingChroma,
+      missingHue,
+      missingA,
+      missingB);
+
+  }
+
+  ColorSpaced* OkLchColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> lightness, tl::optional<double> chroma, tl::optional<double> hue, tl::optional<double> alpha) const
+  {
+    std::cerr << "OKLCH Translate\n";
+    double hueRadians = hue.value_or(0) * PI / 180.0;
+    return ColorSpace::oklab.translate(
+      dest, pstate,
+      lightness,
+      chroma.value_or(0) * std::cos(hueRadians),
+      chroma.value_or(0) * std::sin(hueRadians),
+      alpha,
+      !chroma.has_value(),
+      !hue.has_value());
+  }
+
+  ColorSpaced* OkLabColorSpace::translate(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> lightness, tl::optional<double> a, tl::optional<double> b, tl::optional<double> alpha, bool missingChroma, bool missingHue) const
+  {
+    std::cerr << "OKLAB Translate\n";
+    if (dest.name() == "oklch") {
+      return ColorSpaced::labToLch(pstate, dest, lightness, a, b, alpha,
+        missingChroma, missingHue);
+    }
+
+    if (!lightness.has_value()) lightness = 0;
+    if (!a.has_value()) a = 0;
+    if (!b.has_value()) b = 0;
+    // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
+    return ColorSpace::lms.translate(
+      dest, pstate,
+      std::pow(
+        ColorSpaces::oklabToLms[0] * lightness.value_or(0) +
+        ColorSpaces::oklabToLms[1] * a.value_or(0) +
+        ColorSpaces::oklabToLms[2] * b.value_or(0),
+        3) + 0.0,
+      std::pow(
+        ColorSpaces::oklabToLms[3] * lightness.value_or(0) +
+        ColorSpaces::oklabToLms[4] * a.value_or(0) +
+        ColorSpaces::oklabToLms[5] * b.value_or(0),
+        3) + 0.0,
+      std::pow(
+        ColorSpaces::oklabToLms[6] * lightness.value_or(0) +
+        ColorSpaces::oklabToLms[7] * a.value_or(0) +
+        ColorSpaces::oklabToLms[8] * b.value_or(0),
+        3) + 0.0,
+      alpha,
+      !lightness.has_value(),
+      missingChroma,
+      missingHue,
+      !a.has_value(),
+      !b.has_value());
   }
 
 }

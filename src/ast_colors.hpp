@@ -19,240 +19,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
 
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  const LinearChannel AlphaChannel("alpha", 0, 1, false, false, false);
-
-
-
-  const ColorChannel hsl_channels[3]{
-    ColorChannel("hue", true, "deg"),
-    LinearChannel("saturation", 0, 100, false, true, false),
-    LinearChannel("lightness", 0, 100, true, false, false)
-  };
-
-  const ColorChannel hwb_channels[3]{
-    ColorChannel("hue", true, "deg"),
-    LinearChannel("whiteness", 0, 100, true, false, false),
-    LinearChannel("blackness", 0, 100, true, false, false)
-  };
-
-  const ColorChannel lab_channels[3]{
-    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
-    LinearChannel("a", -125, 125, false, false, false),
-    LinearChannel("b", -125, 125, false, false, false)
-  };
-
-  const ColorChannel lch_channels[3]{
-    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
-    LinearChannel("chroma", 0, 150, false, true, false),
-    ColorChannel("hue", true, "deg"),
-  };
-
-  const ColorChannel lms_channels[3]{
-    LinearChannel("long", 0, 1, false, false, false),
-    LinearChannel("medium", 0, 1, false, false, false),
-    LinearChannel("short", 0, 1, false, false, false)
-  };
-
-  const ColorChannel oklab_channels[3]{
-    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
-    LinearChannel("a", -0.4, 0.4, false, false, false),
-    LinearChannel("b", -0.4, 0.4, false, false, false)
-  };
-
-  const ColorChannel oklch_channels[3]{
-    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
-    LinearChannel("chroma", 0, 0.4, false, true, false),
-    ColorChannel("hue", true, "deg"),
-  };
-
-  const ColorChannel rgb_channels[3]{
-    LinearChannel("red", 0, 1, false, false, false),
-    LinearChannel("green", 0, 1, false, false, false),
-    LinearChannel("blue", 0, 1, false, false, false)
-  };
-
-  const ColorChannel rgb255_channels[3]{
-    LinearChannel("red", 0, 255, false, true, true),
-    LinearChannel("green", 0, 255, false, true, true),
-    LinearChannel("blue", 0, 255, false, true, true)
-  };
-
-  const ColorChannel xyz_channels[3]{
-    LinearChannel("x", 0, 1, false, false, false),
-    LinearChannel("y", 0, 1, false, false, false),
-    LinearChannel("z", 0, 1, false, false, false)
-  };
-
-  const ColorChannel xyz255_channels[3]{
-    LinearChannel("x", 0, 255, false, true, true),
-    LinearChannel("y", 0, 255, false, true, true),
-    LinearChannel("z", 0, 255, false, true, true)
-  };
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  class A98RgbColorSpace : public ColorSpace {
-  public:
-    A98RgbColorSpace() : ColorSpace(
-      str_a98_rgb,
-      SassColorSpace::A98RGB,
-      rgb_channels, 3)
-    {}
-  };
-
-  class DisplayP3ColorSpace : public ColorSpace {
-  public:
-    DisplayP3ColorSpace() : ColorSpace(
-      str_display_p3,
-      SassColorSpace::DISPLAY_P3,
-      rgb_channels, 3)
-    {}
-  };
-
-  class HslColorSpace : public ColorSpace {
-  public:
-    HslColorSpace() : ColorSpace(
-      str_hsl,
-      SassColorSpace::HSL,
-      rgb_channels, 3)
-    {}
-  };
-
-  class HwbColorSpace : public ColorSpace {
-  public:
-    HwbColorSpace() : ColorSpace(
-      str_hwb,
-      SassColorSpace::HWB,
-      hsl_channels, 3)
-    {}
-  };
-
-  class LabColorSpace : public ColorSpace {
-  public:
-    LabColorSpace() : ColorSpace(
-      str_lab,
-      SassColorSpace::LAB,
-      lab_channels, 3)
-    {}
-  };
-
-  class LchColorSpace : public ColorSpace {
-  public:
-    LchColorSpace() : ColorSpace(
-      str_lch,
-      SassColorSpace::LCH,
-      lch_channels, 3)
-    {}
-  };
-
-  class LmsColorSpace : public ColorSpace {
-  public:
-    LmsColorSpace() : ColorSpace(
-      str_lms,
-      SassColorSpace::LMS,
-      lms_channels, 3)
-    {}
-  };
-
-  class OkLabColorSpace : public ColorSpace {
-  public:
-    OkLabColorSpace() : ColorSpace(
-      str_oklab,
-      SassColorSpace::OKLAB,
-      oklab_channels, 3)
-    {}
-  };
-
-  class OkLchColorSpace : public ColorSpace {
-  public:
-    OkLchColorSpace() : ColorSpace(
-      str_oklch,
-      SassColorSpace::OKLCH,
-      oklch_channels, 3)
-    {}
-  };
-
-  class ProphotoRgbColorSpace : public ColorSpace {
-  public:
-    ProphotoRgbColorSpace() : ColorSpace(
-      str_prophoto_rgb,
-      SassColorSpace::PROPHOTO_RGB,
-      rgb_channels, 3)
-    {}
-  };
-
-  class Rec2020ColorSpace : public ColorSpace {
-  public:
-    Rec2020ColorSpace() : ColorSpace(
-      str_rec2020,
-      SassColorSpace::REC2020,
-      rgb_channels, 3)
-    {}
-  };
-
-  class RgbColorSpace : public ColorSpace {
-  public:
-    RgbColorSpace() : ColorSpace(
-      str_rgb,
-      SassColorSpace::RGB,
-      rgb255_channels, 3)
-    {}
-  };
-
-  class SrgbLinearColorSpace : public ColorSpace {
-  public:
-    SrgbLinearColorSpace() : ColorSpace(
-      str_srgb_linear,
-      SassColorSpace::SRGB_LINEAR,
-      rgb_channels, 3)
-    {}
-  };
-
-  class SrgbColorSpace : public ColorSpace {
-  public:
-    SrgbColorSpace() : ColorSpace(
-      str_srgb,
-      SassColorSpace::SRGB,
-      rgb_channels, 3)
-    {}
-    ColorSpaced* convert(
-      const ColorSpace& dest,
-      const SourceSpan& pstate,
-      tl::optional<double> red,
-      tl::optional<double> green,
-      tl::optional<double> blue,
-      tl::optional<double> alpha,
-      bool missingLightness = false,
-      bool missingChroma = false,
-      bool missingHue = false) const;
-  };
-
-  class XyzD50ColorSpace : public ColorSpace {
-  public:
-    XyzD50ColorSpace() : ColorSpace(
-      str_xyz_d50,
-      SassColorSpace::XYZ_D50,
-      xyz_channels, 3)
-    {}
-  };
-
-  class XyzD65ColorSpace : public ColorSpace {
-  public:
-    XyzD65ColorSpace() : ColorSpace(
-      str_xyz_d65,
-      SassColorSpace::XYZ_D65,
-      xyz_channels, 3)
-    {}
-  };
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
   namespace ColorSpaces {
 
     const double d50[] = { 0.3457 / 0.3585, 1.00000, (1.0 - 0.3457 - 0.3585) / 0.3585 };
@@ -711,6 +477,522 @@ namespace Sass {
 
 
   }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  const LinearChannel AlphaChannel("alpha", 0, 1, false, false, false);
+
+
+
+  const ColorChannel hsl_channels[3]{
+    ColorChannel("hue", true, "deg"),
+    LinearChannel("saturation", 0, 100, false, true, false, false, "%"),
+    LinearChannel("lightness", 0, 100, true, false, false, false, "%")
+  };
+
+  const ColorChannel hwb_channels[3]{
+    ColorChannel("hue", true, "deg"),
+    LinearChannel("whiteness", 0, 100, true, false, false, false, "%"),
+    LinearChannel("blackness", 0, 100, true, false, false, false, "%")
+  };
+
+  const ColorChannel lab_channels[3]{
+    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
+    LinearChannel("a", -125, 125, false, false, false),
+    LinearChannel("b", -125, 125, false, false, false)
+  };
+
+  const ColorChannel lch_channels[3]{
+    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
+    LinearChannel("chroma", 0, 150, false, true, false),
+    ColorChannel("hue", true, "deg"),
+  };
+
+  const ColorChannel lms_channels[3]{
+    LinearChannel("long", 0, 1, false, false, false),
+    LinearChannel("medium", 0, 1, false, false, false),
+    LinearChannel("short", 0, 1, false, false, false)
+  };
+
+  const ColorChannel oklab_channels[3]{
+    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
+    LinearChannel("a", -0.4, 0.4, false, false, false),
+    LinearChannel("b", -0.4, 0.4, false, false, false)
+  };
+
+  const ColorChannel oklch_channels[3]{
+    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
+    LinearChannel("chroma", 0, 0.4, false, true, false),
+    ColorChannel("hue", true, "deg"),
+  };
+
+  const ColorChannel rgb_channels[3]{
+    LinearChannel("red", 0, 1, false, false, false),
+    LinearChannel("green", 0, 1, false, false, false),
+    LinearChannel("blue", 0, 1, false, false, false)
+  };
+
+  const ColorChannel rgb255_channels[3]{
+    LinearChannel("red", 0, 255, false, true, true),
+    LinearChannel("green", 0, 255, false, true, true),
+    LinearChannel("blue", 0, 255, false, true, true)
+  };
+
+  const ColorChannel xyz_channels[3]{
+    LinearChannel("x", 0, 1, false, false, false),
+    LinearChannel("y", 0, 1, false, false, false),
+    LinearChannel("z", 0, 1, false, false, false)
+  };
+
+  const ColorChannel xyz255_channels[3]{
+    LinearChannel("x", 0, 255, false, true, true),
+    LinearChannel("y", 0, 255, false, true, true),
+    LinearChannel("z", 0, 255, false, true, true)
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  class A98RgbColorSpace : public ColorSpace {
+  public:
+    A98RgbColorSpace() : ColorSpace(
+      str_a98_rgb,
+      SassColorSpace::A98RGB,
+      rgb_channels, 3)
+    {}
+
+    double toLinear(double channel) const override final {
+      return (std::signbit(channel) ? -1 : +1) *
+        std::pow(std::abs(channel), 563.0 / 256.0);
+    }
+    double fromLinear(double channel) const override final {
+      return (std::signbit(channel) ? -1 : +1) *
+        std::pow(std::abs(channel), 256.0 / 563.0);
+    }
+
+    const double* transformationMatrix(ColorSpace dest) const override final {
+      if (dest.name() == str_rgb) return ColorSpaces::linearA98RgbToLinearSrgb;
+      if (dest.name() == str_srgb) return ColorSpaces::linearA98RgbToLinearSrgb;
+      if (dest.name() == str_srgb_linear) return ColorSpaces::linearA98RgbToLinearSrgb;
+      if (dest.name() == str_display_p3) return ColorSpaces::linearA98RgbToLinearDisplayP3;
+      if (dest.name() == str_prophoto_rgb) return ColorSpaces::linearA98RgbToLinearProphotoRgb;
+      if (dest.name() == str_rec2020) return ColorSpaces::linearA98RgbToLinearRec2020;
+      if (dest.name() == str_xyz_d65) return ColorSpaces::linearA98RgbToXyzD65;
+      if (dest.name() == str_xyz_d50) return ColorSpaces::linearA98RgbToXyzD50;
+      if (dest.name() == str_lms) return ColorSpaces::linearA98RgbToLms;
+      return ColorSpace::transformationMatrix(dest);
+    }
+  };
+
+  static double srgbAndDisplayP3ToLinear(double channel) {
+    double abs = std::abs(channel);
+    if (abs <= 0.04045) return channel / 12.92;
+    return (std::signbit(channel) ? -1 : +1) *
+      std::pow((abs + 0.055) / 1.055, 2.4);
+  }
+
+  static double srgbAndDisplayP3FromLinear(double channel) {
+    double abs = std::abs(channel);
+    if (abs <= 0.0031308) return channel * 12.92;
+    return (std::signbit(channel) ? -1 : +1) *
+      (1.055 * std::pow(abs, 1.0 / 2.4) - 0.055);
+  }
+
+  class DisplayP3ColorSpace : public ColorSpace {
+  public:
+    DisplayP3ColorSpace() : ColorSpace(
+      str_display_p3,
+      SassColorSpace::DISPLAY_P3,
+      rgb_channels, 3)
+    {}
+
+    double toLinear(double channel) const override final {
+      return srgbAndDisplayP3ToLinear(channel);
+    }
+    double fromLinear(double channel) const override final {
+      return srgbAndDisplayP3FromLinear(channel);
+    }
+
+    const double* transformationMatrix(ColorSpace dest) const override final {
+      if (dest.name() == str_rgb) return ColorSpaces::linearDisplayP3ToLinearSrgb;
+      if (dest.name() == str_srgb) return ColorSpaces::linearDisplayP3ToLinearSrgb;
+      if (dest.name() == str_srgb_linear) return ColorSpaces::linearDisplayP3ToLinearSrgb;
+      if (dest.name() == str_a98_rgb) return ColorSpaces::linearDisplayP3ToLinearA98Rgb;
+      if (dest.name() == str_prophoto_rgb) return ColorSpaces::linearDisplayP3ToLinearProphotoRgb;
+      if (dest.name() == str_rec2020) return ColorSpaces::linearDisplayP3ToLinearRec2020;
+      if (dest.name() == str_xyz_d65) return ColorSpaces::linearDisplayP3ToXyzD65;
+      if (dest.name() == str_xyz_d50) return ColorSpaces::linearDisplayP3ToXyzD50;
+      if (dest.name() == str_lms) return ColorSpaces::linearDisplayP3ToLms;
+      return ColorSpace::transformationMatrix(dest);
+    }
+  };
+
+  class HslColorSpace : public ColorSpace {
+  public:
+    HslColorSpace() : ColorSpace(
+      str_hsl,
+      SassColorSpace::HSL,
+      hsl_channels, 3)
+    {}
+  };
+
+  class HwbColorSpace : public ColorSpace {
+  public:
+    HwbColorSpace() : ColorSpace(
+      str_hwb,
+      SassColorSpace::HWB,
+      hwb_channels, 3)
+    {}
+  };
+
+  class LabColorSpace : public ColorSpace {
+  public:
+    LabColorSpace() : ColorSpace(
+      str_lab,
+      SassColorSpace::LAB,
+      lab_channels, 3)
+    {}
+  };
+
+  class LchColorSpace : public ColorSpace {
+  public:
+    LchColorSpace() : ColorSpace(
+      str_lch,
+      SassColorSpace::LCH,
+      lch_channels, 3)
+    {}
+  };
+
+  class LmsColorSpace : public ColorSpace {
+  public:
+    LmsColorSpace() : ColorSpace(
+      str_lms,
+      SassColorSpace::LMS,
+      lms_channels, 3)
+    {}
+
+    double toLinear(double channel) const override final {
+      return channel;
+    }
+    double fromLinear(double channel) const override final {
+      return channel;
+    }
+
+    const double* transformationMatrix(ColorSpace dest) const override final {
+      if (dest.name() == str_rgb) return ColorSpaces::lmsToLinearSrgb;
+      if (dest.name() == str_srgb) return ColorSpaces::lmsToLinearSrgb;
+      if (dest.name() == str_srgb_linear) return ColorSpaces::lmsToLinearSrgb;
+      if (dest.name() == str_a98_rgb) return ColorSpaces::lmsToLinearA98Rgb;
+      if (dest.name() == str_prophoto_rgb) return ColorSpaces::lmsToLinearProphotoRgb;
+      if (dest.name() == str_display_p3) return ColorSpaces::lmsToLinearDisplayP3;
+      if (dest.name() == str_rec2020) return ColorSpaces::lmsToLinearRec2020;
+      if (dest.name() == str_xyz_d65) return ColorSpaces::lmsToXyzD65;
+      if (dest.name() == str_xyz_d50) return ColorSpaces::lmsToXyzD50;
+      return ColorSpace::transformationMatrix(dest);
+    }
+
+    ColorSpaced* translate(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha,
+      bool missingLightness = false,
+      bool missingChroma = false,
+      bool missingHue = false,
+      bool missingA = false,
+      bool missingB = false) const;
+  };
+
+  class OkLabColorSpace : public ColorSpace {
+  public:
+    OkLabColorSpace() : ColorSpace(
+      str_oklab,
+      SassColorSpace::OKLAB,
+      oklab_channels, 3)
+    {}
+
+    ColorSpaced* translate(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> lightness,
+      tl::optional<double> chroma,
+      tl::optional<double> hue,
+      tl::optional<double> alpha,
+      bool missingChroma = false,
+      bool missingHue = false) const;
+
+  };
+
+  class OkLchColorSpace : public ColorSpace {
+  public:
+    OkLchColorSpace() : ColorSpace(
+      str_oklch,
+      SassColorSpace::OKLCH,
+      oklch_channels, 3)
+    {}
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> lightness,
+      tl::optional<double> chroma,
+      tl::optional<double> hue,
+      tl::optional<double> alpha) const override final;
+
+  };
+
+  class ProphotoRgbColorSpace : public ColorSpace {
+  public:
+    ProphotoRgbColorSpace() : ColorSpace(
+      str_prophoto_rgb,
+      SassColorSpace::PROPHOTO_RGB,
+      rgb_channels, 3)
+    {}
+
+    double toLinear(double channel) const override final {
+      double abs = std::abs(channel);
+      if (abs > 16.0 / 512) return channel / 16.0;
+      return (std::signbit(channel) ? -1 : +1) *
+        std::pow(abs, 1.8 / 1.0);
+
+    }
+    double fromLinear(double channel) const override final {
+      double abs = std::abs(channel);
+      if (abs < 1.0 / 512) return 16.0 * channel;
+      return (std::signbit(channel) ? -1 : +1) *
+        std::pow(abs, 1.0 / 1.8);
+    }
+
+    const double* transformationMatrix(ColorSpace dest) const override final {
+      if (dest.name() == str_rgb) return ColorSpaces::linearProphotoRgbToLinearSrgb;
+      if (dest.name() == str_srgb) return ColorSpaces::linearProphotoRgbToLinearSrgb;
+      if (dest.name() == str_srgb_linear) return ColorSpaces::linearProphotoRgbToLinearSrgb;
+      if (dest.name() == str_a98_rgb) return ColorSpaces::linearProphotoRgbToLinearA98Rgb;
+      if (dest.name() == str_display_p3) return ColorSpaces::linearProphotoRgbToLinearDisplayP3;
+      if (dest.name() == str_rec2020) return ColorSpaces::linearProphotoRgbToLinearRec2020;
+      if (dest.name() == str_xyz_d65) return ColorSpaces::linearProphotoRgbToXyzD65;
+      if (dest.name() == str_xyz_d50) return ColorSpaces::linearProphotoRgbToXyzD50;
+      if (dest.name() == str_lms) return ColorSpaces::linearProphotoRgbToLms;
+      return ColorSpace::transformationMatrix(dest);
+    }
+
+  };
+
+  /// A constant used in the rec2020 gamma encoding/decoding functions.
+  const double _alpha = 1.09929682680944;
+
+  /// A constant used in the rec2020 gamma encoding/decoding functions.
+  const double _beta = 0.018053968510807;
+
+
+  class Rec2020ColorSpace : public ColorSpace {
+  public:
+    Rec2020ColorSpace() : ColorSpace(
+      str_rec2020,
+      SassColorSpace::REC2020,
+      rgb_channels, 3)
+    {}
+
+    double toLinear(double channel) const override final {
+      double abs = std::abs(channel);
+      if (abs < _beta * 4.5) return channel / 4.5;
+      return (std::signbit(channel) ? -1 : +1) *
+        std::pow((abs + _alpha -1.0) / _alpha, 1.0 / 0.45);
+
+    }
+    double fromLinear(double channel) const override final {
+      double abs = std::abs(channel);
+      if (abs < _beta) return 4.5 * channel;
+      return (std::signbit(channel) ? -1 : +1) *
+        (_alpha * std::pow(abs, 0.45) - (_alpha - 1.0));
+    }
+
+    const double* transformationMatrix(ColorSpace dest) const override final {
+      if (dest.name() == str_rgb) return ColorSpaces::linearRec2020ToLinearSrgb;
+      if (dest.name() == str_srgb) return ColorSpaces::linearRec2020ToLinearSrgb;
+      if (dest.name() == str_srgb_linear) return ColorSpaces::linearRec2020ToLinearSrgb;
+      if (dest.name() == str_a98_rgb) return ColorSpaces::linearRec2020ToLinearA98Rgb;
+      if (dest.name() == str_display_p3) return ColorSpaces::linearRec2020ToLinearDisplayP3;
+      if (dest.name() == str_prophoto_rgb) return ColorSpaces::linearRec2020ToLinearProphotoRgb;
+      if (dest.name() == str_xyz_d65) return ColorSpaces::linearRec2020ToXyzD65;
+      if (dest.name() == str_xyz_d50) return ColorSpaces::linearRec2020ToXyzD50;
+      if (dest.name() == str_lms) return ColorSpaces::linearRec2020ToLms;
+      return ColorSpace::transformationMatrix(dest);
+    }
+
+  };
+
+  class RgbColorSpace : public ColorSpace {
+  public:
+    RgbColorSpace() : ColorSpace(
+      str_rgb,
+      SassColorSpace::RGB,
+      rgb255_channels, 3)
+    {}
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> channel0,
+      tl::optional<double> channel1,
+      tl::optional<double> channel2,
+      tl::optional<double> alpha) const override final;
+
+    double toLinear(double channel) const override final {
+      return srgbAndDisplayP3ToLinear(channel / 255.0);
+    }
+    double fromLinear(double channel) const override final {
+      double rv = srgbAndDisplayP3FromLinear(channel) * 255.0;
+      std::cerr << " from rgb linear " << channel << " => " << rv << "\n";
+      return rv;
+    }
+  };
+
+  class SrgbLinearColorSpace : public ColorSpace {
+  public:
+    SrgbLinearColorSpace() : ColorSpace(
+      str_srgb_linear,
+      SassColorSpace::SRGB_LINEAR,
+      rgb_channels, 3)
+    {}
+
+    double toLinear(double channel) const override final {
+      return channel;
+    }
+    double fromLinear(double channel) const override final {
+      return channel;
+    }
+
+    const double* transformationMatrix(ColorSpace dest) const override final {
+      if (dest.name() == str_display_p3) return ColorSpaces::linearSrgbToLinearDisplayP3;
+      if (dest.name() == str_a98_rgb) return ColorSpaces::linearSrgbToLinearA98Rgb;
+      if (dest.name() == str_prophoto_rgb) return ColorSpaces::linearSrgbToLinearProphotoRgb;
+      if (dest.name() == str_rec2020) return ColorSpaces::linearSrgbToLinearRec2020;
+      if (dest.name() == str_xyz_d65) return ColorSpaces::linearSrgbToXyzD65;
+      if (dest.name() == str_xyz_d50) return ColorSpaces::linearSrgbToXyzD50;
+      if (dest.name() == str_lms) return ColorSpaces::linearSrgbToLms;
+      return ColorSpace::transformationMatrix(dest);
+    }
+
+  };
+
+  class SrgbColorSpace : public ColorSpace {
+  public:
+    SrgbColorSpace() : ColorSpace(
+      str_srgb,
+      SassColorSpace::SRGB,
+      rgb_channels, 3)
+    {}
+
+    double toLinear(double channel) const override final {
+      return srgbAndDisplayP3ToLinear(channel);
+    }
+    double fromLinear(double channel) const override final {
+      return srgbAndDisplayP3FromLinear(channel);
+    }
+
+    const double* transformationMatrix(ColorSpace dest) const override final {
+      if (dest.name() == str_display_p3) return ColorSpaces::linearSrgbToLinearDisplayP3;
+      if (dest.name() == str_a98_rgb) return ColorSpaces::linearSrgbToLinearA98Rgb;
+      if (dest.name() == str_prophoto_rgb) return ColorSpaces::linearSrgbToLinearProphotoRgb;
+      if (dest.name() == str_rec2020) return ColorSpaces::linearSrgbToLinearRec2020;
+      if (dest.name() == str_xyz_d65) return ColorSpaces::linearSrgbToXyzD65;
+      if (dest.name() == str_xyz_d50) return ColorSpaces::linearSrgbToXyzD50;
+      if (dest.name() == str_lms) return ColorSpaces::linearSrgbToLms;
+      return ColorSpace::transformationMatrix(dest);
+    }
+
+    ColorSpaced* translate(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha,
+      bool missingLightness = false,
+      bool missingChroma = false,
+      bool missingHue = false) const;
+  };
+
+  class XyzD50ColorSpace : public ColorSpace {
+  public:
+    XyzD50ColorSpace() : ColorSpace(
+      str_xyz_d50,
+      SassColorSpace::XYZ_D50,
+      xyz_channels, 3)
+    {}
+
+    double toLinear(double channel) const override final {
+      return channel;
+    }
+    double fromLinear(double channel) const override final {
+      return channel;
+    }
+
+    const double* transformationMatrix(ColorSpace dest) const override final {
+      if (dest.name() == str_rgb) return ColorSpaces::xyzD50ToLinearSrgb;
+      if (dest.name() == str_srgb) return ColorSpaces::xyzD50ToLinearSrgb;
+      if (dest.name() == str_srgb_linear) return ColorSpaces::xyzD50ToLinearSrgb;
+      if (dest.name() == str_a98_rgb) return ColorSpaces::xyzD50ToLinearA98Rgb;
+      if (dest.name() == str_prophoto_rgb) return ColorSpaces::xyzD50ToLinearProphotoRgb;
+      if (dest.name() == str_display_p3) return ColorSpaces::xyzD50ToLinearDisplayP3;
+      if (dest.name() == str_rec2020) return ColorSpaces::xyzD50ToLinearRec2020;
+      if (dest.name() == str_xyz_d65) return ColorSpaces::xyzD50ToXyzD65;
+      if (dest.name() == str_lms) return ColorSpaces::xyzD50ToLms;
+      return ColorSpace::transformationMatrix(dest);
+    }
+
+    ColorSpaced* translate(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha,
+      bool missingLightness = false,
+      bool missingChroma = false,
+      bool missingHue = false,
+      bool missingA = false,
+      bool missingB = false) const;
+
+  };
+
+  class XyzD65ColorSpace : public ColorSpace {
+  public:
+    XyzD65ColorSpace() : ColorSpace(
+      str_xyz_d65,
+      SassColorSpace::XYZ_D65,
+      xyz_channels, 3)
+    {}
+
+    double toLinear(double channel) const override final {
+      return channel;
+    }
+    double fromLinear(double channel) const override final {
+      return channel;
+    }
+
+    const double* transformationMatrix(ColorSpace dest) const override final {
+      if (dest.name() == str_rgb) return ColorSpaces::xyzD65ToLinearSrgb;
+      if (dest.name() == str_srgb) return ColorSpaces::xyzD65ToLinearSrgb;
+      if (dest.name() == str_srgb_linear) return ColorSpaces::xyzD65ToLinearSrgb;
+      if (dest.name() == str_a98_rgb) return ColorSpaces::xyzD65ToLinearA98Rgb;
+      if (dest.name() == str_prophoto_rgb) return ColorSpaces::xyzD65ToLinearProphotoRgb;
+      if (dest.name() == str_display_p3) return ColorSpaces::xyzD65ToLinearDisplayP3;
+      if (dest.name() == str_rec2020) return ColorSpaces::xyzD65ToLinearRec2020;
+      if (dest.name() == str_xyz_d50) return ColorSpaces::xyzD65ToXyzD50;
+      if (dest.name() == str_lms) return ColorSpaces::xyzD65ToLms;
+      return ColorSpace::transformationMatrix(dest);
+    }
+
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   
   ///////////////////////////////////////////////////////////////////////
   // A sass color in RGBA representation.
@@ -720,13 +1002,17 @@ namespace Sass {
   {
   private:
 
-    ADD_CONSTREF(ColorSpace, space);
+    const ColorSpace& space_;
     ADD_PROPERTY(tl::optional<double>, c0);
     ADD_PROPERTY(tl::optional<double>, c1);
     ADD_PROPERTY(tl::optional<double>, c2);
     ADD_PROPERTY(tl::optional<double>, alpha);
 
   public:
+
+    const ColorSpace& space() const {
+      return space_;
+    }
 
     tl::optional<double> getChannel0OrNull() const;
     tl::optional<double> getChannel1OrNull() const;
@@ -739,20 +1025,33 @@ namespace Sass {
     double getChannel(int idx) const;
     double getAlpha() const;
 
+    bool isInGamut() const;
+
+    bool isLegacy() const;
+
     bool isChannel0Missing() const;
     bool isChannel1Missing() const;
     bool isChannel2Missing() const;
+
     bool isChannelMissing(int idx) const;
     bool isAlphaMissing() const;
 
     int getChannelIndex(Logger& logger, const String* channel,
       const char* colorName, const char* channelName) const;
+
     bool isChannelMissing(Logger& logger, const String* channel,
+      const char* colorName, const char* channelName) const;
+
+    bool isChannel0Powerless() const;
+    bool isChannel1Powerless() const;
+    bool isChannel2Powerless() const;
+    bool isChannelPowerless(Logger& logger, const String* channel,
       const char* colorName, const char* channelName) const;
 
     virtual ColorSpacedObj toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
 
   public:
+
 
     static ColorSpacedObj _forSpace(
       const SourceSpan& pstate, const ColorSpace& space,
@@ -765,6 +1064,116 @@ namespace Sass {
       // assert(space == ColorSpace::rgb);
       // assert(space != ColorSpace::lms);
       return color;
+    }
+
+    static ColorSpaced* rgb(
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha)
+    {
+      return rgbInternal(pstate, red, green, blue, alpha);
+    }
+
+    static ColorSpaced* rgbInternal(
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha)
+    {
+      return _forSpace(pstate, ColorSpace::rgb,
+        red, green, blue, alpha);
+    }
+
+    static ColorSpaced* lab(
+      const SourceSpan& pstate,
+      tl::optional<double> lightness,
+      tl::optional<double> a,
+      tl::optional<double> b,
+      tl::optional<double> alpha)
+    {
+      return _forSpace(pstate,
+        ColorSpace::lab,
+        lightness, a, b, alpha);
+    }
+
+    static tl::optional<double> _normalizeHue(
+      tl::optional<double> hue, bool invert)
+    {
+      if (hue.has_value() == false) return hue;
+      return std::fmod(std::fmod(hue.value(), 360.0)
+        + 360.0 + (invert ? 180.0 : 0.0), 360.0);
+    }
+
+    static ColorSpacedObj forSpaceInternal(
+      const SourceSpan& pstate, const ColorSpace& space,
+      tl::optional<double> c0, tl::optional<double> c1,
+      tl::optional<double> c2, tl::optional<double> alpha)
+    {
+
+      std::cerr << "ForSpaceInternal " << c0.value_or(0) << ", "
+        << c1.value_or(0) << ", " << c2.value_or(0) << "\n";
+
+      if (space.name() == "hsl") {
+        return _forSpace(pstate, space,
+          _normalizeHue(c0, c1.value_or(0) < 0.0),
+          c1.has_value() ? std::abs(c1.value()) : c1,
+          c2, alpha);
+      }
+      else if (space.name() == "hwb")
+      {
+        return _forSpace(pstate, space,
+          _normalizeHue(c0, false),
+          c1, c2, alpha);
+      }
+      else if (space.name() == "lch" || space.name() == "oklch") {
+        return _forSpace(pstate, space,
+          c0,
+          c1.has_value() ? std::abs(c1.value()) : c1,
+          _normalizeHue(c2, c2.value_or(0) < 0.0),
+          alpha);
+      }
+      else {
+        return _forSpace(pstate, space, c0, c1, c2, alpha);
+      }
+    }
+
+    static ColorSpaced* oklab(
+      const SourceSpan& pstate, const ColorSpace& space,
+      tl::optional<double> lightness, tl::optional<double> a,
+      tl::optional<double> b, tl::optional<double> alpha)
+    {
+      return ColorSpaced::_forSpace(pstate,
+        space, lightness, a, b, alpha);
+
+    }
+
+    static ColorSpaced* labToLch(
+      const SourceSpan& pstate, const ColorSpace& space,
+      tl::optional<double> lightness, tl::optional<double> a,
+      tl::optional<double> b, tl::optional<double> alpha,
+      bool missingChroma = false, bool missingHue = false)
+    {
+      // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
+      tl::optional<double> chroma, hue;
+      // Requires computation in any case
+      double chromatic = std::sqrt(
+        std::pow(a.value_or(0), 2.0) +
+        std::pow(b.value_or(0), 2.0));
+
+      if (missingChroma == false) {
+        chroma = chromatic;
+      }
+      if (missingHue == false) {
+        if (!fuzzyEquals(chromatic, 0.0, 0.0000001)) {
+          hue = std::atan2(b.value_or(0), a.value_or(0)) * 180.0 / PI;
+          if (hue < 0) hue.value() += 360.0;
+        }
+      }
+      return ColorSpaced::forSpaceInternal(pstate,
+        space, lightness, chroma, hue, alpha);
     }
 
     // static ColorSpacedObj _forSpaceInternal(

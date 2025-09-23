@@ -625,6 +625,16 @@ namespace Sass {
         }
       }
 
+      if (arguments[0]->isaColorSpaced()) {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(logger, Strings::color);
+        const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
+        ColorSpacedObj copy = SASS_MEMORY_COPY(color);
+        copy->alpha(_percentageOrUnitless(
+          alpha, 1.0, "$alpha", logger));
+        copy->parsed(false);
+        return copy.detach();
+      }
+
       const Color* color = arguments[0]->assertColor(logger, Strings::color);
       const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
       ColorObj copy = SASS_MEMORY_COPY(color);
@@ -632,6 +642,464 @@ namespace Sass {
         alpha, 1.0, "$alpha", logger));
       copy->parsed(false);
       return copy.detach();
+    }
+
+
+    tl::optional<double> _channelFromValue(
+      Logger& logger,
+      const ColorChannel& chnInfo,
+      const Number* chnValue,
+      bool clamp = true
+    )
+    {
+      if (chnValue == nullptr) {
+        return tl::optional<double>();
+      }
+
+      std::cerr << "channel " << chnInfo.name << " from value " << chnValue->value() << "\n";
+
+
+      if (chnInfo.isLinear) {
+        std::cerr << " Channel is linear\n";
+        if (chnInfo.requiresPercent && !chnValue->hasUnit("%")) {
+          std::cerr << "Must have unit of percent\n";
+          return chnValue->value();
+        }
+        else if (chnInfo.lowerClamped == false && chnInfo.upperClamped == false) {
+          return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
+        }
+        else if (clamp == false) {
+          return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
+        }
+        else if (chnInfo.lowerClamped == true || chnInfo.upperClamped == true) {
+          double val = _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
+          double min = chnInfo.lowerClamped ? chnInfo.min : -std::numeric_limits<double>::infinity();
+          double max = chnInfo.upperClamped ? chnInfo.max : +std::numeric_limits<double>::infinity();
+          return std::isnan(val) ? min : std::min(std::max(val, min), max);
+        }
+        else {
+          return chnValue->value();
+        }
+      }
+      else {
+        // Coerce into degrees
+        return absmod(coerceToDeg(chnValue), 360.0);
+      }
+    }
+
+    ColorSpaced* _colorFromChannels(
+      Logger& logger, const SourceSpan& pstate, const ColorSpace* space,
+      Number* chn0, Number* chn1, Number* chn2,
+      tl::optional<double> alpha,
+      bool clamp = true, bool fromRgbFunction = false)
+    {
+
+      if (space == nullptr) {
+        std::cerr << "space is nullptr";
+        return SASS_MEMORY_NEW(ColorSpaced,
+          pstate, ColorSpace::rgb,
+          1, 1, 1, 1);
+      }
+
+      if (space == &ColorSpace::hsl) {
+
+        auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
+        auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
+        auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
+        std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
+        auto rv = SASS_MEMORY_NEW(ColorSpaced,
+          pstate, *space,
+          a,
+          b,
+          c,
+          alpha);
+
+        std::cerr << " => " << rv->getChannel0() << ", " <<
+          rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+
+        return rv;
+
+      }
+      else if (space == &ColorSpace::hwb) {
+
+        if (chn1 != nullptr && chn2 != nullptr) {
+          chn1->assertHasUnits(logger, "%", str_whiteness);
+          chn2->assertHasUnits(logger, "%", str_blackness);
+          double whiteness = chn1->value();
+          double blackness = chn2->value();
+          if (whiteness + blackness > 100.0) {
+            double oldWhiteness = whiteness;
+            whiteness = whiteness / (whiteness + blackness) * 100.0;
+            blackness = blackness / (oldWhiteness + blackness) * 100.0;
+          }
+          auto rv = SASS_MEMORY_NEW(ColorSpaced,
+            pstate, *space,
+            chn0->value(),
+            whiteness,
+            blackness,
+            alpha);
+          return rv;
+        }
+
+        auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
+        auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
+        auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
+        std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
+        auto rv = SASS_MEMORY_NEW(ColorSpaced,
+          pstate, *space,
+          a,
+          b,
+          c,
+          alpha);
+
+        std::cerr << " => " << rv->getChannel0() << ", " <<
+          rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+
+        return rv;
+
+      }
+      else if (space == &ColorSpace::rgb) {
+        auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
+        auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
+        auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
+        std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
+        auto rv = SASS_MEMORY_NEW(ColorSpaced,
+          pstate, *space,
+          a,
+          b,
+          c,
+          alpha);
+
+        std::cerr << " => " << rv->getChannel0() << ", " <<
+          rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+
+        return rv;
+      }
+      else {
+        auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
+        auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
+        auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
+        std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
+        auto rv = SASS_MEMORY_NEW(ColorSpaced,
+          pstate, *space,
+          a,
+          b,
+          c,
+          alpha);
+
+        std::cerr << " => " << rv->getChannel0() << ", " <<
+          rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+
+        return rv;
+      }
+      return nullptr;
+    }
+
+
+    Value* _parseNumberOrString(
+      Compiler& ctx,
+      const SourceSpan& pstate,
+      const sass::string& data)
+    {
+      SourceDataObj src = new SourceString(
+        "sass://color", data);
+      ScssParser parser(ctx, src);
+      try {
+        return parser.readSingleNumber();
+      }
+      catch (const std::runtime_error _)
+      {
+        return SASS_MEMORY_NEW(String, pstate, data);
+      }
+    }
+
+    std::pair<ValueObj, ValueObj> _parseSlashChannels2(
+      Compiler& ctx, const SourceSpan& pstate,
+      Value* input, const sass::string& fname
+    )
+    {
+      // Get the list from the channels input variable (or throw)
+      ValueVector list = input->assertCommonListStyle(ctx, fname, true);
+
+      // Check if list is seperated by a slash
+      if (input->separator() == SASS_DIV) {
+        // Only allow slash list with two items
+        if (list.size() == 2) {
+          return { list[0], list[1] };
+        }
+        // Otherwise throw an error
+        else {
+          sass::sstream message;
+          message << "Only 2 slash-separated elements allowed, but " << list.size()
+            << " " << pluralize("was", input->lengthAsList(), "were") << " passed.";
+          throw Exception::SassScriptException(
+            message.str(), ctx, pstate, "$channels");
+        }
+      }
+
+      // Check if last element is a string without quotes
+      if (String* back = list.back()->isaString()) {
+        if (back->hasQuotes() == false) {
+          auto parts = StringUtils::split(back->value(), '/', false);
+          if (parts.size() == 0) return { nullptr, nullptr };
+          else if (parts.size() == 1) return { input, nullptr };
+          else if (parts.size() == 2) {
+            auto initial = SASS_MEMORY_NEW(List, pstate, {
+              list.begin(), list.end() - 1 }, SASS_SPACE);
+            initial->append(_parseNumberOrString(ctx, pstate, parts[0]));
+            return { initial, _parseNumberOrString(ctx, pstate, parts[1]) };
+          }
+        }
+      }
+
+      // debug_ast(list.back());
+
+      // Check if last element is a number with slashes
+      if (Number* back = list.back()->isaNumber()) {
+        std::cerr << "Has As Slash " << back->hasAsSlash() << "\n";
+        if (back->hasAsSlash() == true) {
+          auto initial = SASS_MEMORY_NEW(List, pstate, {
+            list.begin(), list.end() - 1 }, SASS_SPACE);
+          initial->append(back->lhsAsSlash().ptr());
+          return { initial, back->rhsAsSlash().ptr() };
+        }
+      }
+
+      return { input, nullptr };
+    }
+
+    bool isNone(Value* value) {
+
+      String* str = value->isaString();
+      if (str == nullptr) return false;
+      if (str->hasQuotes()) return false;
+      return StringUtils::equalsIgnoreCase(
+        str->value(), "none", 4);
+    }
+
+    // This one is now very close to dart sass!!!!
+    Value* _parseChannels(const sass::string& fname,
+      Value* input, sass::string name,
+      const SourceSpan& pstate,
+      Compiler& ctx,
+      const ColorSpace* space = nullptr)
+    {
+
+      // Check for css var
+      if (isVar(input)) {
+        // return function string
+        return SASS_MEMORY_NEW(
+          String, pstate, fname + "(" +
+          input->inspect() + ")");
+      }
+
+      // If last can look like "1/none", which is passed as string
+      auto sp = _parseSlashChannels2(ctx, pstate, input, fname);
+
+      // debug_ast(sp.first);
+      // debug_ast(sp.second);
+
+      // If parsing failed, return the function string
+      if (sp.first == nullptr && sp.second == nullptr) {
+        return SASS_MEMORY_NEW(
+          String, pstate, fname + "(" +
+          input->inspect() + ")");
+      }
+
+      // First value is guaranteed
+      ValueObj components = sp.first;
+      ValueObj alphaValue = sp.second;
+
+      ValueVector channels;
+      String* spaceName = nullptr;
+
+      // Get the list from the channels input variable (or throw)
+      ValueVector list = components->assertCommonListStyle(ctx, fname, false);
+
+      if (list.size() == 0) {
+        throw Exception::SassScriptException(
+          "Color component list may not be empty.",
+          ctx, pstate);
+      }
+
+      if (String* str = list.front()->isaString()) {
+        if (str->hasQuotes() == false) {
+          if (StringUtils::equalsIgnoreCase(
+            str->value(), "from", 4)) {
+            return SASS_MEMORY_NEW(
+              String, pstate, fname + "(" +
+              input->inspect() + ")");
+          }
+        }
+      }
+
+      if (isVar(components)) {
+        channels.push_back(components);
+      }
+      else {
+        if (space == nullptr) {
+          Value* first = list.front();
+          list.erase(list.begin());
+          spaceName = first->assertString(ctx, fname);
+          spaceName->assertUnquoted(ctx, fname);
+          if (isVar(spaceName) == false) {
+            space = ColorSpace::fromName(ctx, *spaceName);
+          }
+          // Move list to channels
+          channels = std::move(list);
+
+          /*
+                  if (space
+                      case ColorSpace.rgb ||
+                          ColorSpace.hsl ||
+                          ColorSpace.hwb ||
+                          ColorSpace.lab ||
+                          ColorSpace.lch ||
+                          ColorSpace.oklab ||
+                          ColorSpace.oklch) {
+                    throw SassScriptException(
+                        "The color() function doesn't support the color space $space. Use "
+                        "the $space() function instead.",
+                        name);
+                  }
+          */
+
+        }
+        else {
+          // ToDo: is this correct?
+          channels = std::move(list);
+        }
+
+        for (int i = 0; i < channels.size(); i++) {
+          auto channel = channels[i];
+          if (!isSpecialNumber(channel) &&
+            !channel->isaNumber() &&
+            !isNone(channel)) {
+
+            auto qwe = isNone(channel);
+
+            throw Exception::SassScriptException(
+              "Expected to be a number was",
+              ctx, pstate);
+          }
+        }
+
+      }
+
+      if (alphaValue != nullptr) {
+        if (isSpecialNumber(alphaValue)) {
+          std::cerr << "Not yet implemented\n";
+          /*
+  return channels.length == 3 && _specialCommaSpaces.contains(space)
+      ? _functionString(functionName, [...channels, alphaValue!])
+      : _functionString(functionName, [input]);
+      */
+        }
+      }
+
+      tl::optional<double> alpha = 1.0;
+      if (alphaValue != nullptr) {
+        if (const String* astr = alphaValue->isaString()) {
+          if (!astr->hasQuotes() && astr->value() == "none") alpha.reset();
+        }
+        if (alpha.has_value()) {
+          Number* nr = alphaValue->assertNumber(ctx, name);
+          alpha = _percentageOrUnitless(nr, 1, "alpha", ctx);
+          alpha = std::max(0.0, std::min(alpha.value(), 1.0));
+        }
+      }
+
+      // `space` will be null if either `components` or `spaceName` is a `var()`.
+      // Again, we check this here rather than returning early in those cases so
+      // that we can verify `alphaValue` even for colors we can't fully parse.
+      if (space == nullptr) {
+        return SASS_MEMORY_NEW(
+          String, pstate, fname + "(" +
+          input->inspect() + ")");
+      }
+
+      /*
+
+if (channels.any((channel) => channel.isSpecialNumber)) {
+  return channels.length == 3 && _specialCommaSpaces.contains(space)
+      ? _functionString(
+          functionName, [...channels, if (alphaValue != null) alphaValue])
+      : _functionString(functionName, [input]);
+}
+*/
+
+      if (channels.size() != 3) {
+        throw Exception::SassScriptException(
+          "The $space color space has 3 channels but $input has",
+          ctx, pstate);
+      }
+
+      auto rv = _colorFromChannels(
+        ctx, pstate, space,
+        channels[0]->isaNumber(),
+        channels[1]->isaNumber(),
+        channels[2]->isaNumber(),
+        alpha, true,
+        space == &ColorSpace::rgb
+      );
+
+      return rv;
+
+      // Return arguments
+      // return list.detach();
+
+      // debug_ast(input);
+      // _parseSlashChannels
+      // std::cerr << "foobar\n";
+      /*
+      ValueVector args = input->assertCommonListStyle(ctx, name, true);
+
+      StringObj spaceName = args[0]->assertString(ctx, name)->assertUnquoted(ctx, name);
+      auto space = ColorSpace::fromName(ctx, spaceName);
+      int startIdx = 1;
+
+      Value* alphaValue = nullptr;
+      ValueVector values;
+
+      for (int i = startIdx; i < args.size(); i++) {
+        Value* channel = args[i];
+        if (!isSpecialNumber(channel)) {
+
+        }
+        // Specially treat last component
+        // May contain the alpha value
+        if (i == args.size() - 1) {
+          // std::cerr << " " << i << " sep " << args[i]->separator() << "\n";
+          if (args[i]->hasSlashSeparator()) {
+            if (Number* nr = args[i]->isaNumber()) {
+              values.push_back(nr->lhsAsSlash().ptr());
+              alphaValue = nr->rhsAsSlash().ptr();
+            }
+            else {
+              values.push_back(args[i]);
+            }
+          }
+          else {
+            values.push_back(args[i]);
+          }
+        }
+        else {
+          values.push_back(args[i]);
+        }
+      }*/
+
+      // if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
+      //   sass::sstream fncall;
+      //   fncall << name << "(";
+      //   fncall << _h->inspect() << ", ";
+      //   fncall << _w->inspect() << ", ";
+      //   fncall << _b->inspect();
+      //   if (_a) { fncall << ", " << _a->inspect(); }
+      //   fncall << ")";
+      //   return SASS_MEMORY_NEW(String, pstate, fncall.str());
+      // }
+      return nullptr;
+
     }
 
     /////////////////////////////////////////////////////////////////////////
@@ -643,7 +1111,10 @@ namespace Sass {
 
       static BUILT_IN_FN(rgb4arg)
       {
-        return rgbFn2(Strings::rgb,
+        return _parseChannels(str_rgb, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::rgb);
+
+        return rgbFn(Strings::rgb,
           arguments, pstate, compiler, false);
       }
 
@@ -679,29 +1150,26 @@ namespace Sass {
 
       static BUILT_IN_FN(rgb1arg)
       {
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          Color* rgb = color->toRGBA();
-          rgb->a(1.0);
-          return rgb;
-        }
-        #endif
-        return handleOneArgColorFn(Strings::rgb,
-          arguments[0], &rgbFn, compiler, pstate, false);
+        return _parseChannels(str_rgb, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::rgb);
       }
 
       static BUILT_IN_FN(fnRgb1arg)
       {
-        std::cerr << "Hello dear\n";
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          Color* rgb = color->toRGBA();
-          rgb->a(1.0);
-          return rgb;
-        }
-        #endif
-        return handleOneArgColorFn(Strings::rgb,
-          arguments[0], &rgbFn, compiler, pstate, true);
+        auto rv = _parseChannels(str_oklab, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::rgb);
+        return rv;
+
+        // std::cerr << "Hello dear\n";
+        // #if SassPreserveColorInfo
+        // if (Color* color = arguments[0]->isaColor()) {
+        //   Color* rgb = color->toRGBA();
+        //   rgb->a(1.0);
+        //   return rgb;
+        // }
+        // #endif
+        // return handleOneArgColorFn(Strings::rgb,
+        //   arguments[0], &rgbFn, compiler, pstate, true);
       }
 
       /*******************************************************************/
@@ -744,6 +1212,8 @@ namespace Sass {
 
       static BUILT_IN_FN(rgba1arg)
       {
+        return _parseChannels(str_rgb, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::rgb);
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           return color->toRGBA();
@@ -755,6 +1225,8 @@ namespace Sass {
 
       static BUILT_IN_FN(fnRgba1arg)
       {
+        return _parseChannels(str_rgb, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::rgb);
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           return color->toRGBA();
@@ -809,6 +1281,10 @@ namespace Sass {
 
       static BUILT_IN_FN(hsl1arg)
       {
+        auto rv = _parseChannels(str_hsl, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::hsl);
+        return rv;
+        /*
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           Color* hsl = color->toHSLA();
@@ -818,6 +1294,7 @@ namespace Sass {
         #endif
         return handleOneArgColorFn(Strings::hsl,
           arguments[0], &hslFn, compiler, pstate, false);
+        */
       }
 
       static BUILT_IN_FN(fnHsl1arg)
@@ -898,6 +1375,9 @@ namespace Sass {
 
       static BUILT_IN_FN(hwb4arg)
       {
+        auto rv = _parseChannels(str_hwb, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::hwb);
+        return rv;
         return hwbFn(Strings::hwb,
           arguments, pstate, compiler, false);
       }
@@ -911,6 +1391,9 @@ namespace Sass {
 
       static BUILT_IN_FN(fnHwb4arg)
       {
+        auto rv = _parseChannels(str_hwb, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::hwb);
+        return rv;
         return hwbFn(Strings::hwb,
           arguments, pstate, compiler, true);
       }
@@ -935,6 +1418,11 @@ namespace Sass {
 
       static BUILT_IN_FN(hwb1arg)
       {
+        auto rv = _parseChannels(str_hwb, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::hwb);
+        return rv;
+
+        /*
         #if SassPreserveColorInfo
         if (Color* color = arguments[0]->isaColor()) {
           Color* hwb = color->toHWBA();
@@ -944,6 +1432,7 @@ namespace Sass {
         #endif
         return handleOneArgColorFn(Strings::hwb,
           arguments[0], &hwbFn, compiler, pstate, false);
+        */
       }
 
       static BUILT_IN_FN(fnHwb1arg)
@@ -966,396 +1455,6 @@ namespace Sass {
 
       /*******************************************************************/
 
-      tl::optional<double> _channelFromValue(
-        Logger& logger,
-        const ColorChannel& chnInfo,
-        const Number* chnValue,
-        bool clamp = true
-      )
-      {
-        if (chnValue == nullptr) {
-          return tl::optional<double>();
-        }
-
-        std::cerr << "channel " << chnInfo.name << " from value " << chnValue->value() << "\n";
-
-
-        if (chnInfo.isLinear) {
-          std::cerr << " Channel is linear\n";
-          if (chnInfo.requiresPercent && !chnValue->hasUnit("%")) {
-            std::cerr << "Must have unit of percent\n";
-          }
-          else if (chnInfo.lowerClamped == false && chnInfo.upperClamped == false) {
-            return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
-          }
-          else if (clamp == false) {
-            return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
-          }
-          else if (chnInfo.lowerClamped == true || chnInfo.upperClamped == true) {
-            double val = _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
-            double min = chnInfo.lowerClamped ? chnInfo.min : -std::numeric_limits<double>::infinity();
-            double max = chnInfo.upperClamped ? chnInfo.max : +std::numeric_limits<double>::infinity();
-            return std::isnan(val) ? min : std::min(std::max(val, min), max);
-          }
-          else {
-            return chnValue->value();
-          }
-        }
-        else {
-          // Coerce into degrees
-          return absmod(coerceToDeg(chnValue), 360.0);
-        }
-      }
-
-      ColorSpaced* _colorFromChannels(
-        Logger& logger, const SourceSpan& pstate, const ColorSpace* space,
-        Number* chn0, Number* chn1, Number* chn2,
-        tl::optional<double> alpha,
-        bool clamp = true, bool fromRgbFunction = false)
-      {
-
-        if (space == nullptr) {
-          std::cerr << "space is nullptr";
-          return SASS_MEMORY_NEW(ColorSpaced,
-            pstate, ColorSpace::rgb,
-            1, 1, 1, 1);
-        }
-
-        if (space == &ColorSpace::hsl) {
-          std::cerr << "not implemented hsl\n";
-        }
-        else if (space == &ColorSpace::hwb) {
-          std::cerr << "not implemented hwb\n";
-        }
-        else if (space == &ColorSpace::rgb) {
-          std::cerr << "not implemented rgb\n";
-        }
-        else {
-          auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
-          auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
-          auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
-          std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
-          auto rv = SASS_MEMORY_NEW(ColorSpaced,
-            pstate, *space,
-            a,
-            b,
-            c,
-            alpha);
-
-          std::cerr << " => " << rv->getChannel0() << ", " <<
-            rv->getChannel1() << ", " << rv->getChannel2() << "\n";
-
-          return rv;
-        }
-        return nullptr;
-      }
-
-
-      Value* _parseNumberOrString(
-        Compiler& ctx,
-        const SourceSpan& pstate,
-        const sass::string& data)
-      {
-        SourceDataObj src = new SourceString(
-          "sass://color", data);
-        ScssParser parser(ctx, src);
-        try {
-          return parser.readSingleNumber();
-        }
-        catch (const std::runtime_error _)
-        {
-          return SASS_MEMORY_NEW(String, pstate, data);
-        }
-      }
-
-      std::pair<ValueObj, ValueObj> _parseSlashChannels2(
-        Compiler& ctx, const SourceSpan& pstate,
-        Value* input, const sass::string& fname
-      )
-      {
-        // Get the list from the channels input variable (or throw)
-        ValueVector list = input->assertCommonListStyle(ctx, fname, true);
-
-        // Check if list is seperated by a slash
-        if (input->separator() == SASS_DIV) {
-          // Only allow slash list with two items
-          if (list.size() == 2) {
-            return { list[0], list[1] };
-          }
-          // Otherwise throw an error
-          else {
-            sass::sstream message;
-            message << "Only 2 slash-separated elements allowed, but " << list.size()
-              << " " << pluralize("was", input->lengthAsList(), "were") << " passed.";
-            throw Exception::SassScriptException(
-              message.str(), ctx, pstate, "$channels");
-          }
-        }
-
-        // Check if last element is a string without quotes
-        if (String* back = list.back()->isaString()) {
-          if (back->hasQuotes() == false) {
-            auto parts = StringUtils::split(back->value(), '/', false);
-            if (parts.size() == 0) return { nullptr, nullptr };
-            else if (parts.size() == 1) return { input, nullptr };
-            else if (parts.size() == 2) {
-              auto initial = SASS_MEMORY_NEW(List, pstate, {
-                list.begin(), list.end() - 1 }, SASS_SPACE);
-              initial->append(_parseNumberOrString(ctx, pstate, parts[0]));
-              return { initial, _parseNumberOrString(ctx, pstate, parts[1]) };
-            }
-          }
-        }
-
-        // debug_ast(list.back());
-
-        // Check if last element is a number with slashes
-        if (Number* back = list.back()->isaNumber()) {
-          std::cerr << "Has As Slash " << back->hasAsSlash() << "\n";
-          if (back->hasAsSlash() == true) {
-            auto initial = SASS_MEMORY_NEW(List, pstate, {
-              list.begin(), list.end() - 1 }, SASS_SPACE);
-            initial->append(back->lhsAsSlash().ptr());
-            return { initial, back->rhsAsSlash().ptr() };
-          }
-        }
-
-        return { input, nullptr };
-      }
-
-      bool isNone(Value* value) {
-
-        String* str = value->isaString();
-        if (str == nullptr) return false;
-        if (str->hasQuotes()) return false;
-        return StringUtils::equalsIgnoreCase(
-          str->value(), "none", 4);
-      }
-
-      // This one is now very close to dart sass!!!!
-      Value* _parseChannels(const sass::string& fname,
-        Value* input, sass::string name,
-        const SourceSpan& pstate,
-        Compiler& ctx,
-        const ColorSpace* space = nullptr)
-      {
-
-        // Check for css var
-        if (isVar(input)) {
-          // return function string
-          return SASS_MEMORY_NEW(
-            String, pstate, fname + "(" +
-            input->inspect() + ")");
-        }
-
-        // If last can look like "1/none", which is passed as string
-        auto sp = _parseSlashChannels2(ctx, pstate, input, fname);
-
-        // debug_ast(sp.first);
-        // debug_ast(sp.second);
-
-        // If parsing failed, return the function string
-        if (sp.first == nullptr && sp.second == nullptr) {
-          return SASS_MEMORY_NEW(
-            String, pstate, fname + "(" +
-            input->inspect() + ")");
-        }
-
-        // First value is guaranteed
-        ValueObj components = sp.first;
-        ValueObj alphaValue = sp.second;
-
-        ValueVector channels;
-        String* spaceName = nullptr;
-
-        // Get the list from the channels input variable (or throw)
-        ValueVector list = components->assertCommonListStyle(ctx, fname, false);
-
-        if (list.size() == 0) {
-          throw Exception::SassScriptException(
-            "Color component list may not be empty.",
-            ctx, pstate);
-        }
-
-        if (String* str = list.front()->isaString()) {
-          if (str->hasQuotes() == false) {
-            if (StringUtils::equalsIgnoreCase(
-              str->value(), "from", 4)) {
-              return SASS_MEMORY_NEW(
-                String, pstate, fname + "(" +
-                input->inspect() + ")");
-            }
-          }
-        }
-
-        if (isVar(components)) {
-          channels.push_back(components);
-        }
-        else {
-          if (space == nullptr) {
-            Value* first = list.front();
-            list.erase(list.begin());
-            spaceName = first->assertString(ctx, fname);
-            spaceName->assertUnquoted(ctx, fname);
-            if (isVar(spaceName) == false) {
-              space = ColorSpace::fromName(ctx, *spaceName);
-            }
-            // Move list to channels
-            channels = std::move(list);
-
-            /*
-                    if (space
-                        case ColorSpace.rgb ||
-                            ColorSpace.hsl ||
-                            ColorSpace.hwb ||
-                            ColorSpace.lab ||
-                            ColorSpace.lch ||
-                            ColorSpace.oklab ||
-                            ColorSpace.oklch) {
-                      throw SassScriptException(
-                          "The color() function doesn't support the color space $space. Use "
-                          "the $space() function instead.",
-                          name);
-                    }
-            */
-
-          }
-          else {
-            // ToDo: is this correct?
-            channels = std::move(list);
-          }
-
-          for (int i = 0; i < channels.size(); i++) {
-            auto channel = channels[i];
-            if (!isSpecialNumber(channel) &&
-              !channel->isaNumber() &&
-              !isNone(channel)) {
-
-              auto qwe = isNone(channel);
-
-              throw Exception::SassScriptException(
-                "Expected to be a number was",
-                ctx, pstate);
-            }
-          }
-
-        }
-
-        if (alphaValue != nullptr) {
-          if (isSpecialNumber(alphaValue)) {
-            std::cerr << "Not yet implemented\n";
-            /*
-    return channels.length == 3 && _specialCommaSpaces.contains(space)
-        ? _functionString(functionName, [...channels, alphaValue!])
-        : _functionString(functionName, [input]);
-        */
-          }
-        }
-
-        tl::optional<double> alpha = 1.0;
-        if (alphaValue != nullptr) {
-          if (const String* astr = alphaValue->isaString()) {
-            if (!astr->hasQuotes() && astr->value() == "none") alpha.reset();
-          }
-          if (alpha.has_value()) {
-            Number* nr = alphaValue->assertNumber(ctx, name);
-            alpha = _percentageOrUnitless(nr, 1, "alpha", ctx);
-            alpha = std::max(0.0, std::min(alpha.value(), 1.0));
-          }
-        }
-
-        // `space` will be null if either `components` or `spaceName` is a `var()`.
-        // Again, we check this here rather than returning early in those cases so
-        // that we can verify `alphaValue` even for colors we can't fully parse.
-        if (space == nullptr) {
-          return SASS_MEMORY_NEW(
-            String, pstate, fname + "(" +
-            input->inspect() + ")");
-        }
-
-        /*
-
-  if (channels.any((channel) => channel.isSpecialNumber)) {
-    return channels.length == 3 && _specialCommaSpaces.contains(space)
-        ? _functionString(
-            functionName, [...channels, if (alphaValue != null) alphaValue])
-        : _functionString(functionName, [input]);
-  }
-  */
-
-        if (channels.size() != 3) {
-          throw Exception::SassScriptException(
-            "The $space color space has 3 channels but $input has",
-            ctx, pstate);
-        }
-
-        auto rv = _colorFromChannels(
-          ctx, pstate, space,
-          channels[0]->isaNumber(),
-          channels[1]->isaNumber(),
-          channels[2]->isaNumber(),
-          alpha, true,
-          space == &ColorSpace::rgb
-        );
-
-        return rv;
-
-        // Return arguments
-        // return list.detach();
-
-        // debug_ast(input);
-        // _parseSlashChannels
-        // std::cerr << "foobar\n";
-        /*
-        ValueVector args = input->assertCommonListStyle(ctx, name, true);
-
-        StringObj spaceName = args[0]->assertString(ctx, name)->assertUnquoted(ctx, name);
-        auto space = ColorSpace::fromName(ctx, spaceName);
-        int startIdx = 1;
-
-        Value* alphaValue = nullptr;
-        ValueVector values;
-
-        for (int i = startIdx; i < args.size(); i++) {
-          Value* channel = args[i];
-          if (!isSpecialNumber(channel)) {
-
-          }
-          // Specially treat last component
-          // May contain the alpha value
-          if (i == args.size() - 1) {
-            // std::cerr << " " << i << " sep " << args[i]->separator() << "\n";
-            if (args[i]->hasSlashSeparator()) {
-              if (Number* nr = args[i]->isaNumber()) {
-                values.push_back(nr->lhsAsSlash().ptr());
-                alphaValue = nr->rhsAsSlash().ptr();
-              }
-              else {
-                values.push_back(args[i]);
-              }
-            }
-            else {
-              values.push_back(args[i]);
-            }
-          }
-          else {
-            values.push_back(args[i]);
-          }
-        }*/
-
-        // if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
-        //   sass::sstream fncall;
-        //   fncall << name << "(";
-        //   fncall << _h->inspect() << ", ";
-        //   fncall << _w->inspect() << ", ";
-        //   fncall << _b->inspect();
-        //   if (_a) { fncall << ", " << _a->inspect(); }
-        //   fncall << ")";
-        //   return SASS_MEMORY_NEW(String, pstate, fncall.str());
-        // }
-        return nullptr;
-
-      }
 
       static BUILT_IN_FN(oklab)
       {
@@ -1441,12 +1540,60 @@ namespace Sass {
 
       /*******************************************************************/
 
+      
 
-      static BUILT_IN_FN(channel)
+      static BUILT_IN_FN(isInGamut)
+      {
+
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        return SASS_MEMORY_NEW(Boolean, pstate, color->isInGamut());
+      }
+
+      static BUILT_IN_FN(isLegacy)
+      {
+
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        return SASS_MEMORY_NEW(Boolean, pstate, color->isLegacy());
+      }
+
+      static BUILT_IN_FN(isPowerless)
       {
 
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         const String* channel = arguments[1]->assertString(compiler, "channel");
+        bool chnValue = color->isChannelPowerless(compiler, channel, "color", "channel");
+        return SASS_MEMORY_NEW(Boolean, pstate, chnValue);
+      }
+
+      /// Returns the [colorUntyped] as a [SassColor] in the color space specified by
+      /// [spaceUntyped].
+      ///
+      /// If [legacyMissing] is false, this will convert missing channels in legacy
+      /// color spaces to zero if a conversion occurs.
+      ///
+      /// Throws a [SassScriptException] if either argument isn't the expected type or
+      /// if [spaceUntyped] isn't the name of a color space. If [spaceUntyped] is
+      /// `sassNull`, it defaults to the color's existing space.
+      const ColorSpaced* _colorInSpace(Compiler& compiler, Value* col, Value* spc, bool legacyMissing = true)
+      {
+        const ColorSpaced* color = col->assertColorSpaced(compiler, Strings::color);
+        std::cerr << "Called color in space " << color->getChannel0() << ", "
+          << color->getChannel1() << ", " << color->getChannel2() << "\n";
+        if (spc == nullptr || spc->isNull()) return color;
+        String* space = spc->assertString(compiler, "space");
+        space->assertUnquoted(compiler, "space");
+        const ColorSpace& cpsc = ColorSpace::fromNameRef(compiler, *space);
+        ColorSpacedObj rv = color->toSpace(cpsc, col->pstate());
+        return rv.detach();
+      }
+
+      static BUILT_IN_FN(channel)
+      {
+
+        const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[2]);
+          // arguments[0]->assertColorSpaced(compiler, Strings::color);
+        const String* channel = arguments[1]->assertString(compiler, "channel");
+
         int idx = color->getChannelIndex(compiler, channel, "color", "channel");
         if (idx == -1) return SASS_MEMORY_NEW(Number, pstate, color->alpha().value_or(0));
         auto chnInfo = color->space()._channels[idx];
@@ -2427,7 +2574,11 @@ namespace Sass {
         // });
 
         uint32_t idx_color = ctx.createBuiltInFunction(key_color, "$description", color);
+        uint32_t idx_is_legacy = ctx.createBuiltInFunction(key_is_legacy, "$color", isLegacy);
+        uint32_t idx_is_in_gamut = ctx.createBuiltInFunction(key_is_in_gamut, "$color, $space: null", isInGamut);
+
         uint32_t idx_channel = ctx.createBuiltInFunction(key_channel, "$color, $channel, $space: null", channel);
+        uint32_t idx_is_powerless = ctx.createBuiltInFunction(key_is_powerless, "$color, $channel, $space: null", isPowerless);
 
         uint32_t idx_space = ctx.createBuiltInFunction(key_space, "$color", space);
         uint32_t idx_is_missing = ctx.createBuiltInFunction(key_is_missing, "$color, $channel", isMissing);
@@ -2533,7 +2684,10 @@ namespace Sass {
         module.addFunction(key_space, idx_space);
         module.addFunction(key_color, idx_color);
         module.addFunction(key_channel, idx_channel);
+        module.addFunction(key_is_legacy, idx_is_legacy);
         module.addFunction(key_is_missing, idx_is_missing);
+        module.addFunction(key_is_in_gamut, idx_is_in_gamut);
+        module.addFunction(key_is_powerless, idx_is_powerless);
 
 
         module.addFunction(key_rgb, idx_rgb_strict);
@@ -2643,130 +2797,24 @@ namespace Sass {
       Number* r = _r->assertNumber(logger, Strings::red);
       Number* g = _g->assertNumber(logger, Strings::green);
       Number* b = _b->assertNumber(logger, Strings::blue);
-      Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
-      return SASS_MEMORY_NEW(ColorRgba, pstate,
-        fuzzyRound(_percentageOrUnitless(r, 255, "$red", logger), logger.epsilon),
-        fuzzyRound(_percentageOrUnitless(g, 255, "$green", logger), logger.epsilon),
-        fuzzyRound(_percentageOrUnitless(b, 255, "$blue", logger), logger.epsilon),
-        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
+      Number* a_nr = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+      double a_val = _a ? _percentageOrUnitless(a_nr, 1.0, "$alpha", logger) : 1.0;
+      a_val = std::isnan(a_val) ? 0.0 : std::max(0.0, std::min(1.0, a_val));
+      tl::optional<double> a = a_val;
 
-    }
+      return _colorFromChannels(logger, pstate,
+        &ColorSpace::rgb, r, g, b, a, true, true);
 
-
-    Value* labFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
-    {
-      Value* _h = arguments[0];
-      Value* _w = arguments[1];
-      Value* _b = arguments[2];
-      Value* _a = nullptr;
-      if (arguments.size() > 3) {
-        _a = arguments[3];
-      }
-      // Check if any `calc()` or `var()` are passed
-      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
-        sass::sstream fncall;
-        fncall << name << "(";
-        fncall << _h->inspect() << ", ";
-        fncall << _w->inspect() << ", ";
-        fncall << _b->inspect();
-        if (_a) { fncall << ", " << _a->inspect(); }
-        fncall << ")";
-        return SASS_MEMORY_NEW(String, pstate, fncall.str());
-      }
-
-      // Number* h = _h->assertNumber(logger, Strings::hue);
-      // Number* w = _w->assertNumber(logger, Strings::whiteness)
-      //   ->assertHasUnits(logger, "%", Strings::whiteness);
-      // Number* b = _b->assertNumber(logger, Strings::blackness)
-      //   ->assertHasUnits(logger, "%", Strings::blackness);
-      // Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
-
-      // checkAngle(logger, h, Strings::hue);
-      return SASS_MEMORY_NEW(ColorSpaced,
-        pstate, ColorSpace::lab,
-        _h->assertNumber(logger, Strings::hue)->value(),
-        _w->assertNumber(logger, Strings::hue)->value(),
-        _b->assertNumber(logger, Strings::hue)->value(),
-        _a ? _a->assertNumber(logger, Strings::hue)->value() : 1);
+      // return SASS_MEMORY_NEW(ColorRgba, pstate,
+      //   fuzzyRound(_percentageOrUnitless(r, 255, "$red", logger), logger.epsilon),
+      //   fuzzyRound(_percentageOrUnitless(g, 255, "$green", logger), logger.epsilon),
+      //   fuzzyRound(_percentageOrUnitless(b, 255, "$blue", logger), logger.epsilon),
+      //   _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
 
     }
 
-    Value* lchFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
-    {
-      Value* _h = arguments[0];
-      Value* _w = arguments[1];
-      Value* _b = arguments[2];
-      Value* _a = nullptr;
-      if (arguments.size() > 3) {
-        _a = arguments[3];
-      }
-      // Check if any `calc()` or `var()` are passed
-      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
-        sass::sstream fncall;
-        fncall << name << "(";
-        fncall << _h->inspect() << ", ";
-        fncall << _w->inspect() << ", ";
-        fncall << _b->inspect();
-        if (_a) { fncall << ", " << _a->inspect(); }
-        fncall << ")";
-        return SASS_MEMORY_NEW(String, pstate, fncall.str());
-      }
 
-      // Number* h = _h->assertNumber(logger, Strings::hue);
-      // Number* w = _w->assertNumber(logger, Strings::whiteness)
-      //   ->assertHasUnits(logger, "%", Strings::whiteness);
-      // Number* b = _b->assertNumber(logger, Strings::blackness)
-      //   ->assertHasUnits(logger, "%", Strings::blackness);
-      // Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
-
-      // checkAngle(logger, h, Strings::hue);
-      return SASS_MEMORY_NEW(ColorSpaced,
-        pstate, ColorSpace::lch,
-        _h->assertNumber(logger, Strings::hue)->value(),
-        _w->assertNumber(logger, Strings::hue)->value(),
-        absmod(_b->assertNumber(logger, Strings::hue)->value(), 360.0),
-        _a ? _a->assertNumber(logger, Strings::hue)->value() : 1);
-
-    }
-
-    Value* okLchFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
-    {
-      Value* _h = arguments[0];
-      Value* _w = arguments[1];
-      Value* _b = arguments[2];
-      Value* _a = nullptr;
-      if (arguments.size() > 3) {
-        _a = arguments[3];
-      }
-      // Check if any `calc()` or `var()` are passed
-      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
-        sass::sstream fncall;
-        fncall << name << "(";
-        fncall << _h->inspect() << ", ";
-        fncall << _w->inspect() << ", ";
-        fncall << _b->inspect();
-        if (_a) { fncall << ", " << _a->inspect(); }
-        fncall << ")";
-        return SASS_MEMORY_NEW(String, pstate, fncall.str());
-      }
-
-      // Number* h = _h->assertNumber(logger, Strings::hue);
-      // Number* w = _w->assertNumber(logger, Strings::whiteness)
-      //   ->assertHasUnits(logger, "%", Strings::whiteness);
-      // Number* b = _b->assertNumber(logger, Strings::blackness)
-      //   ->assertHasUnits(logger, "%", Strings::blackness);
-      // Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
-
-      // checkAngle(logger, h, Strings::hue);
-      return SASS_MEMORY_NEW(ColorSpaced,
-        pstate, ColorSpace::oklch,
-        _h->assertNumber(logger, Strings::hue)->value(),
-        _w->assertNumber(logger, Strings::hue)->value(),
-        absmod(_b->assertNumber(logger, Strings::hue)->value(), 360.0),
-        _a ? _a->assertNumber(logger, Strings::hue)->value() : 1);
-
-    }
 
     /*******************************************************************/
 

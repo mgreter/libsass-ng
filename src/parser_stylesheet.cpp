@@ -2680,8 +2680,10 @@ namespace Sass {
     SourceSpan pstate(scanner.relevantSpanFrom(state.offset));
     sass::string original(state.position, scanner.position);
     if (keep == false) original = str_empty; // reset!?
-    Color* color = SASS_MEMORY_NEW(ColorRgba, pstate,
-      red, green, blue, alpha, original, false);
+    // Color* color = SASS_MEMORY_NEW(ColorRgba, pstate,
+    //   red, green, blue, alpha, original, false);
+    ColorSpaced* color = SASS_MEMORY_NEW(ColorSpaced, pstate,
+      ColorSpace::rgb, red, green, blue, alpha, original, false);
     return SASS_MEMORY_NEW(ColorExpression, pstate, color);
   }
 
@@ -3145,9 +3147,10 @@ namespace Sass {
             SASS_MEMORY_NEW(Null, pstate));
         }
 
-        if (const ColorRgba* color = name_to_color(plain)) {
+        if (const ColorSpaced* color = name_to_color(plain)) {
           // ToDo: can we avoid this copy here?
-          ColorRgba* copy = SASS_MEMORY_COPY(color);
+          ColorSpaced* copy = SASS_MEMORY_COPY(color);
+          // copy->disp(plain); copy->parsed(true);
           copy->pstate(identifier->pstate());
           copy->disp(plain);
           return SASS_MEMORY_NEW(ColorExpression,
