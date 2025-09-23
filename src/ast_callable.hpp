@@ -47,7 +47,8 @@ namespace Sass {
     // Must be implemented in each specialization
     virtual Value* execute(Eval& eval,
       CallableArguments* arguments,
-      const SourceSpan& pstate) = 0;
+      const SourceSpan& pstate,
+      bool global = false) = 0;
 
     // Return name of this callable/function
     virtual const sass::string& name() const = 0;

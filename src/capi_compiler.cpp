@@ -332,6 +332,7 @@ namespace Sass {
   template <class T, typename ...ARGS> void sass_wrap_exception(
     T& compiler, void (*fn)(T& compiler, ARGS...), ARGS... args)
   {
+    // fn(compiler, args...); return;
     Logger& logger(compiler);
     try { sass_wrap_msvc_exception(compiler, fn, args...); }
     catch (...) { handle_errors(compiler); }

@@ -137,7 +137,8 @@ namespace Sass {
     const SourceSpan& pstate, \
     const ValueVector& arguments, \
     Compiler& compiler, \
-    Eval& eval \
+    Eval& eval, \
+    bool global \
 
   #define BUILT_IN_FN(name) Value* name(FN_PROTOTYPE)
 

@@ -644,6 +644,15 @@ namespace Sass {
       SassColorSpace::HWB,
       hwb_channels, 3)
     {}
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> hue,
+      tl::optional<double> whiteness,
+      tl::optional<double> blackness,
+      tl::optional<double> alpha) const override final;
+
   };
 
   class LabColorSpace : public ColorSpace {
@@ -1210,15 +1219,6 @@ namespace Sass {
 
     double channel(const sass::string& channel) const;
 
-    // Convert and copy only if necessary
-    ColorRgba* toRGBA() const override final;
-    ColorHsla* toHSLA() const override final;
-    ColorHwba* toHWBA() const override final;
-    // Convert if necessary and return a copy
-    ColorRgba* copyAsRGBA() const override final;
-    ColorHsla* copyAsHSLA() const override final;
-    ColorHwba* copyAsHWBA() const override final;
-
     // Implement interface for base color class
     size_t hash() const override final;
 
@@ -1240,146 +1240,14 @@ namespace Sass {
 
 
 
-  class ColorRgba final : public Color
-  {
-  private:
-
-    ADD_CONSTREF(double, r);
-    ADD_CONSTREF(double, g);
-    ADD_CONSTREF(double, b);
-
-  public:
-
-    // Value constructor
-    ColorRgba(const SourceSpan& pstate,
-      double red, double green, double blue, double alpha = 1.0,
-      const sass::string& disp = "",
-      bool parsed = false);
-
-    // Copy constructor
-    ColorRgba(const ColorRgba* ptr);
-
-    // Convert and copy only if necessary
-    ColorRgba* toRGBA() const override final;
-    ColorHsla* toHSLA() const override final;
-    ColorHwba* toHWBA() const override final;
-    // Convert if necessary and return a copy
-    ColorRgba* copyAsRGBA() const override final;
-    ColorHsla* copyAsHSLA() const override final;
-    ColorHwba* copyAsHWBA() const override final;
-
-    // Implement interface for base color class
-    size_t hash() const override final;
-
-    // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
-    // Implement same class compare operator
-    bool operator==(const ColorRgba& rhs) const;
-
-    // Copy operations for childless items
-    ColorRgba* copy(SASS_MEMORY_ARGS bool childless) const override final {
-      return SASS_MEMORY_NEW_DBG(ColorRgba, this);
-    }
-
-    IMPLEMENT_ISA_CASTER(ColorRgba);
-  };
-
-
   ///////////////////////////////////////////////////////////////////////
   // A sass color in HSLA representation.
   ///////////////////////////////////////////////////////////////////////
 
-  class ColorHsla final : public Color
-  {
-  private:
-
-    ADD_CONSTREF(double, h);
-    ADD_CONSTREF(double, s);
-    ADD_CONSTREF(double, l);
-
-  public:
-
-    // Value constructor
-    ColorHsla(const SourceSpan& pstate,
-      double hue, double saturation, double lightness, double alpha = 1,
-      const sass::string& disp = "",
-      bool parsed = false);
-
-    // Copy constructor
-    ColorHsla(const ColorHsla* ptr);
-
-    // Convert and copy only if necessary
-    ColorRgba* toRGBA() const override final;
-    ColorHsla* toHSLA() const override final;
-    ColorHwba* toHWBA() const override final;
-    // Convert if necessary and return a copy
-    ColorRgba* copyAsRGBA() const override final;
-    ColorHsla* copyAsHSLA() const override final;
-    ColorHwba* copyAsHWBA() const override final;
-
-    // Implement interface for base color class
-    size_t hash() const override final;
-
-    // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
-    // Implement same class compare operator
-    bool operator==(const ColorHsla& rhs) const;
-
-    // Copy operations for childless items
-    ColorHsla* copy(SASS_MEMORY_ARGS bool childless) const override final {
-      return SASS_MEMORY_NEW_DBG(ColorHsla, this);
-    }
-
-    IMPLEMENT_ISA_CASTER(ColorHsla);
-  };
-
+  
   ///////////////////////////////////////////////////////////////////////
   // A sass color in HSLA representation.
   ///////////////////////////////////////////////////////////////////////
-
-  class ColorHwba final : public Color
-  {
-  private:
-
-    ADD_CONSTREF(double, h);
-    ADD_CONSTREF(double, w);
-    ADD_CONSTREF(double, b);
-
-  public:
-
-    // Value constructor
-    ColorHwba(const SourceSpan& pstate,
-      double hue, double whiteness, double blackness, double alpha = 1,
-      const sass::string& disp = "",
-      bool parsed = false);
-
-    // Copy constructor
-    ColorHwba(const ColorHwba* ptr);
-
-    // Convert and copy only if necessary
-    ColorRgba* toRGBA() const override final;
-    ColorHsla* toHSLA() const override final;
-    ColorHwba* toHWBA() const override final;
-    // Convert if necessary and return a copy
-    ColorRgba* copyAsRGBA() const override final;
-    ColorHsla* copyAsHSLA() const override final;
-    ColorHwba* copyAsHWBA() const override final;
-
-    // Implement interface for base color class
-    size_t hash() const override final;
-
-    // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
-    // Implement same class compare operator
-    bool operator==(const ColorHwba& rhs) const;
-
-    // Copy operations for childless items
-    ColorHwba* copy(SASS_MEMORY_ARGS bool childless) const override final {
-      return SASS_MEMORY_NEW_DBG(ColorHwba, this);
-    }
-
-    IMPLEMENT_ISA_CASTER(ColorHwba);
-  };
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

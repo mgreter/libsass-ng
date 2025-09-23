@@ -40,7 +40,7 @@ namespace Sass {
 
     // Execute calculation function with arguments
     Value* execute(Logger& logger, const SourceSpan& pstate,
-      CFN fn, const ValueVector& args);
+      CFN fn, const ValueVector& args, bool global = false);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

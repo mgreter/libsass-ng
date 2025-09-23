@@ -19,6 +19,9 @@ namespace Sass
     source(source),
     position(position)
   {
+    if (source == nullptr) {
+      // std::cerr << "NO SOURCE\n";
+    }
     // assert(source != nullptr);
   }
 

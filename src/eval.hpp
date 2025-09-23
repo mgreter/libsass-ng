@@ -216,26 +216,30 @@ namespace Sass {
     Value* execute(
       BuiltInCallable* callable,
       CallableArguments* arguments,
-      const SourceSpan& pstate);
+      const SourceSpan& pstate,
+      bool global = false);
 
     // Call built-in function with overloads
     Value* execute(
       BuiltInCallables* callable,
       CallableArguments* arguments,
-      const SourceSpan& pstate);
+      const SourceSpan& pstate,
+      bool global = false);
 
     // Used for user functions and also by
     // mixin includes and content includes.
     Value* execute(
       UserDefinedCallable* callable,
       CallableArguments* arguments,
-      const SourceSpan& pstate);
+      const SourceSpan& pstate,
+      bool global = false);
 
     // Call external C-API function
     Value* execute(
       ExternalCallable* callable,
       CallableArguments* arguments,
-      const SourceSpan& pstate);
+      const SourceSpan& pstate,
+      bool global = false);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
@@ -292,19 +296,22 @@ namespace Sass {
     Value* _runBuiltInCallable(
       CallableArguments* arguments,
       BuiltInCallable* callable,
-      const SourceSpan& pstate);
+      const SourceSpan& pstate,
+      bool global = false);
 
     // Call built-in function with overloads
     Value* _runBuiltInCallables(
       CallableArguments* arguments,
       BuiltInCallables* callable,
-      const SourceSpan& pstate);
+      const SourceSpan& pstate,
+      bool global = false);
 
     // Helper for _runBuiltInCallable(s)
     Value* _callBuiltInCallable(
       ArgumentResults& evaluated,
       const SassFnPair& function,
-      const SourceSpan& pstate);
+      const SourceSpan& pstate,
+      bool global = false);
     public:
     // Used for user functions and also by
     // mixin includes and content includes.

@@ -224,11 +224,12 @@ namespace Sass {
   Value* Eval::_runBuiltInCallable(
     CallableArguments* arguments,
     BuiltInCallable* callable,
-    const SourceSpan& pstate)
+    const SourceSpan& pstate,
+    bool global)
   {
     ArgumentResults results(_evaluateArguments(arguments));
     const SassFnPair& tuple(callable->callbackFor(results));
-    ValueObj rv = _callBuiltInCallable(results, tuple, pstate);
+    ValueObj rv = _callBuiltInCallable(results, tuple, pstate, global);
     rv = withoutSlash3(rv);
     return rv.detach();
   }
@@ -240,11 +241,12 @@ namespace Sass {
   Value* Eval::_runBuiltInCallables(
     CallableArguments* arguments,
     BuiltInCallables* callable,
-    const SourceSpan& pstate)
+    const SourceSpan& pstate,
+    bool global)
   {
     ArgumentResults results(_evaluateArguments(arguments));
     const SassFnPair& tuple(callable->callbackFor(results));
-    return _callBuiltInCallable(results, tuple, pstate);
+    return _callBuiltInCallable(results, tuple, pstate, global);
   }
   // EO _runBuiltInCallables
 
@@ -254,7 +256,8 @@ namespace Sass {
   Value* Eval::_callBuiltInCallable(
     ArgumentResults& results,
     const SassFnPair& function,
-    const SourceSpan& pstate)
+    const SourceSpan& pstate,
+    bool global)
   {
 
     // Here the strategy is to re-use the positional arguments if possible
@@ -340,7 +343,7 @@ namespace Sass {
     // Now execute the built-in function
     ValueObj result = callback(pstate,
       positional, compiler,
-      *this); // 7%
+      *this, global); // 7%
 
     // If we had no rest arguments, this will be true
     if (restargs == nullptr) return result.detach();
@@ -615,13 +618,14 @@ namespace Sass {
   Value* Eval::execute(
     BuiltInCallable* callable,
     CallableArguments* arguments,
-    const SourceSpan& pstate)
+    const SourceSpan& pstate,
+    bool global)
   {
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
     CallStackFrame frame(logger, trace);
     ValueObj rv = _runBuiltInCallable(
-      arguments, callable, pstate);
+      arguments, callable, pstate, global);
     if (rv.isNull()) {
       throw Exception::RuntimeException(logger,
         "Function finished without @return.");
@@ -636,13 +640,14 @@ namespace Sass {
   Value* Eval::execute(
     BuiltInCallables* callable,
     CallableArguments* arguments,
-    const SourceSpan& pstate)
+    const SourceSpan& pstate,
+    bool global)
   {
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
     CallStackFrame frame(logger, trace);
     ValueObj rv = _runBuiltInCallables(arguments,
-      callable, pstate);
+      callable, pstate, global);
     if (rv.isNull()) {
       throw Exception::RuntimeException(logger,
         "Function finished without @return.");
@@ -658,7 +663,8 @@ namespace Sass {
   Value* Eval::execute(
     UserDefinedCallable* callable,
     CallableArguments* arguments,
-    const SourceSpan& pstate)
+    const SourceSpan& pstate,
+    bool global)
   {
     RAII_FLAG(inMixin, false);
     const EnvKey& key(callable->envkey());
@@ -680,7 +686,8 @@ namespace Sass {
   Value* Eval::execute(
     ExternalCallable* callable,
     CallableArguments* arguments,
-    const SourceSpan& pstate)
+    const SourceSpan& pstate,
+    bool global)
   {
     const EnvKey& key(callable->envkey());
     BackTrace trace(pstate, key.orig(), true);
@@ -837,22 +844,22 @@ namespace Sass {
           value = static_cast<Expression*>(itpl)->accept(this);
         if (warnForColor) {
           if (Color* color = value->isaColor()) {
-            ColorRgbaObj rgba = color->toRGBA();
-            double numval = rgba->r() * 0x10000
-              + rgba->g() * 0x100 + rgba->b();
-            if (const char* disp = color_to_name((int)numval)) {
-              logger.addWarning(itpl->pstate(), Logger::WARN_COLOR_ITPL, [&]() {
-                sass::sstream msg;
-                msg << "You probably don't mean to use the color value ";
-                msg << disp << " in interpolation here.\nIt may end up represented ";
-                msg << "as " << rgba->inspect() << ", which will likely produce invalid ";
-                msg << "CSS. Always quote color names when using them as strings or map ";
-                msg << "keys (for example, \"" << disp << "\"). If you really want to ";
-                msg << "use the color value, append it to an empty string to avoid ";
-                msg << "this warning (e.g. use '\"\" + " << disp << "').";
-                return msg.str();
-              });
-            }
+            // ColorRgbaObj rgba = color->toRGBA();
+            // double numval = rgba->r() * 0x10000
+            //   + rgba->g() * 0x100 + rgba->b();
+            // if (const char* disp = color_to_name((int)numval)) {
+            //   logger.addWarning(itpl->pstate(), Logger::WARN_COLOR_ITPL, [&]() {
+            //     sass::sstream msg;
+            //     msg << "You probably don't mean to use the color value ";
+            //     msg << disp << " in interpolation here.\nIt may end up represented ";
+            //     msg << "as " << rgba->inspect() << ", which will likely produce invalid ";
+            //     msg << "CSS. Always quote color names when using them as strings or map ";
+            //     msg << "keys (for example, \"" << disp << "\"). If you really want to ";
+            //     msg << "use the color value, append it to an empty string to avoid ";
+            //     msg << "this warning (e.g. use '\"\" + " << disp << "').";
+            //     return msg.str();
+            //   });
+            // }
           }
         }
         value->accept(&cssize);
@@ -1527,7 +1534,8 @@ namespace Sass {
       RAII_FLAG(inFunction, true);
       CallStackFrame frame(logger, function->pstate(), true);
       return callable->execute(*this,
-        args, function->pstate());
+        args, function->pstate(),
+        function->ns().empty());
     }
 
     if (StringUtils::startsWith(fname, "--", 2) /* dart has some more conditions */) {
@@ -1546,7 +1554,8 @@ namespace Sass {
       RAII_FLAG(inFunction, true);
       CallStackFrame frame(logger, function->pstate(), true);
       return callable->execute(*this,
-        args, function->pstate());
+        args, function->pstate(),
+        function->ns().empty());
     }
 
     // Only functions without namespace can be css-functions

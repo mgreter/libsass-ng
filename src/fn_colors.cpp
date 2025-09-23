@@ -160,26 +160,6 @@ namespace Sass {
     // EO getFunctionString
 
 
-    static bool _parseSlashChannels(
-      const sass::string& name,
-      Value* channels,
-      ValueObj& components,
-      ValueObj& alphaValue,
-      const SourceSpan& pstate,
-      Compiler& compiler)
-    {
-      // Get the list from the channels input variable (or throw)
-      ValueVector list = channels->assertCommonListStyle(compiler, name, true);
-
-      if (channels->hasSlashSeparator()) {
-
-      }
-      else {
-
-      }
-
-      return false;
-    }
 
     static Value* parseChannels(
       const sass::string& name,
@@ -510,6 +490,7 @@ namespace Sass {
 
     /// Returns [color1] and [color2], mixed
     // together and weighted by [weight].
+    /*
     static ColorRgba* mixColors(
       const Color* color1,
       const Color* color2,
@@ -549,6 +530,7 @@ namespace Sass {
         fuzzyRound(lhs->b() * weight1 + rhs->b() * weight2, logger.epsilon),
         lhs->a() * weightScale + rhs->a() * (1 - weightScale));
     }
+    */
     // EO mixColor
 
     static double scaleValue(
@@ -587,18 +569,19 @@ namespace Sass {
       return value;
     }
 
-    static String* _functionRgbString(sass::string name, ColorRgba* color, Value* alpha, const SourceSpan& pstate)
+    static String* _functionRgbString(sass::string name, const ColorSpaced* color, Value* alpha, const SourceSpan& pstate)
     {
       sass::sstream fncall;
       fncall << name << "(";
-      fncall << color->r() << ", ";
-      fncall << color->g() << ", ";
-      fncall << color->b() << ", ";
+      fncall << color->getChannel0() << ", ";
+      fncall << color->getChannel1() << ", ";
+      fncall << color->getChannel2() << ", ";
       fncall << alpha->inspect() << ")";
       return SASS_MEMORY_NEW(String,
         pstate, fncall.str());
     }
 
+    /// The implementation of the two-argument `rgb()` and `rgba()` functions.
     static Value* handleTwoArgRgb(sass::string name, ValueVector arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
       // Check if any `calc()` or `var()` are passed
@@ -607,22 +590,22 @@ namespace Sass {
           name, pstate, arguments);
       }
       else if (isVar(arguments[1])) {
-        // if (const ColorSpaced* first = arguments[0]->isaColorSpaced()) {
+        if (const ColorSpaced* first = arguments[0]->isaColorSpaced()) {
         //   ColorRgbaObj rgba = first->toRGBA();
-        //   return _functionRgbString(name,
-        //     rgba, arguments[1], pstate);
-        // }
-        // else {
-        //   return getFunctionString(
-        //     name, pstate, arguments);
-        // }
+          return _functionRgbString(name,
+            first, arguments[1], pstate);
+        }
+        else {
+          return getFunctionString(
+            name, pstate, arguments);
+        }
       }
       else if (!strict && isSpecialNumber(arguments[1])) {
-        // if (const ColorSpaced* color = arguments[0]->assertColorSpaced(logger, Strings::color)) {
+        if (const ColorSpaced* color = arguments[0]->assertColorSpaced(logger, Strings::color)) {
         //   ColorRgbaObj rgba = color->toRGBA();
-        //   return _functionRgbString(name,
-        //     rgba, arguments[1], pstate);
-        // }
+          return _functionRgbString(name,
+            color, arguments[1], pstate);
+        }
       }
 
       if (arguments[0]->isaColorSpaced()) {
@@ -656,13 +639,13 @@ namespace Sass {
         return tl::optional<double>();
       }
 
-      std::cerr << "channel " << chnInfo.name << " from value " << chnValue->value() << "\n";
+      // std::cerr << "channel " << chnInfo.name << " from value " << chnValue->value() << "\n";
 
 
       if (chnInfo.isLinear) {
-        std::cerr << " Channel is linear\n";
+        // std::cerr << " Channel is linear\n";
         if (chnInfo.requiresPercent && !chnValue->hasUnit("%")) {
-          std::cerr << "Must have unit of percent\n";
+          // std::cerr << "Must have unit of percent\n";
           return chnValue->value();
         }
         else if (chnInfo.lowerClamped == false && chnInfo.upperClamped == false) {
@@ -695,7 +678,7 @@ namespace Sass {
     {
 
       if (space == nullptr) {
-        std::cerr << "space is nullptr";
+        // std::cerr << "space is nullptr";
         return SASS_MEMORY_NEW(ColorSpaced,
           pstate, ColorSpace::rgb,
           1, 1, 1, 1);
@@ -706,7 +689,7 @@ namespace Sass {
         auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
         auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
         auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
-        std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
+        // std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
         auto rv = SASS_MEMORY_NEW(ColorSpaced,
           pstate, *space,
           a,
@@ -714,8 +697,8 @@ namespace Sass {
           c,
           alpha);
 
-        std::cerr << " => " << rv->getChannel0() << ", " <<
-          rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+        //std::cerr << " => " << rv->getChannel0() << ", " <<
+        //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
 
         return rv;
 
@@ -734,7 +717,7 @@ namespace Sass {
           }
           auto rv = SASS_MEMORY_NEW(ColorSpaced,
             pstate, *space,
-            chn0->value(),
+            chn0 != nullptr ? chn0->value() : tl::optional<double>(),
             whiteness,
             blackness,
             alpha);
@@ -744,7 +727,7 @@ namespace Sass {
         auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
         auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
         auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
-        std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
+        // std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
         auto rv = SASS_MEMORY_NEW(ColorSpaced,
           pstate, *space,
           a,
@@ -752,8 +735,8 @@ namespace Sass {
           c,
           alpha);
 
-        std::cerr << " => " << rv->getChannel0() << ", " <<
-          rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+        //std::cerr << " => " << rv->getChannel0() << ", " <<
+        //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
 
         return rv;
 
@@ -762,7 +745,7 @@ namespace Sass {
         auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
         auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
         auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
-        std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
+        // std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
         auto rv = SASS_MEMORY_NEW(ColorSpaced,
           pstate, *space,
           a,
@@ -770,8 +753,8 @@ namespace Sass {
           c,
           alpha);
 
-        std::cerr << " => " << rv->getChannel0() << ", " <<
-          rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+        //std::cerr << " => " << rv->getChannel0() << ", " <<
+        //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
 
         return rv;
       }
@@ -779,7 +762,7 @@ namespace Sass {
         auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
         auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
         auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
-        std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
+        // std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
         auto rv = SASS_MEMORY_NEW(ColorSpaced,
           pstate, *space,
           a,
@@ -787,8 +770,8 @@ namespace Sass {
           c,
           alpha);
 
-        std::cerr << " => " << rv->getChannel0() << ", " <<
-          rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+        //std::cerr << " => " << rv->getChannel0() << ", " <<
+        //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
 
         return rv;
       }
@@ -858,7 +841,7 @@ namespace Sass {
 
       // Check if last element is a number with slashes
       if (Number* back = list.back()->isaNumber()) {
-        std::cerr << "Has As Slash " << back->hasAsSlash() << "\n";
+        // std::cerr << "Has As Slash " << back->hasAsSlash() << "\n";
         if (back->hasAsSlash() == true) {
           auto initial = SASS_MEMORY_NEW(List, pstate, {
             list.begin(), list.end() - 1 }, SASS_SPACE);
@@ -990,12 +973,38 @@ namespace Sass {
 
       if (alphaValue != nullptr) {
         if (isSpecialNumber(alphaValue)) {
-          std::cerr << "Not yet implemented\n";
-          /*
-  return channels.length == 3 && _specialCommaSpaces.contains(space)
-      ? _functionString(functionName, [...channels, alphaValue!])
-      : _functionString(functionName, [input]);
-      */
+          if (channels.size() == 3 && (space->name() == "rgb" || space->name() == "hsl")) {
+            sass::sstream args;
+            // If size is 3, we must comma separate them
+            // Otherwise we keep it space separated!?
+            for (int n = 0; n < channels.size(); n++) {
+              args << channels[n]->inspect();
+              if (n == channels.size() - 1) break;
+              args << ", ";
+            }
+            if (alphaValue != nullptr) {
+              args << ", " << alphaValue->inspect();
+            }
+            return SASS_MEMORY_NEW(
+              String, pstate, fname +
+              "(" + args.str() + ")");
+          }
+          else {
+            sass::sstream args;
+            // If size is 3, we must comma separate them
+            // Otherwise we keep it space separated!?
+            for (int n = 0; n < channels.size(); n++) {
+              args << channels[n]->inspect();
+              if (n == channels.size() - 1) break;
+              args << ' ';
+            }
+            if (alphaValue != nullptr) {
+              args << "/" << alphaValue->inspect();
+            }
+            return SASS_MEMORY_NEW(
+              String, pstate, fname +
+              "(" + args.str() + ")");
+          }
         }
       }
 
@@ -1018,6 +1027,43 @@ namespace Sass {
         return SASS_MEMORY_NEW(
           String, pstate, fname + "(" +
           input->inspect() + ")");
+      }
+
+      for (int i = 0; i < channels.size(); i++) {
+        if (isSpecialNumber(channels[i])) {
+          if (channels.size() == 3 && (space->name() == "rgb" || space->name() == "hsl")) {
+            sass::sstream args;
+            // If size is 3, we must comma separate them
+            // Otherwise we keep it space separated!?
+            for (int n = 0; n < channels.size(); n++) {
+              args << channels[n]->inspect();
+              if (n == channels.size() - 1) break;
+              args << ", ";
+            }
+            if (alphaValue != nullptr) {
+              args << ", " << alphaValue->inspect();
+            }
+            return SASS_MEMORY_NEW(
+              String, pstate, fname +
+              "(" + args.str() + ")");
+          }
+          else {
+            sass::sstream args;
+            // If size is 3, we must comma separate them
+            // Otherwise we keep it space separated!?
+            for (int n = 0; n < channels.size(); n++) {
+              args << channels[n]->inspect();
+              if (n == channels.size() - 1) break;
+              args << ' ';
+            }
+            if (alphaValue != nullptr) {
+              args << "/" << alphaValue->inspect();
+            }
+            return SASS_MEMORY_NEW(
+              String, pstate, fname +
+              "(" + args.str() + ")");
+          }
+        }
       }
 
       /*
@@ -1113,9 +1159,6 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(rgb4arg)
       {
-        return _parseChannels(str_rgb, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::rgb);
-
         return rgbFn(Strings::rgb,
           arguments, pstate, compiler, false);
       }
@@ -1158,20 +1201,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(fnRgb1arg)
       {
-        auto rv = _parseChannels(str_oklab, arguments[0],
+        return _parseChannels(str_oklab, arguments[0],
           "channels", pstate, compiler, &ColorSpace::rgb);
-        return rv;
-
-        // std::cerr << "Hello dear\n";
-        // #if SassPreserveColorInfo
-        // if (Color* color = arguments[0]->isaColor()) {
-        //   Color* rgb = color->toRGBA();
-        //   rgb->a(1.0);
-        //   return rgb;
-        // }
-        // #endif
-        // return handleOneArgColorFn(Strings::rgb,
-        //   arguments[0], &rgbFn, compiler, pstate, true);
       }
 
       /*******************************************************************/
@@ -1216,26 +1247,12 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         return _parseChannels(str_rgb, arguments[0],
           "channels", pstate, compiler, &ColorSpace::rgb);
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          return color->toRGBA();
-        }
-        #endif
-        return handleOneArgColorFn(Strings::rgba,
-          arguments[0], &rgbFn, compiler, pstate, false);
       }
 
       static BUILT_IN_FN(fnRgba1arg)
       {
         return _parseChannels(str_rgb, arguments[0],
           "channels", pstate, compiler, &ColorSpace::rgb);
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          return color->toRGBA();
-        }
-        #endif
-        return handleOneArgColorFn(Strings::rgba,
-          arguments[0], &rgbFn, compiler, pstate, true);
       }
 
       /*******************************************************************/
@@ -1245,19 +1262,19 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return hslFn(Strings::hsl,
           arguments, pstate, compiler, false);
       }
-
+      
       static BUILT_IN_FN(hsl3arg)
       {
         return hslFn(Strings::hsl,
           arguments, pstate, compiler, false);
       }
-
+      
       static BUILT_IN_FN(fnHsl4arg)
       {
         return hslFn(Strings::hsl,
           arguments, pstate, compiler, true);
       }
-
+      
       static BUILT_IN_FN(fnHsl3arg)
       {
         return hslFn(Strings::hsl,
@@ -1286,30 +1303,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         auto rv = _parseChannels(str_hsl, arguments[0],
           "channels", pstate, compiler, &ColorSpace::hsl);
         return rv;
-        /*
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          Color* hsl = color->toHSLA();
-          hsl->a(1.0);
-          return hsl;
-        }
-        #endif
-        return handleOneArgColorFn(Strings::hsl,
-          arguments[0], &hslFn, compiler, pstate, false);
-        */
       }
 
       static BUILT_IN_FN(fnHsl1arg)
       {
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          Color* hsl = color->toHSLA();
-          hsl->a(1.0);
-          return hsl;
-        }
-        #endif
-        return handleOneArgColorFn(Strings::hsl,
-          arguments[0], &hslFn, compiler, pstate, true);
+        auto rv = _parseChannels(str_hsl, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::hsl);
+        return rv;
       }
 
       /*******************************************************************/
@@ -1318,17 +1318,17 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         return hslFn(Strings::hsla, arguments, pstate, compiler, false);
       }
-
+      
       static BUILT_IN_FN(hsla3arg)
       {
         return hslFn(Strings::hsla, arguments, pstate, compiler, false);
       }
-
+      
       static BUILT_IN_FN(fnHsla4arg)
       {
         return hslFn(Strings::hsla, arguments, pstate, compiler, true);
       }
-
+      
       static BUILT_IN_FN(fnHsla3arg)
       {
         return hslFn(Strings::hsla, arguments, pstate, compiler, true);
@@ -1353,24 +1353,16 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(hsla1arg)
       {
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          return color->toHSLA();
-        }
-        #endif
-        return handleOneArgColorFn(Strings::hsla,
-          arguments[0], &hslFn, compiler, pstate, false);
+        auto rv = _parseChannels(str_hsl, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::hsl);
+        return rv;
       }
 
       static BUILT_IN_FN(fnHsla1arg)
       {
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          return color->toHSLA();
-        }
-        #endif
-        return handleOneArgColorFn(Strings::hsla,
-          arguments[0], &hslFn, compiler, pstate, true);
+        auto rv = _parseChannels(str_hsl, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::hsl);
+        return rv;
       }
 
       /*******************************************************************/
@@ -1380,43 +1372,52 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         auto rv = _parseChannels(str_hwb, arguments[0],
           "channels", pstate, compiler, &ColorSpace::hwb);
         return rv;
+      }
+
+
+      static BUILT_IN_FN(hwb3arg)
+      {
         return hwbFn(Strings::hwb,
           arguments, pstate, compiler, false);
       }
 
-
-      // static BUILT_IN_FN(hwb3arg)
-      // {
-      //   return hwbFn(Strings::hwb,
-      //     arguments, pstate, compiler, false);
-      // }
-
       static BUILT_IN_FN(fnHwb4arg)
       {
-        auto rv = _parseChannels(str_hwb, arguments[0],
+        std::cerr << "hwb 4 arg\n";
+        ListObj args =
+          SASS_MEMORY_NEW(List, pstate, {
+              SASS_MEMORY_NEW(List, pstate, {
+                  arguments[0],
+                  arguments[1],
+                  arguments[2]
+                }, SASS_SPACE),
+                arguments[3]
+            }, SASS_DIV);
+        auto rv = _parseChannels(str_hwb, args,
           "channels", pstate, compiler, &ColorSpace::hwb);
         return rv;
+
+
+        return hwbFn(Strings::hwb,
+          arguments, pstate, compiler, false);
+      }
+
+      static BUILT_IN_FN(fnHwb3arg)
+      {
         return hwbFn(Strings::hwb,
           arguments, pstate, compiler, true);
       }
 
+      static BUILT_IN_FN(hwb2arg)
+      {
+        return getFunctionString(Strings::hwb, pstate, arguments);
+      }
 
-      // static BUILT_IN_FN(fnHwb3arg)
-      // {
-      //   return hwbFn(Strings::hwb,
-      //     arguments, pstate, compiler, true);
-      // }
-
-      //static BUILT_IN_FN(hwb2arg)
-      //{
-      //  return getFunctionString(Strings::hwb, pstate, arguments);
-      //}
-
-      // static BUILT_IN_FN(fnHwb2arg)
-      // {
-      //   // Otherwise throw error for missing argument
-      //   throw Exception::TooManyArguments(compiler, 2, 1);
-      // }
+      static BUILT_IN_FN(fnHwb2arg)
+      {
+        // Otherwise throw error for missing argument
+        throw Exception::TooManyArguments(compiler, 2, 1);
+      }
 
       static BUILT_IN_FN(hwb1arg)
       {
@@ -1439,20 +1440,16 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(fnHwb1arg)
       {
-        #if SassPreserveColorInfo
-        if (Color* color = arguments[0]->isaColor()) {
-          Color* hwb = color->toHWBA();
-          hwb->a(1.0);
-          return hwb;
-        }
-        #endif
-        ValueObj value = handleOneArgColorFn(Strings::hwb,
-          arguments[0], &hwbFn, compiler, pstate, true);
-        if (value->isaString()) {
-          throw Exception::RuntimeException(compiler, "Expected "
-            "numeric channels, got \"" + value->inspect() + "\".");
-        }
-        return value.detach();
+        // #if SassPreserveColorInfo
+        // if (Color* color = arguments[0]->isaColor()) {
+        //   Color* hwb = color->toHWBA();
+        //   hwb->a(1.0);
+        //   return hwb;
+        // }
+        // #endif
+        auto rv = _parseChannels(str_hwb, arguments[0],
+          "channels", pstate, compiler, &ColorSpace::hwb);
+        return rv;
       }
 
       /*******************************************************************/
@@ -1579,8 +1576,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       const ColorSpaced* _colorInSpace(Compiler& compiler, Value* col, Value* spc, bool legacyMissing = true)
       {
         const ColorSpaced* color = col->assertColorSpaced(compiler, Strings::color);
-        std::cerr << "Called color in space " << color->getChannel0() << ", "
-          << color->getChannel1() << ", " << color->getChannel2() << "\n";
+        // std::cerr << "Called color in space " << color->getChannel0() << ", "
+        //   << color->getChannel1() << ", " << color->getChannel2() << "\n";
         if (spc == nullptr || spc->isNull()) return color;
         String* space = spc->assertString(compiler, "space");
         space->assertUnquoted(compiler, "space");
@@ -1641,101 +1638,102 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(red)
       {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
-        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgba->r(), compiler.epsilon));
+        bool deprecate = global;
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
+        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgb->getChannel(0), compiler.epsilon));
       }
-
+      
       static BUILT_IN_FN(green)
       {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
-        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgba->g(), compiler.epsilon));
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
+        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgb->getChannel(1), compiler.epsilon));
       }
-
+      
       static BUILT_IN_FN(blue)
       {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
-        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgba->b(), compiler.epsilon));
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
+        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgb->getChannel(2), compiler.epsilon));
       }
 
       /*******************************************************************/
 
-      static BUILT_IN_FN(invert)
-      {
-        const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
-        weight->checkPercent(compiler, Strings::weight);
-        if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0]) /* or isSpecialValue*/) {
-          // Allow only the value `100` or a percentage (unit == `% `)
-          const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
-          if (weight->value() != 100 || !weight->hasUnit(Strings::percent)) {
-            throw Exception::RuntimeException(compiler,
-              "Only one argument may be passed "
-              "to the plain-CSS invert() function.");
-          }
-          // Return function string since first argument was a number
-          // Need to remove the weight argument as it has a default value
-          return getFunctionString(Strings::invert, pstate, { arguments[0] });
-        }
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorRgbaObj inverse(color->copyAsRGBA()); // Make a copy!
-        inverse->r(clamp(255.0 - inverse->r(), 0.0, 255.0));
-        inverse->g(clamp(255.0 - inverse->g(), 0.0, 255.0));
-        inverse->b(clamp(255.0 - inverse->b(), 0.0, 255.0));
-        // Note: mixColors will create another unnecessary copy!
-        return mixColors(inverse, color, weight, pstate, compiler);
-      }
+      // static BUILT_IN_FN(invert)
+      // {
+      //   const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
+      //   weight->checkPercent(compiler, Strings::weight);
+      //   if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0]) /* or isSpecialValue*/) {
+      //     // Allow only the value `100` or a percentage (unit == `% `)
+      //     const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
+      //     if (weight->value() != 100 || !weight->hasUnit(Strings::percent)) {
+      //       throw Exception::RuntimeException(compiler,
+      //         "Only one argument may be passed "
+      //         "to the plain-CSS invert() function.");
+      //     }
+      //     // Return function string since first argument was a number
+      //     // Need to remove the weight argument as it has a default value
+      //     return getFunctionString(Strings::invert, pstate, { arguments[0] });
+      //   }
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   ColorRgbaObj inverse(color->copyAsRGBA()); // Make a copy!
+      //   inverse->r(clamp(255.0 - inverse->r(), 0.0, 255.0));
+      //   inverse->g(clamp(255.0 - inverse->g(), 0.0, 255.0));
+      //   inverse->b(clamp(255.0 - inverse->b(), 0.0, 255.0));
+      //   // Note: mixColors will create another unnecessary copy!
+      //   return mixColors(inverse, color, weight, pstate, compiler);
+      // }
 
-      static BUILT_IN_FN(fnInvert)
-      {
-        if (arguments[0]->isaNumber()) {
-          compiler.addDeprecation(arguments[0]->pstate(),
-            Logger::WARN_NUMBER_ARG, [arguments]() {
-              return "Passing a number (" +
-                arguments[0] + ") to color.invert() is deprecated.\n"
-                "\nRecommendation: grayscale(" + arguments[0] + ")";
-            });
-        }
-
-        if (isSpecialNumber(arguments[0])) {
-          return getFunctionString(
-            Strings::invert,
-            pstate, arguments);
-        }
-
-        // if (arguments[0]->isaNumber()) {
-        //   compiler.addWarning("Passing a number to "
-        //     "color.invert() is deprecated.\n\nRecommendation: "
-        //     "invert(" + arguments[0]->inspect() + ")",
-        //     arguments[0]->pstate(),
-        //     Logger::WARN_NUMBER_ARG);
-        // }
-        return invert(pstate, arguments, compiler, eval);
-      }
+      // static BUILT_IN_FN(fnInvert)
+      // {
+      //   if (arguments[0]->isaNumber()) {
+      //     compiler.addDeprecation(arguments[0]->pstate(),
+      //       Logger::WARN_NUMBER_ARG, [arguments]() {
+      //         return "Passing a number (" +
+      //           arguments[0] + ") to color.invert() is deprecated.\n"
+      //           "\nRecommendation: grayscale(" + arguments[0] + ")";
+      //       });
+      //   }
+      // 
+      //   if (isSpecialNumber(arguments[0])) {
+      //     return getFunctionString(
+      //       Strings::invert,
+      //       pstate, arguments);
+      //   }
+      // 
+      //   // if (arguments[0]->isaNumber()) {
+      //   //   compiler.addWarning("Passing a number to "
+      //   //     "color.invert() is deprecated.\n\nRecommendation: "
+      //   //     "invert(" + arguments[0]->inspect() + ")",
+      //   //     arguments[0]->pstate(),
+      //   //     Logger::WARN_NUMBER_ARG);
+      //   // }
+      //   return invert(pstate, arguments, compiler, eval);
+      // }
 
       /*******************************************************************/
 
-      static BUILT_IN_FN(hue)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
-        return SASS_MEMORY_NEW(Number, pstate, hsla->h(), Strings::deg);
-      }
-
-      static BUILT_IN_FN(saturation)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
-        return SASS_MEMORY_NEW(Number, pstate, hsla->s(), Strings::percent);
-      }
-
-      static BUILT_IN_FN(lightness)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
-        return SASS_MEMORY_NEW(Number, pstate, hsla->l(), Strings::percent);
-      }
+      // static BUILT_IN_FN(hue)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
+      //   return SASS_MEMORY_NEW(Number, pstate, hsla->h(), Strings::deg);
+      // }
+      // 
+      // static BUILT_IN_FN(saturation)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
+      //   return SASS_MEMORY_NEW(Number, pstate, hsla->s(), Strings::percent);
+      // }
+      // 
+      // static BUILT_IN_FN(lightness)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
+      //   return SASS_MEMORY_NEW(Number, pstate, hsla->l(), Strings::percent);
+      // }
 
       static BUILT_IN_FN(noLighten)
       {
@@ -1749,110 +1747,110 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           arguments, "darken", "$lightness: -");
       }
 
-      static BUILT_IN_FN(whiteness)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        #if SassPreserveColorInfo
-        ColorHwbaObj hwba(color->toHWBA());
-        #else
-        ColorRgbaObj rgba(color->copyAsRGBA());
-        rgba->r(round64(rgba->r(), compiler.epsilon));
-        rgba->g(round64(rgba->g(), compiler.epsilon));
-        rgba->b(round64(rgba->b(), compiler.epsilon));
-        ColorHwbaObj hwba(rgba->toHWBA());
-        #endif
-        return SASS_MEMORY_NEW(Number, pstate, hwba->w(), Strings::percent);
-      }
-
-      static BUILT_IN_FN(blackness)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        #if SassPreserveColorInfo
-        ColorHwbaObj hwba(color->toHWBA());
-        #else
-        ColorRgbaObj rgba(color->copyAsRGBA());
-        rgba->r(round64(rgba->r(), compiler.epsilon));
-        rgba->g(round64(rgba->g(), compiler.epsilon));
-        rgba->b(round64(rgba->b(), compiler.epsilon));
-        ColorHwbaObj hwba(rgba->toHWBA());
-        #endif
-        return SASS_MEMORY_NEW(Number, pstate, hwba->b(), Strings::percent);
-      }
-
-      /*******************************************************************/
-
-      static BUILT_IN_FN(adjustHue)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        const Number* degrees = arguments[1]->assertNumber(compiler, Strings::degrees);
-        checkAngle(compiler, degrees, Strings::degrees);
-        ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-        copy->h(absmod(copy->h() + coerceToDeg(degrees), 360.0));
-        return copy.detach();
-      }
-
-      static BUILT_IN_FN(noAdjustHue)
-      {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "adjust-hue", "$hue: ", Strings::degrees);
-      }
-
-      static BUILT_IN_FN(complement)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-        copy->h(absmod(copy->h() + 180.0, 360.0));
-        return copy.detach();
-      }
+      // static BUILT_IN_FN(whiteness)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   #if SassPreserveColorInfo
+      //   ColorHwbaObj hwba(color->toHWBA());
+      //   #else
+      //   ColorRgbaObj rgba(color->copyAsRGBA());
+      //   rgba->r(round64(rgba->r(), compiler.epsilon));
+      //   rgba->g(round64(rgba->g(), compiler.epsilon));
+      //   rgba->b(round64(rgba->b(), compiler.epsilon));
+      //   ColorHwbaObj hwba(rgba->toHWBA());
+      //   #endif
+      //   return SASS_MEMORY_NEW(Number, pstate, hwba->w(), Strings::percent);
+      // }
+      // 
+      // static BUILT_IN_FN(blackness)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   #if SassPreserveColorInfo
+      //   ColorHwbaObj hwba(color->toHWBA());
+      //   #else
+      //   ColorRgbaObj rgba(color->copyAsRGBA());
+      //   rgba->r(round64(rgba->r(), compiler.epsilon));
+      //   rgba->g(round64(rgba->g(), compiler.epsilon));
+      //   rgba->b(round64(rgba->b(), compiler.epsilon));
+      //   ColorHwbaObj hwba(rgba->toHWBA());
+      //   #endif
+      //   return SASS_MEMORY_NEW(Number, pstate, hwba->b(), Strings::percent);
+      // }
 
       /*******************************************************************/
 
-      static BUILT_IN_FN(grayscale)
-      {
-        // Gracefully handle if number is passed
-        if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0])) {
-          return getFunctionString(
-            Strings::grayscale,
-            pstate, arguments);
-        }
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-        copy->s(0.0); // Simply reset the saturation
-        return copy.detach(); // Return HSLA
-      }
-
-      static BUILT_IN_FN(lighten)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
-        ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-        copy->l(clamp(copy->l() + nr, 0.0, 100.0));
-        return copy.detach(); // Return HSLA
-      }
-
-      static BUILT_IN_FN(darken)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
-        ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-        copy->l(clamp(copy->l() - nr, 0.0, 100.0));
-        return copy.detach(); // Return HSLA
-      }
+      // static BUILT_IN_FN(adjustHue)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   const Number* degrees = arguments[1]->assertNumber(compiler, Strings::degrees);
+      //   checkAngle(compiler, degrees, Strings::degrees);
+      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
+      //   copy->h(absmod(copy->h() + coerceToDeg(degrees), 360.0));
+      //   return copy.detach();
+      // }
+      // 
+      // static BUILT_IN_FN(noAdjustHue)
+      // {
+      //   throw Exception::DeprecatedColorAdjustFn(compiler,
+      //     arguments, "adjust-hue", "$hue: ", Strings::degrees);
+      // }
+      // 
+      // static BUILT_IN_FN(complement)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
+      //   copy->h(absmod(copy->h() + 180.0, 360.0));
+      //   return copy.detach();
+      // }
 
       /*******************************************************************/
 
-      static BUILT_IN_FN(saturate2arg)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
-        ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-        if (copy->h() == 0 && nr > 0.0) copy->h(100.0);
-        copy->s(clamp(copy->s() + nr, 0.0, 100.0));
-        return copy.detach(); // Return HSLA
-      }
+      // static BUILT_IN_FN(grayscale)
+      // {
+      //   // Gracefully handle if number is passed
+      //   if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0])) {
+      //     return getFunctionString(
+      //       Strings::grayscale,
+      //       pstate, arguments);
+      //   }
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
+      //   copy->s(0.0); // Simply reset the saturation
+      //   return copy.detach(); // Return HSLA
+      // }
+      // 
+      // static BUILT_IN_FN(lighten)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+      //   double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
+      //   copy->l(clamp(copy->l() + nr, 0.0, 100.0));
+      //   return copy.detach(); // Return HSLA
+      // }
+      // 
+      // static BUILT_IN_FN(darken)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+      //   double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
+      //   copy->l(clamp(copy->l() - nr, 0.0, 100.0));
+      //   return copy.detach(); // Return HSLA
+      // }
+
+      /*******************************************************************/
+
+      // static BUILT_IN_FN(saturate2arg)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+      //   double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
+      //   if (copy->h() == 0 && nr > 0.0) copy->h(100.0);
+      //   copy->s(clamp(copy->s() + nr, 0.0, 100.0));
+      //   return copy.detach(); // Return HSLA
+      // }
 
       static BUILT_IN_FN(saturate1arg)
       {
@@ -1865,15 +1863,15 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return getFunctionString(Strings::saturate, pstate, { arguments[0] });
       }
 
-      static BUILT_IN_FN(desaturate)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
-        ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-        copy->s(clamp(copy->s() - nr, 0.0, 100.0));
-        return copy.detach(); // Return HSLA
-      }
+      // static BUILT_IN_FN(desaturate)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+      //   double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
+      //   copy->s(clamp(copy->s() - nr, 0.0, 100.0));
+      //   return copy.detach(); // Return HSLA
+      // }
 
 
       static BUILT_IN_FN(noFadeIn)
@@ -1909,25 +1907,25 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       /*******************************************************************/
 
-      static BUILT_IN_FN(opacify)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
-        ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-        copy->a(clamp(copy->a() + nr, 0.0, 1.0));
-        return copy.detach(); // Return HSLA
-      }
-
-      static BUILT_IN_FN(transparentize)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
-        ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-        copy->a(clamp(copy->a() - nr, 0.0, 1.0));
-        return copy.detach(); // Return HSLA
-      }
+      // static BUILT_IN_FN(opacify)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+      //   double nr = amount->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
+      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
+      //   copy->a(clamp(copy->a() + nr, 0.0, 1.0));
+      //   return copy.detach(); // Return HSLA
+      // }
+      // 
+      // static BUILT_IN_FN(transparentize)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+      //   double nr = amount->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
+      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
+      //   copy->a(clamp(copy->a() - nr, 0.0, 1.0));
+      //   return copy.detach(); // Return HSLA
+      // }
 
       static BUILT_IN_FN(noOpacify)
       {
@@ -2009,18 +2007,18 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return SASS_MEMORY_NEW(Number, pstate, color->a());
       }
 
-      static BUILT_IN_FN(noGrayscale)
-      {
-        if (arguments[0]->isaNumber()) {
-          compiler.addDeprecation(arguments[0]->pstate(),
-            Logger::WARN_NUMBER_ARG, [arguments]() {
-              return "Passing a number (" +
-                arguments[0] + ") to color.grayscale() is deprecated.\n"
-                "\nRecommendation: grayscale(" + arguments[0] + ")";
-            });
-        }
-        return grayscale(pstate, arguments, compiler, eval);
-      }
+      // static BUILT_IN_FN(noGrayscale)
+      // {
+      //   if (arguments[0]->isaNumber()) {
+      //     compiler.addDeprecation(arguments[0]->pstate(),
+      //       Logger::WARN_NUMBER_ARG, [arguments]() {
+      //         return "Passing a number (" +
+      //           arguments[0] + ") to color.grayscale() is deprecated.\n"
+      //           "\nRecommendation: grayscale(" + arguments[0] + ")";
+      //       });
+      //   }
+      //   return grayscale(pstate, arguments, compiler, eval);
+      // }
         
 
 
@@ -2034,26 +2032,26 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
                 "\nRecommendation: opacity(" + arguments[0] + ")";
             });
         }
-        return opacity(pstate, arguments, compiler, eval);
+        return opacity(pstate, arguments, compiler, eval, false);
       }
 
-      static BUILT_IN_FN(ieHexStr)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ColorRgbaObj rgba = color->toRGBA(); // This might create a copy
-        // clamp should not be needed here
-        double r = clamp(rgba->r(), 0.0, 255.0);
-        double g = clamp(rgba->g(), 0.0, 255.0);
-        double b = clamp(rgba->b(), 0.0, 255.0);
-        double a = clamp(rgba->a(), 0.0, 1.0) * 255.0;
-        sass::sstream ss;
-        ss << '#' << std::setw(2) << std::setfill('0') << std::uppercase;
-        ss << std::hex << std::setw(2) << fuzzyRound(a, compiler.epsilon);
-        ss << std::hex << std::setw(2) << fuzzyRound(r, compiler.epsilon);
-        ss << std::hex << std::setw(2) << fuzzyRound(g, compiler.epsilon);
-        ss << std::hex << std::setw(2) << fuzzyRound(b, compiler.epsilon);
-        return SASS_MEMORY_NEW(String, pstate, ss.str());
-      }
+      // static BUILT_IN_FN(ieHexStr)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   ColorRgbaObj rgba = color->toRGBA(); // This might create a copy
+      //   // clamp should not be needed here
+      //   double r = clamp(rgba->r(), 0.0, 255.0);
+      //   double g = clamp(rgba->g(), 0.0, 255.0);
+      //   double b = clamp(rgba->b(), 0.0, 255.0);
+      //   double a = clamp(rgba->a(), 0.0, 1.0) * 255.0;
+      //   sass::sstream ss;
+      //   ss << '#' << std::setw(2) << std::setfill('0') << std::uppercase;
+      //   ss << std::hex << std::setw(2) << fuzzyRound(a, compiler.epsilon);
+      //   ss << std::hex << std::setw(2) << fuzzyRound(r, compiler.epsilon);
+      //   ss << std::hex << std::setw(2) << fuzzyRound(g, compiler.epsilon);
+      //   ss << std::hex << std::setw(2) << fuzzyRound(b, compiler.epsilon);
+      //   return SASS_MEMORY_NEW(String, pstate, ss.str());
+      // }
 
       static Number* getKwdNumber(ValueFlatMap* keywords, const EnvKey& name, Logger& logger)
       {
@@ -2139,355 +2137,355 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return rv.detach();
       }
 
-      static BUILT_IN_FN(adjust)
-      {
-        Color* color2 = arguments[0]
-          ->assertColor2(compiler, Strings::color);
+      // static BUILT_IN_FN(adjust)
+      // {
+      //   Color* color2 = arguments[0]
+      //     ->assertColor2(compiler, Strings::color);
+      // 
+      //   const Color* color = arguments[0]
+      //     ->assertColor(compiler, Strings::color);
+      //   ArgumentList* argumentList = arguments[1]
+      //     ->assertArgumentList(compiler, "kwargs");
+      //   if (!argumentList->empty()) {
+      //     SourceSpan span(color->pstate());
+      //     CallStackFrame frame(compiler, BackTrace(
+      //       span, Strings::colorAdjust));
+      //     throw Exception::RuntimeException(compiler,
+      //       "Only one positional argument is allowed. All "
+      //       "other arguments must be passed by name.");
+      //   }
+      // 
+      //   // ToDo: solve without erase ...
+      //   ValueFlatMap* kwds = argumentList->keywords();
+      // 
+      //   {
+      //     Number* nr_r = getKwdNumber(kwds, key_red, compiler);
+      //     Number* nr_g = getKwdNumber(kwds, key_green, compiler);
+      //     Number* nr_b = getKwdNumber(kwds, key_blue, compiler);
+      //     Number* nr_h = getKwdNumber(kwds, key_hue, compiler);
+      //     Number* nr_s = getKwdNumber(kwds, key_saturation, compiler);
+      //     Number* nr_l = getKwdNumber(kwds, key_lightness, compiler);
+      //     Number* nr_a = getKwdNumber(kwds, key_alpha, compiler);
+      //     Number* nr_wn = getKwdNumber(kwds, key_whiteness, compiler);
+      //     Number* nr_bn = getKwdNumber(kwds, key_blackness, compiler);
+      // 
+      //     ColorObj copy = SASS_MEMORY_COPY(color2);
+      // 
+      //     return copy.detach();
+      //   }
+      // 
+      // 
+      // 
+      //   String* str_space = getKwdString(kwds, key_space, compiler);
+      // 
+      //   if (dynamic_cast<ColorSpaced*>(color2)) {
+      //     auto col = dynamic_cast<ColorSpaced*>(color2);
+      //     std::cerr << "ASDASDASDASD " << col->space().name() << "\n";
+      //     const ColorSpace* legacy = _sniffLegacyColorSpace(kwds);
+      // 
+      //     ColorSpacedObj bar = legacy != nullptr ?
+      //       col->toSpace(*legacy, pstate, false).ptr() :
+      //       _colorInSpace(col, str_space, compiler);
+      // 
+      //     {
+      // 
+      //       for (int i = 0; i < bar->space()._channelSize; i++)
+      //       {
+      // 
+      //         const double oldChannel = bar->getChannel(i);
+      //         double* channelArg = nullptr;
+      //         const ColorChannel& channelInfo0 = bar->space()._channels[i];
+      // 
+      //       }
+      // 
+      //       const double oldChannels[] = {
+      //         bar->getChannel0(),
+      //         bar->getChannel1(),
+      //         bar->getChannel2()
+      //       };
+      // 
+      //       Number* channelArgs[] = {
+      //         nullptr,
+      //         nullptr,
+      //         nullptr
+      //       };
+      // 
+      //       auto qwe = kwds->find(key_lightness);
+      //       if (qwe != kwds->end()) {
+      //         channelArgs[0] = qwe->second->assertNumber(compiler, str_lightness);
+      //       }
+      // 
+      //       for (int i = 0; i < bar->space()._channelSize; i++)
+      //       {
+      //         // std::cerr << ""
+      //       }
+      // 
+      //       const ColorChannel& channelInfo0 = bar->space()._channels[0];
+      //       const ColorChannel& channelInfo1 = bar->space()._channels[1];
+      //       const ColorChannel& channelInfo2 = bar->space()._channels[2];
+      // 
+      //       return _adjustColor(compiler, bar, channelArgs, nullptr);
+      //     }
+      // 
+      //   }
+      // 
+      //   if (str_space != nullptr /*  && color->space() */ ) {
+      // 
+      //   }
+      //   else {
+      // 
+      //     Number* nr_r = getKwdNumber(kwds, key_red, compiler);
+      //     Number* nr_g = getKwdNumber(kwds, key_green, compiler);
+      //     Number* nr_b = getKwdNumber(kwds, key_blue, compiler);
+      //     Number* nr_h = getKwdNumber(kwds, key_hue, compiler);
+      //     Number* nr_s = getKwdNumber(kwds, key_saturation, compiler);
+      //     Number* nr_l = getKwdNumber(kwds, key_lightness, compiler);
+      //     Number* nr_a = getKwdNumber(kwds, key_alpha, compiler);
+      //     Number* nr_wn = getKwdNumber(kwds, key_whiteness, compiler);
+      //     Number* nr_bn = getKwdNumber(kwds, key_blackness, compiler);
+      // 
+      //     if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
+      //     if (nr_s) nr_s->checkPercent(compiler, Strings::saturation);
+      //     if (nr_l) nr_l->checkPercent(compiler, Strings::lightness);
+      // 
+      //     double r = nr_r ? nr_r->assertRange(-255.0, 255.0, unit_none, compiler, Strings::red) : 0.0;
+      //     double g = nr_g ? nr_g->assertRange(-255.0, 255.0, unit_none, compiler, Strings::green) : 0.0;
+      //     double b = nr_b ? nr_b->assertRange(-255.0, 255.0, unit_none, compiler, Strings::blue) : 0.0;
+      //     double s = nr_s ? nr_s->assertRange(-100.0, 100.0, unit_percent, compiler, Strings::saturation) : 0.0;
+      //     double l = nr_l ? nr_l->assertRange(-100.0, 100.0, unit_percent, compiler, Strings::lightness) : 0.0;
+      // 
+      //     double wn = nr_wn ? nr_wn->assertHasUnits(compiler, Strings::percent, Strings::whiteness)->assertRange(-100.0, 100.0, nr_wn, compiler, Strings::whiteness) : 0.0;
+      //     double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange(-100.0, 100.0, nr_bn, compiler, Strings::blackness) : 0.0;
+      // 
+      //     double a = nr_a ? nr_a->assertRange(-1.0, 1.0, nr_a, compiler, Strings::alpha) : 0.0;
+      // 
+      //     double h = nr_h ? coerceToDeg(nr_h) : 0.0; // Hue is a very special case
+      // 
+      //     if (kwds && !kwds->empty()) {
+      //       throw Exception::UnknownNamedArgument(compiler, kwds);
+      //     }
+      // 
+      //     bool hasRgb = nr_r || nr_g || nr_b;
+      //     bool hasHsl = nr_s || nr_l;
+      //     bool hasHwb = nr_wn || nr_bn;
+      //     bool hasHue = nr_h != nullptr;
+      // 
+      //     if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
+      //     else if (hasRgb && hasHue) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL/HWB" });
+      //     else if (hasRgb && hasHsl) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL" });
+      //     else if (hasRgb && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HWB" });
+      //     else if (hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
+      //     else if (hasHwb && hasHsl) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
+      // 
+      //     if (hasRgb) {
+      //       ColorRgbaObj rgba = color->copyAsRGBA();
+      //       if (nr_r) rgba->r(clamp(rgba->r() + r, 0.0, 255.0));
+      //       if (nr_g) rgba->g(clamp(rgba->g() + g, 0.0, 255.0));
+      //       if (nr_b) rgba->b(clamp(rgba->b() + b, 0.0, 255.0));
+      //       if (nr_a) rgba->a(clamp(rgba->a() + a, 0.0, 1.0));
+      //       return rgba.detach();
+      //     }
+      //     else if (hasHsl) {
+      //       ColorHslaObj hsla = color->copyAsHSLA();
+      //       if (nr_h) hsla->h(absmod(hsla->h() + h, 360.0));
+      //       if (nr_s) hsla->s(clamp(hsla->s() + s, 0.0, 100.0));
+      //       if (nr_l) hsla->l(clamp(hsla->l() + l, 0.0, 100.0));
+      //       if (nr_a) hsla->a(clamp(hsla->a() + a, 0.0, 1.0));
+      //       return hsla.detach();
+      //     }
+      //     else if (hasHwb || nr_h) { // hue can be shared!
+      //       ColorHwbaObj hwba = color->copyAsHWBA();
+      //       if (nr_h) hwba->h(absmod(hwba->h() + h, 360.0));
+      //       if (nr_wn) hwba->w(clamp(hwba->w() + wn, 0.0, 100.0));
+      //       if (nr_bn) hwba->b(clamp(hwba->b() + bn, 0.0, 100.0));
+      //       if (nr_a) hwba->a(clamp(hwba->a() + a, 0.0, 1.0));
+      //       return hwba.detach();
+      //     }
+      //     else if (nr_a) {
+      //       ColorObj copy = SASS_MEMORY_COPY(color);
+      //       if (nr_a) copy->a(clamp(copy->a() + a, 0.0, 1.0));
+      //       return copy.detach();
+      //     }
+      // 
+      //   }
+      // 
+      //   return arguments[0];
+      // }
+      // 
+      // static BUILT_IN_FN(change)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   ArgumentList* argumentList = arguments[1]
+      //     ->assertArgumentList(compiler, "kwargs");
+      //   if (!argumentList->empty()) {
+      //     SourceSpan span(color->pstate());
+      //     CallStackFrame frame(compiler, BackTrace(
+      //       span, Strings::colorChange));
+      //     throw Exception::RuntimeException(compiler,
+      //       "Only one positional argument is allowed. All "
+      //       "other arguments must be passed by name.");
+      //   }
+      // 
+      //   // ToDo: solve without erase ...
+      //   ValueFlatMap* keywords(argumentList->keywords());
+      // 
+      //   Number* nr_r = getKwdNumber(keywords, key_red, compiler);
+      //   Number* nr_g = getKwdNumber(keywords, key_green, compiler);
+      //   Number* nr_b = getKwdNumber(keywords, key_blue, compiler);
+      //   Number* nr_h = getKwdNumber(keywords, key_hue, compiler);
+      //   Number* nr_s = getKwdNumber(keywords, key_saturation, compiler);
+      //   Number* nr_l = getKwdNumber(keywords, key_lightness, compiler);
+      //   Number* nr_a = getKwdNumber(keywords, key_alpha, compiler);
+      //   Number* nr_wn = getKwdNumber(keywords, key_whiteness, compiler);
+      //   Number* nr_bn = getKwdNumber(keywords, key_blackness, compiler);
+      // 
+      //   if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
+      // 
+      //   double r = nr_r ? nr_r->assertRange(0.0, 255.0, unit_none, compiler, Strings::red) : 0.0;
+      //   double g = nr_g ? nr_g->assertRange(0.0, 255.0, unit_none, compiler, Strings::green) : 0.0;
+      //   double b = nr_b ? nr_b->assertRange(0.0, 255.0, unit_none, compiler, Strings::blue) : 0.0;
+      //   double s = nr_s ? nr_s->checkPercent(compiler, Strings::saturation)->assertRange(0.0, 100.0, unit_percent, compiler, Strings::saturation) : 0.0;
+      //   double l = nr_l ? nr_l->checkPercent(compiler, Strings::lightness)->assertRange(0.0, 100.0, unit_percent, compiler, Strings::lightness) : 0.0;
+      //   double a = nr_a ? nr_a->assertRange(0.0, 1.0, nr_a, compiler, Strings::alpha) : 0.0;
+      //   double wn = nr_wn ? nr_wn->assertHasUnits(compiler, Strings::percent, Strings::whiteness)->assertRange(0.0, 100.0, nr_wn, compiler, Strings::whiteness) : 0.0;
+      //   double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange( 0.0, 100.0, nr_bn, compiler, Strings::blackness) : 0.0;
+      //   double h = nr_h ? coerceToDeg(nr_h) : 0.0; // Hue is a very special case
+      // 
+      //   if (keywords && !keywords->empty()) {
+      //     throw Exception::UnknownNamedArgument(compiler, keywords);
+      //   }
+      // 
+      //   bool hasRgb = nr_r != nullptr || nr_g != nullptr || nr_b != nullptr;
+      //   bool hasHsl = nr_s != nullptr || nr_l != nullptr;
+      //   bool hasHwb = nr_wn != nullptr || nr_bn != nullptr;
+      //   bool hasHue = nr_h != nullptr;
+      // 
+      //   if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
+      //   else if (hasRgb && hasHue) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL/HWB" });
+      //   else if (hasRgb && hasHsl) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL" });
+      //   else if (hasRgb && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HWB" });
+      //   else if (hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
+      //   else if (hasHwb && hasHsl) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
+      // 
+      //   if (hasRgb) {
+      //     ColorRgbaObj rgba = color->copyAsRGBA();
+      //     if (nr_r) rgba->r(clamp(r, 0.0, 255.0));
+      //     if (nr_g) rgba->g(clamp(g, 0.0, 255.0));
+      //     if (nr_b) rgba->b(clamp(b, 0.0, 255.0));
+      //     if (nr_a) rgba->a(clamp(a, 0.0, 1.0));
+      //     return rgba.detach();
+      //   }
+      //   else if (hasHsl) {
+      //     ColorHslaObj hsla = color->copyAsHSLA();
+      //     if (nr_h) hsla->h(absmod(h, 360.0));
+      //     if (nr_s) hsla->s(clamp(s, 0.0, 100.0));
+      //     if (nr_l) hsla->l(clamp(l, 0.0, 100.0));
+      //     if (nr_a) hsla->a(clamp(a, 0.0, 1.0));
+      //     return hsla.detach();
+      //   }
+      //   else if (hasHwb || nr_h) { // hue can be shared!
+      //     ColorHwbaObj hwba = color->copyAsHWBA();
+      //     if (nr_h) hwba->h(absmod(h, 360.0));
+      //     if (nr_wn) hwba->w(clamp(wn, 0.0, 100.0));
+      //     if (nr_bn) hwba->b(clamp(bn, 0.0, 100.0));
+      //     if (nr_a) hwba->a(clamp(a, 0.0, 1.0));
+      //     return hwba.detach();
+      //   }
+      //   else if (nr_a) {
+      //     ColorObj copy = SASS_MEMORY_COPY(color);
+      //     if (nr_a) copy->a(clamp(a, 0.0, 1.0));
+      //     return copy.detach();
+      //   }
+      //   return arguments[0];
+      // }
+      // 
+      // static BUILT_IN_FN(scale)
+      // {
+      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+      //   ArgumentList* argumentList = arguments[1]
+      //     ->assertArgumentList(compiler, "kwargs");
+      //   if (!argumentList->empty()) {
+      //     SourceSpan span(color->pstate());
+      //     CallStackFrame frame(compiler, BackTrace(
+      //       span, Strings::scaleColor));
+      //     throw Exception::RuntimeException(compiler,
+      //       "Only one positional argument is allowed. All "
+      //       "other arguments must be passed by name.");
+      //   }
+      // 
+      //   // ToDo: solve without erase ...
+      //   ValueFlatMap* keywords(argumentList->keywords());
+      // 
+      //   Number* nr_r = getKwdNumber(keywords, key_red, compiler);
+      //   Number* nr_g = getKwdNumber(keywords, key_green, compiler);
+      //   Number* nr_b = getKwdNumber(keywords, key_blue, compiler);
+      //   Number* nr_s = getKwdNumber(keywords, key_saturation, compiler);
+      //   Number* nr_l = getKwdNumber(keywords, key_lightness, compiler);
+      //   Number* nr_wn = getKwdNumber(keywords, key_whiteness, compiler);
+      //   Number* nr_bn = getKwdNumber(keywords, key_blackness, compiler);
+      //   Number* nr_a = getKwdNumber(keywords, key_alpha, compiler);
+      // 
+      //   double r = nr_r ? nr_r->assertHasUnits(compiler, Strings::percent, Strings::red)->assertRange(-100.0, 100.0, nr_r, compiler, Strings::red) / 100.0 : 0.0;
+      //   double g = nr_g ? nr_g->assertHasUnits(compiler, Strings::percent, Strings::green)->assertRange(-100.0, 100.0, nr_g, compiler, Strings::green) / 100.0 : 0.0;
+      //   double b = nr_b ? nr_b->assertHasUnits(compiler, Strings::percent, Strings::blue)->assertRange(-100.0, 100.0, nr_b, compiler, Strings::blue) / 100.0 : 0.0;
+      //   double s = nr_s ? nr_s->assertHasUnits(compiler, Strings::percent, Strings::saturation)->assertRange(-100.0, 100.0, nr_s, compiler, Strings::saturation) / 100.0 : 0.0;
+      //   double l = nr_l ? nr_l->assertHasUnits(compiler, Strings::percent, Strings::lightness)->assertRange(-100.0, 100.0, nr_l, compiler, Strings::lightness) / 100.0 : 0.0;
+      //   double wn = nr_wn ? nr_wn->assertHasUnits(compiler, Strings::percent, Strings::whiteness)->assertRange(-100.0, 100.0, nr_wn, compiler, Strings::whiteness) / 100.0 : 0.0;
+      //   double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange(-100.0, 100.0, nr_bn, compiler, Strings::blackness) / 100.0 : 0.0;
+      //   double a = nr_a ? nr_a->assertHasUnits(compiler, Strings::percent, Strings::alpha)->assertRange(-100.0, 100.0, nr_a, compiler, Strings::alpha) / 100.0 : 0.0;
+      // 
+      //   if (keywords && !keywords->empty()) {
+      //     throw Exception::UnknownNamedArgument(compiler, keywords);
+      //   }
+      // 
+      //   bool hasRgb = nr_r || nr_g || nr_b;
+      //   bool hasHsl = nr_s || nr_l;
+      //   bool hasHwb = nr_wn || nr_bn;
+      // 
+      //   if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
+      //   else if (hasRgb && hasHsl) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL" });
+      //   else if (hasRgb && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HWB" });
+      //   else if (hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
+      //   else if (hasHwb && hasHsl) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
+      // 
+      //   if (hasRgb) {
+      //     ColorRgbaObj rgba = color->copyAsRGBA();
+      //     if (nr_r) rgba->r(scaleValue(rgba->r(), r, 255.0));
+      //     if (nr_g) rgba->g(scaleValue(rgba->g(), g, 255.0));
+      //     if (nr_b) rgba->b(scaleValue(rgba->b(), b, 255.0));
+      //     if (nr_a) rgba->a(scaleValue(rgba->a(), a, 1.0));
+      //     return rgba.detach();
+      //   }
+      //   else if (hasHsl) {
+      //     ColorHslaObj hsla = color->copyAsHSLA();
+      //     if (nr_s) hsla->s(scaleValue(hsla->s(), s, 100.0));
+      //     if (nr_l) hsla->l(scaleValue(hsla->l(), l, 100.0));
+      //     if (nr_a) hsla->a(scaleValue(hsla->a(), a, 1.0));
+      //     return hsla.detach();
+      //   }
+      //   else if (hasHwb) { // hue can be shared!
+      //     ColorHwbaObj hwba = color->copyAsHWBA();
+      //     if (nr_wn) hwba->w(scaleValue(hwba->w(), wn, 100.0));
+      //     if (nr_bn) hwba->b(scaleValue(hwba->b(), bn, 100.0));
+      //     if (nr_a) hwba->a(scaleValue(hwba->a(), a, 1.0));
+      //     return hwba.detach();
+      //   }
+      //   else if (nr_a) {
+      //     ColorObj copy = SASS_MEMORY_COPY(color);
+      //     if (nr_a) copy->a(scaleValue(copy->a(), a, 1.0));
+      //     return copy.detach();
+      //   }
+      //   return arguments[0];
+      // }
 
-        const Color* color = arguments[0]
-          ->assertColor(compiler, Strings::color);
-        ArgumentList* argumentList = arguments[1]
-          ->assertArgumentList(compiler, "kwargs");
-        if (!argumentList->empty()) {
-          SourceSpan span(color->pstate());
-          CallStackFrame frame(compiler, BackTrace(
-            span, Strings::colorAdjust));
-          throw Exception::RuntimeException(compiler,
-            "Only one positional argument is allowed. All "
-            "other arguments must be passed by name.");
-        }
-
-        // ToDo: solve without erase ...
-        ValueFlatMap* kwds = argumentList->keywords();
-
-        {
-          Number* nr_r = getKwdNumber(kwds, key_red, compiler);
-          Number* nr_g = getKwdNumber(kwds, key_green, compiler);
-          Number* nr_b = getKwdNumber(kwds, key_blue, compiler);
-          Number* nr_h = getKwdNumber(kwds, key_hue, compiler);
-          Number* nr_s = getKwdNumber(kwds, key_saturation, compiler);
-          Number* nr_l = getKwdNumber(kwds, key_lightness, compiler);
-          Number* nr_a = getKwdNumber(kwds, key_alpha, compiler);
-          Number* nr_wn = getKwdNumber(kwds, key_whiteness, compiler);
-          Number* nr_bn = getKwdNumber(kwds, key_blackness, compiler);
-
-          ColorObj copy = SASS_MEMORY_COPY(color2);
-
-          return copy.detach();
-        }
-
-
-
-        String* str_space = getKwdString(kwds, key_space, compiler);
-
-        if (dynamic_cast<ColorSpaced*>(color2)) {
-          auto col = dynamic_cast<ColorSpaced*>(color2);
-          std::cerr << "ASDASDASDASD " << col->space().name() << "\n";
-          const ColorSpace* legacy = _sniffLegacyColorSpace(kwds);
-
-          ColorSpacedObj bar = legacy != nullptr ?
-            col->toSpace(*legacy, pstate, false).ptr() :
-            _colorInSpace(col, str_space, compiler);
-
-          {
-
-            for (int i = 0; i < bar->space()._channelSize; i++)
-            {
-
-              const double oldChannel = bar->getChannel(i);
-              double* channelArg = nullptr;
-              const ColorChannel& channelInfo0 = bar->space()._channels[i];
-
-            }
-
-            const double oldChannels[] = {
-              bar->getChannel0(),
-              bar->getChannel1(),
-              bar->getChannel2()
-            };
-
-            Number* channelArgs[] = {
-              nullptr,
-              nullptr,
-              nullptr
-            };
-
-            auto qwe = kwds->find(key_lightness);
-            if (qwe != kwds->end()) {
-              channelArgs[0] = qwe->second->assertNumber(compiler, str_lightness);
-            }
-
-            for (int i = 0; i < bar->space()._channelSize; i++)
-            {
-              // std::cerr << ""
-            }
-
-            const ColorChannel& channelInfo0 = bar->space()._channels[0];
-            const ColorChannel& channelInfo1 = bar->space()._channels[1];
-            const ColorChannel& channelInfo2 = bar->space()._channels[2];
-
-            return _adjustColor(compiler, bar, channelArgs, nullptr);
-          }
-
-        }
-
-        if (str_space != nullptr /*  && color->space() */ ) {
-
-        }
-        else {
-
-          Number* nr_r = getKwdNumber(kwds, key_red, compiler);
-          Number* nr_g = getKwdNumber(kwds, key_green, compiler);
-          Number* nr_b = getKwdNumber(kwds, key_blue, compiler);
-          Number* nr_h = getKwdNumber(kwds, key_hue, compiler);
-          Number* nr_s = getKwdNumber(kwds, key_saturation, compiler);
-          Number* nr_l = getKwdNumber(kwds, key_lightness, compiler);
-          Number* nr_a = getKwdNumber(kwds, key_alpha, compiler);
-          Number* nr_wn = getKwdNumber(kwds, key_whiteness, compiler);
-          Number* nr_bn = getKwdNumber(kwds, key_blackness, compiler);
-
-          if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
-          if (nr_s) nr_s->checkPercent(compiler, Strings::saturation);
-          if (nr_l) nr_l->checkPercent(compiler, Strings::lightness);
-
-          double r = nr_r ? nr_r->assertRange(-255.0, 255.0, unit_none, compiler, Strings::red) : 0.0;
-          double g = nr_g ? nr_g->assertRange(-255.0, 255.0, unit_none, compiler, Strings::green) : 0.0;
-          double b = nr_b ? nr_b->assertRange(-255.0, 255.0, unit_none, compiler, Strings::blue) : 0.0;
-          double s = nr_s ? nr_s->assertRange(-100.0, 100.0, unit_percent, compiler, Strings::saturation) : 0.0;
-          double l = nr_l ? nr_l->assertRange(-100.0, 100.0, unit_percent, compiler, Strings::lightness) : 0.0;
-
-          double wn = nr_wn ? nr_wn->assertHasUnits(compiler, Strings::percent, Strings::whiteness)->assertRange(-100.0, 100.0, nr_wn, compiler, Strings::whiteness) : 0.0;
-          double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange(-100.0, 100.0, nr_bn, compiler, Strings::blackness) : 0.0;
-
-          double a = nr_a ? nr_a->assertRange(-1.0, 1.0, nr_a, compiler, Strings::alpha) : 0.0;
-
-          double h = nr_h ? coerceToDeg(nr_h) : 0.0; // Hue is a very special case
-
-          if (kwds && !kwds->empty()) {
-            throw Exception::UnknownNamedArgument(compiler, kwds);
-          }
-
-          bool hasRgb = nr_r || nr_g || nr_b;
-          bool hasHsl = nr_s || nr_l;
-          bool hasHwb = nr_wn || nr_bn;
-          bool hasHue = nr_h != nullptr;
-
-          if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
-          else if (hasRgb && hasHue) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL/HWB" });
-          else if (hasRgb && hasHsl) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL" });
-          else if (hasRgb && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HWB" });
-          else if (hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
-          else if (hasHwb && hasHsl) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
-
-          if (hasRgb) {
-            ColorRgbaObj rgba = color->copyAsRGBA();
-            if (nr_r) rgba->r(clamp(rgba->r() + r, 0.0, 255.0));
-            if (nr_g) rgba->g(clamp(rgba->g() + g, 0.0, 255.0));
-            if (nr_b) rgba->b(clamp(rgba->b() + b, 0.0, 255.0));
-            if (nr_a) rgba->a(clamp(rgba->a() + a, 0.0, 1.0));
-            return rgba.detach();
-          }
-          else if (hasHsl) {
-            ColorHslaObj hsla = color->copyAsHSLA();
-            if (nr_h) hsla->h(absmod(hsla->h() + h, 360.0));
-            if (nr_s) hsla->s(clamp(hsla->s() + s, 0.0, 100.0));
-            if (nr_l) hsla->l(clamp(hsla->l() + l, 0.0, 100.0));
-            if (nr_a) hsla->a(clamp(hsla->a() + a, 0.0, 1.0));
-            return hsla.detach();
-          }
-          else if (hasHwb || nr_h) { // hue can be shared!
-            ColorHwbaObj hwba = color->copyAsHWBA();
-            if (nr_h) hwba->h(absmod(hwba->h() + h, 360.0));
-            if (nr_wn) hwba->w(clamp(hwba->w() + wn, 0.0, 100.0));
-            if (nr_bn) hwba->b(clamp(hwba->b() + bn, 0.0, 100.0));
-            if (nr_a) hwba->a(clamp(hwba->a() + a, 0.0, 1.0));
-            return hwba.detach();
-          }
-          else if (nr_a) {
-            ColorObj copy = SASS_MEMORY_COPY(color);
-            if (nr_a) copy->a(clamp(copy->a() + a, 0.0, 1.0));
-            return copy.detach();
-          }
-
-        }
-
-        return arguments[0];
-      }
-
-      static BUILT_IN_FN(change)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ArgumentList* argumentList = arguments[1]
-          ->assertArgumentList(compiler, "kwargs");
-        if (!argumentList->empty()) {
-          SourceSpan span(color->pstate());
-          CallStackFrame frame(compiler, BackTrace(
-            span, Strings::colorChange));
-          throw Exception::RuntimeException(compiler,
-            "Only one positional argument is allowed. All "
-            "other arguments must be passed by name.");
-        }
-
-        // ToDo: solve without erase ...
-        ValueFlatMap* keywords(argumentList->keywords());
-
-        Number* nr_r = getKwdNumber(keywords, key_red, compiler);
-        Number* nr_g = getKwdNumber(keywords, key_green, compiler);
-        Number* nr_b = getKwdNumber(keywords, key_blue, compiler);
-        Number* nr_h = getKwdNumber(keywords, key_hue, compiler);
-        Number* nr_s = getKwdNumber(keywords, key_saturation, compiler);
-        Number* nr_l = getKwdNumber(keywords, key_lightness, compiler);
-        Number* nr_a = getKwdNumber(keywords, key_alpha, compiler);
-        Number* nr_wn = getKwdNumber(keywords, key_whiteness, compiler);
-        Number* nr_bn = getKwdNumber(keywords, key_blackness, compiler);
-
-        if (nr_h) checkAngle(compiler, nr_h, Strings::hue);
-
-        double r = nr_r ? nr_r->assertRange(0.0, 255.0, unit_none, compiler, Strings::red) : 0.0;
-        double g = nr_g ? nr_g->assertRange(0.0, 255.0, unit_none, compiler, Strings::green) : 0.0;
-        double b = nr_b ? nr_b->assertRange(0.0, 255.0, unit_none, compiler, Strings::blue) : 0.0;
-        double s = nr_s ? nr_s->checkPercent(compiler, Strings::saturation)->assertRange(0.0, 100.0, unit_percent, compiler, Strings::saturation) : 0.0;
-        double l = nr_l ? nr_l->checkPercent(compiler, Strings::lightness)->assertRange(0.0, 100.0, unit_percent, compiler, Strings::lightness) : 0.0;
-        double a = nr_a ? nr_a->assertRange(0.0, 1.0, nr_a, compiler, Strings::alpha) : 0.0;
-        double wn = nr_wn ? nr_wn->assertHasUnits(compiler, Strings::percent, Strings::whiteness)->assertRange(0.0, 100.0, nr_wn, compiler, Strings::whiteness) : 0.0;
-        double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange( 0.0, 100.0, nr_bn, compiler, Strings::blackness) : 0.0;
-        double h = nr_h ? coerceToDeg(nr_h) : 0.0; // Hue is a very special case
-
-        if (keywords && !keywords->empty()) {
-          throw Exception::UnknownNamedArgument(compiler, keywords);
-        }
-
-        bool hasRgb = nr_r != nullptr || nr_g != nullptr || nr_b != nullptr;
-        bool hasHsl = nr_s != nullptr || nr_l != nullptr;
-        bool hasHwb = nr_wn != nullptr || nr_bn != nullptr;
-        bool hasHue = nr_h != nullptr;
-
-        if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
-        else if (hasRgb && hasHue) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL/HWB" });
-        else if (hasRgb && hasHsl) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL" });
-        else if (hasRgb && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HWB" });
-        else if (hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
-        else if (hasHwb && hasHsl) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
-
-        if (hasRgb) {
-          ColorRgbaObj rgba = color->copyAsRGBA();
-          if (nr_r) rgba->r(clamp(r, 0.0, 255.0));
-          if (nr_g) rgba->g(clamp(g, 0.0, 255.0));
-          if (nr_b) rgba->b(clamp(b, 0.0, 255.0));
-          if (nr_a) rgba->a(clamp(a, 0.0, 1.0));
-          return rgba.detach();
-        }
-        else if (hasHsl) {
-          ColorHslaObj hsla = color->copyAsHSLA();
-          if (nr_h) hsla->h(absmod(h, 360.0));
-          if (nr_s) hsla->s(clamp(s, 0.0, 100.0));
-          if (nr_l) hsla->l(clamp(l, 0.0, 100.0));
-          if (nr_a) hsla->a(clamp(a, 0.0, 1.0));
-          return hsla.detach();
-        }
-        else if (hasHwb || nr_h) { // hue can be shared!
-          ColorHwbaObj hwba = color->copyAsHWBA();
-          if (nr_h) hwba->h(absmod(h, 360.0));
-          if (nr_wn) hwba->w(clamp(wn, 0.0, 100.0));
-          if (nr_bn) hwba->b(clamp(bn, 0.0, 100.0));
-          if (nr_a) hwba->a(clamp(a, 0.0, 1.0));
-          return hwba.detach();
-        }
-        else if (nr_a) {
-          ColorObj copy = SASS_MEMORY_COPY(color);
-          if (nr_a) copy->a(clamp(a, 0.0, 1.0));
-          return copy.detach();
-        }
-        return arguments[0];
-      }
-
-      static BUILT_IN_FN(scale)
-      {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        ArgumentList* argumentList = arguments[1]
-          ->assertArgumentList(compiler, "kwargs");
-        if (!argumentList->empty()) {
-          SourceSpan span(color->pstate());
-          CallStackFrame frame(compiler, BackTrace(
-            span, Strings::scaleColor));
-          throw Exception::RuntimeException(compiler,
-            "Only one positional argument is allowed. All "
-            "other arguments must be passed by name.");
-        }
-
-        // ToDo: solve without erase ...
-        ValueFlatMap* keywords(argumentList->keywords());
-
-        Number* nr_r = getKwdNumber(keywords, key_red, compiler);
-        Number* nr_g = getKwdNumber(keywords, key_green, compiler);
-        Number* nr_b = getKwdNumber(keywords, key_blue, compiler);
-        Number* nr_s = getKwdNumber(keywords, key_saturation, compiler);
-        Number* nr_l = getKwdNumber(keywords, key_lightness, compiler);
-        Number* nr_wn = getKwdNumber(keywords, key_whiteness, compiler);
-        Number* nr_bn = getKwdNumber(keywords, key_blackness, compiler);
-        Number* nr_a = getKwdNumber(keywords, key_alpha, compiler);
-
-        double r = nr_r ? nr_r->assertHasUnits(compiler, Strings::percent, Strings::red)->assertRange(-100.0, 100.0, nr_r, compiler, Strings::red) / 100.0 : 0.0;
-        double g = nr_g ? nr_g->assertHasUnits(compiler, Strings::percent, Strings::green)->assertRange(-100.0, 100.0, nr_g, compiler, Strings::green) / 100.0 : 0.0;
-        double b = nr_b ? nr_b->assertHasUnits(compiler, Strings::percent, Strings::blue)->assertRange(-100.0, 100.0, nr_b, compiler, Strings::blue) / 100.0 : 0.0;
-        double s = nr_s ? nr_s->assertHasUnits(compiler, Strings::percent, Strings::saturation)->assertRange(-100.0, 100.0, nr_s, compiler, Strings::saturation) / 100.0 : 0.0;
-        double l = nr_l ? nr_l->assertHasUnits(compiler, Strings::percent, Strings::lightness)->assertRange(-100.0, 100.0, nr_l, compiler, Strings::lightness) / 100.0 : 0.0;
-        double wn = nr_wn ? nr_wn->assertHasUnits(compiler, Strings::percent, Strings::whiteness)->assertRange(-100.0, 100.0, nr_wn, compiler, Strings::whiteness) / 100.0 : 0.0;
-        double bn = nr_bn ? nr_bn->assertHasUnits(compiler, Strings::percent, Strings::blackness)->assertRange(-100.0, 100.0, nr_bn, compiler, Strings::blackness) / 100.0 : 0.0;
-        double a = nr_a ? nr_a->assertHasUnits(compiler, Strings::percent, Strings::alpha)->assertRange(-100.0, 100.0, nr_a, compiler, Strings::alpha) / 100.0 : 0.0;
-
-        if (keywords && !keywords->empty()) {
-          throw Exception::UnknownNamedArgument(compiler, keywords);
-        }
-
-        bool hasRgb = nr_r || nr_g || nr_b;
-        bool hasHsl = nr_s || nr_l;
-        bool hasHwb = nr_wn || nr_bn;
-
-        if (hasRgb && hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL", "HWB" });
-        else if (hasRgb && hasHsl) throw Exception::MixedParamGroups(compiler, "RGB", { "HSL" });
-        else if (hasRgb && hasHwb) throw Exception::MixedParamGroups(compiler, "RGB", { "HWB" });
-        else if (hasHsl && hasHwb) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
-        else if (hasHwb && hasHsl) throw Exception::MixedParamGroups(compiler, "HSL", { "HWB" });
-
-        if (hasRgb) {
-          ColorRgbaObj rgba = color->copyAsRGBA();
-          if (nr_r) rgba->r(scaleValue(rgba->r(), r, 255.0));
-          if (nr_g) rgba->g(scaleValue(rgba->g(), g, 255.0));
-          if (nr_b) rgba->b(scaleValue(rgba->b(), b, 255.0));
-          if (nr_a) rgba->a(scaleValue(rgba->a(), a, 1.0));
-          return rgba.detach();
-        }
-        else if (hasHsl) {
-          ColorHslaObj hsla = color->copyAsHSLA();
-          if (nr_s) hsla->s(scaleValue(hsla->s(), s, 100.0));
-          if (nr_l) hsla->l(scaleValue(hsla->l(), l, 100.0));
-          if (nr_a) hsla->a(scaleValue(hsla->a(), a, 1.0));
-          return hsla.detach();
-        }
-        else if (hasHwb) { // hue can be shared!
-          ColorHwbaObj hwba = color->copyAsHWBA();
-          if (nr_wn) hwba->w(scaleValue(hwba->w(), wn, 100.0));
-          if (nr_bn) hwba->b(scaleValue(hwba->b(), bn, 100.0));
-          if (nr_a) hwba->a(scaleValue(hwba->a(), a, 1.0));
-          return hwba.detach();
-        }
-        else if (nr_a) {
-          ColorObj copy = SASS_MEMORY_COPY(color);
-          if (nr_a) copy->a(scaleValue(copy->a(), a, 1.0));
-          return copy.detach();
-        }
-        return arguments[0];
-      }
-
-      static BUILT_IN_FN(mix)
-      {
-        const Color* color1 = arguments[0]->assertColor(compiler, "color1");
-        const Color* color2 = arguments[1]->assertColor(compiler, "color2");
-        const Number* weight = arguments[2]->assertNumber(compiler, "weight");
-        weight->checkPercent(compiler, Strings::weight);
-        return mixColors(color1, color2, weight, pstate, compiler);
-      }
+      // static BUILT_IN_FN(mix)
+      // {
+      //   const Color* color1 = arguments[0]->assertColor(compiler, "color1");
+      //   const Color* color2 = arguments[1]->assertColor(compiler, "color2");
+      //   const Number* weight = arguments[2]->assertNumber(compiler, "weight");
+      //   weight->checkPercent(compiler, Strings::weight);
+      //   return mixColors(color1, color2, weight, pstate, compiler);
+      // }
 
       /*******************************************************************/
 
@@ -2546,12 +2544,12 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         uint32_t idx_hwb_strict = ctx.createBuiltInOverloadFns(key_hwb, {
           std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", fnHwb4arg),
           // std::make_pair("$hue, $whiteness, $blackness", fnHwb3arg),
-          // std::make_pair("$color, $alpha", fnHwb2arg),
+          std::make_pair("$color, $alpha", fnHwb2arg),
           std::make_pair("$channels", fnHwb1arg),
         });
 
         uint32_t idx_hwb_loose = ctx.createBuiltInOverloadFns(key_hwb, {
-          std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", hwb4arg),
+          // std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", hwb4arg),
           // std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
           // std::make_pair("$color, $alpha", hwb2arg),
           std::make_pair("$channels", hwb1arg),
@@ -2590,46 +2588,46 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         uint32_t idx_red = ctx.createBuiltInFunction(key_red, "$color", red);
         uint32_t idx_green = ctx.createBuiltInFunction(key_green, "$color", green);
         uint32_t idx_blue = ctx.createBuiltInFunction(key_blue, "$color", blue);
-        uint32_t idx_hue = ctx.createBuiltInFunction(key_hue, "$color", hue);
-        uint32_t idx_lightness = ctx.createBuiltInFunction(key_lightness, "$color", lightness);
-        uint32_t idx_saturation = ctx.createBuiltInFunction(key_saturation, "$color", saturation);
-        uint32_t idx_blackness = ctx.createBuiltInFunction(key_blackness, "$color", blackness);
-        uint32_t idx_whiteness = ctx.createBuiltInFunction(key_whiteness, "$color", whiteness);
-        uint32_t idx_invert_strict = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", fnInvert);
-        uint32_t idx_invert_loose = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
-        uint32_t idx_grayscale_strict = ctx.createBuiltInFunction(key_grayscale, "$color", noGrayscale);
-        uint32_t idx_grayscale_loose = ctx.createBuiltInFunction(key_grayscale, "$color", grayscale);
-        uint32_t idx_complement = ctx.createBuiltInFunction(key_complement, "$color", complement);
-        uint32_t idx_desaturate_strict = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", noDesaturate);
-        uint32_t idx_desaturate_loose = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
-        uint32_t idx_saturate_strict = ctx.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate);
-        uint32_t idx_saturate_loose = ctx.createBuiltInOverloadFns(key_saturate, {
-          std::make_pair("$amount", saturate1arg),
-          std::make_pair("$color, $amount", saturate2arg),
-          });
-        uint32_t idx_lighten_strict = ctx.createBuiltInFunction(key_lighten, "$color, $amount", noLighten);
-        uint32_t idx_lighten_loose = ctx.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
-        uint32_t idx_darken_strict = ctx.createBuiltInFunction(key_darken, "$color, $amount", noDarken);
-        uint32_t idx_darken_loose = ctx.createBuiltInFunction(key_darken, "$color, $amount", darken);
-        uint32_t idx_adjust_hue_strict = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue);
-        uint32_t idx_adjust_hue_loose = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
-        uint32_t idx_adjust = ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust);
-        uint32_t idx_change = ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
-        uint32_t idx_scale = ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale);
-        uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix);
+        // uint32_t idx_hue = ctx.createBuiltInFunction(key_hue, "$color", hue);
+        // uint32_t idx_lightness = ctx.createBuiltInFunction(key_lightness, "$color", lightness);
+        // uint32_t idx_saturation = ctx.createBuiltInFunction(key_saturation, "$color", saturation);
+        // uint32_t idx_blackness = ctx.createBuiltInFunction(key_blackness, "$color", blackness);
+        // uint32_t idx_whiteness = ctx.createBuiltInFunction(key_whiteness, "$color", whiteness);
+        // uint32_t idx_invert_strict = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", fnInvert);
+        // uint32_t idx_invert_loose = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
+        // uint32_t idx_grayscale_strict = ctx.createBuiltInFunction(key_grayscale, "$color", noGrayscale);
+        // uint32_t idx_grayscale_loose = ctx.createBuiltInFunction(key_grayscale, "$color", grayscale);
+        // uint32_t idx_complement = ctx.createBuiltInFunction(key_complement, "$color", complement);
+        // uint32_t idx_desaturate_strict = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", noDesaturate);
+        // uint32_t idx_desaturate_loose = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
+        // uint32_t idx_saturate_strict = ctx.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate);
+        // uint32_t idx_saturate_loose = ctx.createBuiltInOverloadFns(key_saturate, {
+        //   std::make_pair("$amount", saturate1arg),
+        //   std::make_pair("$color, $amount", saturate2arg),
+        //   });
+        // uint32_t idx_lighten_strict = ctx.createBuiltInFunction(key_lighten, "$color, $amount", noLighten);
+        // uint32_t idx_lighten_loose = ctx.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
+        // uint32_t idx_darken_strict = ctx.createBuiltInFunction(key_darken, "$color, $amount", noDarken);
+        // uint32_t idx_darken_loose = ctx.createBuiltInFunction(key_darken, "$color, $amount", darken);
+        // uint32_t idx_adjust_hue_strict = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue);
+        // uint32_t idx_adjust_hue_loose = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
+        // uint32_t idx_adjust = ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust);
+        // uint32_t idx_change = ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
+        // uint32_t idx_scale = ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale);
+        // uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix);
 
 
         uint32_t idx_to_gamut = ctx.createBuiltInFunction(key_to_gamut, "$color, $space, $method", toGamut);
 
         uint32_t idx_opacify_strict = ctx.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify);
-        uint32_t idx_opacify_loose = ctx.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
+        // uint32_t idx_opacify_loose = ctx.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
         uint32_t idx_fade_in_strict = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", noFadeIn);
-        uint32_t idx_fade_in_loose = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", opacify);
+        // uint32_t idx_fade_in_loose = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", opacify);
         uint32_t idx_fade_out_strict = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", noFadeOut);
-        uint32_t idx_fade_out_loose = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
+        // uint32_t idx_fade_out_loose = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
         uint32_t idx_transparentize_strict = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", noTansparentize);
-        uint32_t idx_transparentize_loose = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
-        uint32_t idx_ie_hex_str = ctx.createBuiltInFunction(key_ie_hex_str, "$color", ieHexStr);
+        // uint32_t idx_transparentize_loose = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
+        // uint32_t idx_ie_hex_str = ctx.createBuiltInFunction(key_ie_hex_str, "$color", ieHexStr);
         uint32_t idx_alpha = ctx.createBuiltInOverloadFns(key_alpha, {
           // This does not give deprecations
           std::make_pair("$color", alphaOne),
@@ -2653,31 +2651,31 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         ctx.exposeFunction(key_space, idx_space);
         ctx.exposeFunction(key_color, idx_color);
         ctx.exposeFunction(key_red, idx_red);
-        ctx.exposeFunction(key_green, idx_green);
-        ctx.exposeFunction(key_blue, idx_blue);
-        ctx.exposeFunction(key_hue, idx_hue);
-        ctx.exposeFunction(key_lightness, idx_lightness);
-        ctx.exposeFunction(key_saturation, idx_saturation);
-        ctx.exposeFunction(key_blackness, idx_blackness);
-        ctx.exposeFunction(key_whiteness, idx_whiteness);
-        ctx.exposeFunction(key_invert, idx_invert_loose);
-        ctx.exposeFunction(key_grayscale, idx_grayscale_loose);
-        ctx.exposeFunction(key_complement, idx_complement);
-        ctx.exposeFunction(key_desaturate, idx_desaturate_loose);
-        ctx.exposeFunction(key_saturate, idx_saturate_loose);
-        ctx.exposeFunction(key_lighten, idx_lighten_loose);
-        ctx.exposeFunction(key_darken, idx_darken_loose);
-        ctx.exposeFunction(key_adjust_hue, idx_adjust_hue_loose);
-        ctx.exposeFunction(key_adjust_color, idx_adjust);
-        ctx.exposeFunction(key_change_color, idx_change);
-        ctx.exposeFunction(key_scale_color, idx_scale);
-        ctx.exposeFunction(key_mix, idx_mix);
-        // ctx.exposeFunction(key_to_gamut, idx_to_gamut);
-        ctx.exposeFunction(key_opacify, idx_opacify_loose);
-        ctx.exposeFunction(key_fade_in, idx_fade_in_loose);
-        ctx.exposeFunction(key_fade_out, idx_fade_out_loose);
-        ctx.exposeFunction(key_transparentize, idx_transparentize_loose);
-        ctx.exposeFunction(key_ie_hex_str, idx_ie_hex_str);
+        // ctx.exposeFunction(key_green, idx_green);
+        // ctx.exposeFunction(key_blue, idx_blue);
+        // ctx.exposeFunction(key_hue, idx_hue);
+        // ctx.exposeFunction(key_lightness, idx_lightness);
+        // ctx.exposeFunction(key_saturation, idx_saturation);
+        // ctx.exposeFunction(key_blackness, idx_blackness);
+        // ctx.exposeFunction(key_whiteness, idx_whiteness);
+        // ctx.exposeFunction(key_invert, idx_invert_loose);
+        // ctx.exposeFunction(key_grayscale, idx_grayscale_loose);
+        // ctx.exposeFunction(key_complement, idx_complement);
+        // ctx.exposeFunction(key_desaturate, idx_desaturate_loose);
+        // ctx.exposeFunction(key_saturate, idx_saturate_loose);
+        // ctx.exposeFunction(key_lighten, idx_lighten_loose);
+        // ctx.exposeFunction(key_darken, idx_darken_loose);
+        // ctx.exposeFunction(key_adjust_hue, idx_adjust_hue_loose);
+        // ctx.exposeFunction(key_adjust_color, idx_adjust);
+        // ctx.exposeFunction(key_change_color, idx_change);
+        // ctx.exposeFunction(key_scale_color, idx_scale);
+        // ctx.exposeFunction(key_mix, idx_mix);
+        // // ctx.exposeFunction(key_to_gamut, idx_to_gamut);
+        // ctx.exposeFunction(key_opacify, idx_opacify_loose);
+        // ctx.exposeFunction(key_fade_in, idx_fade_in_loose);
+        // ctx.exposeFunction(key_fade_out, idx_fade_out_loose);
+        // ctx.exposeFunction(key_transparentize, idx_transparentize_loose);
+        // ctx.exposeFunction(key_ie_hex_str, idx_ie_hex_str);
         ctx.exposeFunction(key_alpha, idx_alpha);
         ctx.exposeFunction(key_opacity, idx_opacity_loose);
 
@@ -2707,29 +2705,29 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         module.addFunction(key_red, idx_red);
         module.addFunction(key_green, idx_green);
         module.addFunction(key_blue, idx_blue);
-        module.addFunction(key_hue, idx_hue);
-        module.addFunction(key_lightness, idx_lightness);
-        module.addFunction(key_saturation, idx_saturation);
-        module.addFunction(key_blackness, idx_blackness);
-        module.addFunction(key_whiteness, idx_whiteness);
-        module.addFunction(key_invert, idx_invert_strict);
-        module.addFunction(key_grayscale, idx_grayscale_strict);
-        module.addFunction(key_complement, idx_complement);
-        module.addFunction(key_desaturate, idx_desaturate_strict);
-        module.addFunction(key_saturate, idx_saturate_strict);
-        module.addFunction(key_lighten, idx_lighten_strict);
-        module.addFunction(key_darken, idx_darken_strict);
-        module.addFunction(key_adjust_hue, idx_adjust_hue_strict);
-        module.addFunction(key_adjust, idx_adjust);
-        module.addFunction(key_change, idx_change);
-        module.addFunction(key_scale, idx_scale);
-        module.addFunction(key_mix, idx_mix);
+        // module.addFunction(key_hue, idx_hue);
+        // module.addFunction(key_lightness, idx_lightness);
+        // module.addFunction(key_saturation, idx_saturation);
+        // module.addFunction(key_blackness, idx_blackness);
+        // module.addFunction(key_whiteness, idx_whiteness);
+        // module.addFunction(key_invert, idx_invert_strict);
+        // module.addFunction(key_grayscale, idx_grayscale_strict);
+        // module.addFunction(key_complement, idx_complement);
+        // module.addFunction(key_desaturate, idx_desaturate_strict);
+        // module.addFunction(key_saturate, idx_saturate_strict);
+        // module.addFunction(key_lighten, idx_lighten_strict);
+        // module.addFunction(key_darken, idx_darken_strict);
+        // module.addFunction(key_adjust_hue, idx_adjust_hue_strict);
+        // module.addFunction(key_adjust, idx_adjust);
+        // module.addFunction(key_change, idx_change);
+        // module.addFunction(key_scale, idx_scale);
+        // module.addFunction(key_mix, idx_mix);
         module.addFunction(key_to_gamut, idx_to_gamut);
         module.addFunction(key_opacify, idx_opacify_strict);
         module.addFunction(key_fade_in, idx_fade_in_strict);
         module.addFunction(key_fade_out, idx_fade_out_strict);
         module.addFunction(key_transparentize, idx_transparentize_strict);
-        module.addFunction(key_ie_hex_str, idx_ie_hex_str);
+        // module.addFunction(key_ie_hex_str, idx_ie_hex_str);
         module.addFunction(key_alpha, idx_alpha);
         module.addFunction(key_opacity, idx_opacity_strict);
 
@@ -2738,7 +2736,6 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
     }
 
     /*******************************************************************/
-
 
     Value* rgbFn2(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
@@ -2807,92 +2804,148 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       return _colorFromChannels(logger, pstate,
         &ColorSpace::rgb, r, g, b, a, true, true);
-
-      // return SASS_MEMORY_NEW(ColorRgba, pstate,
-      //   fuzzyRound(_percentageOrUnitless(r, 255, "$red", logger), logger.epsilon),
-      //   fuzzyRound(_percentageOrUnitless(g, 255, "$green", logger), logger.epsilon),
-      //   fuzzyRound(_percentageOrUnitless(b, 255, "$blue", logger), logger.epsilon),
-      //   _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
-
     }
-
-
 
     /*******************************************************************/
 
-    Value* hwbFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    Value* hslFn2(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
-      Value* _h = arguments[0];
-      Value* _w = arguments[1];
+
+      Value* _r = arguments[0];
+      Value* _g = arguments[1];
       Value* _b = arguments[2];
       Value* _a = nullptr;
       if (arguments.size() > 3) {
         _a = arguments[3];
       }
       // Check if any `calc()` or `var()` are passed
-      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_w) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
+      if (!strict && (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
         sass::sstream fncall;
         fncall << name << "(";
-        fncall << _h->inspect() << ", ";
-        fncall << _w->inspect() << ", ";
+        fncall << _r->inspect() << ", ";
+        fncall << _g->inspect() << ", ";
         fncall << _b->inspect();
         if (_a) { fncall << ", " << _a->inspect(); }
         fncall << ")";
         return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }
 
-      Number* h = _h->assertNumber(logger, Strings::hue);
-      Number* w = _w->assertNumber(logger, Strings::whiteness)
-        ->assertHasUnits(logger, "%", Strings::whiteness);
-      Number* b = _b->assertNumber(logger, Strings::blackness)
-        ->assertHasUnits(logger, "%", Strings::blackness);
+      Number* r = _r->assertNumber(logger, Strings::hue);
+      Number* g = _g->assertNumber(logger, Strings::saturation);
+      Number* b = _b->assertNumber(logger, Strings::lightness);
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
-      checkAngle(logger, h, Strings::hue);
-      return SASS_MEMORY_NEW(ColorHwba, pstate,
-        coerceToDeg(h),
-        w->assertRange(0.0, 100.0, w, logger, Strings::whiteness),
-        b->assertRange(0.0, 100.0, b, logger, Strings::blackness),
-        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true);
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::hsl,
+        fuzzyRound(_percentageOrUnitless(r, 255, "$hue", logger), logger.epsilon),
+        fuzzyRound(_percentageOrUnitless(g, 255, "$saturation", logger), logger.epsilon),
+        fuzzyRound(_percentageOrUnitless(b, 255, "$lightness", logger), logger.epsilon),
+        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
 
     }
 
-    /*******************************************************************/
-
     Value* hslFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
-      Value* _h = arguments[0];
-      Value* _s = arguments[1];
-      Value* _l = arguments[2];
+      Value* _r = arguments[0];
+      Value* _g = arguments[1];
+      Value* _b = arguments[2];
       Value* _a = nullptr;
       if (arguments.size() > 3) {
         _a = arguments[3];
       }
       // Check if any `calc()` or `var()` are passed
-      if (!strict && (isSpecialNumber(_h) || isSpecialNumber(_s) || isSpecialNumber(_l) || isSpecialNumber(_a))) {
+      if (!strict && (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
         sass::sstream fncall;
         fncall << name << "(";
-        fncall << _h->inspect() << ", ";
-        fncall << _s->inspect() << ", ";
-        fncall << _l->inspect();
+        fncall << _r->inspect() << ", ";
+        fncall << _g->inspect() << ", ";
+        fncall << _b->inspect();
         if (_a) { fncall << ", " << _a->inspect(); }
         fncall << ")";
         return SASS_MEMORY_NEW(String, pstate, fncall.str());
       }
 
-      Number* h = _h->assertNumber(logger, Strings::hue);
-      Number* s = _s->assertNumber(logger, Strings::saturation);
-      Number* l = _l->assertNumber(logger, Strings::lightness);
+      Number* r = _r->assertNumber(logger, Strings::hue);
+      Number* g = _g->assertNumber(logger, Strings::saturation);
+      Number* b = _b->assertNumber(logger, Strings::lightness);
+
+      Number* a_nr = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+      double a_val = _a ? _percentageOrUnitless(a_nr, 1.0, "$alpha", logger) : 1.0;
+      a_val = std::isnan(a_val) ? 0.0 : std::max(0.0, std::min(1.0, a_val));
+      tl::optional<double> a = a_val;
+
+      return _colorFromChannels(logger, pstate,
+        &ColorSpace::hsl, r, g, b, a, true, true);
+    }
+
+    /*******************************************************************/
+
+    Value* hwbFn2(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    {
+
+      Value* _r = arguments[0];
+      Value* _g = arguments[1];
+      Value* _b = arguments[2];
+      Value* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (!strict && (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        fncall << _r->inspect() << ", ";
+        fncall << _g->inspect() << ", ";
+        fncall << _b->inspect();
+        if (_a) { fncall << ", " << _a->inspect(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(String, pstate, fncall.str());
+      }
+
+      Number* r = _r->assertNumber(logger, Strings::hue);
+      Number* g = _g->assertNumber(logger, Strings::whiteness);
+      Number* b = _b->assertNumber(logger, Strings::blackness);
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
-      checkAngle(logger, h, Strings::hue);
-      s->checkPercent(logger, Strings::saturation);
-      l->checkPercent(logger, Strings::lightness);
-      return SASS_MEMORY_NEW(ColorHsla, pstate,
-        coerceToDeg(h),
-        clamp(s->value(), 0.0, 100.0),
-        clamp(l->value(), 0.0, 100.0),
-        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true);
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::hwb,
+        fuzzyRound(_percentageOrUnitless(r, 255, "$hue", logger), logger.epsilon),
+        fuzzyRound(_percentageOrUnitless(g, 255, "$whiteness", logger), logger.epsilon),
+        fuzzyRound(_percentageOrUnitless(b, 255, "$blackness", logger), logger.epsilon),
+        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
+
+    }
+
+    Value* hwbFn(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    {
+      Value* _r = arguments[0];
+      Value* _g = arguments[1];
+      Value* _b = arguments[2];
+      Value* _a = nullptr;
+      if (arguments.size() > 3) {
+        _a = arguments[3];
+      }
+      // Check if any `calc()` or `var()` are passed
+      if (!strict && (isSpecialNumber(_r) || isSpecialNumber(_g) || isSpecialNumber(_b) || isSpecialNumber(_a))) {
+        sass::sstream fncall;
+        fncall << name << "(";
+        fncall << _r->inspect() << ", ";
+        fncall << _g->inspect() << ", ";
+        fncall << _b->inspect();
+        if (_a) { fncall << ", " << _a->inspect(); }
+        fncall << ")";
+        return SASS_MEMORY_NEW(String, pstate, fncall.str());
+      }
+
+      Number* r = _r->assertNumber(logger, Strings::hue);
+      Number* g = _g->assertNumber(logger, Strings::whiteness);
+      Number* b = _b->assertNumber(logger, Strings::blackness);
+
+      Number* a_nr = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
+      double a_val = _a ? _percentageOrUnitless(a_nr, 1.0, "$alpha", logger) : 1.0;
+      a_val = std::isnan(a_val) ? 0.0 : std::max(0.0, std::min(1.0, a_val));
+      tl::optional<double> a = a_val;
+
+      return _colorFromChannels(logger, pstate,
+        &ColorSpace::hwb, r, g, b, a, true, true);
     }
 
     /*******************************************************************/

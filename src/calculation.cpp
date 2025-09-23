@@ -816,7 +816,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
 
     Value* execute(Logger& logger, const SourceSpan& pstate,
-      CFN fn, const ValueVector& args)
+      CFN fn, const ValueVector& args, bool global)
     {
       switch (fn) {
       case CFN::SQRT: return calc_sqrt(logger, pstate, args);

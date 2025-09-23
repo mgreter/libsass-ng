@@ -31,7 +31,7 @@ extern "C" {
   static Number* getNumber(struct SassValue* value) { return Value::unwrap(value).isaNumber(); }
   static String* getString(struct SassValue* value) { return Value::unwrap(value).isaString(); }
   static Boolean* getBoolean(struct SassValue* value) { return Value::unwrap(value).isaBoolean(); }
-  static ColorRgba* getTerm(struct SassValue* value) { return Value::unwrap(value).isaColorRgba(); }
+  // static ColorRgba* getTerm(struct SassValue* value) { return Value::unwrap(value).isaColorRgba(); }
   static CustomError* getError(struct SassValue* value) { return Value::unwrap(value).isaCustomError(); }
   static CustomWarning* getWarning(struct SassValue* value) { return Value::unwrap(value).isaCustomWarning(); }
 
@@ -50,7 +50,7 @@ extern "C" {
   bool ADDCALL sass_value_is_number(struct SassValue* value) { return getNumber(value) != nullptr; }
   bool ADDCALL sass_value_is_string(struct SassValue* value) { return getString(value) != nullptr; }
   bool ADDCALL sass_value_is_boolean(struct SassValue* value) { return getBoolean(value) != nullptr; }
-  bool ADDCALL sass_value_is_color(struct SassValue* value) { return getTerm(value) != nullptr; }
+  bool ADDCALL sass_value_is_color(struct SassValue* value) { return false; }
   bool ADDCALL sass_value_is_list(struct SassValue* value) { return getList(value) != nullptr; }
   bool ADDCALL sass_value_is_map(struct SassValue* value) { return getMap(value) != nullptr; }
   bool ADDCALL sass_value_is_error(struct SassValue* value) { return getError(value) != nullptr; }
@@ -89,14 +89,14 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   // Getters and setters for Sass_Color (UB if `sass_value_is_color` is false)
-  double ADDCALL sass_color_get_r(struct SassValue* color) { return getTerm(color)->r(); }
-  void ADDCALL sass_color_set_r(struct SassValue* color, double r) { getTerm(color)->r(r); }
-  double ADDCALL sass_color_get_g(struct SassValue* color) { return getTerm(color)->g(); }
-  void ADDCALL sass_color_set_g(struct SassValue* color, double g) { getTerm(color)->g(g); }
-  double ADDCALL sass_color_get_b(struct SassValue* color) { return getTerm(color)->b(); }
-  void ADDCALL sass_color_set_b(struct SassValue* color, double b) { getTerm(color)->b(b); }
-  double ADDCALL sass_color_get_a(struct SassValue* color) { return getTerm(color)->a(); }
-  void ADDCALL sass_color_set_a(struct SassValue* color, double a) { getTerm(color)->a(a); }
+  double ADDCALL sass_color_get_r(struct SassValue* color) { return 1.0; }
+  void ADDCALL sass_color_set_r(struct SassValue* color, double r) { }
+  double ADDCALL sass_color_get_g(struct SassValue* color) { return 1.0; }
+  void ADDCALL sass_color_set_g(struct SassValue* color, double g) { }
+  double ADDCALL sass_color_get_b(struct SassValue* color) { return 1.0; }
+  void ADDCALL sass_color_set_b(struct SassValue* color, double b) { }
+  double ADDCALL sass_color_get_a(struct SassValue* color) { return 1.0; }
+  void ADDCALL sass_color_set_a(struct SassValue* color, double a) { }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -202,8 +202,9 @@ extern "C" {
 
   struct SassValue* ADDCALL sass_make_color(double r, double g, double b, double a)
   {
-    return newSassValue(SASS_MEMORY_NEW(
-      ColorRgba, SourceSpan::internal32("sass://color"), r, g, b, a));
+    return newSassValue(SASS_MEMORY_NEW(Null, SourceSpan::internal32("sass://color")));
+    // return newSassValue(SASS_MEMORY_NEW(
+    //   ColorSpaced, SourceSpan::internal32("sass://color"), r, g, b, a));
   }
 
   struct SassValue* ADDCALL sass_make_string(const char* value, bool is_quoted)

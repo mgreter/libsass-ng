@@ -31,6 +31,13 @@ namespace Sass {
       Logger& logger,
       bool strict = false);
 
+    Value* hslFn2(
+      const sass::string& name,
+      const ValueVector& arguments,
+      const SourceSpan& pstate,
+      Logger& logger,
+      bool strict = false);
+
     Value* hslFn(
       const sass::string& name,
       const ValueVector& arguments,
@@ -38,35 +45,14 @@ namespace Sass {
       Logger& logger,
       bool strict = false);
 
+    Value* hwbFn2(
+      const sass::string& name,
+      const ValueVector& arguments,
+      const SourceSpan& pstate,
+      Logger& logger,
+      bool strict = false);
+
     Value* hwbFn(
-      const sass::string& name,
-      const ValueVector& arguments,
-      const SourceSpan& pstate,
-      Logger& logger,
-      bool strict = false);
-
-    Value* okLabFn(
-      const sass::string& name,
-      const ValueVector& arguments,
-      const SourceSpan& pstate,
-      Logger& logger,
-      bool strict = false);
-
-    Value* okLchFn(
-      const sass::string& name,
-      const ValueVector& arguments,
-      const SourceSpan& pstate,
-      Logger& logger,
-      bool strict = false);
-
-    Value* labFn(
-      const sass::string& name,
-      const ValueVector& arguments,
-      const SourceSpan& pstate,
-      Logger& logger,
-      bool strict = false);
-
-    Value* lchFn(
       const sass::string& name,
       const ValueVector& arguments,
       const SourceSpan& pstate,

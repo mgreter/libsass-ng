@@ -167,15 +167,6 @@ namespace Sass {
     // Copy constructor
     Color(const Color* ptr);
 
-    // Convert and copy only if necessary
-    virtual ColorRgba* toRGBA() const = 0;
-    virtual ColorHsla* toHSLA() const = 0;
-    virtual ColorHwba* toHWBA() const = 0;
-    // Convert if necessary and return a copy
-    virtual ColorRgba* copyAsRGBA() const = 0;
-    virtual ColorHsla* copyAsHSLA() const = 0;
-    virtual ColorHwba* copyAsHWBA() const = 0;
-
     // Implement interface for base Value class
     virtual size_t hash() const override = 0;
     SassValueType getTag() const override final { return SASS_COLOR; }

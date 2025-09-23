@@ -416,24 +416,24 @@ namespace Sass {
   // Implement the execute dispatch to evaluator
   /////////////////////////////////////////////////////////////////////////
 
-  Value* BuiltInCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
+  Value* BuiltInCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global)
   {
-    return eval.execute(this, arguments, pstate);
+    return eval.execute(this, arguments, pstate, global);
   }
 
-  Value* BuiltInCallables::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
+  Value* BuiltInCallables::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global)
   {
-    return eval.execute(this, arguments, pstate);
+    return eval.execute(this, arguments, pstate, global);
   }
 
-  Value* UserDefinedCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
+  Value* UserDefinedCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global)
   {
-    return eval.execute(this, arguments, pstate);
+    return eval.execute(this, arguments, pstate, global);
   }
 
-  Value* ExternalCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
+  Value* ExternalCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global)
   {
-    return eval.execute(this, arguments, pstate);
+    return eval.execute(this, arguments, pstate, global);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -445,7 +445,7 @@ namespace Sass {
   {
   }
 
-  Value* PlainCssCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate)
+  Value* PlainCssCallable::execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global)
   {
 
     if (arguments->hasNamed() || arguments->kwdRest() != nullptr) {

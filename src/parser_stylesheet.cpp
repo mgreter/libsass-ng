@@ -329,7 +329,7 @@ namespace Sass {
       start, readStyleRule.ptr(), local.idxs);
 
     if (isIndented() && styles->empty()) {
-      compiler.addWarning(itpl ? itpl->pstate() : SourceSpan{}, Logger::WARN_EMPTY_SELECTOR,
+      compiler.addWarning(itpl ? itpl->pstate() : styles->pstate(), Logger::WARN_EMPTY_SELECTOR,
         []() { return "This selector doesn't have any properties and won't be rendered."; });
     }
 

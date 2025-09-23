@@ -1254,20 +1254,20 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << " (" << pstate_source_position(node) << ")";
     std::cerr << " [" << expression->value() << "]" << std::endl;
   }
-  else if (Cast<ColorRgba>(node)) {
-    ColorRgba* expression = Cast<ColorRgba>(node);
-    std::cerr << ind << "Color " << expression;
-    std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [name: " << expression->disp() << "] ";
-    std::cerr << " rgba[" << expression->r() << ":" << expression->g() << ":" << expression->b() << "@" << expression->a() << "]" << std::endl;
-  }
-  else if (Cast<ColorHsla>(node)) {
-    ColorHsla* expression = Cast<ColorHsla>(node);
-    std::cerr << ind << "Color " << expression;
-    std::cerr << " (" << pstate_source_position(node) << ")";
-    std::cerr << " [name: " << expression->disp() << "] ";
-    std::cerr << " hsla[" << expression->h() << ":" << expression->s() << ":" << expression->l() << "@" << expression->a() << "]" << std::endl;
-  }
+  // else if (Cast<ColorRgba>(node)) {
+  //   ColorRgba* expression = Cast<ColorRgba>(node);
+  //   std::cerr << ind << "Color " << expression;
+  //   std::cerr << " (" << pstate_source_position(node) << ")";
+  //   std::cerr << " [name: " << expression->disp() << "] ";
+  //   std::cerr << " rgba[" << expression->r() << ":" << expression->g() << ":" << expression->b() << "@" << expression->a() << "]" << std::endl;
+  // }
+  // else if (Cast<ColorHsla>(node)) {
+  //   ColorHsla* expression = Cast<ColorHsla>(node);
+  //   std::cerr << ind << "Color " << expression;
+  //   std::cerr << " (" << pstate_source_position(node) << ")";
+  //   std::cerr << " [name: " << expression->disp() << "] ";
+  //   std::cerr << " hsla[" << expression->h() << ":" << expression->s() << ":" << expression->l() << "@" << expression->a() << "]" << std::endl;
+  // }
   else if (Cast<Number>(node)) {
     Number* expression = Cast<Number>(node);
     std::cerr << ind << "Number " << expression;

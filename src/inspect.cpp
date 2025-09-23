@@ -903,7 +903,8 @@ namespace Sass {
   void Inspect::_writeHsl(ColorSpaced* color)
   {
     sass::string ss;
-    ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    ColorSpacedObj rgb = color->toSpace(ColorSpace::hsl, color->pstate());
+    rgb.detach();
     if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
       ss += "hsl(";
       ss += PrintNumber(rgb->channel(str_hue), outopt); ss += ", ";
@@ -923,7 +924,8 @@ namespace Sass {
   void Inspect::_writeHwb(ColorSpaced* color)
   {
     sass::string ss;
-    ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    ColorSpacedObj rgb = color->toSpace(ColorSpace::hwb, color->pstate());
+    rgb.detach();
     if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
       ss += "hwb(";
       ss += PrintNumber(rgb->channel(str_hue), outopt); ss += ", ";
@@ -944,6 +946,7 @@ namespace Sass {
   {
     sass::string ss;
     ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    rgb.detach();
     if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {
       ss += "rgb(";
       ss += PrintNumber(rgb->channel(str_red), outopt); ss += ", ";
@@ -962,11 +965,23 @@ namespace Sass {
 
   void Inspect::_writeLegacyColor(ColorSpaced* color)
   {
+
+
     // Check if resulting color is considered fully opaque
     // bool opaque = fuzzyEquals(color->alpha(), 1, outopt.epsilon);
 
     if (outopt.output_style == SASS_STYLE_COMPRESSED) {
       std::cerr << "COMPRESSED OUTPUT\n";
+    }
+
+    // std::cerr << "IS IN GAMUT " << color->isInGamut() << "\n";
+
+    // Out-of-gamut colors can _only_ be represented accurately as HSL, because
+    // only HSL isn't clamped at parse time (except negative saturation which
+    // isn't necessary anyway).
+    if (!color->isInGamut()) { //  && !inspect
+      _writeHsl(color);
+      return;
     }
 
     if (color->space() == ColorSpace::hsl) {
@@ -979,11 +994,11 @@ namespace Sass {
         return;
       }
     }
-    else if (color->parsed() && !color->isaColorHwba()) {
-      std::cerr << "FOOBAR\n";
-    }
+    // else if (color->parsed() && !color->isaColorHwba()) {
+    //   std::cerr << "FOOBAR\n";
+    // }
     else {
-      std::cerr << "BAZ\n";
+      // std::cerr << "BAZ\n";
       _writeRgb(color);
       return;
     }
@@ -1144,153 +1159,6 @@ namespace Sass {
       return;
     }
 
-    if (color->parsed() && !color->isaColorHwba()) { //&& color->a() < 1
-
-      // output the final token
-      // is sass::string faster?
-      sass::sstream ss;
-
-      if (color->disp().empty()) {
-        if (ColorHsla* hsla = color->isaColorHsla()) {
-          if (hsla->a() >= 1) {
-            ss << "hsl(";
-            ss << PrintNumber(hsla->h(), outopt) << ", ";
-            ss << PrintNumber(hsla->s(), outopt) << "%, ";
-            ss << PrintNumber(hsla->l(), outopt) << "%)";
-          }
-          else {
-            ss << "hsla(";
-            ss << PrintNumber(hsla->h(), outopt) << ", ";
-            ss << PrintNumber(hsla->s(), outopt) << "%, ";
-            ss << PrintNumber(hsla->l(), outopt) << "%, ";
-            ss << PrintNumber(clamp<double>(hsla->a(), 0, 1), outopt) << ")";
-          }
-        }
-        else if (ColorRgba* rgba = color->isaColorRgba()) {
-          if (rgba->a() >= 1) {
-            ss << "rgb(";
-            ss << PrintNumber(rgba->r(), outopt) << ", ";
-            ss << PrintNumber(rgba->g(), outopt) << ", ";
-            ss << PrintNumber(rgba->b(), outopt) << ")";
-          }
-          else {
-            ss << "rgba(";
-            ss << PrintNumber(rgba->r(), outopt) << ", ";
-            ss << PrintNumber(rgba->g(), outopt) << ", ";
-            ss << PrintNumber(rgba->b(), outopt) << ", ";
-            ss << PrintNumber(clamp<double>(rgba->a(), 0, 1), outopt) << ")";
-          }
-        }
-        // else if (ColorHwba* hwba = color->isaColorHwba()) {
-        //   auto rgba = hwba->toRGBA();
-        //   if (rgba->a() >= 1) {
-        //     ss << "hwb(";
-        //     ss << round64(rgba->r(), epsilon) << ", ";
-        //     ss << round64(rgba->g(), epsilon) << ", ";
-        //     ss << round64(rgba->b(), epsilon) << ")";
-        //   }
-        //   else {
-        //     ss << "hwba(";
-        //     ss << round64(rgba->r(), epsilon) << ", ";
-        //     ss << round64(rgba->g(), epsilon) << ", ";
-        //     ss << round64(rgba->b(), epsilon) << ", ";
-        //     ss << clamp<double>(rgba->a(), 0, 1) << ")";
-        //   }
-        // }
-        append_token(ss.str(), color);
-      }
-      else {
-        append_token(color->disp(), color);
-      }
-      return;
-
-    }
-
-    ColorRgbaObj c = color->toRGBA();
-
-    // original color name
-    // maybe an unknown token
-    sass::string name = c->disp();
-
-    // resolved color
-    sass::string res_name = name;
-
-    double epsilon = std::pow(0.1, outopt.precision);
-    double r = round64(clamp(c->r(), 0.0, 255.0), epsilon);
-    double g = round64(clamp(c->g(), 0.0, 255.0), epsilon);
-    double b = round64(clamp(c->b(), 0.0, 255.0), epsilon);
-    double a = clamp<double>(c->a(), 0, 1);
-
-    // get color from given name (if one was given at all)
-    if (name != "" && name_to_color(name)) {
-      const ColorSpaced* n = name_to_color(name);
-      r = round64(clamp(n->getChannel0(), 0.0, 255.0), epsilon);
-      g = round64(clamp(n->getChannel1(), 0.0, 255.0), epsilon);
-      b = round64(clamp(n->getChannel2(), 0.0, 255.0), epsilon);
-      a = clamp(n->a(), 0.0, 1.0);
-    }
-    // otherwise get the possible resolved color name
-    else {
-      double numval = r * 0x10000 + g * 0x100 + b;
-      if (color_to_name((int)numval))
-        res_name = color_to_name((int)numval);
-    }
-
-    sass::sstream hexlet;
-    // dart sass compressed all colors in regular css always
-    // ruby sass and libsass does it only when not delayed
-    // since color math is going to be removed, this can go too
-    bool compressed = outopt.output_style == SASS_STYLE_COMPRESSED;
-    hexlet << '#' << std::setw(1) << std::setfill('0');
-    // create a short color hexlet if there is any need for it
-    if (compressed && is_color_doublet(r, g, b) && a >= 1.0) {
-      hexlet << std::hex << std::setw(1) << (static_cast<unsigned long>(r) >> 4);
-      hexlet << std::hex << std::setw(1) << (static_cast<unsigned long>(g) >> 4);
-      hexlet << std::hex << std::setw(1) << (static_cast<unsigned long>(b) >> 4);
-      if (a != 1) hexlet << std::hex << std::setw(1) << (static_cast<unsigned long>(a * 255) >> 4);
-    }
-    else {
-      hexlet << std::hex << std::setw(2) << static_cast<unsigned long>(r);
-      hexlet << std::hex << std::setw(2) << static_cast<unsigned long>(g);
-      hexlet << std::hex << std::setw(2) << static_cast<unsigned long>(b);
-      if (a != 1) hexlet << std::hex << std::setw(2) << (static_cast<unsigned long>(a * 255) >> 4);
-    }
-
-    if (compressed) name = "";
-
-    // output the final token
-    sass::sstream ss;
-
-    // retain the originally specified color definition if unchanged
-    if (name != "") {
-      ss << name;
-    }
-    else if (a >= 1.0) {
-      if (res_name != "") {
-        if (compressed && hexlet.str().size() < res_name.size()) {
-          ss << hexlet.str();
-        }
-        else {
-          ss << res_name;
-        }
-      }
-      else {
-        ss << hexlet.str();
-      }
-    }
-
-    else {
-      ss << "rgba(";
-      ss << PrintNumber(r, outopt) << ",";
-      if (!compressed) ss << " ";
-      ss << PrintNumber(g, outopt) << ",";
-      if (!compressed) ss << " ";
-      ss << PrintNumber(b, outopt) << ",";
-      if (!compressed) ss << " ";
-      ss << PrintNumber(clamp<double>(a, 0, 1), outopt) << ')';
-    }
-
-    append_token(ss.str(), c);
   }
   // EO visitColorRGBA
 
