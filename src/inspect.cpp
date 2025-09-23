@@ -994,6 +994,13 @@ namespace Sass {
         return;
       }
     }
+
+    // Maybe force format to rgb or use original
+    if (!color->disp().empty()) {
+      append_string(color->disp());
+      return;
+    }
+
     // else if (color->parsed() && !color->isaColorHwba()) {
     //   std::cerr << "FOOBAR\n";
     // }
