@@ -240,6 +240,25 @@ namespace Sass {
 
     std::cerr << "  result " << converted->debug() << "\n";
 
+    if (!legacyMissing &&
+      converted->isLegacy() &&
+      (converted->isChannel0Missing() ||
+        converted->isChannel1Missing() ||
+        converted->isChannel2Missing() ||
+        converted->isAlphaMissing()))
+    {
+      std::cerr << "XXX Special case\n";
+      return ColorSpaced::forSpaceInternal(
+        pstate, converted->space(),
+        converted->getChannel0(),
+        converted->getChannel1(),
+        converted->getChannel2(),
+        converted->getAlpha());
+    }
+    else {
+      return converted;
+    }
+
     //return !legacyMissing &&
     //  converted->space().isLegacy() &&
     //  (converted->isChannel0Missing() ||
@@ -266,7 +285,26 @@ namespace Sass {
 
     std::cerr << "  result " << converted->debug() << "\n";
 
-    //return !legacyMissing &&
+    if (!legacyMissing &&
+      converted->isLegacy() &&
+      (converted->isChannel0Missing() ||
+        converted->isChannel1Missing() ||
+        converted->isChannel2Missing() ||
+        converted->isAlphaMissing()))
+    {
+      std::cerr << "XXX Special case\n";
+      return ColorSpaced::forSpaceInternal(
+        pstate, converted->space(),
+        converted->getChannel0(),
+        converted->getChannel1(),
+        converted->getChannel2(),
+        converted->getAlpha());
+    }
+    else {
+      return converted;
+    }
+
+      //return !legacyMissing &&
     //  converted->space().isLegacy() &&
     //  (converted->isChannel0Missing() ||
     //    converted->isChannel1Missing() ||
@@ -555,8 +593,8 @@ namespace Sass {
     bool missingHue) const
   {
 
-    // std::cerr << "CALL SRGB translate " << red.value_or(0) << ", "
-    //   << green.value_or(0) << ", " << blue.value_or(0) << ", " << "\n";
+    std::cerr << "CALL SRGB translate " << red.value_or(0) << ", "
+      << green.value_or(0) << ", " << blue.value_or(0) << ", " << "\n";
 
     if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
       double nr_red = red.value_or(0);
@@ -597,7 +635,7 @@ namespace Sass {
           saturation = std::abs(saturation);
         }
 
-        // std::cerr << "  to hsl " << hue << ", " << saturation << ", " << lightness << "\n";
+        std::cerr << "  to hsl " << hue << ", " << saturation << ", " << lightness << "\n";
 
         tl::optional<double> c0;
         if (!fuzzyEquals(saturation, 0.0, sass::epsilon)) {
@@ -1033,7 +1071,7 @@ namespace Sass {
       scaledLightness * scaledSaturation;
     double m1 = scaledLightness * 2 - m2;
 
-    return ColorSpace::srgb.translate(
+    auto rv = ColorSpace::srgb.translate(
       dest, pstate,
       hueToRgb(m1, m2, scaledHue + 1.0 / 3.0),
       hueToRgb(m1, m2, scaledHue),
@@ -1042,6 +1080,10 @@ namespace Sass {
       !lightness.has_value(),
       !saturation.has_value(),
       !hue.has_value());
+
+    // std::cerr << "covert " << rv->debug() << "\n";
+
+    return rv;
   }
 
 }

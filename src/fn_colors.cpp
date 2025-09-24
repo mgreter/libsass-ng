@@ -1829,7 +1829,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (inverted == nullptr) return arguments[0];
 
         if (fuzzyEquals(w, 1.0, compiler.epsilon)) {
-          ColorSpaced* rv = inverted->toSpace2(color->space(), pstate);
+          ColorSpaced* rv = inverted->toSpace2(color->space(), pstate, false);
           return rv;
         }
 
