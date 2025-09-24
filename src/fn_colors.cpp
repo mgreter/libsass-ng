@@ -2311,10 +2311,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       }
       */
 
-      const ColorSpace* _sniffLegacyColorSpace(const ValueFlatMap* kwds)
+      static const ColorSpace* _sniffLegacyColorSpace(
+        const ColorSpaced* color, const ValueFlatMap* kwds)
       {
-        /*
-        for each(auto kv in *kwds)
+        if (!color->isLegacy()) {
+          return nullptr;
+        }
+        for(auto kv : *kwds)
         {
           const sass::string& key = kv.first.norm();
           if (key == "red") return &ColorSpace::rgb;
@@ -2328,8 +2331,6 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (kwds->count(key_hue) != 0)
           return &ColorSpace::hsl;
         else return nullptr;
-        */
-        return nullptr;
       }
 
       ColorSpaced* _colorInSpace(ColorSpaced* colorUntyped, const String* spaceUntyped, Compiler& compiler, bool legacyMissing = true)
@@ -2589,7 +2590,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           else if (!a_nr->hasUnits()) a = a_nr->valueInRange(compiler, 0.0, 1.0, "alpha");
           else {
             compiler.addDeprecation(pstate, Logger::WarningType::WARN_COLOR_ITPL, []() {
-              return "\$alpha: Passing a unit other than %";
+              return "$alpha: Passing a unit other than %";
             });
           }
         }
@@ -2629,7 +2630,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         const ColorSpace* space = nullptr;
-        if (space_val == nullptr) space = _sniffLegacyColorSpace(keywords);
+        if (space_val == nullptr) space = _sniffLegacyColorSpace(input, keywords);
         else space = &ColorSpace::fromValueRef(compiler, space_val);
         if (space == nullptr) space = &input->space();
 
