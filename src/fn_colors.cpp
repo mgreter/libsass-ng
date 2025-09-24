@@ -582,9 +582,48 @@ namespace Sass {
         pstate, fncall.str());
     }
 
+    static double clampLikeCss(double val, double min, double max) {
+      return std::isnan(val) ? min : std::min(std::max(val, min), max);
+
+    }
+
     /// The implementation of the two-argument `rgb()` and `rgba()` functions.
     static Value* handleTwoArgRgb(sass::string name, ValueVector arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
+
+      Value* first = arguments[0];
+      Value* second = arguments[1];
+
+      if (isVar(first) || (!first->isaColorSpaced() && isVar(second))) {
+        return getFunctionString(
+          name, pstate, arguments);
+      }
+
+      const ColorSpaced* color = arguments[0]->assertColorSpaced(logger, Strings::color);
+
+      if (color->isLegacy() == false) {
+        throw Exception::SassScriptException(logger, pstate,
+          "Expected " + color->toCss() + " to be in the legacy RGB, HSL, or HWB color space.\n\n"
+          "Recommendation: color.change(" + color->toCss() + ", \$alpha: " + second->toCss() + ")", name);
+      }
+
+      // color->assertLegacy(logger, "color");
+
+      auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
+
+      if (isSpecialNumber(second)) {
+        // dart-sass is using color?
+        // ToDo: Check what this does!?
+        return _functionRgbString(name,
+          rgb, arguments[1], pstate);
+      }
+
+      const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
+      double a = _percentageOrUnitless(alpha, 1.0, "$alpha", logger);
+      return rgb->changeAlpha(clampLikeCss(a, 0.0, 1.0));
+
+
+
       // Check if any `calc()` or `var()` are passed
       if (isVar(arguments[0])) {
         return getFunctionString(
@@ -659,16 +698,16 @@ namespace Sass {
           if (percent) return chnInfo.max * chnValue->value() / 100;
           return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
         }
-        else if (chnInfo.lowerClamped == true || chnInfo.upperClamped == true) {
+        else { // if (chnInfo.lowerClamped == true || chnInfo.upperClamped == true) {
           double val = percent ? chnInfo.max * chnValue->value() / 100 :
             _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
           double min = chnInfo.lowerClamped ? chnInfo.min : -std::numeric_limits<double>::infinity();
           double max = chnInfo.upperClamped ? chnInfo.max : +std::numeric_limits<double>::infinity();
           return std::isnan(val) ? min : std::min(std::max(val, min), max);
         }
-        else {
-          return chnValue->value();
-        }
+        // else {
+        //   return chnValue->value();
+        // }
       }
       else {
         // Coerce into degrees

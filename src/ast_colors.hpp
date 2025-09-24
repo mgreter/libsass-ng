@@ -1331,6 +1331,13 @@ namespace Sass {
       }
     }
 
+    ColorSpaced* changeAlpha(double alpha) {
+      return ColorSpaced::forSpaceInternal(
+        pstate_, space_,
+        c0_, c1_, c2_,
+        alpha);
+    }
+
     static ColorSpaced* oklab(
       const SourceSpan& pstate, const ColorSpace& space,
       tl::optional<double> lightness, tl::optional<double> a,
