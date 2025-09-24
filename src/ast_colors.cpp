@@ -523,16 +523,22 @@ namespace Sass {
     bool missingHue) const
   {
 
-    //std::cerr << "CALL SRGB translate " << red.value_or(0) << ", "
-    //  << green.value_or(0) << ", " << blue.value_or(0) << ", " << "\n";
+    // std::cerr << "CALL SRGB translate " << red.value_or(0) << ", "
+    //   << green.value_or(0) << ", " << blue.value_or(0) << ", " << "\n";
 
     if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
       double nr_red = red.value_or(0);
       double nr_green = green.value_or(0);
       double nr_blue = blue.value_or(0);
-      double max = std::max(std::max(nr_red, nr_green), nr_blue);
-      double min = std::min(std::min(nr_red, nr_green), nr_blue);
+      double max = sass::max(sass::max(nr_red, nr_green), nr_blue);
+      double min = sass::min(sass::min(nr_red, nr_green), nr_blue);
+      // if (std::isinf(max)) max = NaN;
+      // if (std::isinf(min)) min = NaN;
       double delta = max - min;
+
+      double test = std::max(NaN, NaN);
+
+      // std::cerr << " inter " << min << ", " << max << ", " << delta << "\n";
 
       double hue;
       if (max == min) {
@@ -559,7 +565,12 @@ namespace Sass {
           saturation = std::abs(saturation);
         }
 
-        tl::optional<double> c0 = std::fmod(hue, 360.0);
+        // std::cerr << "  to hsl " << hue << ", " << saturation << ", " << lightness << "\n";
+
+        tl::optional<double> c0;
+        if (!fuzzyEquals(saturation, 0.0, sass::epsilon)) {
+          c0 = std::fmod(hue, 360.0);
+        }
         tl::optional<double> c1 = saturation;
         tl::optional<double> c2 = lightness * 100;
 
@@ -844,6 +855,10 @@ namespace Sass {
     }
   }
 
+  static double nnan(double val) {
+    if (std::isnan(val)) return NaN;
+    return val;
+  }
 
   ColorSpaced* HwbColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> hue, tl::optional<double> whiteness, tl::optional<double> blackness, tl::optional<double> alpha) const
   {
@@ -866,9 +881,9 @@ namespace Sass {
     // HWB as well.
     return ColorSpace::srgb.translate(
       dest, pstate,
-      hueToRgb(0.0, 1.0, scaledHue + 1.0 / 3.0)* factor + scaledWhiteness,
-      hueToRgb(0.0, 1.0, scaledHue)* factor + scaledWhiteness,
-      hueToRgb(0.0, 1.0, scaledHue - 1.0 / 3.0)* factor + scaledWhiteness,
+      nnan(hueToRgb(0.0, 1.0, scaledHue + 1.0 / 3.0)* factor + scaledWhiteness),
+      nnan(hueToRgb(0.0, 1.0, scaledHue)* factor + scaledWhiteness),
+      nnan(hueToRgb(0.0, 1.0, scaledHue - 1.0 / 3.0)* factor + scaledWhiteness),
       alpha,
       false, false,
       !hue.has_value());

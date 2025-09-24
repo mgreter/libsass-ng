@@ -675,8 +675,8 @@ namespace Sass {
 
     double _angleValue(Number* value, const sass::string& name)
     {
-      //double factor = value->getUnitConversionFactor(unit_deg);
-      //if (factor != 0.0) return value->value() * factor;
+      double factor = value->getUnitConversionFactor(unit_deg);
+      if (factor != 0.0) return value->value() * factor;
       return value->value();
     }
 
@@ -688,7 +688,7 @@ namespace Sass {
     {
 
       if (space == nullptr) {
-        // std::cerr << "space is nullptr";
+        std::cerr << "space is nullptr";
         return SASS_MEMORY_NEW(ColorSpaced,
           pstate, ColorSpace::rgb,
           1, 1, 1, 1);
@@ -696,20 +696,27 @@ namespace Sass {
 
       if (space == &ColorSpace::hsl) {
 
-        auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
-        auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
-        auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
-        // std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
-        auto rv = SASS_MEMORY_NEW(ColorSpaced,
-          pstate, *space,
-          a,
-          b,
-          c,
-          alpha);
+        tl::optional<double> hue;
+        if (chn0 != nullptr) {
+          hue = _angleValue(chn0, "hue");
+        }
 
-        //std::cerr << " => " << rv->getChannel0() << ", " <<
-        //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+        tl::optional<double> saturation;
+        if (chn1 != nullptr) {
+          chn1->assertHasUnits(logger, "%", str_saturation); // deprecation and force
+          saturation = _channelFromValue(logger, space->_channels[1], chn1, clamp);
+        }
 
+        tl::optional<double> lightness;
+        if (chn2 != nullptr) {
+          chn2->assertHasUnits(logger, "%", str_lightness); // deprecation and force
+          lightness = _channelFromValue(logger, space->_channels[2], chn2, clamp);
+        }
+
+        // Original code is using `_forcePercent`
+        // Not sure what it does exactly here!?
+        auto rv = SASS_MEMORY_NEW(ColorSpaced, pstate,
+          *space, hue, saturation, lightness, alpha);
         return rv;
 
       }
@@ -733,9 +740,11 @@ namespace Sass {
         }
 
         if (whiteness.has_value() && blackness.has_value()) {
-          double oldWhiteness = whiteness.value();
-          whiteness = whiteness.value() / (whiteness.value() + blackness.value()) * 100.0;
-          blackness = blackness.value() / (oldWhiteness + blackness.value()) * 100.0;
+          if (whiteness.value() + blackness.value() > 100.0) {
+            double oldWhiteness = whiteness.value();
+            whiteness = whiteness.value() / (whiteness.value() + blackness.value()) * 100.0;
+            blackness = blackness.value() / (oldWhiteness + blackness.value()) * 100.0;
+          }
         }
 
         auto rv = SASS_MEMORY_NEW(ColorSpaced, pstate,
@@ -755,6 +764,8 @@ namespace Sass {
           b,
           c,
           alpha);
+
+        rv->forceRgb = fromRgbFunction;
 
         //std::cerr << " => " << rv->getChannel0() << ", " <<
         //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
@@ -807,7 +818,7 @@ namespace Sass {
       // Get the list from the channels input variable (or throw)
       ValueVector list = input->assertCommonListStyle(ctx, fname, true);
 
-      if (list.empty()) return { nullptr, nullptr };
+      if (list.empty()) return { input, nullptr };
 
       // Check if list is seperated by a slash
       if (input->separator() == SASS_DIV) {
@@ -992,21 +1003,11 @@ namespace Sass {
               String, pstate, fname +
               "(" + args.str() + ")");
           }
-          else {
-            sass::sstream args;
-            // If size is 3, we must comma separate them
-            // Otherwise we keep it space separated!?
-            for (int n = 0; n < channels.size(); n++) {
-              args << channels[n]->inspect();
-              if (n == channels.size() - 1) break;
-              args << ' ';
-            }
-            if (alphaValue != nullptr) {
-              args << "/" << alphaValue->inspect();
-            }
+          else
+          {
             return SASS_MEMORY_NEW(
               String, pstate, fname +
-              "(" + args.str() + ")");
+              "(" + input->inspect() + ")");
           }
         }
       }
@@ -1050,21 +1051,11 @@ namespace Sass {
               String, pstate, fname +
               "(" + args.str() + ")");
           }
-          else {
-            sass::sstream args;
-            // If size is 3, we must comma separate them
-            // Otherwise we keep it space separated!?
-            for (int n = 0; n < channels.size(); n++) {
-              args << channels[n]->inspect();
-              if (n == channels.size() - 1) break;
-              args << ' ';
-            }
-            if (alphaValue != nullptr) {
-              args << "/" << alphaValue->inspect();
-            }
+          else
+          {
             return SASS_MEMORY_NEW(
               String, pstate, fname +
-              "(" + args.str() + ")");
+              "(" + input->inspect() + ")");
           }
         }
       }
@@ -1265,7 +1256,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         auto rv = hslFn(Strings::hsl,
           arguments, pstate, compiler, false);
         if (auto color = rv->isaColorSpaced())
-          std::cerr << "hsl4arg: " << color->debug() << "\n";
+          //std::cerr << "hsl4arg: " << color->debug() << "\n";
         return rv;
       }
       
@@ -1377,8 +1368,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         auto rv = _parseChannels(str_hwb, arguments[0],
           "channels", pstate, compiler, &ColorSpace::hwb);
-        if (auto color = rv->isaColorSpaced())
-          std::cerr << "hwb4arg: " << color->debug() << "\n";
+        // if (auto color = rv->isaColorSpaced())
+          //std::cerr << "hwb4arg: " << color->debug() << "\n";
         return rv;
       }
 
@@ -1402,8 +1393,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             }, SASS_DIV);
         auto rv = _parseChannels(str_hwb, args,
           "channels", pstate, compiler, &ColorSpace::hwb);
-        if (auto color = rv->isaColorSpaced())
-          std::cerr << "fnHwb4arg: " << color->debug() << "\n";
+        // if (auto color = rv->isaColorSpaced())
+        //   std::cerr << "fnHwb4arg: " << color->debug() << "\n";
         return rv;
 
 

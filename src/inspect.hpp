@@ -27,6 +27,14 @@ namespace Sass {
 
   public:
 
+    bool isCompressed() {
+      return output_style() == SASS_STYLE_COMPRESSED;
+    }
+
+    void write_number(double nr);
+
+    void _writeHexComponent(int color);
+
     static sass::string PrintNumber(double nr, const OutputOptions& outopt);
     static sass::string PrintChannel(tl::optional<double> nr, const OutputOptions& outopt);
 

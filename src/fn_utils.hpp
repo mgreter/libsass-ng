@@ -13,6 +13,26 @@
 #include "shim/optional.hpp"
 #include "exceptions.hpp"
 
+namespace sass {
+
+  // Dart computes some edge cases different
+  static double min(double a, double b) {
+    if (std::isnan(a)) return a;
+    if (std::isnan(b)) return b;
+    return std::min(a, b);
+  }
+
+  // Dart computes some edge cases different
+  static double max(double a, double b) {
+    if (std::isnan(a)) return a;
+    if (std::isnan(b)) return b;
+    return std::max(a, b);
+  }
+
+  const double epsilon = std::pow(10.0, -10 - 1);
+
+}
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////

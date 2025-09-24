@@ -855,7 +855,7 @@ namespace Sass {
     }
     double fromLinear(double channel) const override final {
       double rv = srgbAndDisplayP3FromLinear(channel) * 255.0;
-      std::cerr << " from rgb linear " << channel << " => " << rv << "\n";
+      // std::cerr << " from rgb linear " << channel << " => " << rv << "\n";
       return rv;
     }
   };
@@ -1017,7 +1017,11 @@ namespace Sass {
     ADD_PROPERTY(tl::optional<double>, c2);
     ADD_PROPERTY(tl::optional<double>, alpha);
 
+
   public:
+
+    // ADD_PROPERTY(bool, frgb);
+    bool forceRgb = false;
 
     sass::string debug() const;
 
@@ -1092,10 +1096,13 @@ namespace Sass {
       tl::optional<double> red,
       tl::optional<double> green,
       tl::optional<double> blue,
-      tl::optional<double> alpha)
+      tl::optional<double> alpha,
+      bool forceRgb = false)
     {
-      return _forSpace(pstate, ColorSpace::rgb,
+      auto rv = _forSpace(pstate, ColorSpace::rgb,
         red, green, blue, alpha);
+      if (rv) rv->forceRgb = forceRgb;
+      return rv;
     }
 
     static ColorSpaced* lab(
@@ -1124,8 +1131,8 @@ namespace Sass {
       tl::optional<double> c2, tl::optional<double> alpha)
     {
 
-      std::cerr << "ForSpaceInternal " << c0.value_or(0) << ", "
-        << c1.value_or(0) << ", " << c2.value_or(0) << "\n";
+      //std::cerr << "ForSpaceInternal " << c0.value_or(0) << ", "
+      //  << c1.value_or(0) << ", " << c2.value_or(0) << "\n";
 
       if (space.name() == "hsl") {
         return _forSpace(pstate, space,
