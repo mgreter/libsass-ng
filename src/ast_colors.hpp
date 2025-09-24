@@ -1019,6 +1019,8 @@ namespace Sass {
 
   public:
 
+    sass::string debug() const;
+
     const ColorSpace& space() const {
       return space_;
     }

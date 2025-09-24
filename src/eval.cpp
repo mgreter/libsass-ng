@@ -844,6 +844,7 @@ namespace Sass {
           value = static_cast<Expression*>(itpl)->accept(this);
         if (warnForColor) {
           if (Color* color = value->isaColor()) {
+            //return "foobar";
             // ColorRgbaObj rgba = color->toRGBA();
             // double numval = rgba->r() * 0x10000
             //   + rgba->g() * 0x100 + rgba->b();

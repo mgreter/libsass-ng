@@ -28,6 +28,7 @@ namespace Sass
   const sass::string str_slash("slash");
   const sass::string str_list_separator("list-separator");
   const sass::string str_is_bracketed("is-bracketed");
+  const sass::string str_separator("separator");
 
   // Rounding strategies
   const sass::string str_up = "up";
@@ -118,7 +119,7 @@ namespace Sass
   const sass::string str_display_p3("display-p3");
   const sass::string str_srgb_linear("srgb-linear");
   const sass::string str_xyz_d50("xyz-d50");
-  const sass::string str_xyz_d65("xyz-d65");
+  const sass::string str_xyz_d65("xyz");
 
 
   const sass::string str_color("color");
@@ -245,6 +246,7 @@ namespace Sass
   const EnvKey key_slash(str_slash);
   const EnvKey key_list_separator(str_list_separator);
   const EnvKey key_is_bracketed(str_is_bracketed);
+  const EnvKey key_separator(str_separator);
 
   // For map functions
   const EnvKey key_set(str_set);

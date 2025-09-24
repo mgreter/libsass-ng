@@ -35,6 +35,7 @@ namespace Sass {
   extern const sass::string str_slash;
   extern const sass::string str_list_separator;
   extern const sass::string str_is_bracketed;
+  extern const sass::string str_separator;
 
   // Rounding strategies
   extern const sass::string str_up;
@@ -262,6 +263,7 @@ namespace Sass {
   extern const EnvKey key_slash;
   extern const EnvKey key_list_separator;
   extern const EnvKey key_is_bracketed;
+  extern const EnvKey key_separator;
 
   // For map functions
   extern const EnvKey key_set;

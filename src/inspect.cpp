@@ -903,7 +903,11 @@ namespace Sass {
   void Inspect::_writeHsl(ColorSpaced* color)
   {
     sass::string ss;
+
     ColorSpacedObj rgb = color->toSpace(ColorSpace::hsl, color->pstate());
+
+    std::cerr << "write hsl " << rgb->debug() << "\n";
+
     rgb.detach();
     if (fuzzyEquals(color->alpha().value_or(1), 1, outopt.epsilon)) {
       ss += "hsl(";
@@ -925,6 +929,7 @@ namespace Sass {
   {
     sass::string ss;
     ColorSpacedObj rgb = color->toSpace(ColorSpace::hwb, color->pstate());
+    std::cerr << "write hwb " << rgb->debug() << "\n";
     rgb.detach();
     if (fuzzyEquals(color->alpha().value_or(1), 1, outopt.epsilon)) {
       ss += "hwb(";
@@ -946,6 +951,7 @@ namespace Sass {
   {
     sass::string ss;
     ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    std::cerr << "write rgb " << rgb->debug() << "\n";
     rgb.detach();
     if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {
       ss += "rgb(";
@@ -966,9 +972,10 @@ namespace Sass {
   void Inspect::_writeLegacyColor(ColorSpaced* color)
   {
 
+    std::cerr << "write legacy color " << color->debug() << "\n";
 
     // Check if resulting color is considered fully opaque
-    // bool opaque = fuzzyEquals(color->alpha(), 1, outopt.epsilon);
+    bool opaque = fuzzyEquals(color->alpha().value_or(1), 1, outopt.epsilon);
 
     if (outopt.output_style == SASS_STYLE_COMPRESSED) {
       std::cerr << "COMPRESSED OUTPUT\n";
@@ -1001,6 +1008,27 @@ namespace Sass {
       return;
     }
 
+    if (opaque) {
+      if (ColorSpacedObj rgba = color->toSpace(ColorSpace::rgb, color->pstate())) {
+        double numval = rgba->getChannel0() * 0x10000
+          + rgba->getChannel1() * 0x100 + rgba->getChannel2();
+        if (const char* disp = color_to_name((int)numval)) {
+          append_string(disp);
+          rgba.detach();
+          return;
+        }
+        rgba.detach();
+      }
+
+      //if (ColorSpaced* rgb = color->toSpace(ColorSpace::rgb, color->pstate())) {
+        // if (color_to_name(rgb))
+      //}
+      // if (color_to_name()
+    }
+
+    if (color->space().name() == "hwb") {
+      _writeHsl(color);
+    }
     // else if (color->parsed() && !color->isaColorHwba()) {
     //   std::cerr << "FOOBAR\n";
     // }
@@ -1063,6 +1091,7 @@ namespace Sass {
 
       // Get the associated color space
       const ColorSpace& space = spaced->space();
+      std::cerr << "visitColor " << spaced->debug() << "\n";
 
       if (spaced->space() == ColorSpace::rgb || spaced->space() == ColorSpace::hsl || spaced->space() == ColorSpace::hwb) {
         if (!spaced->isChannel0Missing() && !spaced->isChannel1Missing() && !spaced->isChannel2Missing() && !spaced->isAlphaMissing()) {

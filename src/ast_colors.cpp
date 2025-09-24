@@ -41,6 +41,37 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   
+  sass::string ColorSpaced::debug() const
+  {
+    sass::sstream ss;
+    ss << space_.name() << ": ";
+    if (isChannel0Missing()) {
+      ss << "none, ";
+    }
+    else {
+      ss << getChannel0() << ", ";
+    }
+    if (isChannel1Missing()) {
+      ss << "none, ";
+    }
+    else {
+      ss << getChannel1() << ", ";
+    }
+    if (isChannel2Missing()) {
+      ss << "none, ";
+    }
+    else {
+      ss << getChannel2() << ", ";
+    }
+    if (isAlphaMissing()) {
+      ss << "none";
+    }
+    else {
+      ss << getAlpha();
+    }
+    return ss.str();
+  }
+
   tl::optional<double> ColorSpaced::getChannel0OrNull() const { return c0_; }
   tl::optional<double> ColorSpaced::getChannel1OrNull() const { return c1_; }
   tl::optional<double> ColorSpaced::getChannel2OrNull() const { return c2_; }
@@ -330,6 +361,7 @@ namespace Sass {
     if (StringUtils::equalsIgnoreCase(name.value(), "prophoto-rgb")) return &ColorSpace::protophotoRgb;
     if (StringUtils::equalsIgnoreCase(name.value(), "rec2020")) return &ColorSpace::rec2020;
     if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d65")) return &ColorSpace::xyzd65;
+    if (StringUtils::equalsIgnoreCase(name.value(), "xyz")) return &ColorSpace::xyzd65;
 
     if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d50")) return &ColorSpace::xyzd50;
     if (StringUtils::equalsIgnoreCase(name.value(), "lab")) return &ColorSpace::lab;

@@ -270,6 +270,7 @@ namespace Sass {
         module.addFunction(key_list_separator, ctx.registerBuiltInFunction(key_list_separator, "$list", separator));
         module.addFunction(key_is_bracketed, ctx.registerBuiltInFunction(key_is_bracketed, "$list", isBracketed));
         module.addFunction(key_slash, ctx.registerBuiltInFunction(key_slash, "$elements...", slash));
+        module.addFunction(key_separator, ctx.registerBuiltInFunction(key_separator, "$list", separator));
 
       }
 

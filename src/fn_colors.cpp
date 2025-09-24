@@ -673,6 +673,13 @@ namespace Sass {
       }
     }
 
+    double _angleValue(Number* value, const sass::string& name)
+    {
+      //double factor = value->getUnitConversionFactor(unit_deg);
+      //if (factor != 0.0) return value->value() * factor;
+      return value->value();
+    }
+
     ColorSpaced* _colorFromChannels(
       Logger& logger, const SourceSpan& pstate, const ColorSpace* space,
       Number* chn0, Number* chn1, Number* chn2,
@@ -708,42 +715,35 @@ namespace Sass {
       }
       else if (space == &ColorSpace::hwb) {
 
-        if (chn1 != nullptr && chn2 != nullptr) {
-          chn1->assertHasUnits(logger, "%", str_whiteness);
-          chn2->assertHasUnits(logger, "%", str_blackness);
-          double whiteness = chn1->value();
-          double blackness = chn2->value();
-          if (whiteness + blackness > 100.0) {
-            double oldWhiteness = whiteness;
-            whiteness = whiteness / (whiteness + blackness) * 100.0;
-            blackness = blackness / (oldWhiteness + blackness) * 100.0;
-          }
-          auto rv = SASS_MEMORY_NEW(ColorSpaced,
-            pstate, *space,
-            chn0 != nullptr ? chn0->value() : tl::optional<double>(),
-            whiteness,
-            blackness,
-            alpha);
-          return rv;
+        tl::optional<double> hue;
+        if (chn0 != nullptr) {
+          hue = _angleValue(chn0, "hue");
         }
 
-        auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
-        auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
-        auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
-        // std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
-        auto rv = SASS_MEMORY_NEW(ColorSpaced,
-          pstate, *space,
-          a,
-          b,
-          c,
-          alpha);
+        tl::optional<double> whiteness;
+        if (chn1 != nullptr) {
+          chn1->assertHasUnits(logger, "%", str_whiteness);
+          whiteness = chn1->value();
+        }
 
-        //std::cerr << " => " << rv->getChannel0() << ", " <<
-        //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
+        tl::optional<double> blackness;
+        if (chn2 != nullptr) {
+          chn2->assertHasUnits(logger, "%", str_blackness);
+          blackness = chn2->value();
+        }
 
+        if (whiteness.has_value() && blackness.has_value()) {
+          double oldWhiteness = whiteness.value();
+          whiteness = whiteness.value() / (whiteness.value() + blackness.value()) * 100.0;
+          blackness = blackness.value() / (oldWhiteness + blackness.value()) * 100.0;
+        }
+
+        auto rv = SASS_MEMORY_NEW(ColorSpaced, pstate,
+          *space, hue, whiteness, blackness, alpha);
         return rv;
 
       }
+
       else if (space == &ColorSpace::rgb) {
         auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
         auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
@@ -1262,8 +1262,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(hsl4arg)
       {
-        return hslFn(Strings::hsl,
+        auto rv = hslFn(Strings::hsl,
           arguments, pstate, compiler, false);
+        if (auto color = rv->isaColorSpaced())
+          std::cerr << "hsl4arg: " << color->debug() << "\n";
+        return rv;
       }
       
       static BUILT_IN_FN(hsl3arg)
@@ -1374,6 +1377,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         auto rv = _parseChannels(str_hwb, arguments[0],
           "channels", pstate, compiler, &ColorSpace::hwb);
+        if (auto color = rv->isaColorSpaced())
+          std::cerr << "hwb4arg: " << color->debug() << "\n";
         return rv;
       }
 
@@ -1386,7 +1391,6 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(fnHwb4arg)
       {
-        std::cerr << "hwb 4 arg\n";
         ListObj args =
           SASS_MEMORY_NEW(List, pstate, {
               SASS_MEMORY_NEW(List, pstate, {
@@ -1398,6 +1402,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             }, SASS_DIV);
         auto rv = _parseChannels(str_hwb, args,
           "channels", pstate, compiler, &ColorSpace::hwb);
+        if (auto color = rv->isaColorSpaced())
+          std::cerr << "fnHwb4arg: " << color->debug() << "\n";
         return rv;
 
 
