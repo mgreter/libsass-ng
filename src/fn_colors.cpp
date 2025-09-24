@@ -2570,6 +2570,93 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
       }
 
+      tl::optional<double> _adjustChannel(Compiler& compiler, const SourceSpan& pstate,
+        const ColorSpaced* color, const ColorChannel& channel,
+        tl::optional<double> oldValue, Number* adjustmentArg)
+      {
+        if (adjustmentArg == nullptr) return oldValue;
+
+        if (!oldValue.has_value()) throw Exception::MissingColorChannel(compiler, color, channel);
+
+        if ((color->space().name() == "hsl" || color->space().name() == "hwb") && channel.isPolarAngle)
+        {
+          adjustmentArg = SASS_MEMORY_NEW(Number,
+            adjustmentArg->pstate(),
+            _angleValue(adjustmentArg, "hue"));
+        }
+        else if (color->space().name() == "hsl" && (channel.name == "saturation" || channel.name == "lightness"))
+        {
+          // _checkPercent(adjustmentArg, channel.name);
+          adjustmentArg = SASS_MEMORY_NEW(Number,
+            adjustmentArg->pstate(),
+            adjustmentArg->value(),
+            unit_percent);
+        }
+        else if (channel.name == "alpha" && adjustmentArg->hasUnits()) {
+          adjustmentArg = SASS_MEMORY_NEW(Number,
+            adjustmentArg->pstate(),
+            adjustmentArg->value());
+        }
+
+        auto adjusted = _channelFromValue(compiler, channel, adjustmentArg, false);
+
+        if (adjusted.has_value() == false) return oldValue;
+
+        double result = oldValue.value() + adjusted.value();
+
+        if (channel.lowerClamped == true && result < channel.min) {
+          return oldValue.value() < channel.min ? std::max(oldValue.value(), result) : channel.min;
+        }
+        else if (channel.upperClamped == true && result > channel.min) {
+          return oldValue.value() > channel.max ? std::min(oldValue.value(), result) : channel.max;
+        }
+        return result;
+      }
+
+      ColorSpaced* _adjustColor(Compiler& compiler, const SourceSpan& pstate,
+        const ColorSpaced* color, const NumberVector& args, Number* alpha)
+      {
+
+        return ColorSpaced::forSpaceInternal(
+          pstate, color->space(),
+          _adjustChannel(
+            compiler,
+            pstate,
+            color,
+            color->space()._channels[0],
+            color->getChannel0OrNull(),
+            args[0]),
+          _adjustChannel(
+            compiler,
+            pstate,
+            color,
+            color->space()._channels[1],
+            color->getChannel1OrNull(),
+            args[1]),
+          _adjustChannel(
+            compiler,
+            pstate,
+            color,
+            color->space()._channels[2],
+            color->getChannel2OrNull(),
+            args[2]),
+          // The color space doesn't matter for alpha, as long as it's not
+          // strictly bounded.
+          _adjustChannel(
+            compiler,
+            pstate,
+            color,
+            AlphaChannel,
+            color->getAlphaOrNull(),
+            alpha).transform([](double alpha) {
+              return clampLikeCss(alpha, 0, 1);
+            })
+          );
+
+
+        return nullptr;
+      }
+
       ColorSpaced* _changeColor(Compiler& compiler, const SourceSpan& pstate,
         const ColorSpaced* color, const ValueVector& args, Value* alpha)
       {
@@ -2619,7 +2706,14 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         ValueFlatMap* keywords = kwds->keywords();
 
+        if (keywords == nullptr && kwds->empty() == false) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "Only one positional argument is allowed. All other arguments must "
+            "be passed by name.");
+        }
+
         if (keywords == nullptr) return arguments[0];
+
 
         Value* space_val = nullptr;
         Value* alpha_val = nullptr;
@@ -2655,10 +2749,46 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           args[idx] = kv.second;
         }
 
-        auto rv = _changeColor(compiler,
-          pstate, color, args, alpha_val);
+        if (change) {
+          auto rv = _changeColor(compiler,
+            pstate, color, args, alpha_val);
+          return rv->toSpace(input->space(), pstate, false);
+        }
+        else {
 
-        return rv->toSpace(input->space(), pstate, false);
+          NumberVector numbers;
+          Number* alpha_nr = nullptr;
+
+          for (int i = 0; i < space->_channelSize; i++) {
+            if (args[i] == nullptr) {
+              numbers.push_back(nullptr);
+            }
+            else {
+              numbers.push_back(args[i]->assertNumber(
+                compiler, space->_channels[i].name));
+            }
+          }
+
+          if (alpha_val != nullptr) {
+            alpha_nr = alpha_val->assertNumber(compiler, "alpha");
+          }
+
+          if (scale) {
+            // auto rv = _scaleColor(compiler,
+            //   pstate, color, args, alpha_val);
+            // return rv->toSpace(input->space(), pstate, false);
+            return nullptr;
+          }
+          else if (adjust)
+          {
+            auto rv = _adjustColor(compiler,
+              pstate, color, numbers, alpha_nr);
+            return rv->toSpace(input->space(), pstate, false);
+            return arguments[0];
+          }
+
+        }
+
 
         // var argumentList = arguments[1] as SassArgumentList;
         // if (argumentList.asList.isNotEmpty) {
@@ -2671,10 +2801,19 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       }
       
-
       static BUILT_IN_FN(change)
       {
         return _updateComponents(compiler, pstate, arguments, true, false, false);
+      }
+
+      static BUILT_IN_FN(adjust)
+      {
+        return _updateComponents(compiler, pstate, arguments, false, true, false);
+      }
+
+      static BUILT_IN_FN(scale)
+      {
+        return _updateComponents(compiler, pstate, arguments, false, false, true);
       }
 
       // static BUILT_IN_FN(change)
@@ -2978,6 +3117,9 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // uint32_t idx_adjust_hue_strict = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue);
         // uint32_t idx_adjust_hue_loose = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
         // uint32_t idx_adjust = ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust);
+
+        uint32_t idx_scale = ctx.createBuiltInFunction(key_scale, "$color, $kwargs...", scale);
+        uint32_t idx_adjust = ctx.createBuiltInFunction(key_adjust, "$color, $kwargs...", adjust);
         uint32_t idx_change = ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
         // uint32_t idx_scale = ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale);
         // uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix);
@@ -3032,9 +3174,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // ctx.exposeFunction(key_lighten, idx_lighten_loose);
         // ctx.exposeFunction(key_darken, idx_darken_loose);
         // ctx.exposeFunction(key_adjust_hue, idx_adjust_hue_loose);
-        // ctx.exposeFunction(key_adjust_color, idx_adjust);
+
+        ctx.exposeFunction(key_scale_color, idx_scale);
+        ctx.exposeFunction(key_adjust_color, idx_adjust);
         ctx.exposeFunction(key_change_color, idx_change);
-        // ctx.exposeFunction(key_scale_color, idx_scale);
+
         // ctx.exposeFunction(key_mix, idx_mix);
         // // ctx.exposeFunction(key_to_gamut, idx_to_gamut);
         // ctx.exposeFunction(key_opacify, idx_opacify_loose);
@@ -3084,9 +3228,10 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // module.addFunction(key_lighten, idx_lighten_strict);
         // module.addFunction(key_darken, idx_darken_strict);
         // module.addFunction(key_adjust_hue, idx_adjust_hue_strict);
-        // module.addFunction(key_adjust, idx_adjust);
+        module.addFunction(key_scale, idx_scale);
+        module.addFunction(key_adjust, idx_adjust);
         module.addFunction(key_change, idx_change);
-        // module.addFunction(key_scale, idx_scale);
+
         // module.addFunction(key_mix, idx_mix);
         module.addFunction(key_to_gamut, idx_to_gamut);
         module.addFunction(key_opacify, idx_opacify_strict);

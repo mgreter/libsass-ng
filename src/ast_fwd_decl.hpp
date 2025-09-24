@@ -339,6 +339,7 @@ namespace Sass {
   typedef sass::vector<CplxSelComponentObj> CplxSelComponentVector;
   typedef sass::vector<SelectorCombinatorObj> SelectorCombinatorVector;
   typedef sass::vector<ValueObj> ValueVector;
+  typedef sass::vector<NumberObj> NumberVector;
   typedef sass::vector<CssNodeObj> CssNodeVector;
   typedef sass::vector<CssParentNodeObj> CssParentVector;
   // typedef sass::vector<CssMediaQueryObj> CssMediaQueryVector;
