@@ -1613,7 +1613,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         const String* channel = arguments[1]->assertString(compiler, "channel");
-        bool missing = color->isChannelMissing(compiler, channel, "color", "channel");
+        bool missing = color->isChannelMissing(compiler, channel);
         return SASS_MEMORY_NEW(Boolean, pstate, missing);
       }
 
@@ -1831,6 +1831,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (fuzzyEquals(w, 1.0, compiler.epsilon)) {
           ColorSpaced* rv = inverted->toSpace2(color->space(), pstate, false);
           return rv;
+        }
+        else {
+          ;
+          return color->interpolate(
+            compiler, pstate, inverted,
+            InterpolationMethod(space),
+            1.0 - w, false);
         }
 
         return arguments[0];

@@ -41,6 +41,137 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   
+  bool _isAnalogousChannelMissing(
+    Logger& logger,
+    ColorSpaced* original,
+    ColorSpaced* output,
+    int outputChannelIndex)
+  {
+    if (output->isChannelMissing(outputChannelIndex)) return true;
+    if (*original == *output) return false;
+    const ColorChannel& outputChannel = output->space()._channels[outputChannelIndex];
+    tl::optional<const ColorChannel&> originalChannel;
+    for (int i = 0; i < original->space()._channelSize; i++) {
+      auto& channel = original->space()._channels[i];
+      if (!channel.isAnalogous(outputChannel)) continue;
+      originalChannel = channel;
+      break;
+    }
+    if (!originalChannel.has_value()) return false;
+    return original->isChannelMissing(logger, originalChannel.value().name);
+  }
+
+  double _interpolateHues(
+    double hue1,
+    double hue2,
+    HueInterpolationMethod method,
+    double weight)
+
+  {
+    // Algorithms from https://www.w3.org/TR/css-color-4/#hue-interpolation
+    double diff = hue2 - hue1;
+    switch (method) {
+    case shorter:
+      if (diff > 180.0) {
+        hue1 += 360;
+      }
+      else if (diff < -180.0) {
+        hue2 += 360;
+      }
+
+    case longer:
+      if (diff > 0.0 && diff < 180.0) {
+        hue2 += 360;
+      }
+      else if (diff > -180.0 && diff <= 0.0) {
+        hue1 += 360;
+      }
+
+    case increasing:
+      if (hue2 < hue1)
+        hue2 += 360;
+
+    case decreasing:
+      if (hue1 < hue2)
+        hue1 += 360;
+
+    }
+
+    return hue1 * weight + hue2 * (1 - weight);
+  }
+
+  ColorSpaced* ColorSpaced::interpolate(Logger& logger, const SourceSpan& pstate, ColorSpaced* other, InterpolationMethod method, double weight, bool legacyMissing)
+  {
+
+    if (fuzzyEquals(weight, 0.0, sass::epsilon)) return other;
+    if (fuzzyEquals(weight, 1.0, sass::epsilon)) return this;
+
+    ColorSpaced* color1 = this->toSpace(method.space, pstate);
+    ColorSpaced* color2 = other->toSpace(method.space, pstate);
+
+    if (weight < 0 || weight > 1) {
+      throw Exception::SassScriptException(logger, pstate, "Weight out of Range");
+      // throw RangeError.range(weight, 0, 1, 'weight');
+    }
+
+    bool missing1_0 = _isAnalogousChannelMissing(logger, this, color1, 0);
+    bool missing1_1 = _isAnalogousChannelMissing(logger, this, color1, 1);
+    bool missing1_2 = _isAnalogousChannelMissing(logger, this, color1, 2);
+    bool missing2_0 = _isAnalogousChannelMissing(logger, other, color2, 0);
+    bool missing2_1 = _isAnalogousChannelMissing(logger, other, color2, 1);
+    bool missing2_2 = _isAnalogousChannelMissing(logger, other, color2, 2);
+
+    double channel1_0 = (missing1_0 ? color2 : color1)->getChannel0();
+    double channel1_1 = (missing1_1 ? color2 : color1)->getChannel1();
+    double channel1_2 = (missing1_2 ? color2 : color1)->getChannel2();
+    double channel2_0 = (missing2_0 ? color1 : color2)->getChannel0();
+    double channel2_1 = (missing2_1 ? color1 : color2)->getChannel1();
+    double channel2_2 = (missing2_2 ? color1 : color2)->getChannel2();
+
+    bool missing_alpha1 = this->isAlphaMissing();
+    bool missing_alpha2 = other->isAlphaMissing();
+
+    double alpha1 = this->getAlphaOrNull().value_or(other->getAlpha());
+    double alpha2 = other->getAlphaOrNull().value_or(this->getAlpha());
+
+    double thisMultiplier = (this->getAlphaOrNull().value_or(1)) * weight;
+    double otherMultiplier = (other->getAlphaOrNull().value_or(1)) * (1.0 - weight);
+
+    tl::optional<double> mixedAlpha = missing_alpha1 && missing_alpha2
+      ? tl::optional<double>() : alpha1 * weight + alpha2 * (1 - weight);
+    tl::optional<double> mixed0 = missing1_0 && missing2_0 ? tl::optional<double>() :
+      (channel1_0 * thisMultiplier + channel2_0 * otherMultiplier) / (mixedAlpha.value_or(1.0));
+    tl::optional<double> mixed1 = missing1_1 && missing2_1 ? tl::optional<double>() :
+      (channel1_1 * thisMultiplier + channel2_1 * otherMultiplier) / (mixedAlpha.value_or(1.0));
+    tl::optional<double> mixed2 = missing1_2 && missing2_2 ? tl::optional<double>()
+      : (channel1_2 * thisMultiplier + channel2_2 * otherMultiplier) / (mixedAlpha.value_or(1.0));
+
+    if (method.space.name() == "hsl" || method.space.name() == "hwb") {
+      return ColorSpaced::forSpaceInternal(
+        pstate, method.space,
+        missing1_0 && missing2_0
+        ? tl::optional<double>()
+        : _interpolateHues(channel1_0, channel2_0, method.hue, weight),
+        mixed1, mixed2, mixedAlpha);
+    }
+    else if (method.space.name() == "lch" || method.space.name() == "oklch") {
+      return ColorSpaced::forSpaceInternal(
+        pstate, method.space,
+        mixed0, mixed1,
+        missing1_2 && missing2_2
+        ? tl::optional<double>()
+        : _interpolateHues(channel1_2, channel2_2, method.hue, weight),
+        mixedAlpha);
+    }
+    else {
+      return ColorSpaced::forSpaceInternal(pstate,
+        method.space, mixed0, mixed1, mixed2, mixedAlpha);
+    }
+
+    return nullptr;
+
+  }
+
   sass::string ColorSpaced::debug() const
   {
     sass::sstream ss;
@@ -176,9 +307,7 @@ namespace Sass {
   }
 
   bool ColorSpaced::isChannelMissing(
-    Logger& logger, const String* channel,
-    const char* colorName,
-    const char* channelName) const
+    Logger& logger, const String* channel) const
   {
     // channel must not be nullptr
     auto channels = space_._channels;
@@ -186,6 +315,20 @@ namespace Sass {
     if (channel->value() == channels[1].name) return isChannel1Missing();
     if (channel->value() == channels[2].name) return isChannel2Missing();
     if (channel->value() == "alpha") return isAlphaMissing();
+    throw Exception::RuntimeException(logger,
+      "Only one argument may be passed "
+      "to the plain-CSS invert() function.");
+  }
+
+  bool ColorSpaced::isChannelMissing(
+    Logger& logger, const sass::string& channel) const
+  {
+    // channel must not be nullptr
+    auto channels = space_._channels;
+    if (channel == channels[0].name) return isChannel0Missing();
+    if (channel == channels[1].name) return isChannel1Missing();
+    if (channel == channels[2].name) return isChannel2Missing();
+    if (channel == "alpha") return isAlphaMissing();
     throw Exception::RuntimeException(logger,
       "Only one argument may be passed "
       "to the plain-CSS invert() function.");

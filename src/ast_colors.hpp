@@ -1113,6 +1113,31 @@ namespace Sass {
   // A sass color in RGBA representation.
   ///////////////////////////////////////////////////////////////////////
 
+  enum HueInterpolationMethod {
+    legacy,
+    shorter,
+    longer,
+    increasing,
+    decreasing
+  };
+
+  class InterpolationMethod {
+
+  public:
+
+    const ColorSpace& space;
+
+    HueInterpolationMethod hue = legacy;
+
+    InterpolationMethod(
+      const ColorSpace& space,
+      HueInterpolationMethod hue = legacy) :
+      space(space), hue(hue)
+    {}
+
+  };
+
+
   class ColorSpaced final : public Color
   {
   private:
@@ -1128,6 +1153,14 @@ namespace Sass {
 
     // ADD_PROPERTY(bool, frgb);
     bool forceRgb = false;
+
+    ColorSpaced* interpolate(
+      Logger& logger,
+      const SourceSpan& pstate,
+      ColorSpaced* other,
+      InterpolationMethod method,
+      double weight = 0.5,
+      bool legacyMissing = true);
 
     sass::string debug() const;
 
@@ -1161,8 +1194,8 @@ namespace Sass {
     int getChannelIndex(Logger& logger, const String* channel,
       const char* colorName, const char* channelName) const;
 
-    bool isChannelMissing(Logger& logger, const String* channel,
-      const char* colorName, const char* channelName) const;
+    bool isChannelMissing(Logger& logger, const String* channel) const;
+    bool isChannelMissing(Logger& logger, const sass::string& channel) const;
 
     bool isChannel0Powerless() const;
     bool isChannel1Powerless() const;
