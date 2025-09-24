@@ -1751,13 +1751,15 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         auto inSpace = color->toSpace2(space, pstate);
 
+        std::cerr << "Before invert " << inSpace->debug() << "\n";
+
         ColorSpaced* inverted = nullptr;
 
         if (space == ColorSpace::hwb) {
           inverted = ColorSpaced::hwb(pstate,
             _invertChannel(compiler, inSpace, space._channels[0], inSpace->getChannel0OrNull()),
-            inSpace->getChannel1OrNull(),
             inSpace->getChannel2OrNull(),
+            inSpace->getChannel1OrNull(),
             inSpace->getAlpha());
 
         }

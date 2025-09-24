@@ -1259,7 +1259,7 @@ namespace Sass {
     {
 
       std::cerr << "ForSpaceInternal " << c0.value_or(-32) << ", "
-        << c1.value_or(-42) << ", " << c2.value_or(0) << "\n";
+        << c1.value_or(-42) << ", " << c2.value_or(-52) << "\n";
 
       if (space.name() == "hsl") {
         return _forSpace(pstate, space,
