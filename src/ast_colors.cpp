@@ -146,8 +146,10 @@ namespace Sass {
     tl::optional<double> mixed2 = missing1_2 && missing2_2 ? tl::optional<double>()
       : (channel1_2 * thisMultiplier + channel2_2 * otherMultiplier) / (mixedAlpha.value_or(1.0));
 
+    ColorSpaced* rv = nullptr;
+
     if (method.space.name() == "hsl" || method.space.name() == "hwb") {
-      return ColorSpaced::forSpaceInternal(
+      rv = ColorSpaced::forSpaceInternal(
         pstate, method.space,
         missing1_0 && missing2_0
         ? tl::optional<double>()
@@ -155,7 +157,7 @@ namespace Sass {
         mixed1, mixed2, mixedAlpha);
     }
     else if (method.space.name() == "lch" || method.space.name() == "oklch") {
-      return ColorSpaced::forSpaceInternal(
+      rv = ColorSpaced::forSpaceInternal(
         pstate, method.space,
         mixed0, mixed1,
         missing1_2 && missing2_2
@@ -164,11 +166,16 @@ namespace Sass {
         mixedAlpha);
     }
     else {
-      return ColorSpaced::forSpaceInternal(pstate,
+      rv = ColorSpaced::forSpaceInternal(pstate,
         method.space, mixed0, mixed1, mixed2, mixedAlpha);
     }
 
-    return nullptr;
+    if (rv == nullptr)
+      return nullptr;
+
+    rv = rv->toSpace(space(), pstate, legacyMissing);
+
+    return rv;
 
   }
 
