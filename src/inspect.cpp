@@ -1159,7 +1159,7 @@ namespace Sass {
       return !fuzzyInRange(color->getChannel0(), 0.0, 100.0, outopt.epsilon)
         && !color->isChannel1Missing() && !color->isChannel2Missing();
     }
-    else if (space.name() == "lab" || space.name() == "oklab")
+    else if (space.name() == "oklab" || space.name() == "oklch")
     {
       return !fuzzyInRange(color->getChannel0(), 0.0, 1.0, outopt.epsilon)
         && !color->isChannel1Missing() && !color->isChannel2Missing();
