@@ -109,6 +109,12 @@ namespace Sass {
       this->traces.push_back(rhs.pstate());
     }
 
+    UnitMissing::UnitMissing(BackTraces traces, const Number& number, const sass::string& unit)
+      : RuntimeException(traces, "Expected " + number.inspect() + " to have unit \"" + unit + "\".")
+    {
+      this->traces.push_back(number.pstate());
+    }
+
     InvalidParent::InvalidParent(Selector* parent, BackTraces traces, Selector* selector)
     : Base(def_msg, traces, selector->pstate()), parent(parent), selector(selector)
     {

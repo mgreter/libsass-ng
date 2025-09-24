@@ -141,6 +141,15 @@ namespace Sass {
         const Number& rhs);
     };
 
+    class UnitMissing : public RuntimeException
+    {
+    public:
+      UnitMissing(
+        BackTraces traces,
+        const Number& number,
+        const sass::string& unit);
+    };
+
     class IncompatibleCalcValue : public RuntimeException
     {
     public:

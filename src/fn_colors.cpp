@@ -635,7 +635,8 @@ namespace Sass {
       Logger& logger,
       const ColorChannel& chnInfo,
       const Number* chnValue,
-      bool clamp = true
+      bool clamp = true,
+      bool percent = false
     )
     {
       if (chnValue == nullptr) {
@@ -647,18 +648,20 @@ namespace Sass {
 
       if (chnInfo.isLinear) {
         // std::cerr << " Channel is linear\n";
-        if (chnInfo.requiresPercent && !chnValue->hasUnit("%")) {
-          // std::cerr << "Must have unit of percent\n";
-          return chnValue->value();
+        if (chnInfo.requiresPercent && !percent && !chnValue->hasUnit("%")) {
+          throw Exception::UnitMissing(logger, *chnValue, "%");
         }
         else if (chnInfo.lowerClamped == false && chnInfo.upperClamped == false) {
+          if (percent) return chnInfo.max * chnValue->value() / 100;
           return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
         }
         else if (clamp == false) {
+          if (percent) return chnInfo.max * chnValue->value() / 100;
           return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
         }
         else if (chnInfo.lowerClamped == true || chnInfo.upperClamped == true) {
-          double val = _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
+          double val = percent ? chnInfo.max * chnValue->value() / 100 :
+            _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
           double min = chnInfo.lowerClamped ? chnInfo.min : -std::numeric_limits<double>::infinity();
           double max = chnInfo.upperClamped ? chnInfo.max : +std::numeric_limits<double>::infinity();
           return std::isnan(val) ? min : std::min(std::max(val, min), max);
@@ -703,14 +706,14 @@ namespace Sass {
 
         tl::optional<double> saturation;
         if (chn1 != nullptr) {
-          // chn1->assertHasUnits(logger, "%", str_saturation); // deprecation and force
-          saturation = _channelFromValue(logger, space->_channels[1], chn1, clamp);
+          // _checkPercent(chn1, "saturation"); // maybe print deprecation warning
+          saturation = _channelFromValue(logger, space->_channels[1], chn1, clamp, true);
         }
 
         tl::optional<double> lightness;
         if (chn2 != nullptr) {
-          // chn2->assertHasUnits(logger, "%", str_lightness); // deprecation and force
-          lightness = _channelFromValue(logger, space->_channels[2], chn2, clamp);
+          // _checkPercent(chn1, "lightness"); // maybe print deprecation warning
+          lightness = _channelFromValue(logger, space->_channels[2], chn2, clamp, true);
         }
 
         // Original code is using `_forcePercent`
