@@ -2810,7 +2810,39 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
 
       }
-      
+
+      static BUILT_IN_FN(adjustHue)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, "color");
+        Number* angle = arguments[1]->assertNumber(compiler, "degrees");
+        double degrees = _angleValue(angle, "degrees");
+
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "adjust-hue() is only supported for legacy colors. Please use "
+            "color.adjust() instead with an explicit \$space argument.");
+        }
+
+        compiler.addDeprecation(arguments[0]->pstate(),
+          Logger::DEPR_COLOR_FUNCTIONS, [arguments]() {
+            return "adjust-hue() is deprecated. Suggestion:\n\n"
+              "color.adjust($color, $hue: ${suggestedValue.toCssString()})\n\n"
+              "More info: https://sass-lang.com/d/color-functions";
+          });
+
+        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+
+        auto rv = ColorSpaced::hsl(
+          hsl->pstate(),
+          hsl->c0().has_value() ? hsl->c0().value() + degrees : hsl->c0(),
+          hsl->c1(),
+          hsl->c2(),
+          hsl->alpha());
+
+        return rv->toSpace(color->space(), pstate);
+
+      }
+
       static BUILT_IN_FN(change)
       {
         return _updateComponents(compiler, pstate, arguments, true, false, false);
@@ -3125,7 +3157,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // uint32_t idx_darken_strict = ctx.createBuiltInFunction(key_darken, "$color, $amount", noDarken);
         // uint32_t idx_darken_loose = ctx.createBuiltInFunction(key_darken, "$color, $amount", darken);
         // uint32_t idx_adjust_hue_strict = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue);
-        // uint32_t idx_adjust_hue_loose = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
+        uint32_t idx_adjust_hue = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
         // uint32_t idx_adjust = ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust);
 
         uint32_t idx_scale = ctx.createBuiltInFunction(key_scale, "$color, $kwargs...", scale);
@@ -3183,7 +3215,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // ctx.exposeFunction(key_saturate, idx_saturate_loose);
         // ctx.exposeFunction(key_lighten, idx_lighten_loose);
         // ctx.exposeFunction(key_darken, idx_darken_loose);
-        // ctx.exposeFunction(key_adjust_hue, idx_adjust_hue_loose);
+        ctx.exposeFunction(key_adjust_hue, idx_adjust_hue);
 
         ctx.exposeFunction(key_scale_color, idx_scale);
         ctx.exposeFunction(key_adjust_color, idx_adjust);
@@ -3237,7 +3269,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // module.addFunction(key_saturate, idx_saturate_strict);
         // module.addFunction(key_lighten, idx_lighten_strict);
         // module.addFunction(key_darken, idx_darken_strict);
-        // module.addFunction(key_adjust_hue, idx_adjust_hue_strict);
+        module.addFunction(key_adjust_hue, idx_adjust_hue);
         module.addFunction(key_scale, idx_scale);
         module.addFunction(key_adjust, idx_adjust);
         module.addFunction(key_change, idx_change);

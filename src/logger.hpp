@@ -49,6 +49,7 @@ namespace Sass {
       WARN_DOUBLE_DASH_MIXIN,
       WARN_ABS_PERCENT,
       WARN_MS_ALPHA,
+      DEPR_COLOR_FUNCTIONS,
     };
 
     // Epsilon for precision
