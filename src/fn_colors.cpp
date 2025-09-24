@@ -829,6 +829,8 @@ namespace Sass {
           c,
           alpha);
 
+        std::cerr << "Created for space internal " << rv->debug() << "\n";
+
         //std::cerr << " => " << rv->getChannel0() << ", " <<
         //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
 
@@ -1811,11 +1813,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           // _checkPercent(weightNumber, "weight");
 
 
-          std::cerr << "Before invert color " << color->debug() << "\n";
+          std::cerr << "Before legacy invert color " << color->debug() << "\n";
 
           auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
 
-          std::cerr << "Before invert as rgb " << rgb->debug() << "\n";
+          std::cerr << "Before legacy invert as rgb " << rgb->debug() << "\n";
 
           auto inv = ColorSpaced::rgb(color->pstate(),
             _invertChannel(compiler, rgb, rgb->space()._channels[0], rgb->getChannel0OrNull()),
@@ -1823,15 +1825,15 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             _invertChannel(compiler, rgb, rgb->space()._channels[2], rgb->getChannel2OrNull()),
             color->getAlphaOrNull());
 
-          std::cerr << "After invert as rgb " << inv->debug() << "\n";
+          std::cerr << "After legacy invert as rgb " << inv->debug() << "\n";
 
           auto mixed = mixLegacy(inv, color, weight);
 
-          std::cerr << "After mixing as rgb " << mixed->debug() << "\n";
+          std::cerr << "After legacy  mixing as rgb " << mixed->debug() << "\n";
 
           auto rv = mixed->toSpace(color->space(), color->pstate());
 
-          std::cerr << "After mixing as color " << rv->debug() << "\n";
+          std::cerr << "After legacy mixing as color " << rv->debug() << "\n";
 
           return rv;
         }
@@ -1845,9 +1847,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         if (fuzzyEquals(w, 0.0, compiler.epsilon)) return color;
 
+        std::cerr << "Before invert color " << color->debug() << "\n";
+
         auto inSpace = color->toSpace2(space, pstate);
 
-        std::cerr << "Before invert " << inSpace->debug() << "\n";
+        std::cerr << "After invert to space " << inSpace->debug() << "\n";
 
         ColorSpaced* inverted = nullptr;
 

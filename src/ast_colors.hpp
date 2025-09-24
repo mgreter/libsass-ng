@@ -1292,7 +1292,7 @@ namespace Sass {
       if (hue.has_value() == false) return hue;
       auto rv = std::fmod(std::fmod(hue.value(), 360.0)
         + 360.0 + (invert ? 180.0 : 0.0), 360.0);
-      std::cerr << "norm hue " << rv << "\n";
+      // std::cerr << "norm hue " << rv << "\n";
         return rv;
     }
 
@@ -1302,7 +1302,7 @@ namespace Sass {
       tl::optional<double> c2, tl::optional<double> alpha)
     {
 
-      std::cerr << "ForSpaceInternal " << c0.value_or(-32) << ", "
+      std::cerr << "=> forSpaceInternal " << space.name() << " " << c0.value_or(-32) << ", "
         << c1.value_or(-42) << ", " << c2.value_or(-52) << "\n";
 
       if (space.name() == "hsl") {
