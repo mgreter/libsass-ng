@@ -2592,6 +2592,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             compiler.addDeprecation(pstate, Logger::WarningType::WARN_COLOR_ITPL, []() {
               return "$alpha: Passing a unit other than %";
             });
+            a = a_nr->valueInRange(compiler, 0.0, 1.0, "alpha");
           }
         }
         else {
