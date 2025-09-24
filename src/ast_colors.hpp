@@ -1091,6 +1091,32 @@ namespace Sass {
       return rgbInternal(pstate, red, green, blue, alpha);
     }
 
+    static ColorSpaced* hsl(
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha)
+    {
+      auto rv = forSpaceInternal(pstate,
+        ColorSpace::hsl,
+        red, green, blue, alpha);
+      return rv.detach();
+    }
+
+    static ColorSpaced* hwb(
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha)
+    {
+      auto rv = forSpaceInternal(pstate,
+        ColorSpace::hwb,
+        red, green, blue, alpha);
+      return rv.detach();
+    }
+
     static ColorSpaced* rgbInternal(
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -1121,8 +1147,10 @@ namespace Sass {
       tl::optional<double> hue, bool invert)
     {
       if (hue.has_value() == false) return hue;
-      return std::fmod(std::fmod(hue.value(), 360.0)
+      auto rv = std::fmod(std::fmod(hue.value(), 360.0)
         + 360.0 + (invert ? 180.0 : 0.0), 360.0);
+      std::cerr << "norm hue " << rv << "\n";
+        return rv;
     }
 
     static ColorSpacedObj forSpaceInternal(

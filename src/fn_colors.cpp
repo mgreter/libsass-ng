@@ -703,20 +703,20 @@ namespace Sass {
 
         tl::optional<double> saturation;
         if (chn1 != nullptr) {
-          chn1->assertHasUnits(logger, "%", str_saturation); // deprecation and force
+          // chn1->assertHasUnits(logger, "%", str_saturation); // deprecation and force
           saturation = _channelFromValue(logger, space->_channels[1], chn1, clamp);
         }
 
         tl::optional<double> lightness;
         if (chn2 != nullptr) {
-          chn2->assertHasUnits(logger, "%", str_lightness); // deprecation and force
+          // chn2->assertHasUnits(logger, "%", str_lightness); // deprecation and force
           lightness = _channelFromValue(logger, space->_channels[2], chn2, clamp);
         }
 
         // Original code is using `_forcePercent`
         // Not sure what it does exactly here!?
-        auto rv = SASS_MEMORY_NEW(ColorSpaced, pstate,
-          *space, hue, saturation, lightness, alpha);
+        auto rv = ColorSpaced::hsl(pstate,
+          hue, saturation, lightness, alpha);
         return rv;
 
       }
@@ -747,8 +747,8 @@ namespace Sass {
           }
         }
 
-        auto rv = SASS_MEMORY_NEW(ColorSpaced, pstate,
-          *space, hue, whiteness, blackness, alpha);
+        auto rv = ColorSpaced::hwb(pstate,
+          hue, whiteness, blackness, alpha);
         return rv;
 
       }
