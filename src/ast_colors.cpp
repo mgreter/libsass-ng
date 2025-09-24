@@ -68,7 +68,7 @@ namespace Sass {
       return true;
     }
 
-    std::cerr << "Check for gamut " << isChannelInGamut(getChannel2(), space_._channels[2]) << "\n";
+    // std::cerr << "Check for gamut " << isChannelInGamut(getChannel2(), space_._channels[2]) << "\n";
 
     // There aren't (currently) any color spaces that are bounded
     // but not STRICTLY bounded, and have polar-angle channels.
@@ -219,7 +219,7 @@ namespace Sass {
   }
 
   ColorSpaced::ColorSpaced(const SourceSpan& pstate, const ColorSpace& space, double c0, double c1, double c2, double alpha, const sass::string& disp, bool parsed)
-    : Color(pstate), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
+    : Color(pstate, disp), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
   {
 
 
@@ -235,7 +235,7 @@ namespace Sass {
     tl::optional<double> alpha,
     const sass::string& disp,
     bool parsed)
-    : Color(pstate), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
+    : Color(pstate, disp), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
   {
   }
 

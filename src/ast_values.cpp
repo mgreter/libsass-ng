@@ -315,12 +315,10 @@ namespace Sass {
 
   Color::Color(
     const SourceSpan& pstate,
-    double alpha,
     const sass::string& disp,
     bool parsed) :
     Value(pstate),
     disp_(disp),
-    a_(alpha),
     parsed_(parsed)
   {}
 
@@ -328,7 +326,6 @@ namespace Sass {
     : Value(ptr),
     // Reset on copy
     // disp_(ptr->disp_),
-    a_(ptr->a_),
     parsed_(false) // safe to assume?
     // ptr->parsed_
   {}

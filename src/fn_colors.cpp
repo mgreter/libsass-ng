@@ -92,6 +92,7 @@ namespace Sass {
         || startsWith(str->value(), "env(", 4)
         || startsWith(str->value(), "min(", 4)
         || startsWith(str->value(), "max(", 4)
+        || startsWith(str->value(), "attr(", 5)
         || startsWith(str->value(), "clamp(", 6);
     }
     // EO isSpecialNumber 
@@ -618,13 +619,15 @@ namespace Sass {
         return copy.detach();
       }
 
-      const Color* color = arguments[0]->assertColor(logger, Strings::color);
-      const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
-      ColorObj copy = SASS_MEMORY_COPY(color);
-      copy->a(_percentageOrUnitless(
-        alpha, 1.0, "$alpha", logger));
-      copy->parsed(false);
-      return copy.detach();
+      // const Color* color = arguments[0]->assertColor(logger, Strings::color);
+      // const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
+      // ColorObj copy = SASS_MEMORY_COPY(color);
+      // copy->a(_percentageOrUnitless(
+      //   alpha, 1.0, "$alpha", logger));
+      // copy->parsed(false);
+      // return copy.detach();
+      std::cerr << "not possible\n";
+      return nullptr;
     }
 
 
@@ -1962,8 +1965,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           }
         }
 
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        return SASS_MEMORY_NEW(Number, pstate, color->a());
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        return SASS_MEMORY_NEW(Number, pstate, color->alpha().value_or(1));
       }
 
       static BUILT_IN_FN(alphaAny)
@@ -2003,8 +2006,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           return getFunctionString("opacity",
             pstate, arguments);
         }
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        return SASS_MEMORY_NEW(Number, pstate, color->a());
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        return SASS_MEMORY_NEW(Number, pstate, color->alpha().value_or(1));
       }
 
       // static BUILT_IN_FN(noGrayscale)

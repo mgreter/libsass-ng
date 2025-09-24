@@ -2422,6 +2422,9 @@ namespace Sass {
     case $exclamation:
       return readImportantExpression();
 
+    case $percent:
+      return readPercentExpression();
+
     case $u:
     case $U:
       if (scanner.peekChar(1) == $plus) {
@@ -2761,6 +2764,16 @@ namespace Sass {
       sass::string("!important"));
   }
   // EO readImportantExpression
+
+  StringExpression* StylesheetParser::readPercentExpression() {
+    SASS_ASSERT(scanner.peekChar() == $percent,
+      "importantExpression expects a percent sign");
+    Offset start(scanner.offset);
+    scanner.readChar();
+    return SASS_MEMORY_NEW(StringExpression,
+      scanner.relevantSpanFrom(start),
+      sass::string("%"));
+  }
 
   // Consumes a unary operation expression.
   UnaryOpExpression* StylesheetParser::readUnaryOpExpression()
@@ -4507,6 +4520,7 @@ namespace Sass {
       || character == $backslash
       || character == $dollar
       || character == $ampersand
+      || character == $percent
       || isNameStart(character)
       || isDigit(character);
   }
@@ -4715,8 +4729,16 @@ namespace Sass {
       compiler.addDeprecation(name.pstate,
         Logger::WARN_DOUBLE_DASH_MIXIN, []() {
           return "Sass @function names beginning with -- are deprecated for forward-"
-            "compatibility with plain CSS mixins.\n"
+            "compatibility with plain CSS functions.\n"
             "For details, see https://sass-lang.com/d/css-function-mixin";
+        });
+    }
+    else if (StringUtils::equalsIgnoreCase(name.str, "type", 4)) {
+      compiler.addDeprecation(name.pstate,
+        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
+          return "Sass @functions named \"type\" are deprecated for forward-"
+            "compatibility with the plain CSS type() function.\n\n"
+            "For details, see https://sass-lang.com/d/type-function";
         });
     }
 

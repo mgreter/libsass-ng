@@ -905,7 +905,7 @@ namespace Sass {
     sass::string ss;
     ColorSpacedObj rgb = color->toSpace(ColorSpace::hsl, color->pstate());
     rgb.detach();
-    if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
+    if (fuzzyEquals(color->alpha().value_or(1), 1, outopt.epsilon)) {
       ss += "hsl(";
       ss += PrintNumber(rgb->channel(str_hue), outopt); ss += ", ";
       ss += PrintNumber(rgb->channel(str_saturation), outopt); ss += "%, ";
@@ -926,7 +926,7 @@ namespace Sass {
     sass::string ss;
     ColorSpacedObj rgb = color->toSpace(ColorSpace::hwb, color->pstate());
     rgb.detach();
-    if (fuzzyEquals(color->a(), 1, outopt.epsilon)) {
+    if (fuzzyEquals(color->alpha().value_or(1), 1, outopt.epsilon)) {
       ss += "hwb(";
       ss += PrintNumber(rgb->channel(str_hue), outopt); ss += ", ";
       ss += PrintNumber(rgb->channel(str_whiteness), outopt); ss += ", ";

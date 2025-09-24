@@ -425,6 +425,9 @@ namespace Sass {
     // Consumes an `!important` expression.
     StringExpression* readImportantExpression();
 
+    // Consumes an percent character expression.
+    StringExpression* readPercentExpression();
+
     // Consumes a unary operation expression.
     UnaryOpExpression* readUnaryOpExpression();
 

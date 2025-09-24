@@ -42,7 +42,6 @@ namespace Sass {
     //std::cerr << "Add operator, prev [" << parser.scanner.peekChar(-2) << "], next [" << parser.scanner.peekChar(0) << "]\n";
 
     // ToDo: merge into one structure?
-	  operators.emplace_back(op);
     opstates.emplace_back(parser.scanner.relevantSpanFrom(start));
     uint8_t isSafe = Character::isWhitespace(parser.scanner.peekChar(-2)) ? 1 : 0;
     isSafe |= Character::isWhitespace(parser.scanner.peekChar(0)) ? 2 : 0;
@@ -57,11 +56,21 @@ namespace Sass {
 
 	  // assert(singleExpression != null);
 
-    operands.emplace_back(singleExpression);
 	  parser.scanWhitespace();
-	  // allowSlash = allowSlash && parser.lookingAtNumber();
-	  singleExpression = parser.readSingleExpression();
-    // allowSlash = allowSlash && singleExpression->isaNumberExpression();
+
+
+    if (op == SassOperator::MOD && !parser.lookingAtExpression()) {
+      addSingleExpression(new StringExpression(
+        parser.scanner.relevantSpanFrom(start), "%"));
+    }
+    else {
+      operators.emplace_back(op);
+      operands.emplace_back(singleExpression);
+      // allowSlash = allowSlash && parser.lookingAtNumber();
+      singleExpression = parser.readSingleExpression();
+      // allowSlash = allowSlash && singleExpression->isaNumberExpression();
+    }
+
   }
 
   ExpressionParser::ExpressionParser(StylesheetParser& parser) :

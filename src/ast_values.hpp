@@ -153,14 +153,12 @@ namespace Sass {
   private:
 
     ADD_CONSTREF(sass::string, disp);
-    ADD_CONSTREF(double, a);
     ADD_CONSTREF(bool, parsed);
 
   public:
 
     // Value constructor
     Color(const SourceSpan& pstate,
-      double alpha = 1,
       const sass::string& disp = "",
       bool parsed = false);
 
