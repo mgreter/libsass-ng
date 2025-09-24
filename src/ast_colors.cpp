@@ -75,6 +75,7 @@ namespace Sass {
   tl::optional<double> ColorSpaced::getChannel0OrNull() const { return c0_; }
   tl::optional<double> ColorSpaced::getChannel1OrNull() const { return c1_; }
   tl::optional<double> ColorSpaced::getChannel2OrNull() const { return c2_; }
+  tl::optional<double> ColorSpaced::getAlphaOrNull() const { return alpha_; }
 
   double ColorSpaced::getChannel0() const { return c0_.value_or(0); }
   double ColorSpaced::getChannel1() const { return c1_.value_or(0); }
@@ -222,6 +223,32 @@ namespace Sass {
     case 2: return !c2_.has_value();
     }
     return true;
+  }
+
+
+  ColorSpaced* ColorSpaced::toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
+  {
+    if (space == this->space_) {
+      return SASS_MEMORY_NEW(ColorSpaced, this);
+    }
+
+    // std::cerr << "Do toSpace " << getChannel0() << ", "
+    //   << getChannel1() << ", " << getChannel2() << "\n";
+
+    // return SASS_MEMORY_NEW(ColorSpaced, this);
+    // std::cerr << "Convert from " << space_.name() << " to " << space.name() << "\n";
+    ColorSpaced* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
+
+    //return !legacyMissing &&
+    //  converted->space().isLegacy() &&
+    //  (converted->isChannel0Missing() ||
+    //    converted->isChannel1Missing() ||
+    //    converted->isChannel2Missing() ||
+    //    converted.isAlphaMissing)
+    //  ? SassColor.forSpaceInternal(converted.space, converted.channel0,
+    //    converted.channel1, converted.channel2, converted.alpha)
+    //  : converted;
+    return converted;
   }
 
   ColorSpacedObj ColorSpaced::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
@@ -479,12 +506,13 @@ namespace Sass {
         alpha, missingLightness, missingChroma, missingHue);
     }
 
-    return ColorSpaced::_forSpace(
+    auto rv = ColorSpaced::_forSpace(
       pstate, dest,
       transformedRed,
       transformedGreen,
       transformedBlue,
       alpha);
+    return rv.detach();
     // auto rv = ColorSpaced::_forSpace(pstate, dest, 1, 1, 1, 1, )
 
     // return ColorSpaced::forSpaceInternal(;

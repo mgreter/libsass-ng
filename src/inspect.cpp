@@ -1155,7 +1155,7 @@ namespace Sass {
   // T visitColorRGBA(SassColor value);
   void Inspect::visitColor(Color* color)
   {
-
+    
     auto spaced = color->isaColorSpaced();
     if (spaced == nullptr) {
       std::cerr << "wrong input for visitColor\n";
@@ -1185,7 +1185,7 @@ namespace Sass {
       append_string(")");
     }
 
-    if (space == ColorSpace::hsl || space == ColorSpace::hwb) {
+    else if (space == ColorSpace::hsl || space == ColorSpace::hwb) {
       append_string(space.name());
       append_string("(");
       write_channel(spaced->getChannel0OrNull(),
@@ -1240,45 +1240,6 @@ namespace Sass {
     else {
       _writeColorFunction(spaced);
     }
-
-      // output the final token
-      // is sass::string faster?
-      sass::sstream ss;
-      /*
-      switch (spaced->space()) {
-      case SassColorSpace::RGB:
-        ss << "rgb(";
-        ss << PrintChannel(spaced->c0(), outopt) << ", ";
-        ss << PrintChannel(spaced->c1(), outopt) << ", ";
-        ss << PrintChannel(spaced->c2(), outopt) << ")";
-        append_token(ss.str(), color);
-        break;
-      case SassColorSpace::HSL:
-      case SassColorSpace::HWB:
-        break;
-      case SassColorSpace::OKLCH:
-
-        // color-mix() is currently more widely supported than relative color
-        // syntax, so we use it to serialize out-of-gamut colors in a way that
-        // maintains the color space defined in Sass while (per spec) not
-        // clamping their values. In practice, all browsers clamp out-of-gamut
-        // values, but there's not much we can do about that at time of writing.
-        ss << "color-mix(in '";
-        ss << spaced->space();
-        ss << " ,";
-        // The XYZ space has no gamut restrictions, so we use it to represent
-        // the out-of-gamut color before converting into the target space.
-        // _writeColorFunction(value.toSpace(ColorSpace.xyzD65));
-        ss << " "; // optional
-        ss << "100%,";
-        // _buffer.write(_isCompressed ? 'red' : 'black');
-        ss << "black";
-        ss << ")";
-
-        append_token(ss.str(), color);
-        break;
-      }
-      */
 
   }
   // EO visitColorRGBA

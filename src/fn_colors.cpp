@@ -1255,7 +1255,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         auto rv = hslFn(Strings::hsl,
           arguments, pstate, compiler, false);
-        if (auto color = rv->isaColorSpaced())
+        // if (auto color = rv->isaColorSpaced())
           //std::cerr << "hsl4arg: " << color->debug() << "\n";
         return rv;
       }
@@ -1660,30 +1660,130 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       /*******************************************************************/
 
-      // static BUILT_IN_FN(invert)
-      // {
-      //   const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
-      //   weight->checkPercent(compiler, Strings::weight);
-      //   if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0]) /* or isSpecialValue*/) {
-      //     // Allow only the value `100` or a percentage (unit == `% `)
-      //     const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
-      //     if (weight->value() != 100 || !weight->hasUnit(Strings::percent)) {
-      //       throw Exception::RuntimeException(compiler,
-      //         "Only one argument may be passed "
-      //         "to the plain-CSS invert() function.");
-      //     }
-      //     // Return function string since first argument was a number
-      //     // Need to remove the weight argument as it has a default value
-      //     return getFunctionString(Strings::invert, pstate, { arguments[0] });
-      //   }
-      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+/// Returns the inverse of the given [value] in a linear color channel.
+      double _invertChannel(ColorSpaced* color, const ColorChannel& channel, tl::optional<double> value)
+      {
+        // if (value == nullptr) _missingChannelError(color, channel.name);
+        if (channel.isLinear && channel.min < 0) return - value.value();
+        else if (channel.isLinear && channel.min == 0) return channel.max - value.value();
+        else if (channel.isPolarAngle) return std::fmod(value.value() + 180.0, 360.0);
+        // else throw UnsupportedError("Unknown channel $channel.")
+        // return switch (channel) {
+        //   LinearChannel(min: < 0) = > -value,
+        //     LinearChannel(min : 0, : var max) = > max - value,
+        //     ColorChannel(isPolarAngle: true) = > (value + 180) % 360,
+        //     _ = > ,
+        // };
+        std::cerr << "invert channel is wrong\n";
+        return 0;
+      }
+
+      static BUILT_IN_FN(invert)
+      {
+
+        // if (arguments[0] is!SassNumber && !arguments[0].isSpecialNumber) {
+        //   warnForGlobalBuiltIn("color", "invert");
+        // }
+
+        const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
+        weight->checkPercent(compiler, Strings::weight);
+        if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0]) /* or isSpecialValue*/) {
+          // Allow only the value `100` or a percentage (unit == `% `)
+          const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
+          if (weight->value() != 100 || !weight->hasUnit(Strings::percent)) {
+            throw Exception::RuntimeException(compiler,
+              "Only one argument may be passed "
+              "to the plain-CSS invert() function.");
+          }
+          // Return function string since first argument was a number
+          // Need to remove the weight argument as it has a default value
+          return getFunctionString(Strings::invert, pstate, { arguments[0] });
+
+        }
+
+        ColorSpaced* color = arguments[0]->assertColorSpaced2(compiler, Strings::color);
+
+        if (arguments[2] == nullptr || arguments[2]->isNull()) {
+
+          /*
+    if (!color.isLegacy) {
+      throw SassScriptException(
+        "To use color.invert() with non-legacy color $color, you must provide "
+            "a \$space.",
+        "color",
+      );
+    }
+          */
+
+          // _checkPercent(weightNumber, "weight");
+
+
+          auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
+
+          auto rv = ColorSpaced::rgb(color->pstate(),
+            _invertChannel(rgb, color->space()._channels[0], rgb->getChannel0OrNull()),
+            _invertChannel(rgb, color->space()._channels[1], rgb->getChannel1OrNull()),
+            _invertChannel(rgb, color->space()._channels[2], rgb->getChannel2OrNull()),
+            color->getAlphaOrNull());
+
+          return rv;
+        }
+
+        String* spname = arguments[2]->assertString(compiler, "space");
+        spname->assertUnquoted(compiler, "space");
+        const ColorSpace& space = ColorSpace::fromNameRef(compiler, *spname);
+
+        double w = weight->valueInRangeWithUnit(compiler,
+          0, 100, "weight", unit_percent) / 100.0;
+
+        if (fuzzyEquals(w, 0.0, compiler.epsilon)) return color;
+
+        auto inSpace = color->toSpace2(space, pstate);
+
+        ColorSpaced* inverted = nullptr;
+
+        if (space == ColorSpace::hwb) {
+          inverted = ColorSpaced::hwb(pstate,
+            _invertChannel(inSpace, space._channels[0], inSpace->getChannel0OrNull()),
+            inSpace->getChannel1OrNull(),
+            inSpace->getChannel2OrNull(),
+            inSpace->getAlpha());
+
+        }
+        else if (space == ColorSpace::hsl || space == ColorSpace::lch || space == ColorSpace::oklch) {
+          inverted = ColorSpaced::forSpaceInternal(pstate, space,
+            _invertChannel(inSpace, space._channels[0], inSpace->getChannel0OrNull()),
+            inSpace->getChannel1OrNull(),
+            _invertChannel(inSpace, space._channels[2], inSpace->getChannel2OrNull()),
+            inSpace->getAlpha());
+        }
+        else {
+          inverted = ColorSpaced::forSpaceInternal(pstate, space,
+            _invertChannel(inSpace, space._channels[0], inSpace->getChannel0OrNull()),
+            _invertChannel(inSpace, space._channels[1], inSpace->getChannel1OrNull()),
+            _invertChannel(inSpace, space._channels[2], inSpace->getChannel2OrNull()),
+            inSpace->getAlpha());
+        }
+
+        if (inverted == nullptr) return arguments[0];
+
+        if (fuzzyEquals(w, 1.0, compiler.epsilon)) {
+          ColorSpaced* rv = inverted->toSpace2(color->space(), pstate);
+          return rv;
+        }
+
+        return arguments[0];
+
+
+
+      //   
       //   ColorRgbaObj inverse(color->copyAsRGBA()); // Make a copy!
       //   inverse->r(clamp(255.0 - inverse->r(), 0.0, 255.0));
       //   inverse->g(clamp(255.0 - inverse->g(), 0.0, 255.0));
       //   inverse->b(clamp(255.0 - inverse->b(), 0.0, 255.0));
       //   // Note: mixColors will create another unnecessary copy!
       //   return mixColors(inverse, color, weight, pstate, compiler);
-      // }
+      }
 
       // static BUILT_IN_FN(fnInvert)
       // {
@@ -2595,6 +2695,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // uint32_t idx_whiteness = ctx.createBuiltInFunction(key_whiteness, "$color", whiteness);
         // uint32_t idx_invert_strict = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", fnInvert);
         // uint32_t idx_invert_loose = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
+        uint32_t idx_invert = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%, $space: null", invert);
         // uint32_t idx_grayscale_strict = ctx.createBuiltInFunction(key_grayscale, "$color", noGrayscale);
         // uint32_t idx_grayscale_loose = ctx.createBuiltInFunction(key_grayscale, "$color", grayscale);
         // uint32_t idx_complement = ctx.createBuiltInFunction(key_complement, "$color", complement);
@@ -2658,7 +2759,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // ctx.exposeFunction(key_saturation, idx_saturation);
         // ctx.exposeFunction(key_blackness, idx_blackness);
         // ctx.exposeFunction(key_whiteness, idx_whiteness);
-        // ctx.exposeFunction(key_invert, idx_invert_loose);
+        ctx.exposeFunction(key_invert, idx_invert);
         // ctx.exposeFunction(key_grayscale, idx_grayscale_loose);
         // ctx.exposeFunction(key_complement, idx_complement);
         // ctx.exposeFunction(key_desaturate, idx_desaturate_loose);
@@ -2710,7 +2811,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // module.addFunction(key_saturation, idx_saturation);
         // module.addFunction(key_blackness, idx_blackness);
         // module.addFunction(key_whiteness, idx_whiteness);
-        // module.addFunction(key_invert, idx_invert_strict);
+        module.addFunction(key_invert, idx_invert);
         // module.addFunction(key_grayscale, idx_grayscale_strict);
         // module.addFunction(key_complement, idx_complement);
         // module.addFunction(key_desaturate, idx_desaturate_strict);

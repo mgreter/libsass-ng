@@ -946,6 +946,17 @@ namespace Sass {
     return value_;
   }
 
+  double Number::valueInRangeWithUnit(Logger& logger, double min, double max, const sass::string& name, const Units& units) const
+  {
+    auto rv = fuzzyCheckRangeVal(value(),
+      min, max, logger.epsilon);
+    if (rv.has_value()) return rv.value();
+    throw Exception::SassScriptException(
+      "Expected " + inspect() + " to be within .",
+      logger, pstate(), name);
+
+  }
+
   const Number* Number::checkPercent(Logger& logger, const sass::string& name) const
   {
     if (!hasUnit("%")) {

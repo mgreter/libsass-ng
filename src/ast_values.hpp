@@ -340,6 +340,8 @@ namespace Sass {
     void assertNoUnits(Logger& logger, const sass::string& name = Strings::empty) const;
     double assertRange(double min, double max, const Units& units, Logger& logger, const sass::string& name = Strings::empty) const;
 
+    double valueInRangeWithUnit(Logger& logger, double min, double max, const sass::string& name, const Units& units) const;
+
     const Number* checkPercent(Logger& logger, const sass::string& name) const;
 
     // Implement equality comparators for base value class

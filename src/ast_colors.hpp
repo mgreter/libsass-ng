@@ -1033,6 +1033,7 @@ namespace Sass {
     tl::optional<double> getChannel1OrNull() const;
     tl::optional<double> getChannel2OrNull() const;
     tl::optional<double> getChannelOrNull(int idx) const;
+    tl::optional<double> getAlphaOrNull() const;
 
     double getChannel0() const;
     double getChannel1() const;
@@ -1064,6 +1065,7 @@ namespace Sass {
       const char* colorName, const char* channelName) const;
 
     virtual ColorSpacedObj toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
+    virtual ColorSpaced* toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
 
   public:
 
@@ -1128,7 +1130,7 @@ namespace Sass {
       auto rv = _forSpace(pstate, ColorSpace::rgb,
         red, green, blue, alpha);
       if (rv) rv->forceRgb = forceRgb;
-      return rv;
+      return rv.detach();
     }
 
     static ColorSpaced* lab(
