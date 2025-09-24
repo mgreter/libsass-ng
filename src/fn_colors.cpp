@@ -2536,8 +2536,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       //
       //
 
-      static bool isNone(Value* value) {
-        return false;
+      static bool isNone(Value* value)
+      {
+        auto str = value->isaString();
+        return str != nullptr && str->hasQuotes() == false &&
+          StringUtils::equalsIgnoreCase(str->value(), "none", 4);
       }
 
       Number* _channelForChange(Compiler& compiler, const SourceSpan& pstate,
