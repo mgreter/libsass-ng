@@ -98,6 +98,12 @@ namespace Sass {
       return norm() == rhs.norm();
     }
 
+    // Compare against normalized string
+    bool operator==(const sass::string& rhs) const
+    {
+      return norm() == rhs;
+    }
+
     // Compare normalization forms
     bool operator<(const EnvKey& rhs) const
     {

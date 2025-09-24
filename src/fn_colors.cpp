@@ -2533,7 +2533,145 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       // 
       //   return arguments[0];
       // }
-      // 
+      //
+      //
+
+      static bool isNone(Value* value) {
+        return false;
+      }
+
+      Number* _channelForChange(Compiler& compiler, const SourceSpan& pstate,
+        Value* arg, const ColorSpaced* color, int idx)
+      {
+        if (arg == nullptr) {
+          auto before = color->getChannelOrNull(idx);
+          if (before.has_value()) {
+            if (idx > 0 && (color->space().name() == "hsl" || color->space().name() == "hwb")) {
+              return SASS_MEMORY_NEW(Number, pstate, before.value(), unit_percent);
+            }
+            else {
+              return SASS_MEMORY_NEW(Number, pstate, before.value());
+            }
+          }
+          return nullptr;
+        }
+        else {
+          // Keyword `none` is nullptr
+          if (isNone(arg)) return nullptr;
+          Number* nr = arg->isaNumber();
+          if (nr != nullptr) return nr;
+          throw Exception::SassScriptException(compiler, pstate,
+            arg->toCss() + " is not a number or unquoted \"none\".",
+            color->space()._channels[idx].name);
+        }
+      }
+
+      ColorSpaced* _changeColor(Compiler& compiler, const SourceSpan& pstate,
+        const ColorSpaced* color, const ValueVector& args, Value* alpha)
+      {
+
+        Number* c0 = _channelForChange(compiler, pstate, args[0], color, 0);
+        Number* c1 = _channelForChange(compiler, pstate, args[1], color, 1);
+        Number* c2 = _channelForChange(compiler, pstate, args[2], color, 2);
+
+        tl::optional<double> a;
+        if (alpha == nullptr) {
+          a = color->alpha();
+        }
+        else if (isNone(alpha)) {
+          a.reset();
+        }
+        else if (Number* a_nr = alpha->isaNumber()) {
+          if (a_nr->isPercent()) a = a_nr->valueInRangeWithUnit(compiler, 0.0, 1.0, "alpha", unit_percent); 
+          else if (!a_nr->hasUnits()) a = a_nr->valueInRange(compiler, 0.0, 1.0, "alpha");
+          else {
+            compiler.addDeprecation(pstate, Logger::WarningType::WARN_COLOR_ITPL, []() {
+              return "\$alpha: Passing a unit other than %";
+            });
+          }
+        }
+        else {
+          throw Exception::SassScriptException(compiler, pstate, "is not a number or unquoted \"none\".", "alpha");
+        }
+
+
+        return _colorFromChannels(
+          compiler, pstate,
+          &color->space(),
+          c0, c1, c2, a,
+          false);
+
+        // return color->toSpace(ColorSpace::rgb, pstate);
+
+      }
+
+      Value* _updateComponents(Compiler& compiler, const SourceSpan& pstate,
+        const ValueVector& arguments, bool change, bool adjust, bool scale)
+      {
+
+        auto input = arguments[0]->assertColorSpaced(compiler, "color");
+        auto kwds = arguments[1]->assertArgumentList(compiler, "kwds");
+
+        ValueFlatMap* keywords = kwds->keywords();
+
+        if (keywords == nullptr) return arguments[0];
+
+        Value* space_val = nullptr;
+        Value* alpha_val = nullptr;
+
+        // First get the global keywords
+        for (const auto& kv : *keywords) {
+          if (kv.first == "space") space_val = kv.second;
+          else if (kv.first == "alpha") alpha_val = kv.second;
+        }
+
+        const ColorSpace* space = nullptr;
+        if (space_val == nullptr) space = _sniffLegacyColorSpace(keywords);
+        else space = &ColorSpace::fromValueRef(compiler, space_val);
+        if (space == nullptr) space = &input->space();
+
+        // Convert input color to color optional space
+        const ColorSpaced* color = space == nullptr
+          ? input : input->toSpace(*space, pstate);
+
+        // Create args and init with nullptrs
+        ValueVector args(space->_channelSize);
+        args.resize(space->_channelSize, nullptr);
+
+        // Then get color space channels
+        for (const auto& kv : *keywords) {
+          if (kv.first == "space") continue;
+          else if (kv.first == "alpha") continue;
+          int idx = space->getChannelIndex(kv.first.norm());
+          if (idx == -1) throw Exception::SassScriptException(
+            compiler, pstate, "Color space " + space->name()
+            + " doesn't have a channel with this name.",
+            kv.first.orig());
+          args[idx] = kv.second;
+        }
+
+        auto rv = _changeColor(compiler,
+          pstate, color, args, nullptr);
+
+        return rv->toSpace(input->space(), pstate, false);
+
+        // var argumentList = arguments[1] as SassArgumentList;
+        // if (argumentList.asList.isNotEmpty) {
+        //   throw SassScriptException(
+        //     "Only one positional argument is allowed. All other arguments must "
+        //     "be passed by name.",
+        //     );
+        // }
+
+
+      }
+      
+
+      static BUILT_IN_FN(change)
+      {
+        return _updateComponents(compiler, pstate, arguments, true, false, false);
+      }
+
       // static BUILT_IN_FN(change)
       // {
       //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
@@ -2835,7 +2973,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // uint32_t idx_adjust_hue_strict = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue);
         // uint32_t idx_adjust_hue_loose = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
         // uint32_t idx_adjust = ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust);
-        // uint32_t idx_change = ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
+        uint32_t idx_change = ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
         // uint32_t idx_scale = ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale);
         // uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix);
 
@@ -2890,7 +3028,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // ctx.exposeFunction(key_darken, idx_darken_loose);
         // ctx.exposeFunction(key_adjust_hue, idx_adjust_hue_loose);
         // ctx.exposeFunction(key_adjust_color, idx_adjust);
-        // ctx.exposeFunction(key_change_color, idx_change);
+        ctx.exposeFunction(key_change_color, idx_change);
         // ctx.exposeFunction(key_scale_color, idx_scale);
         // ctx.exposeFunction(key_mix, idx_mix);
         // // ctx.exposeFunction(key_to_gamut, idx_to_gamut);
@@ -2942,7 +3080,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // module.addFunction(key_darken, idx_darken_strict);
         // module.addFunction(key_adjust_hue, idx_adjust_hue_strict);
         // module.addFunction(key_adjust, idx_adjust);
-        // module.addFunction(key_change, idx_change);
+        module.addFunction(key_change, idx_change);
         // module.addFunction(key_scale, idx_scale);
         // module.addFunction(key_mix, idx_mix);
         module.addFunction(key_to_gamut, idx_to_gamut);

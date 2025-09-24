@@ -537,6 +537,16 @@ namespace Sass {
     return hash_;
   }
 
+  const ColorSpace& ColorSpace::fromValueRef(Logger& logger, Value* value)
+  {
+    // assert(value != nullptr, "Space value must not be null");
+    String* space_str = value->assertString(logger, "space");
+    space_str->assertUnquoted(logger, "space"); // may throw
+    return fromNameRef(logger, *space_str); // safe access
+
+    // TODO: insert return statement here
+  }
+
   const ColorSpace& ColorSpace::fromNameRef(Logger& logger, const String& name)
   {
     if (StringUtils::equalsIgnoreCase(name.value(), "rgb")) return ColorSpace::rgb;

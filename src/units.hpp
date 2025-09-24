@@ -127,6 +127,13 @@ namespace Sass {
       return !isUnitless();
     }
 
+    // Returns true if percent unit
+    bool isPercent() const {
+      return denominators.size() == 0
+        && numerators.size() == 1
+        && numerators[0] == "%";
+    }
+
     const sass::string& unit2() const;
 
     // Returns true if we only have given numerator
