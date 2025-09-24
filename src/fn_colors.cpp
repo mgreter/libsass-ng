@@ -2729,14 +2729,20 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           else if (kv.first == "alpha") alpha_val = kv.second;
         }
 
+        bool legacy = false;
         const ColorSpace* space = nullptr;
-        if (space_val == nullptr) space = _sniffLegacyColorSpace(input, keywords);
+        if (space_val == nullptr) {
+          space = _sniffLegacyColorSpace(input, keywords);
+          legacy = true;
+        }
         else space = &ColorSpace::fromValueRef(compiler, space_val);
         if (space == nullptr) space = &input->space();
 
         // Convert input color to color optional space
         const ColorSpaced* color = space == nullptr
-          ? input : input->toSpace(*space, pstate);
+          ? input : input->toSpace(*space, pstate, !legacy);
+
+        std::cerr << "COLOR IN " << color->debug() << "\n";
 
         // Create args and init with nullptrs
         ValueVector args(space->_channelSize);
@@ -2789,7 +2795,6 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             auto rv = _adjustColor(compiler,
               pstate, color, numbers, alpha_nr);
             return rv->toSpace(input->space(), pstate, false);
-            return arguments[0];
           }
 
         }
