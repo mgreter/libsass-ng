@@ -288,16 +288,17 @@ namespace Sass {
 
   bool ColorSpaced::operator==(const Value& rhs) const
   {
-    if (const Color* color = rhs.isaColor()) {
+    if (const ColorSpaced* color = rhs.isaColorSpaced()) {
       // ColorHwba* hwba = color->toHWBA();
-      // return *this == *hwba;
+      return *this == *color;
     }
     return false;
   }
 
   bool ColorSpaced::operator==(const ColorSpaced& rhs) const
   {
-    return c0_ == rhs.c0_ &&
+    return space_ == rhs.space_ &&
+      c0_ == rhs.c0_ &&
       c1_ == rhs.c1_ &&
       c2_ == rhs.c2_ &&
       alpha_ == rhs.alpha();
