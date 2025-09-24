@@ -2655,7 +2655,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         auto rv = _changeColor(compiler,
-          pstate, color, args, nullptr);
+          pstate, color, args, alpha_val);
 
         return rv->toSpace(input->space(), pstate, false);
 
