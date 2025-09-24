@@ -2586,7 +2586,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           a.reset();
         }
         else if (Number* a_nr = alpha->isaNumber()) {
-          if (a_nr->isPercent()) a = a_nr->valueInRangeWithUnit(compiler, 0.0, 1.0, "alpha", unit_percent); 
+          if (a_nr->isPercent()) a = a_nr->valueInRangeWithUnit(compiler, 0.0, 100.0, "alpha", unit_percent) / 100.0; 
           else if (!a_nr->hasUnits()) a = a_nr->valueInRange(compiler, 0.0, 1.0, "alpha");
           else {
             compiler.addDeprecation(pstate, Logger::WarningType::WARN_COLOR_ITPL, []() {
