@@ -1066,7 +1066,8 @@ namespace Sass {
           // Fix something that is actually correct to pass tests
           // Adjust the spec tests once we figure out how to proceed
 
-          if (!(color->space() == ColorSpace::hwb && strcmp("gray", disp) == 0)) {
+          if (!(color->space() == ColorSpace::hwb && strcmp("gray", disp) == 0) &&
+              !(color->space() == ColorSpace::rgb && strcmp("gray", disp) == 0)) {
             append_string(disp);
             return;
           }

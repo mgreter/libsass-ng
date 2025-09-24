@@ -1018,4 +1018,30 @@ namespace Sass {
     }
   }
 
+
+  ColorSpaced* HslColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> hue, tl::optional<double> saturation, tl::optional<double> lightness, tl::optional<double> alpha) const
+  {
+    // Algorithm from the CSS3 spec: https://www.w3.org/TR/css3-color/#hsl-color.
+    double scaledHue = std::fmod(hue.value_or(0) / 360.0, 1.0);
+    double scaledSaturation = saturation.value_or(0) / 100.0;
+    double scaledLightness = lightness.value_or(0) / 100.0;
+
+    double m2 = scaledLightness <= 0.5
+      ? scaledLightness * (scaledSaturation + 1)
+      : scaledLightness +
+      scaledSaturation -
+      scaledLightness * scaledSaturation;
+    double m1 = scaledLightness * 2 - m2;
+
+    return ColorSpace::srgb.translate(
+      dest, pstate,
+      hueToRgb(m1, m2, scaledHue + 1.0 / 3.0),
+      hueToRgb(m1, m2, scaledHue),
+      hueToRgb(m1, m2, scaledHue - 1.0 / 3.0),
+      alpha,
+      !lightness.has_value(),
+      !saturation.has_value(),
+      !hue.has_value());
+  }
+
 }

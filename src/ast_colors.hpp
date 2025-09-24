@@ -635,6 +635,16 @@ namespace Sass {
       SassColorSpace::HSL,
       hsl_channels, 3)
     {}
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> hue,
+      tl::optional<double> saturation,
+      tl::optional<double> lightness,
+      tl::optional<double> alpha)
+        const override final;
+
   };
 
   class HwbColorSpace : public ColorSpace {
@@ -1223,7 +1233,8 @@ namespace Sass {
       tl::optional<double> alpha,
       bool forceRgb = false)
     {
-      auto rv = _forSpace(pstate, ColorSpace::rgb,
+      auto rv = _forSpace(pstate,
+        ColorSpace::rgb,
         red, green, blue, alpha);
       if (rv != nullptr) rv->forceRgb = forceRgb;
       return rv;
