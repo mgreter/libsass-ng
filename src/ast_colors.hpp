@@ -1318,15 +1318,17 @@ namespace Sass {
           c1, c2, alpha);
       }
       else if (space.name() == "lch" || space.name() == "oklch") {
-        return _forSpace(pstate, space,
+        auto rv = _forSpace(pstate, space,
           c0,
           c1.has_value() ? std::abs(c1.value()) : c1,
-          _normalizeHue(c2, c2.value_or(0) < 0.0),
+          _normalizeHue(c2, c1.value_or(0) < 0.0), // fuzzyLessThan
           alpha);
+        std::cerr << "for space " << rv->debug() << "\n";
+        return rv;
       }
       else {
         auto rv = _forSpace(pstate, space, c0, c1, c2, alpha);
-        std::cerr << "";
+        std::cerr << "for space " << rv->debug() << "\n";
         return rv;
       }
     }
