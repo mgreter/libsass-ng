@@ -154,6 +154,8 @@ namespace Sass {
   class VariableExpression;
   class Number;
   class Color;
+  class ColorSpace;
+  class ColorChannel;
   class ColorSpaced;
   class Boolean;
   class Null;

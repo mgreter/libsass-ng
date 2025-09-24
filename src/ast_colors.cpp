@@ -252,7 +252,7 @@ namespace Sass {
     return converted;
   }
 
-  ColorSpacedObj ColorSpaced::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
+  ColorSpaced* ColorSpaced::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
   {
     if (space == this->space_) {
       return SASS_MEMORY_NEW(ColorSpaced, this);
@@ -262,7 +262,7 @@ namespace Sass {
 
     // return SASS_MEMORY_NEW(ColorSpaced, this);
     // std::cerr << "Convert from " << space_.name() << " to " << space.name() << "\n";
-    ColorSpacedObj converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
+    ColorSpaced* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
 
     std::cerr << "  result " << converted->debug() << "\n";
 
@@ -511,11 +511,11 @@ namespace Sass {
 
     auto rv = ColorSpaced::_forSpace(
       pstate, dest,
-      transformedRed,
-      transformedGreen,
-      transformedBlue,
+      red.has_value() ? transformedRed : red,
+      green.has_value() ? transformedGreen : green,
+      blue.has_value() ? transformedBlue : blue,
       alpha);
-    return rv.detach();
+    return rv;
     // auto rv = ColorSpaced::_forSpace(pstate, dest, 1, 1, 1, 1, )
 
     // return ColorSpaced::forSpaceInternal(;
@@ -621,7 +621,7 @@ namespace Sass {
           whiteness,
           blackness,
           alpha);
-        return rv.detach();
+        return rv;
 
       }
       return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
@@ -639,7 +639,7 @@ namespace Sass {
         green.has_value() ? toLinear(green.value()) : green,
         blue.has_value() ? toLinear(blue.value()) : blue,
         alpha);
-      return rv.detach();
+      return rv;
     }
     else {
       return ColorSpace::convertLinear(dest,

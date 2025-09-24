@@ -789,7 +789,7 @@ namespace Sass {
         //std::cerr << " => " << rv->getChannel0() << ", " <<
         //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
 
-        return rv.detach();
+        return rv;
       }
       return nullptr;
     }
@@ -1584,8 +1584,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         String* space = spc->assertString(compiler, "space");
         space->assertUnquoted(compiler, "space");
         const ColorSpace& cpsc = ColorSpace::fromNameRef(compiler, *space);
-        ColorSpacedObj rv = color->toSpace(cpsc, col->pstate());
-        return rv.detach();
+        ColorSpaced* rv = color->toSpace(cpsc, col->pstate());
+        return rv;
       }
 
       static BUILT_IN_FN(channel)
@@ -1663,8 +1663,17 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       /*******************************************************************/
 
 /// Returns the inverse of the given [value] in a linear color channel.
-      double _invertChannel(ColorSpaced* color, const ColorChannel& channel, tl::optional<double> value)
+      double _invertChannel(Logger& logger, ColorSpaced* color, const ColorChannel& channel, tl::optional<double> value)
       {
+
+        if (!value.has_value()) {
+          Value* qwe = (color);
+          ColorSpaced* asd = qwe->isaColorSpaced();
+          std::cerr << "Has no value " << qwe->inspect() << "\n";
+          // throw Exception::SassScriptException(logger, color->pstate(), "color, channel");
+          throw Exception::MissingColorChannel(logger, color, channel);
+        }
+
         // if (value == nullptr) _missingChannelError(color, channel.name);
         if (channel.isLinear && channel.min < 0) return - value.value();
         else if (channel.isLinear && channel.min == 0) return channel.max - value.value();
@@ -1723,9 +1732,9 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
 
           auto rv = ColorSpaced::rgb(color->pstate(),
-            _invertChannel(rgb, color->space()._channels[0], rgb->getChannel0OrNull()),
-            _invertChannel(rgb, color->space()._channels[1], rgb->getChannel1OrNull()),
-            _invertChannel(rgb, color->space()._channels[2], rgb->getChannel2OrNull()),
+            _invertChannel(compiler, rgb, color->space()._channels[0], rgb->getChannel0OrNull()),
+            _invertChannel(compiler, rgb, color->space()._channels[1], rgb->getChannel1OrNull()),
+            _invertChannel(compiler, rgb, color->space()._channels[2], rgb->getChannel2OrNull()),
             color->getAlphaOrNull());
 
           return rv;
@@ -1746,25 +1755,27 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         if (space == ColorSpace::hwb) {
           inverted = ColorSpaced::hwb(pstate,
-            _invertChannel(inSpace, space._channels[0], inSpace->getChannel0OrNull()),
+            _invertChannel(compiler, inSpace, space._channels[0], inSpace->getChannel0OrNull()),
             inSpace->getChannel1OrNull(),
             inSpace->getChannel2OrNull(),
             inSpace->getAlpha());
 
         }
         else if (space == ColorSpace::hsl || space == ColorSpace::lch || space == ColorSpace::oklch) {
-          inverted = ColorSpaced::forSpaceInternal(pstate, space,
-            _invertChannel(inSpace, space._channels[0], inSpace->getChannel0OrNull()),
+          auto rv = ColorSpaced::forSpaceInternal(pstate, space,
+            _invertChannel(compiler, inSpace, space._channels[0], inSpace->getChannel0OrNull()),
             inSpace->getChannel1OrNull(),
-            _invertChannel(inSpace, space._channels[2], inSpace->getChannel2OrNull()),
+            _invertChannel(compiler, inSpace, space._channels[2], inSpace->getChannel2OrNull()),
             inSpace->getAlpha());
+          inverted = rv;
         }
         else {
-          inverted = ColorSpaced::forSpaceInternal(pstate, space,
-            _invertChannel(inSpace, space._channels[0], inSpace->getChannel0OrNull()),
-            _invertChannel(inSpace, space._channels[1], inSpace->getChannel1OrNull()),
-            _invertChannel(inSpace, space._channels[2], inSpace->getChannel2OrNull()),
+          auto rv = ColorSpaced::forSpaceInternal(pstate, space,
+            _invertChannel(compiler, inSpace, space._channels[0], inSpace->getChannel0OrNull()),
+            _invertChannel(compiler, inSpace, space._channels[1], inSpace->getChannel1OrNull()),
+            _invertChannel(compiler, inSpace, space._channels[2], inSpace->getChannel2OrNull()),
             inSpace->getAlpha());
+          inverted = rv;
         }
 
         if (inverted == nullptr) return arguments[0];
@@ -2218,8 +2229,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (spaceUntyped == nullptr) return color;
         if (spaceUntyped->isNull()) return color;
         const ColorSpace* space = ColorSpace::fromName(compiler, *spaceUntyped);
-        ColorSpacedObj rv = color->toSpace(*space, colorUntyped->pstate(), legacyMissing);
-        return rv.detach();
+        ColorSpaced* rv = color->toSpace(*space, colorUntyped->pstate(), legacyMissing);
+        return rv;
       }
 
       tl::optional<double> _adjustChannel(ColorSpaced* color, ColorChannel channel, tl::optional<double> oldValue, Number* adjustmentArg)
@@ -2229,14 +2240,14 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       ColorSpaced* _adjustColor(Logger& logger, ColorSpaced* color, Number** channelArgs, Number* alphaArg)
       {
-        ColorSpacedObj rv = ColorSpaced::_forSpace(color->pstate(), color->space(),
+        ColorSpaced* rv = ColorSpaced::_forSpace(color->pstate(), color->space(),
           _adjustChannel(color, color->space()._channels[0], color->getChannel0(), channelArgs[0]),
           _adjustChannel(color, color->space()._channels[1], color->getChannel1(), channelArgs[1]),
           _adjustChannel(color, color->space()._channels[2], color->getChannel2(), channelArgs[2]),
           _adjustChannel(color, AlphaChannel, color->getAlpha(), alphaArg)
             .and_then([&](tl::optional<double> a) { return a; })
         );
-        return rv.detach();
+        return rv;
       }
 
       // static BUILT_IN_FN(adjust)

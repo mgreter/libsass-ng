@@ -307,6 +307,12 @@ namespace Sass {
     };
 
 
+    class MissingColorChannel : public Base {
+    public:
+      MissingColorChannel(BackTraces traces,
+        const ColorSpaced* color,
+        const ColorChannel& channel);
+    };
 
     class InvalidCssValue : public Base {
       public:

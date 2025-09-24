@@ -4,6 +4,7 @@
 #include "exceptions.hpp"
 
 #include "ast_selectors.hpp"
+#include "ast_colors.hpp"
 #include "ast_values.hpp"
 #include "extension.hpp"
 #include <string.h>
@@ -495,6 +496,15 @@ namespace Sass {
     traces, pstate)
     {
       this->traces.push_back(pstate);
+  }
+
+  MissingColorChannel::MissingColorChannel(BackTraces traces, const ColorSpaced* color, const ColorChannel& channel)
+    : Base("Because the CSS working group is still deciding on the best behavior, "
+      "Sass doesn't currently support modifying missing channels (color: " +
+      color->toCss() + ".",
+    traces, color->pstate())
+  {
+    // this->traces.push_back(color->pstate());
   }
 
 }

@@ -1160,19 +1160,19 @@ namespace Sass {
     bool isChannelPowerless(Logger& logger, const String* channel,
       const char* colorName, const char* channelName) const;
 
-    virtual ColorSpacedObj toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
+    virtual ColorSpaced* toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
     virtual ColorSpaced* toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
 
   public:
 
 
-    static ColorSpacedObj _forSpace(
+    static ColorSpaced* _forSpace(
       const SourceSpan& pstate, const ColorSpace& space,
       tl::optional<double> c0, tl::optional<double> c1,
       tl::optional<double> c2, tl::optional<double> alpha
       /*,Logger& logger, format */)
     {
-      ColorSpacedObj color = SASS_MEMORY_NEW(ColorSpaced, pstate, space, c0, c1, c2,
+      ColorSpaced* color = SASS_MEMORY_NEW(ColorSpaced, pstate, space, c0, c1, c2,
         alpha/*.and_then([&](double a) { return tl::optional<double>(fuzzyAssertRange(a, 0, 1, logger)); })*/);
       // assert(space == ColorSpace::rgb);
       // assert(space != ColorSpace::lms);
@@ -1199,7 +1199,7 @@ namespace Sass {
       auto rv = forSpaceInternal(pstate,
         ColorSpace::hsl,
         red, green, blue, alpha);
-      return rv.detach();
+      return rv;
     }
 
     static ColorSpaced* hwb(
@@ -1212,7 +1212,7 @@ namespace Sass {
       auto rv = forSpaceInternal(pstate,
         ColorSpace::hwb,
         red, green, blue, alpha);
-      return rv.detach();
+      return rv;
     }
 
     static ColorSpaced* rgbInternal(
@@ -1226,7 +1226,7 @@ namespace Sass {
       auto rv = _forSpace(pstate, ColorSpace::rgb,
         red, green, blue, alpha);
       if (rv != nullptr) rv->forceRgb = forceRgb;
-      return rv.detach();
+      return rv;
     }
 
     static ColorSpaced* lab(
@@ -1239,7 +1239,7 @@ namespace Sass {
       auto rv = _forSpace(pstate,
         ColorSpace::lab,
         lightness, a, b, alpha);
-      return rv.detach();
+      return rv;
     }
 
     static tl::optional<double> _normalizeHue(
@@ -1252,14 +1252,14 @@ namespace Sass {
         return rv;
     }
 
-    static ColorSpacedObj forSpaceInternal(
+    static ColorSpaced* forSpaceInternal(
       const SourceSpan& pstate, const ColorSpace& space,
       tl::optional<double> c0, tl::optional<double> c1,
       tl::optional<double> c2, tl::optional<double> alpha)
     {
 
-      //std::cerr << "ForSpaceInternal " << c0.value_or(0) << ", "
-      //  << c1.value_or(0) << ", " << c2.value_or(0) << "\n";
+      std::cerr << "ForSpaceInternal " << c0.value_or(-32) << ", "
+        << c1.value_or(-42) << ", " << c2.value_or(0) << "\n";
 
       if (space.name() == "hsl") {
         return _forSpace(pstate, space,
@@ -1281,7 +1281,9 @@ namespace Sass {
           alpha);
       }
       else {
-        return _forSpace(pstate, space, c0, c1, c2, alpha);
+        auto rv = _forSpace(pstate, space, c0, c1, c2, alpha);
+        std::cerr << "";
+        return rv;
       }
     }
 
@@ -1319,7 +1321,7 @@ namespace Sass {
       }
       auto rv = ColorSpaced::forSpaceInternal(pstate,
         space, lightness, chroma, hue, alpha);
-      return rv.detach();
+      return rv;
     }
 
     // static ColorSpacedObj _forSpaceInternal(

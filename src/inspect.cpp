@@ -908,9 +908,7 @@ namespace Sass {
   void Inspect::_writeHsl(ColorSpaced* color)
   {
 
-    ColorSpacedObj hsl = color->toSpace(ColorSpace::hsl, color->pstate());
-    // std::cerr << "write hsl " << hsl->debug() << "\n";
-    hsl.detach();
+    ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -940,9 +938,7 @@ namespace Sass {
   void Inspect::_writeHwb(ColorSpaced* color)
   {
 
-    ColorSpacedObj hwb = color->toSpace(ColorSpace::hwb, color->pstate());
-    // std::cerr << "write hwb " << hwb->debug() << "\n";
-    hwb.detach();
+    ColorSpaced* hwb = color->toSpace(ColorSpace::hwb, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -972,9 +968,9 @@ namespace Sass {
   void Inspect::_writeRgb(ColorSpaced* color)
   {
     sass::string ss;
-    ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    ColorSpaced* rgb = color->toSpace(ColorSpace::rgb, color->pstate());
     // std::cerr << "write rgb " << rgb->debug() << "\n";
-    rgb.detach();
+
     if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {
       ss += "rgb(";
       ss += PrintNumber(rgb->channel(str_red), outopt); ss += ", ";
@@ -1061,7 +1057,7 @@ namespace Sass {
     }
 
     if (opaque) {
-      if (ColorSpacedObj rgba = color->toSpace(ColorSpace::rgb, color->pstate())) {
+      if (ColorSpaced* rgba = color->toSpace(ColorSpace::rgb, color->pstate())) {
         int numval = fuzzyRound(rgba->getChannel0(), sass::epsilon) * 0x10000
           + fuzzyRound(rgba->getChannel1(), sass::epsilon) * 0x100
           + fuzzyRound(rgba->getChannel2(), sass::epsilon);
@@ -1072,7 +1068,6 @@ namespace Sass {
 
           if (!(color->space() == ColorSpace::hwb && strcmp("gray", disp) == 0)) {
             append_string(disp);
-            rgba.detach();
             return;
           }
         }
@@ -1083,10 +1078,8 @@ namespace Sass {
           _writeHexComponent((int)std::round(rgba->getChannel0()));
           _writeHexComponent((int)std::round(rgba->getChannel1()));
           _writeHexComponent((int)std::round(rgba->getChannel2()));
-          rgba.detach();
           return;
         }
-        rgba.detach();
       }
 
       //if (ColorSpaced* rgb = color->toSpace(ColorSpace::rgb, color->pstate())) {
