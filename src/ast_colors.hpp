@@ -662,6 +662,30 @@ namespace Sass {
       SassColorSpace::LAB,
       lab_channels, 3)
     {}
+
+    ColorSpaced* translate(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> hue,
+      tl::optional<double> whiteness,
+      tl::optional<double> blackness,
+      tl::optional<double> alpha,
+      bool missingChroma = false,
+      bool missingHue = false) const;
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> hue,
+      tl::optional<double> whiteness,
+      tl::optional<double> blackness,
+      tl::optional<double> alpha)
+      const override final
+    {
+      return translate(dest, pstate,
+        hue, whiteness, blackness, alpha);
+    }
+
   };
 
   class LchColorSpace : public ColorSpace {
@@ -671,6 +695,16 @@ namespace Sass {
       SassColorSpace::LCH,
       lch_channels, 3)
     {}
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> hue,
+      tl::optional<double> whiteness,
+      tl::optional<double> blackness,
+      tl::optional<double> alpha)
+        const override final;
+
   };
 
   class LmsColorSpace : public ColorSpace {
@@ -713,6 +747,20 @@ namespace Sass {
       bool missingHue = false,
       bool missingA = false,
       bool missingB = false) const;
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha)
+      const override final
+    {
+      return translate(dest, pstate,
+        red, green, blue, alpha);
+    }
+
   };
 
   class OkLabColorSpace : public ColorSpace {
@@ -732,6 +780,19 @@ namespace Sass {
       tl::optional<double> alpha,
       bool missingChroma = false,
       bool missingHue = false) const;
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> lightness,
+      tl::optional<double> chroma,
+      tl::optional<double> hue,
+      tl::optional<double> alpha)
+      const override final
+    {
+      return translate(dest, pstate,
+        lightness, chroma, hue, alpha);
+    }
 
   };
 
@@ -886,6 +947,14 @@ namespace Sass {
       return ColorSpace::transformationMatrix(dest);
     }
 
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> hue,
+      tl::optional<double> whiteness,
+      tl::optional<double> blackness,
+      tl::optional<double> alpha) const override final;
+
   };
 
   class SrgbColorSpace : public ColorSpace {
@@ -924,6 +993,20 @@ namespace Sass {
       bool missingLightness = false,
       bool missingChroma = false,
       bool missingHue = false) const;
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha)
+      const override final
+    {
+      return translate(dest, pstate,
+        red, green, blue, alpha);
+    }
+
   };
 
   class XyzD50ColorSpace : public ColorSpace {
@@ -966,6 +1049,19 @@ namespace Sass {
       bool missingHue = false,
       bool missingA = false,
       bool missingB = false) const;
+
+    ColorSpaced* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha)
+      const override final
+    {
+      return translate(dest, pstate,
+        red, green, blue, alpha);
+    }
 
   };
 
@@ -1129,7 +1225,7 @@ namespace Sass {
     {
       auto rv = _forSpace(pstate, ColorSpace::rgb,
         red, green, blue, alpha);
-      if (rv) rv->forceRgb = forceRgb;
+      if (rv != nullptr) rv->forceRgb = forceRgb;
       return rv.detach();
     }
 
@@ -1140,9 +1236,10 @@ namespace Sass {
       tl::optional<double> b,
       tl::optional<double> alpha)
     {
-      return _forSpace(pstate,
+      auto rv = _forSpace(pstate,
         ColorSpace::lab,
         lightness, a, b, alpha);
+      return rv.detach();
     }
 
     static tl::optional<double> _normalizeHue(
@@ -1220,8 +1317,9 @@ namespace Sass {
           if (hue < 0) hue.value() += 360.0;
         }
       }
-      return ColorSpaced::forSpaceInternal(pstate,
+      auto rv = ColorSpaced::forSpaceInternal(pstate,
         space, lightness, chroma, hue, alpha);
+      return rv.detach();
     }
 
     // static ColorSpacedObj _forSpaceInternal(

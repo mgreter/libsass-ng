@@ -758,14 +758,16 @@ namespace Sass {
         auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
         auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
         // std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
-        auto rv = SASS_MEMORY_NEW(ColorSpaced,
-          pstate, *space,
-          a,
-          b,
-          c,
-          alpha);
+        auto rv = ColorSpaced::rgbInternal(pstate,
+          a, b, c, alpha, fromRgbFunction);
+        // auto rv = SASS_MEMORY_NEW(ColorSpaced,
+        //   pstate, *space,
+        //   a,
+        //   b,
+        //   c,
+        //   alpha);
 
-        rv->forceRgb = fromRgbFunction;
+        // rv->forceRgb = fromRgbFunction;
 
         //std::cerr << " => " << rv->getChannel0() << ", " <<
         //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
@@ -777,7 +779,7 @@ namespace Sass {
         auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
         auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
         // std::cerr << " RV " << a.value_or(0) << ", " << b.value_or(0) << ", " << c.value_or(0) << "\n";
-        auto rv = SASS_MEMORY_NEW(ColorSpaced,
+        auto rv = ColorSpaced::forSpaceInternal( // SASS_MEMORY_NEW(ColorSpaced,
           pstate, *space,
           a,
           b,
@@ -787,7 +789,7 @@ namespace Sass {
         //std::cerr << " => " << rv->getChannel0() << ", " <<
         //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
 
-        return rv;
+        return rv.detach();
       }
       return nullptr;
     }

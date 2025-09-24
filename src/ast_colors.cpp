@@ -232,12 +232,13 @@ namespace Sass {
       return SASS_MEMORY_NEW(ColorSpaced, this);
     }
 
-    // std::cerr << "Do toSpace " << getChannel0() << ", "
-    //   << getChannel1() << ", " << getChannel2() << "\n";
+    std::cerr << "Do toSpace from " << debug() << " to " << space.name() << "\n";
 
     // return SASS_MEMORY_NEW(ColorSpaced, this);
     // std::cerr << "Convert from " << space_.name() << " to " << space.name() << "\n";
     ColorSpaced* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
+
+    std::cerr << "  result " << converted->debug() << "\n";
 
     //return !legacyMissing &&
     //  converted->space().isLegacy() &&
@@ -257,12 +258,13 @@ namespace Sass {
       return SASS_MEMORY_NEW(ColorSpaced, this);
     }
 
-    // std::cerr << "Do toSpace " << getChannel0() << ", "
-    //   << getChannel1() << ", " << getChannel2() << "\n";
+    std::cerr << "Do toSpace from " << debug() << " to " << space.name() << "\n";
 
     // return SASS_MEMORY_NEW(ColorSpaced, this);
     // std::cerr << "Convert from " << space_.name() << " to " << space.name() << "\n";
     ColorSpacedObj converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
+
+    std::cerr << "  result " << converted->debug() << "\n";
 
     //return !legacyMissing &&
     //  converted->space().isLegacy() &&
@@ -406,6 +408,7 @@ namespace Sass {
 
   double ColorSpace::toLinear(double channel) const
   {
+    std::cerr << "Not implemented for " << name_ << "\n";
     throw std::runtime_error("toLinear not implemented");
   }
 
@@ -610,7 +613,7 @@ namespace Sass {
       else {
         double whiteness = min * 100;
         double blackness = 100 - max * 100;
-        return ColorSpaced::forSpaceInternal(
+        auto rv = ColorSpaced::forSpaceInternal(
           pstate, dest,
           missingHue || fuzzyGreaterThanOrEquals(whiteness + blackness, 100, 0.00001)
           ? tl::optional<double>()
@@ -618,6 +621,7 @@ namespace Sass {
           whiteness,
           blackness,
           alpha);
+        return rv.detach();
 
       }
       return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb, 1, 1, 1, 1);
@@ -630,11 +634,12 @@ namespace Sass {
         alpha);
     }
     else if (dest == ColorSpace::srgb_linear) {
-      return ColorSpaced::forSpaceInternal(pstate, dest,
+      auto rv = ColorSpaced::forSpaceInternal(pstate, dest,
         red.has_value() ? toLinear(red.value()) : red,
         green.has_value() ? toLinear(green.value()) : green,
         blue.has_value() ? toLinear(blue.value()) : blue,
         alpha);
+      return rv.detach();
     }
     else {
       return ColorSpace::convertLinear(dest,
@@ -916,6 +921,101 @@ namespace Sass {
       alpha,
       false, false,
       !hue.has_value());
+  }
+
+  ColorSpaced* LchColorSpace::convert(
+    const ColorSpace& dest,
+    const SourceSpan& pstate,
+    tl::optional<double> lightness,
+    tl::optional<double> chroma,
+    tl::optional<double> hue,
+    tl::optional<double> alpha) const
+  {
+    double hueRadians = hue.value_or(0) * PI / 180.0;
+    auto rv = ColorSpace::lab.translate(dest, pstate,
+      lightness,
+      chroma.value_or(0) * std::cos(hueRadians),
+      chroma.value_or(0) * std::sin(hueRadians),
+      alpha,
+      !chroma.has_value(),
+      !hue.has_value());
+    return rv;
+  }
+
+  /// Converts an f-format component to the X or Z channel of an XYZ color.
+  double _convertFToXorZ(double component) {
+    double cubed = std::pow(component, 3.0) + 0.0;
+    return cubed > labEpsilon ? cubed : (116.0 * component - 16.0) / labKappa;
+  }
+
+  ColorSpaced* LabColorSpace::translate(
+    const ColorSpace& dest,
+    const SourceSpan& pstate,
+    tl::optional<double> lightness,
+    tl::optional<double> a,
+    tl::optional<double> b,
+    tl::optional<double> alpha,
+    bool missingChroma,
+    bool missingHue) const
+  {
+
+    if (dest.name() == "lab")
+    {
+      bool powerlessAB = !lightness.has_value() || fuzzyEquals(lightness.value(), 0, sass::epsilon);
+      return ColorSpaced::lab(pstate,
+        lightness,
+        !a.has_value() || powerlessAB ? tl::optional<double>() : a,
+        !b.has_value() || powerlessAB ? tl::optional<double>() : b,
+        alpha);
+    }
+    else if (dest.name() == "lch")
+    {
+      return ColorSpaced::labToLch(pstate,
+        dest, lightness, a, b, alpha,
+        missingChroma, missingHue);
+    }
+    else
+    {
+      bool missingLightness = !lightness.has_value();
+      lightness = 0;
+      // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
+      // and http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+      double f1 = (lightness.value() + 16.0) / 116.0;
+
+      return ColorSpace::xyzd50.translate(
+        dest, pstate,
+        _convertFToXorZ((a.value_or(0)) / 500 + f1) * d50[0],
+        (lightness.value() > labKappa * labEpsilon
+          ? std::pow((lightness.value() + 16) / 116, 3) * 1.0
+          : lightness.value() / labKappa) *
+        d50[1],
+        _convertFToXorZ(f1 - (b.value_or(0)) / 200) * d50[2],
+        alpha,
+        missingLightness,
+        missingChroma,
+        missingHue,
+        !a.has_value(),
+        !b.has_value());
+    }
+
+  }
+
+  ColorSpaced* SrgbLinearColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate,
+    tl::optional<double> red, tl::optional<double> green, tl::optional<double> blue, tl::optional<double> alpha) const
+  {
+    if (dest.name() == "rgb" || dest.name() == "hsl" ||
+        dest.name() == "hwb" || dest.name() == "srgb")
+    {
+      return ColorSpace::srgb.convert(
+        dest, pstate,
+        red.transform(srgbAndDisplayP3FromLinear),
+        green.transform(srgbAndDisplayP3FromLinear),
+        blue.transform(srgbAndDisplayP3FromLinear),
+        alpha);
+    }
+    else {
+      return ColorSpace::convert(dest, pstate, red, green, blue, alpha);
+    }
   }
 
 }
