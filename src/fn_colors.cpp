@@ -1689,6 +1689,38 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return 0;
       }
 
+      ColorSpaced* mixLegacy(ColorSpaced* color1, ColorSpaced* color2, const Number* weight)
+      {
+
+        ColorSpaced* rgb1 = color1->toSpace(ColorSpace::rgb, color1->pstate());
+        ColorSpaced* rgb2 = color2->toSpace(ColorSpace::rgb, color2->pstate());
+
+
+        // double weightScale = weight->valueInRange(0, 100, "weight") / 100;
+
+        double weightScale = weight->value() / 100.0;
+
+        std::cerr << "Mix " << weightScale << " " << rgb1->debug() << " with " << rgb2->debug() << "\n";
+
+        double normalizedWeight = weightScale * 2.0 - 1.0;
+        double alphaDistance = color1->getAlpha() - color2->getAlpha();
+
+        double combinedWeight1 = normalizedWeight * alphaDistance == -1
+          ? normalizedWeight
+          : (normalizedWeight + alphaDistance) /
+          (1.0 + normalizedWeight * alphaDistance);
+        double weight1 = (combinedWeight1 + 1.0) / 2.0;
+        double weight2 = 1 - weight1;
+
+        return ColorSpaced::rgb(color2->pstate(),
+          rgb1->getChannel0() * weight1 + rgb2->getChannel0() * weight2,
+          rgb1->getChannel1() * weight1 + rgb2->getChannel1() * weight2,
+          rgb1->getChannel2() * weight1 + rgb2->getChannel2() * weight2,
+          rgb1->getAlpha() * weightScale + rgb2->getAlpha() * (1.0 - weightScale));
+
+
+      }
+
       static BUILT_IN_FN(invert)
       {
 
@@ -1729,13 +1761,27 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           // _checkPercent(weightNumber, "weight");
 
 
+          std::cerr << "Before invert color " << color->debug() << "\n";
+
           auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
 
-          auto rv = ColorSpaced::rgb(color->pstate(),
+          std::cerr << "Before invert as rgb " << rgb->debug() << "\n";
+
+          auto inv = ColorSpaced::rgb(color->pstate(),
             _invertChannel(compiler, rgb, color->space()._channels[0], rgb->getChannel0OrNull()),
             _invertChannel(compiler, rgb, color->space()._channels[1], rgb->getChannel1OrNull()),
             _invertChannel(compiler, rgb, color->space()._channels[2], rgb->getChannel2OrNull()),
             color->getAlphaOrNull());
+
+          std::cerr << "After invert as rgb " << inv->debug() << "\n";
+
+          auto mixed = mixLegacy(inv, color, weight);
+
+          std::cerr << "After mixing as rgb " << mixed->debug() << "\n";
+
+          auto rv = mixed->toSpace(color->space(), color->pstate());
+
+          std::cerr << "After mixing as color " << rv->debug() << "\n";
 
           return rv;
         }
