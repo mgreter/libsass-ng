@@ -1675,9 +1675,10 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         // if (value == nullptr) _missingChannelError(color, channel.name);
-        if (channel.isLinear && channel.min < 0) return - value.value();
+        if (channel.isLinear && channel.min < 0) return 0.0 - value.value();
         else if (channel.isLinear && channel.min == 0) return channel.max - value.value();
         else if (channel.isPolarAngle) return std::fmod(value.value() + 180.0, 360.0);
+
         // else throw UnsupportedError("Unknown channel $channel.")
         // return switch (channel) {
         //   LinearChannel(min: < 0) = > -value,
@@ -1685,8 +1686,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         //     ColorChannel(isPolarAngle: true) = > (value + 180) % 360,
         //     _ = > ,
         // };
-        std::cerr << "invert channel is wrong\n";
-        return 0;
+        throw Exception::SassScriptException(logger, color->pstate(),
+          "Unknown channel " + channel.name + ".");
       }
 
       ColorSpaced* mixLegacy(ColorSpaced* color1, ColorSpaced* color2, const Number* weight)
@@ -1748,6 +1749,12 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         if (arguments[2] == nullptr || arguments[2]->isNull()) {
 
+          if (!color->isLegacy()) {
+            throw Exception::SassScriptException(compiler, pstate,
+              "To use color.invert() with non-legacy color " + color->toCss()
+              + ", you must provide a $space.", "color");
+          }
+
           /*
     if (!color.isLegacy) {
       throw SassScriptException(
@@ -1768,9 +1775,9 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           std::cerr << "Before invert as rgb " << rgb->debug() << "\n";
 
           auto inv = ColorSpaced::rgb(color->pstate(),
-            _invertChannel(compiler, rgb, color->space()._channels[0], rgb->getChannel0OrNull()),
-            _invertChannel(compiler, rgb, color->space()._channels[1], rgb->getChannel1OrNull()),
-            _invertChannel(compiler, rgb, color->space()._channels[2], rgb->getChannel2OrNull()),
+            _invertChannel(compiler, rgb, rgb->space()._channels[0], rgb->getChannel0OrNull()),
+            _invertChannel(compiler, rgb, rgb->space()._channels[1], rgb->getChannel1OrNull()),
+            _invertChannel(compiler, rgb, rgb->space()._channels[2], rgb->getChannel2OrNull()),
             color->getAlphaOrNull());
 
           std::cerr << "After invert as rgb " << inv->debug() << "\n";
