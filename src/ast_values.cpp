@@ -946,15 +946,31 @@ namespace Sass {
     return value_;
   }
 
+  double Number::valueInRange(Logger& logger, double min, double max, const sass::string& name) const
+  {
+    auto rv = fuzzyCheckRangeVal(value(),
+      min, max, logger.epsilon);
+    if (rv.has_value()) return rv.value();
+    sass::sstream msg; msg << "Expected "
+      << inspect() + " to be within "
+      << min << unit() << " and "
+      << max << unit() << ".";
+    throw Exception::SassScriptException(
+      msg.str(), logger, pstate(), name);
+
+  }
+
   double Number::valueInRangeWithUnit(Logger& logger, double min, double max, const sass::string& name, const Units& units) const
   {
     auto rv = fuzzyCheckRangeVal(value(),
       min, max, logger.epsilon);
     if (rv.has_value()) return rv.value();
+    sass::sstream msg; msg << "Expected "
+      << inspect() + " to be within "
+      << min << units.unit() << " and "
+      << max << units.unit() << ".";
     throw Exception::SassScriptException(
-      "Expected " + inspect() + " to be within .",
-      logger, pstate(), name);
-
+      msg.str(), logger, pstate(), name);
   }
 
   const Number* Number::checkPercent(Logger& logger, const sass::string& name) const

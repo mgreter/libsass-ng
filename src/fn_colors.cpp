@@ -604,7 +604,7 @@ namespace Sass {
       if (color->isLegacy() == false) {
         throw Exception::SassScriptException(logger, pstate,
           "Expected " + color->toCss() + " to be in the legacy RGB, HSL, or HWB color space.\n\n"
-          "Recommendation: color.change(" + color->toCss() + ", \$alpha: " + second->toCss() + ")", name);
+          "Recommendation: color.change(" + color->toCss() + ", $alpha: " + second->toCss() + ")", name);
       }
 
       // color->assertLegacy(logger, "color");
@@ -1735,16 +1735,16 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           "Unknown channel " + channel.name + ".");
       }
 
-      ColorSpaced* mixLegacy(ColorSpaced* color1, ColorSpaced* color2, const Number* weight)
+      ColorSpaced* mixLegacy(Logger& logger, ColorSpaced* color1, ColorSpaced* color2, const Number* weight)
       {
 
         ColorSpaced* rgb1 = color1->toSpace(ColorSpace::rgb, color1->pstate());
         ColorSpaced* rgb2 = color2->toSpace(ColorSpace::rgb, color2->pstate());
 
 
-        // double weightScale = weight->valueInRange(0, 100, "weight") / 100;
+        double weightScale = weight->valueInRange(logger, 0.0, 100.0, "weight") / 100.0;
 
-        double weightScale = weight->value() / 100.0;
+        // double weightScale = weight->value() / 100.0;
 
         std::cerr << "Mix " << weightScale << " " << rgb1->debug() << " with " << rgb2->debug() << "\n";
 
@@ -1827,7 +1827,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
           std::cerr << "After legacy invert as rgb " << inv->debug() << "\n";
 
-          auto mixed = mixLegacy(inv, color, weight);
+          auto mixed = mixLegacy(compiler, inv, color, weight);
 
           std::cerr << "After legacy  mixing as rgb " << mixed->debug() << "\n";
 
