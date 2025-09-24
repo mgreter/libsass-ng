@@ -93,6 +93,9 @@ namespace Sass {
       void append_colon_separator(void);
       void append_delimiter(void);
 
+      bool isInspect() const;
+      bool isRelativeColor(const ColorSpaced* color) const;
+
   };
 
 }

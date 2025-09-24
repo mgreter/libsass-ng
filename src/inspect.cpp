@@ -1146,6 +1146,32 @@ namespace Sass {
     append_string(")");
   }
 
+  bool Emitter::isInspect() const
+  {
+    return false;
+  }
+
+  bool Emitter::isRelativeColor(const ColorSpaced* color) const
+  {
+    const ColorSpace& space = color->space();
+    if (space.name() == "lab" || space.name() == "lch")
+    {
+      return !fuzzyInRange(color->getChannel0(), 0.0, 100.0, outopt.epsilon)
+        && !color->isChannel1Missing() && !color->isChannel2Missing();
+    }
+    else if (space.name() == "lab" || space.name() == "lch")
+    {
+      return !fuzzyInRange(color->getChannel0(), 0.0, 1.0, outopt.epsilon)
+        && !color->isChannel1Missing() && !color->isChannel2Missing();
+    }
+    else if (space.name() == "lab" || space.name() == "lch")
+    {
+      return fuzzyLessThan(color->getChannel1(), 0.0, outopt.epsilon)
+        && !color->isChannel0Missing() && !color->isChannel2Missing();
+    }
+    return false;
+  }
+
   // T visitColorRGBA(SassColor value);
   void Inspect::visitColor(Color* color)
   {
@@ -1189,6 +1215,22 @@ namespace Sass {
       append_mandatory_space();
       write_channel(spaced->getChannel2OrNull(), "%");
       _maybeWriteSlashAlpha(spaced);
+      append_string(")");
+    }
+
+    else if (isRelativeColor(spaced)) {
+
+      append_string("color-mix(in ");
+      append_string(spaced->space().name());
+      append_comma_separator();
+      // The XYZ space has no gamut restrictions, so we use it to represent
+      // the out-of-gamut color before converting into the target space.
+      _writeColorFunction(spaced->toSpace(ColorSpace::xyzd65, spaced->pstate()));
+      append_optional_space();
+      append_string("100%");
+      append_comma_separator();
+      append_string("black");
+      // _buffer.write(_isCompressed ? 'red' : 'black');
       append_string(")");
     }
 

@@ -89,6 +89,14 @@ namespace Sass {
       ? floorl(number) : ceill(number));
   }
 
+  // Returns whether [number] is within [min] and [max]
+  // inclusive, using fuzzy equality.
+  inline bool fuzzyInRange(double number, double min, double max, double epsilon)
+  {
+    return fuzzyGreaterThanOrEquals(number, min, epsilon)
+      && fuzzyLessThanOrEquals(number, max, epsilon);
+  }
+
   // Returns `true` if it's within [min] and [max],
   // or [number] is [fuzzyEquals] to [min] or [max].
   inline bool fuzzyCheckRange(double number, double min, double max, double epsilon)
