@@ -2604,12 +2604,17 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         double result = oldValue.value() + adjusted.value();
 
+        std::cerr << "Adjust channel " << channel.name << " -> " << result << "\n";
+
         if (channel.lowerClamped == true && result < channel.min) {
+          std::cerr << "Clamp to lower\n";
           return oldValue.value() < channel.min ? std::max(oldValue.value(), result) : channel.min;
         }
-        else if (channel.upperClamped == true && result > channel.min) {
+        else if (channel.upperClamped == true && result > channel.max) {
+          std::cerr << "Clamp to upper\n";
           return oldValue.value() > channel.max ? std::min(oldValue.value(), result) : channel.max;
         }
+
         return result;
       }
 
@@ -2617,44 +2622,44 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const ColorSpaced* color, const NumberVector& args, Number* alpha)
       {
 
-        return ColorSpaced::forSpaceInternal(
+        auto c0 = _adjustChannel(
+          compiler,
+          pstate,
+          color,
+          color->space()._channels[0],
+          color->getChannel0OrNull(),
+          args[0]);
+        auto c1 = _adjustChannel(
+          compiler,
+          pstate,
+          color,
+          color->space()._channels[1],
+          color->getChannel1OrNull(),
+          args[1]);
+        auto c2 = _adjustChannel(
+          compiler,
+          pstate,
+          color,
+          color->space()._channels[2],
+          color->getChannel2OrNull(),
+          args[2]);
+        // The color space doesn't matter for alpha, as long as it's not
+        // strictly bounded.
+        auto a = _adjustChannel(
+          compiler,
+          pstate,
+          color,
+          AlphaChannel,
+          color->getAlphaOrNull(),
+          alpha).transform([](double alpha) {
+            return clampLikeCss(alpha, 0, 1);
+          });
+
+        auto rv = ColorSpaced::forSpaceInternal(
           pstate, color->space(),
-          _adjustChannel(
-            compiler,
-            pstate,
-            color,
-            color->space()._channels[0],
-            color->getChannel0OrNull(),
-            args[0]),
-          _adjustChannel(
-            compiler,
-            pstate,
-            color,
-            color->space()._channels[1],
-            color->getChannel1OrNull(),
-            args[1]),
-          _adjustChannel(
-            compiler,
-            pstate,
-            color,
-            color->space()._channels[2],
-            color->getChannel2OrNull(),
-            args[2]),
-          // The color space doesn't matter for alpha, as long as it's not
-          // strictly bounded.
-          _adjustChannel(
-            compiler,
-            pstate,
-            color,
-            AlphaChannel,
-            color->getAlphaOrNull(),
-            alpha).transform([](double alpha) {
-              return clampLikeCss(alpha, 0, 1);
-            })
-          );
-
-
-        return nullptr;
+          c0, c1, c2, a);
+        std::cerr << "Adjusted " << rv->debug() << "\n";
+        return rv;
       }
 
       ColorSpaced* _changeColor(Compiler& compiler, const SourceSpan& pstate,
