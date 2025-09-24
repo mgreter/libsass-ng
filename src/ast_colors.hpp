@@ -1302,8 +1302,8 @@ namespace Sass {
       tl::optional<double> c2, tl::optional<double> alpha)
     {
 
-      std::cerr << "=> forSpaceInternal " << space.name() << " " << c0.value_or(-32) << ", "
-        << c1.value_or(-42) << ", " << c2.value_or(-52) << "\n";
+      // std::cerr << "=> forSpaceInternal " << space.name() << " " << c0.value_or(-32) << ", "
+      //   << c1.value_or(-42) << ", " << c2.value_or(-52) << "\n";
 
       if (space.name() == "hsl") {
         return _forSpace(pstate, space,
@@ -1323,12 +1323,12 @@ namespace Sass {
           c1.has_value() ? std::abs(c1.value()) : c1,
           _normalizeHue(c2, c1.value_or(0) < 0.0), // fuzzyLessThan
           alpha);
-        std::cerr << "for space " << rv->debug() << "\n";
+        // std::cerr << "for space " << rv->debug() << "\n";
         return rv;
       }
       else {
         auto rv = _forSpace(pstate, space, c0, c1, c2, alpha);
-        std::cerr << "for space " << rv->debug() << "\n";
+        // std::cerr << "for space " << rv->debug() << "\n";
         return rv;
       }
     }

@@ -759,7 +759,7 @@ namespace Sass {
         // Not sure what it does exactly here!?
         auto rv = ColorSpaced::hsl(pstate,
           hue, saturation, lightness, alpha);
-        std::cerr << "hsl => " << rv->debug() << "\n";
+        // std::cerr << "hsl => " << rv->debug() << "\n";
         return rv;
 
       }
@@ -829,7 +829,7 @@ namespace Sass {
           c,
           alpha);
 
-        std::cerr << "Created for space internal " << rv->debug() << "\n";
+        // std::cerr << "Created for space internal " << rv->debug() << "\n";
 
         //std::cerr << " => " << rv->getChannel0() << ", " <<
         //  rv->getChannel1() << ", " << rv->getChannel2() << "\n";
@@ -1714,7 +1714,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (!value.has_value()) {
           Value* qwe = (color);
           ColorSpaced* asd = qwe->isaColorSpaced();
-          std::cerr << "Has no value " << qwe->inspect() << "\n";
+          // std::cerr << "Has no value " << qwe->inspect() << "\n";
           // throw Exception::SassScriptException(logger, color->pstate(), "color, channel");
           throw Exception::MissingColorChannel(logger, color, channel);
         }
@@ -1746,7 +1746,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         // double weightScale = weight->value() / 100.0;
 
-        std::cerr << "Mix " << weightScale << " " << rgb1->debug() << " with " << rgb2->debug() << "\n";
+        // std::cerr << "Mix " << weightScale << " " << rgb1->debug() << " with " << rgb2->debug() << "\n";
 
         double normalizedWeight = weightScale * 2.0 - 1.0;
         double alphaDistance = color1->getAlpha() - color2->getAlpha();
@@ -1813,11 +1813,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           // _checkPercent(weightNumber, "weight");
 
 
-          std::cerr << "Before legacy invert color " << color->debug() << "\n";
+          // std::cerr << "Before legacy invert color " << color->debug() << "\n";
 
           auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
 
-          std::cerr << "Before legacy invert as rgb " << rgb->debug() << "\n";
+          // std::cerr << "Before legacy invert as rgb " << rgb->debug() << "\n";
 
           auto inv = ColorSpaced::rgb(color->pstate(),
             _invertChannel(compiler, rgb, rgb->space()._channels[0], rgb->getChannel0OrNull()),
@@ -1825,15 +1825,15 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             _invertChannel(compiler, rgb, rgb->space()._channels[2], rgb->getChannel2OrNull()),
             color->getAlphaOrNull());
 
-          std::cerr << "After legacy invert as rgb " << inv->debug() << "\n";
+          // std::cerr << "After legacy invert as rgb " << inv->debug() << "\n";
 
           auto mixed = mixLegacy(compiler, inv, color, weight);
 
-          std::cerr << "After legacy  mixing as rgb " << mixed->debug() << "\n";
+          // std::cerr << "After legacy  mixing as rgb " << mixed->debug() << "\n";
 
           auto rv = mixed->toSpace(color->space(), color->pstate());
 
-          std::cerr << "After legacy mixing as color " << rv->debug() << "\n";
+          // std::cerr << "After legacy mixing as color " << rv->debug() << "\n";
 
           return rv;
         }
@@ -1847,11 +1847,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         if (fuzzyEquals(w, 0.0, compiler.epsilon)) return color;
 
-        std::cerr << "Before invert color " << color->debug() << "\n";
+        // std::cerr << "Before invert color " << color->debug() << "\n";
 
         auto inSpace = color->toSpace2(space, pstate);
 
-        std::cerr << "After invert to space " << inSpace->debug() << "\n";
+        // std::cerr << "After invert to space " << inSpace->debug() << "\n";
 
         ColorSpaced* inverted = nullptr;
 
@@ -2159,7 +2159,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(toGamut)
       {
         throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "opacify", "$alpha: ");
+          arguments, "t-gamut", "$alpha: ");
       }
 
       /*
@@ -2570,6 +2570,82 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
       }
 
+      tl::optional<double> _scaleChannel(Compiler& compiler, const SourceSpan& pstate,
+        const ColorSpaced* color, const ColorChannel& channel,
+        tl::optional<double> oldValue, Number* factorArg)
+      {
+        if (factorArg == nullptr) return oldValue;
+
+        if (channel.isLinear == false) {
+          throw Exception::SassScriptException(compiler,
+            pstate, "Channel isn't scalable.", channel.name);
+        }
+
+        if (!oldValue.has_value()) throw Exception::MissingColorChannel(compiler, color, channel);
+
+        double factor = factorArg->assertHasUnits(compiler, "%", channel.name)
+          ->valueInRangeWithUnit(compiler, -100, 100, channel.name, unit_percent) / 100.0;
+
+        if (factor == 0) {
+          return oldValue.value();
+        }
+        else if (factor >= 0) {
+          return oldValue.value() >= channel.max ? oldValue.value() :
+            oldValue.value() + (channel.max - oldValue.value()) * factor;
+        }
+        else {
+          return oldValue.value() <= channel.min ? oldValue.value() :
+            oldValue.value() + (oldValue.value() - channel.min) * factor;
+        }
+
+      }
+
+
+      ColorSpaced* _scaleColor(Compiler& compiler, const SourceSpan& pstate,
+        const ColorSpaced* color, const NumberVector& args, Number* alpha)
+      {
+        auto c0 = _scaleChannel(
+          compiler,
+          pstate,
+          color,
+          color->space()._channels[0],
+          color->getChannel0OrNull(),
+          args[0]);
+        auto c1 = _scaleChannel(
+          compiler,
+          pstate,
+          color,
+          color->space()._channels[1],
+          color->getChannel1OrNull(),
+          args[1]);
+        auto c2 = _scaleChannel(
+          compiler,
+          pstate,
+          color,
+          color->space()._channels[2],
+          color->getChannel2OrNull(),
+          args[2]);
+        // The color space doesn't matter for alpha, as long as it's not
+        // strictly bounded.
+        auto a = _scaleChannel(
+          compiler,
+          pstate,
+          color,
+          AlphaChannel,
+          color->getAlphaOrNull(),
+          alpha)
+          // .transform([](double alpha) {
+          //   return clampLikeCss(alpha, 0, 1);
+          // })
+          ;
+
+        auto rv = ColorSpaced::forSpaceInternal(
+          pstate, color->space(),
+          c0, c1, c2, a);
+        // std::cerr << "Scaled " << rv->debug() << "\n";
+        return rv;
+      }
+
       tl::optional<double> _adjustChannel(Compiler& compiler, const SourceSpan& pstate,
         const ColorSpaced* color, const ColorChannel& channel,
         tl::optional<double> oldValue, Number* adjustmentArg)
@@ -2604,14 +2680,14 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         double result = oldValue.value() + adjusted.value();
 
-        std::cerr << "Adjust channel " << channel.name << " -> " << result << "\n";
+        // std::cerr << "Adjust channel " << channel.name << " -> " << result << "\n";
 
         if (channel.lowerClamped == true && result < channel.min) {
-          std::cerr << "Clamp to lower\n";
+          // std::cerr << "Clamp to lower\n";
           return oldValue.value() < channel.min ? std::max(oldValue.value(), result) : channel.min;
         }
         else if (channel.upperClamped == true && result > channel.max) {
-          std::cerr << "Clamp to upper\n";
+          // std::cerr << "Clamp to upper\n";
           return oldValue.value() > channel.max ? std::min(oldValue.value(), result) : channel.max;
         }
 
@@ -2658,7 +2734,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         auto rv = ColorSpaced::forSpaceInternal(
           pstate, color->space(),
           c0, c1, c2, a);
-        std::cerr << "Adjusted " << rv->debug() << "\n";
+        // std::cerr << "Adjusted " << rv->debug() << "\n";
         return rv;
       }
 
@@ -2742,7 +2818,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const ColorSpaced* color = space == nullptr
           ? input : input->toSpace(*space, pstate, !legacy);
 
-        std::cerr << "COLOR IN " << color->debug() << "\n";
+        // std::cerr << "COLOR IN " << color->debug() << "\n";
 
         // Create args and init with nullptrs
         ValueVector args(space->_channelSize);
@@ -2785,10 +2861,9 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           }
 
           if (scale) {
-            // auto rv = _scaleColor(compiler,
-            //   pstate, color, args, alpha_val);
-            // return rv->toSpace(input->space(), pstate, false);
-            return nullptr;
+            auto rv = _scaleColor(compiler,
+              pstate, color, numbers, alpha_nr);
+            return rv->toSpace(input->space(), pstate, false);
           }
           else if (adjust)
           {
@@ -2799,7 +2874,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         }
 
-
+        return arguments[0];
         // var argumentList = arguments[1] as SassArgumentList;
         // if (argumentList.asList.isNotEmpty) {
         //   throw SassScriptException(
@@ -2820,7 +2895,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
             "adjust-hue() is only supported for legacy colors. Please use "
-            "color.adjust() instead with an explicit \$space argument.");
+            "color.adjust() instead with an explicit $space argument.");
         }
 
         compiler.addDeprecation(arguments[0]->pstate(),
@@ -3167,7 +3242,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix);
 
 
-        uint32_t idx_to_gamut = ctx.createBuiltInFunction(key_to_gamut, "$color, $space, $method", toGamut);
+        uint32_t idx_to_gamut = ctx.createBuiltInFunction(key_to_gamut, "$color, $space: null, $method: null", toGamut);
 
         uint32_t idx_opacify_strict = ctx.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify);
         // uint32_t idx_opacify_loose = ctx.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
@@ -3222,7 +3297,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         ctx.exposeFunction(key_change_color, idx_change);
 
         // ctx.exposeFunction(key_mix, idx_mix);
-        // // ctx.exposeFunction(key_to_gamut, idx_to_gamut);
+        ctx.exposeFunction(key_to_gamut, idx_to_gamut);
         // ctx.exposeFunction(key_opacify, idx_opacify_loose);
         // ctx.exposeFunction(key_fade_in, idx_fade_in_loose);
         // ctx.exposeFunction(key_fade_out, idx_fade_out_loose);
