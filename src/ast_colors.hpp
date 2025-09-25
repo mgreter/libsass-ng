@@ -636,6 +636,8 @@ namespace Sass {
       hsl_channels, 3)
     {}
 
+    bool isPolar() const override final { return false; }
+
     ColorSpaced* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
@@ -654,6 +656,8 @@ namespace Sass {
       SassColorSpace::HWB,
       hwb_channels, 3)
     {}
+
+    bool isPolar() const override final { return false; }
 
     ColorSpaced* convert(
       const ColorSpace& dest,
@@ -708,6 +712,7 @@ namespace Sass {
       lch_channels, 3)
     {}
 
+    bool isPolar() const override final { return false; }
     bool isBounded() const override final { return false; }
 
     ColorSpaced* convert(
@@ -822,6 +827,7 @@ namespace Sass {
       oklch_channels, 3)
     {}
 
+    bool isPolar() const override final { return false; }
     bool isBounded() const override final { return false; }
 
     ColorSpaced* convert(
@@ -1148,6 +1154,10 @@ namespace Sass {
       HueInterpolationMethod hue = legacy) :
       space(space), hue(hue)
     {}
+
+    static InterpolationMethod fromValue(Logger& ctx, Value* value, const sass::string& name);
+
+    static HueInterpolationMethod hueFromValue(Logger& ctx, Value* value, const sass::string& name);
 
   };
 

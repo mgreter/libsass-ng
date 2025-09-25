@@ -3131,16 +3131,40 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(mix)
       {
-        const ColorSpaced* color1 = arguments[0]->assertColorSpaced(compiler, "color1");
-        const ColorSpaced* color2 = arguments[1]->assertColorSpaced(compiler, "color2");
+        ColorSpaced* color1 = arguments[0]->assertColorSpaced2(compiler, "color1");
+        ColorSpaced* color2 = arguments[1]->assertColorSpaced2(compiler, "color2");
         const Number* weight = arguments[2]->assertNumber(compiler, "weight");
 
-        if (arguments[3] != nullptr && !arguments[3]->isNull()) {
+        if (arguments[3] != nullptr && !arguments[3]->isNull())
+        {
+          return color1->interpolate(compiler, pstate, color2,
+            InterpolationMethod::fromValue(compiler, arguments[3], "method"),
+            weight->valueInRangeWithUnit(compiler, 0.0, 100.0, "weight", unit_percent) / 100.0,
+            false);
+
           return arguments[0];
 
         }
 
         weight->checkPercent(compiler, Strings::weight);
+
+        /*
+
+    if (!color1.isLegacy) {
+      throw SassScriptException(
+        "To use color.mix() with non-legacy color $color1, you must provide a "
+            "\$method.",
+        "color1",
+      );
+    } else if (!color2.isLegacy) {
+      throw SassScriptException(
+        "To use color.mix() with non-legacy color $color2, you must provide a "
+            "\$method.",
+        "color2",
+      );
+    }
+
+        */
         return _mixLegacy(color1, color2, weight, pstate, compiler);
       }
 

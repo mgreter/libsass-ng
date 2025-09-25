@@ -1379,4 +1379,75 @@ namespace Sass {
 
   }
 
+  InterpolationMethod InterpolationMethod::fromValue(Logger& logger, Value* value, const sass::string& name)
+  {
+    auto list = value->assertCommonListStyle(logger, name, false);
+
+    if (list.empty()) {
+      throw Exception::SassScriptException(logger, value->pstate(),
+        "Expected a color interpolation method, got an empty list.",
+        name);
+    }
+
+    const ColorSpace& space = ColorSpace::fromValueRef(logger, value);
+
+    if (list.size() == 1) return InterpolationMethod(space);
+
+    auto hueMethod = InterpolationMethod::hueFromValue(logger, list[1], name);
+
+    if (list.size() == 2) {
+      throw Exception::SassScriptException(logger, value->pstate(),
+        "Expected unquoted string \"hue\" after " + value->toCss() + ".",
+        name);
+    }
+    else {
+      auto str = list[2]->assertString(logger, name);
+      str->assertUnquoted(logger, name);
+      if (!StringUtils::equalsIgnoreCase(str->value(), "hue", 3)) {
+        throw Exception::SassScriptException(logger, value->pstate(),
+          "Expected unquoted string \"hue\" at the end of "
+          + value->toCss() + ", was " + list[2]->toCss() + ".",
+          name);
+      }
+      if (list.size() > 3) {
+        throw Exception::SassScriptException(logger, value->pstate(),
+          "Expected nothing after \"hue\" in " + value->toCss() + ".",
+          name);
+      }
+      if (!space.isPolar()) {
+        throw Exception::SassScriptException(logger, value->pstate(),
+          "Hue interpolation method \"" + name + " hue\" may not be"
+          " set for rectangular color space " + space.name() + ".",
+          name);
+      }
+    }
+
+    return InterpolationMethod(space, legacy);
+
+  }
+
+  HueInterpolationMethod InterpolationMethod::hueFromValue(Logger& logger, Value* value, const sass::string& name)
+  {
+
+    auto string = value->assertString(logger, name);
+    string->assertUnquoted(logger, name);
+
+    if (StringUtils::equalsIgnoreCase(string->value(), "shorter", 7)) {
+      return HueInterpolationMethod::shorter;
+    }
+    if (StringUtils::equalsIgnoreCase(string->value(), "longer", 6)) {
+      return HueInterpolationMethod::longer;
+    }
+    if (StringUtils::equalsIgnoreCase(string->value(), "increasing", 10)) {
+      return HueInterpolationMethod::increasing;
+    }
+    if (StringUtils::equalsIgnoreCase(string->value(), "decreasing", 10)) {
+      return HueInterpolationMethod::decreasing;
+    }
+
+    throw Exception::SassScriptException(logger, value->pstate(),
+      "Unknown hue interpolation method " + value->toCss() + ".",
+      name);
+  }
+
 }

@@ -622,7 +622,7 @@ namespace Sass {
     /// (without the `$`). It's used for error reporting.
     CompoundSelector* assertCompoundSelector(Compiler& ctx, const sass::string& name = Strings::empty, bool allowParent = false) const;
 
-    ValueVector assertCommonListStyle(Compiler& ctx, const sass::string& name = Strings::empty, bool allowSlash = false);
+    ValueVector assertCommonListStyle(Logger& ctx, const sass::string& name = Strings::empty, bool allowSlash = false);
 
     /// Returns a valid CSS representation of [this].
     ///

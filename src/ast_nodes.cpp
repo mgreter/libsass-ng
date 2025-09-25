@@ -680,7 +680,7 @@ namespace Sass {
   }
 
 
-  ValueVector Value::assertCommonListStyle(Compiler& ctx, const sass::string& name, bool allowSlash)
+  ValueVector Value::assertCommonListStyle(Logger& ctx, const sass::string& name, bool allowSlash)
   {
     auto invalidSeparator = separator() == SassSeparator::SASS_COMMA ||
       (!allowSlash && separator() == SassSeparator::SASS_DIV);
