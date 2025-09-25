@@ -890,7 +890,7 @@ namespace Sass {
         &StylesheetParser::readChildStatement,
         start, query, local.idxs);
     }
-    else if (lookingAtChildren()) {
+    else if (lookingAtChildren() || (isIndented() && atEndOfStatement())) {
       return withChildren<AtRootRule>(
         &StylesheetParser::readChildStatement,
         start, nullptr, local.idxs);
