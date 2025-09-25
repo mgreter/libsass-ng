@@ -499,7 +499,8 @@ namespace Sass {
     // returns their contents as a string. If [allowEmpty] is `false` (the default), this
     // requires at least one token. Unlike [declarationValue], this allows interpolation.
     Interpolation* readInterpolatedDeclarationValue(bool allowEmpty = false,
-      bool allowSemicolon = false, bool allowColon = true);
+      bool allowSemicolon = false, bool allowColon = true, bool allowOpenBrace = true,
+      bool silenComments = true, bool consumeNewlines = false);
 
     // Consumes an identifier that may contain interpolation.
     Interpolation* readInterpolatedIdentifier();

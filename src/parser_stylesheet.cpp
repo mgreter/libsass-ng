@@ -568,9 +568,12 @@ namespace Sass {
   }
   // EO tryDeclarationOrBuffer
 
-  // Consumes a property declaration. This is only used in contexts where
-  // declarations are allowed but style rules are not, such as nested
-  // declarations. Otherwise, [readDeclarationOrStyleRule] is used instead.
+  // Consumes either a property declaration or a namespaced variable
+  // declaration. This is only used in contexts where declarations
+  // are allowed but style rules are not, such as nested declarations.
+  // Otherwise, [_declarationOrStyleRule] is used instead.
+  // If [parseCustomProperties] is `true`, properties that begin
+  // with `--` will be parsed using custom property parsing rules.
   Statement* StylesheetParser::readPropertyOrVariableDeclaration(bool parseCustomProperties)
   {
 
@@ -605,7 +608,8 @@ namespace Sass {
     scanWhitespace();
 
     if (parseCustomProperties && startsWith(name->getInitialPlain(), "--", 2)) {
-      InterpolationObj value(readInterpolatedDeclarationValue());
+      InterpolationObj value(readInterpolatedDeclarationValue(
+        false, false, true, true, false, false));
       expectStatementSeparator("custom property");
       return SASS_MEMORY_NEW(Declaration,
         scanner.relevantSpanFrom(start),
@@ -1838,7 +1842,7 @@ namespace Sass {
 
   // Consumes an at-rule that's not explicitly supported by Sass.
   // [start] should point before the `@`. [name] is the name of the at-rule.
-  AtRule* StylesheetParser::readAnyAtRule(Offset start, Interpolation* name)
+  AtRule* StylesheetParser::readAnyAtRule(Offset start, Interpolation* name) // unknownAtRule
   {
     RAII_FLAG(inUnknownAtRule, true);
     EnvFrame local(compiler, false);
@@ -1846,7 +1850,9 @@ namespace Sass {
     InterpolationObj value;
     uint8_t next = scanner.peekChar();
     if (next != $exclamation && !atEndOfStatement()) {
-      value = readAlmostAnyValue();
+      value = readInterpolatedDeclarationValue(
+        /* allowOpenBrace: false */
+        false, false, true, false, true, false);
     }
 
     if (lookingAtChildren()) {
@@ -1864,7 +1870,9 @@ namespace Sass {
     // Parse almost any value to report disallowed at-rule
   Statement* StylesheetParser::throwDisallowedAtRule(Offset start)
   {
-    InterpolationObj value(readAlmostAnyValue());
+    InterpolationObj value(readInterpolatedDeclarationValue(
+      /* allowEmpty: true, allowOpenBrace: false */
+      true, false, true, false, true,false));
     error("This at-rule is not allowed here.",
       scanner.relevantSpanFrom(start));
     return nullptr;
@@ -3567,10 +3575,9 @@ namespace Sass {
   // This respects string and comment boundaries and supports interpolation.
   // Once this interpolation is evaluated, it's expected to be re-parsed.
   // Differences from [parseInterpolatedDeclarationValue] include:
-  // * This does not balance brackets.
+  // * This always stops at curly braces.
   // * This does not interpret backslashes, since
   //   the text is expected to be re-parsed.
-  // * This supports Sass-style single-line comments.
   // * This does not compress adjacent whitespace characters.
   Interpolation* StylesheetParser::readAlmostAnyValue(bool omitComments)
   {
@@ -3581,6 +3588,8 @@ namespace Sass {
     StringScannerState start = scanner.state();
     Interpolation* contents;
     uint8_t next = 0;
+
+    sass::string urlid;
 
     while (true) {
       if (!scanner.peekChar(next)) {
@@ -3602,14 +3611,22 @@ namespace Sass {
 
       case $slash:
         commentStart = scanner.position;
-        if (scanComment()) {
-          if (!omitComments) buffer.write(scanner.substring(commentStart));
-        }
-        else {
-          buffer.write(scanner.readChar());
+        switch (scanner.peekChar(1)) {
+        case $asterisk:
+          if (scanComment() && !omitComments) {
+            buffer.write(scanner.substring(commentStart));
+          }
+          break;
+        case $slash:
+          if (scanSilentComment() && !omitComments) {
+            buffer.write(scanner.substring(commentStart));
+          }
+          break;
+        default:
+          buffer.writeCharCode(scanner.readChar());
+          break;
         }
         break;
-
       case $hash:
         if (scanner.peekChar(1) == $lbrace) {
           // Add a full interpolated identifier to handle cases like
@@ -3638,11 +3655,17 @@ namespace Sass {
       case $u:
       case $U:
         start = scanner.state();
-        if (!scanIdentifier("url")) {
-          buffer.write(scanner.readChar());
+        urlid = readIdentifier();
+        if (urlid != "url" &&
+            urlid != "url-prefix") {
+          buffer.write(urlid);
           break;
         }
-        contents = tryUrlContents(start.offset);
+        // if (!scanIdentifier("url")) {
+        //   buffer.write(scanner.readChar());
+        //   break;
+        // }
+        contents = tryUrlContents(start.offset, urlid);
         if (contents == nullptr) {
           scanner.backtrack(start);
           buffer.write(scanner.readChar());
@@ -3678,12 +3701,18 @@ namespace Sass {
   }
   // readAlmostAnyValue
 
-  // Consumes tokens until it reaches a top-level `";"`, `")"`, `"]"`, or `"}"` and returns
-  // their contents as a string. If [allowEmpty] is `false` (the default), this requires
-  // at least one token. If [allowSemicolon] is `true`, this doesn't stop at semicolons
-  // and instead includes them in the interpolated output. If [allowColon] is `false`,
-  // this stops at top-level colons.Unlike [declarationValue], this allows interpolation.
-  Interpolation* StylesheetParser::readInterpolatedDeclarationValue(bool allowEmpty, bool allowSemicolon, bool allowColon)
+  // Consumes tokens until it reaches a top-level `";"`, `")"`, `"]"`,
+  // or `"}"` and returns their contents as a string.
+  // If [allowEmpty] is `false` (the default), this requires at least one token.
+  // If [allowSemicolon] is `true`, this doesn't stop at semicolons and instead
+  // includes them in the interpolated output.
+  // If [allowColon] is `false`, this stops at top-level colons.
+  // If [allowOpenBrace] is `false`, this stops at top-level colons.
+  // If [silentComments] is `true`, this will parse silent comments as comments.
+  // Otherwise, it will preserve two adjacent slashes and emit them to CSS.
+  Interpolation* StylesheetParser::readInterpolatedDeclarationValue(
+    bool allowEmpty, bool allowSemicolon, bool allowColon,
+    bool allowOpenBrace, bool silenComments, bool consumeNewlines)
   {
     // NOTE: this logic is largely duplicated in Parser.declarationValue and
     // isIdentifier in utils.dart. Most changes here should be mirrored there.
@@ -3720,6 +3749,9 @@ namespace Sass {
       case $slash:
         if (scanner.peekChar(1) == $asterisk) {
           buffer.write(rawText(&StylesheetParser::scanLoudComment));
+        }
+        else if (silenComments && scanner.peekChar(1) == $slash) {
+          scanSilentComment();
         }
         else {
           buffer.write(scanner.readChar());
@@ -3761,8 +3793,12 @@ namespace Sass {
         wroteNewline = true;
         break;
 
-      case $lparen:
       case $lbrace:
+        if (!allowOpenBrace)
+          break;
+        // fall through
+
+      case $lparen:
       case $lbracket:
         buffer.write(next);
         brackets.emplace_back(opposite(scanner.readChar()));
