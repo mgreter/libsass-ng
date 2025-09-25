@@ -1655,6 +1655,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[2]);
           // arguments[0]->assertColorSpaced(compiler, Strings::color);
         const String* channel = arguments[1]->assertString(compiler, "channel");
+        channel->assertQuoted(compiler, "channel");
 
         int idx = color->getChannelIndex(compiler, channel, "color", "channel");
         if (idx == -1) return SASS_MEMORY_NEW(Number, pstate, color->alpha().value_or(0));

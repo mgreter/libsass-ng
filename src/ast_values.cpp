@@ -1227,7 +1227,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  String* String::assertUnquoted(Logger& logger, const sass::string& name)
+  const String* String::assertUnquoted(Logger& logger, const sass::string& name) const
   {
     if (hasQuotes_ == false) return this;
     logger.callStack.push_back(pstate());
@@ -1235,7 +1235,7 @@ namespace Sass {
       "Expected " + inspect() + " to be an unquoted string.");
   }
 
-  String* String::assertQuoted(Logger& logger, const sass::string& name)
+  const String* String::assertQuoted(Logger& logger, const sass::string& name) const
   {
     if (hasQuotes_ == true) return this;
     logger.callStack.push_back(pstate());
