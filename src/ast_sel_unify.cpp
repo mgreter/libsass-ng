@@ -21,7 +21,7 @@ namespace Sass {
 
     SelectorCombinatorObj leadingCombinator;
     SelectorCombinatorObj trailingCombinator;
-    SimpleSelectors unifiedBase;
+    CompoundSelector* unifiedBase = nullptr;
 
     for (const ComplexSelector* complex : complexes)
     {
@@ -56,14 +56,12 @@ namespace Sass {
         trailingCombinator = trail;
       }
 
-      if (unifiedBase.empty()) {
-        unifiedBase = base->selector()->elements();
+      if (unifiedBase == nullptr) {
+        unifiedBase = base->selector();
       }
       else {
-        for (auto& simple : base->selector()->elements()) {
-          unifiedBase = simple->unify(unifiedBase);
-          if (unifiedBase.empty()) return {};
-        }
+        unifiedBase = unifyCompound(unifiedBase, base->selector());
+        if (unifiedBase == nullptr) return {};
       }
     }
     // EO complexes loop
@@ -76,14 +74,11 @@ namespace Sass {
       withoutBases.push_back(unbase); // add unbase
     }
 
-    CompoundSelector* compound = SASS_MEMORY_NEW(
-      CompoundSelector, pstate, std::move(unifiedBase));
-
     sass::vector<SelectorCombinatorObj> trailing;
     if (trailingCombinator != nullptr)
       trailing.push_back(trailingCombinator);
     CplxSelComponent* component = SASS_MEMORY_NEW(
-      CplxSelComponent, pstate, std::move(trailing), compound);
+      CplxSelComponent, pstate, std::move(trailing), unifiedBase);
 
     ComplexSelectorObj base = !leadingCombinator ?
       SASS_MEMORY_NEW(ComplexSelector, pstate, {}, { component }) :

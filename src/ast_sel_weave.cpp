@@ -422,18 +422,37 @@ namespace Sass {
   // elements matched by `A X` and all elements matched by `B X`. Some `AB_i`
   // are elided to reduce the size of the output.
   /////////////////////////////////////////////////////////////////////////
-  static CompoundSelector* unifyCompound(
+  CompoundSelector* unifyCompound(
     CompoundSelector* compound1,
     CompoundSelector* compound2)
   {
+    SimpleSelectors pseudoResult;
+    bool pseudoElementFound = false;
     // Optimize case when nothing is changed
     if (compound1->empty()) return compound1;
     // Make a copy of the existing elements (ToDo: optimize)
     SimpleSelectors result(compound1->elements());
     for (const auto& simple : compound2->elements()) {
-      result = simple->unify(result);
-      if (result.empty()) return nullptr;
+
+      if (pseudoElementFound && simple->isaPseudoSelector() != nullptr) {
+        auto unified = simple->unify(pseudoResult);
+        if (unified.empty()) return nullptr;
+        pseudoResult = unified;
+      }
+      else {
+        pseudoElementFound |= simple->isaPseudoSelector() != nullptr && simple->isPseudoElement();
+        auto unified = simple->unify(result);
+        if (unified.empty()) return nullptr;
+        result = unified;
+      }
+
     }
+
+    std::move(
+      pseudoResult.begin(),
+      pseudoResult.end(),
+      std::back_inserter(result));
+
     return SASS_MEMORY_NEW(CompoundSelector,
       compound1->pstate(), std::move(result));
   }

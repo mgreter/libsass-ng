@@ -19,6 +19,10 @@ namespace Sass {
   // Some helpers for superselector and weave parts
   /////////////////////////////////////////////////////////////////////////
 
+  CompoundSelector* unifyCompound(
+    CompoundSelector* compound1,
+    CompoundSelector* compound2);
+
   // super selector
   bool compoundIsSuperselector(
     const SimpleSelectors& compound1,
