@@ -281,6 +281,17 @@ namespace Sass {
     // arguments is an unquoted `var()` string.
     Value* calc_round(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
 
+    // Creates a `hypot()` calculation with the given [arguments].
+    //
+    // Each argument must be either a [SassNumber], a [SassCalculation], an
+    // unquoted [SassString], or a [CalculationOperation]. It must be passed at
+    // least one argument.
+    //
+    // This automatically simplifies the calculation, so it may return a
+    // [SassNumber] rather than a [SassCalculation]. It throws an exception if it
+    // can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_size(Logger& logger, const SourceSpan& pstate, const ValueVector& args);
+
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 

@@ -44,8 +44,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   std::set<sass::string> SlashOperands{
-    "calc", "clamp", "hypot", "sin", "cos", "tan", "asin", "acos", //
-    "atan", "sqrt", "exp", "sign", "mod", "rem", "atan2", "pow", "log"
+    "calc", "clamp", "hypot", "sin", "cos", "tan", "asin", "acos", "atan",
+    "sqrt", "exp", "sign", "mod", "rem", "atan2", "pow", "log", "calc-size"
   };
 
   bool Eval::_operandAllowsSlash(const Expression* node) const {
@@ -1222,8 +1222,9 @@ namespace Sass {
     case UnaryOpType::SLASH:
       return operand->unaryDivide(logger, node->pstate());
     }
-    // Satisfy compiler
-    return nullptr;
+    CallStackFrame frame(logger, node->operand()->pstate());
+    throw Exception::RuntimeException(logger,
+      "This operation can't be used in a calculation.");
   }
   // EO visitUnaryOpExpression
 

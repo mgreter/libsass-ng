@@ -815,6 +815,41 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
+    static Value* calc_size_2(Logger& logger, const SourceSpan& pstate, const ValueVector& args)
+    {
+      sass::vector<AstNodeObj> simplifieds(args.size());
+      std::transform(args.begin(), args.end(),
+        simplifieds.begin(), [&](ValueObj value) {
+          return value ? value->simplify(logger) : nullptr;
+        });
+      return SASS_MEMORY_NEW(Calculation, pstate,
+        str_hypot, std::move(simplifieds));
+    }
+
+    // Creates an `calc-size()` calculation with the given [basis] and [value].
+    // The [basis] and [value] must be either a [SassNumber], a [SassCalculation],
+    // an unquoted [SassString], or a [CalculationOperation].
+    // This automatically simplifies the calculation. It throws an exception if
+    // it can determine that the calculation will definitely produce invalid CSS.
+    Value* calc_size(Logger& logger, const SourceSpan& pstate, const ValueVector& args)
+    {
+      switch (args.size()) {
+      case 0: throw Exception::MissingArgument(logger, str_number);
+      case 1: throw Exception::TooFewArguments(logger, args.size(), 3);
+      case 2: return calc_size_2(logger, pstate, args);
+      default: throw Exception::TooManyArguments(logger, args.size(), 3);
+      }
+        //    static SassCalculation calcSize(Object basis, Object ? value) {
+      // var args = [basis, if (value != null) value];
+      // _verifyLength(args, 2);
+      // basis = _simplify(basis);
+      // value = value.andThen(_simplify);
+      // return SassCalculation._("calc-size", [basis, if (value != null) value]);
+    }
+
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+
     Value* execute(Logger& logger, const SourceSpan& pstate,
       CFN fn, const ValueVector& args, bool global)
     {
@@ -840,6 +875,7 @@ namespace Sass {
       case CFN::LOG: return calc_log(logger, pstate, args);
       case CFN::ROUND: return calc_round(logger, pstate, args);
       case CFN::CALC: return calc_calc(logger, pstate, args);
+      case CFN::SIZE: return calc_size(logger, pstate, args);
       default: throw Exception::RuntimeException(logger, "Bad calc CFN");
       }
     }

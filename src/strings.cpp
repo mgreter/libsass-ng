@@ -184,6 +184,7 @@ namespace Sass
 
   const sass::string str_ceil("ceil");
   const sass::string str_calc("calc");
+  const sass::string str_calc_size("calc-size");
   const sass::string str_clamp("clamp");
   const sass::string str_floor("floor");
   const sass::string str_max("max");

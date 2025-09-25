@@ -55,6 +55,7 @@ namespace Sass {
       if (std::equal(str_atan2.begin(), str_atan2.end(), name.begin(), equalsIgnoreCaseAsciiSafeConst)) { return ATAN2; }
       break;
     default:
+      if (std::equal(str_calc_size.begin(), str_calc_size.end(), name.begin(), equalsIgnoreCaseAsciiSafeConst)) { return SIZE; }
       break;
     }
     return OTHER;

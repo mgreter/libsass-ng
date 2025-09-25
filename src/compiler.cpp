@@ -159,16 +159,14 @@ namespace Sass {
     // abort on invalid root
     if (root.isNull()) return {};
 
-    // debug_ast(root);
-
     Eval eval(*this, *this, plainCss);
-
-    // debug_ast(root);
 
     CssRootObj compiled;
     {
       ImportStackFrame iframe(eval.compiler, root->import);
+      // debug_ast(root);
       eval.visitStylesheet(root);
+      // debug_ast(root);
       compiled = eval._combineCss(root);
     }
 

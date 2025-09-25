@@ -188,6 +188,7 @@ namespace Sass {
 
   extern const sass::string str_ceil;
   extern const sass::string str_calc;
+  extern const sass::string str_calc_size;
   extern const sass::string str_clamp;
   extern const sass::string str_floor;
   extern const sass::string str_max;
