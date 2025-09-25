@@ -219,32 +219,36 @@ namespace Sass {
       return rhs.space_ == space_;
     }
 
-    static const HwbColorSpace hwb;
-    static const HslColorSpace hsl;
-    static const LabColorSpace lab;
-    static const LchColorSpace lch;
-    static const OkLabColorSpace oklab;
-    static const OkLchColorSpace oklch;
-
-    static const RgbColorSpace rgb;
-    static const SrgbColorSpace srgb;
-    static const SrgbLinearColorSpace srgb_linear;
-    static const XyzD50ColorSpace xyzd50;
-    static const XyzD65ColorSpace xyzd65;
-    static const Rec2020ColorSpace rec2020;
-    static const DisplayP3ColorSpace displayP3;
-    static const A98RgbColorSpace a98rgb;
-    static const ProphotoRgbColorSpace protophotoRgb;
-    static const LmsColorSpace lms;
 
   };
 
+  namespace ColorSpace2 {
+
+    extern const HwbColorSpace hwb;
+    extern const HslColorSpace hsl;
+    extern const LabColorSpace lab;
+    extern const LchColorSpace lch;
+    extern const OkLabColorSpace oklab;
+    extern const OkLchColorSpace oklch;
+    extern const RgbColorSpace rgb;
+    extern const SrgbColorSpace srgb;
+    extern const SrgbLinearColorSpace srgb_linear;
+    extern const XyzD50ColorSpace xyzd50;
+    extern const XyzD65ColorSpace xyzd65;
+    extern const Rec2020ColorSpace rec2020;
+    extern const DisplayP3ColorSpace displayP3;
+    extern const A98RgbColorSpace a98rgb;
+    extern const ProphotoRgbColorSpace protophotoRgb;
+    extern const LmsColorSpace lms;
+
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  extern const ColorChannel hsl_channel0;
-  extern const LinearChannel hsl_channel1;
-  extern const LinearChannel hsl_channel2;
+  // extern const ColorChannel hsl_channel0;
+  // extern const LinearChannel hsl_channel1;
+  // extern const LinearChannel hsl_channel2;
 
   // const ColorChannel hsl_channels[3]{
   //   ColorChannel("hue", true, "deg"),

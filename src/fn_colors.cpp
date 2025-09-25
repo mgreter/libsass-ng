@@ -500,8 +500,8 @@ namespace Sass {
       Logger& logger)
     {
 
-      auto rgb1 = color1->toSpace(ColorSpace::rgb, pstate);
-      auto rgb2 = color2->toSpace(ColorSpace::rgb, pstate);
+      auto rgb1 = color1->toSpace(ColorSpace2::rgb, pstate);
+      auto rgb2 = color2->toSpace(ColorSpace2::rgb, pstate);
 
       // This algorithm factors in both the user-provided weight (w) and the
       // difference between the alpha values of the two colors (a) to decide how
@@ -611,7 +611,7 @@ namespace Sass {
 
       // color->assertLegacy(logger, "color");
 
-      auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
+      auto rgb = color->toSpace2(ColorSpace2::rgb, pstate);
 
       if (isSpecialNumber(second)) {
         // dart-sass is using color?
@@ -734,11 +734,11 @@ namespace Sass {
       if (space == nullptr) {
         std::cerr << "space is nullptr";
         return SASS_MEMORY_NEW(ColorSpaced,
-          pstate, ColorSpace::rgb,
+          pstate, ColorSpace2::rgb,
           1, 1, 1, 1);
       }
 
-      if (space == &ColorSpace::hsl) {
+      if (space == &ColorSpace2::hsl) {
 
         tl::optional<double> hue;
         if (chn0 != nullptr) {
@@ -765,7 +765,7 @@ namespace Sass {
         return rv;
 
       }
-      else if (space == &ColorSpace::hwb) {
+      else if (space == &ColorSpace2::hwb) {
 
         tl::optional<double> hue;
         if (chn0 != nullptr) {
@@ -798,7 +798,7 @@ namespace Sass {
 
       }
 
-      else if (space == &ColorSpace::rgb) {
+      else if (space == &ColorSpace2::rgb) {
         auto a = _channelFromValue(logger, space->_channels[0], chn0, clamp);
         auto b = _channelFromValue(logger, space->_channels[1], chn1, clamp);
         auto c = _channelFromValue(logger, space->_channels[2], chn2, clamp);
@@ -1131,7 +1131,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         channels[1]->isaNumber(),
         channels[2]->isaNumber(),
         alpha, true,
-        space == &ColorSpace::rgb
+        space == &ColorSpace2::rgb
       );
 
       return rv;
@@ -1239,13 +1239,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(rgb1arg)
       {
         return _parseChannels(str_rgb, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::rgb);
+          "channels", pstate, compiler, &ColorSpace2::rgb);
       }
 
       static BUILT_IN_FN(fnRgb1arg)
       {
         return _parseChannels(str_oklab, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::rgb);
+          "channels", pstate, compiler, &ColorSpace2::rgb);
       }
 
       /*******************************************************************/
@@ -1289,13 +1289,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(rgba1arg)
       {
         return _parseChannels(str_rgb, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::rgb);
+          "channels", pstate, compiler, &ColorSpace2::rgb);
       }
 
       static BUILT_IN_FN(fnRgba1arg)
       {
         return _parseChannels(str_rgb, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::rgb);
+          "channels", pstate, compiler, &ColorSpace2::rgb);
       }
 
       /*******************************************************************/
@@ -1347,14 +1347,14 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(hsl1arg)
       {
         auto rv = _parseChannels(str_hsl, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::hsl);
+          "channels", pstate, compiler, &ColorSpace2::hsl);
         return rv;
       }
 
       static BUILT_IN_FN(fnHsl1arg)
       {
         auto rv = _parseChannels(str_hsl, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::hsl);
+          "channels", pstate, compiler, &ColorSpace2::hsl);
         return rv;
       }
 
@@ -1400,14 +1400,14 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(hsla1arg)
       {
         auto rv = _parseChannels(str_hsl, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::hsl);
+          "channels", pstate, compiler, &ColorSpace2::hsl);
         return rv;
       }
 
       static BUILT_IN_FN(fnHsla1arg)
       {
         auto rv = _parseChannels(str_hsl, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::hsl);
+          "channels", pstate, compiler, &ColorSpace2::hsl);
         return rv;
       }
 
@@ -1416,7 +1416,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(hwb4arg)
       {
         auto rv = _parseChannels(str_hwb, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::hwb);
+          "channels", pstate, compiler, &ColorSpace2::hwb);
         // if (auto color = rv->isaColorSpaced())
           //std::cerr << "hwb4arg: " << color->debug() << "\n";
         return rv;
@@ -1441,7 +1441,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
                 arguments[3]
             }, SASS_DIV);
         auto rv = _parseChannels(str_hwb, args,
-          "channels", pstate, compiler, &ColorSpace::hwb);
+          "channels", pstate, compiler, &ColorSpace2::hwb);
         // if (auto color = rv->isaColorSpaced())
         //   std::cerr << "fnHwb4arg: " << color->debug() << "\n";
         return rv;
@@ -1471,7 +1471,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(hwb1arg)
       {
         auto rv = _parseChannels(str_hwb, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::hwb);
+          "channels", pstate, compiler, &ColorSpace2::hwb);
         return rv;
 
         /*
@@ -1497,7 +1497,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // }
         // #endif
         auto rv = _parseChannels(str_hwb, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::hwb);
+          "channels", pstate, compiler, &ColorSpace2::hwb);
         return rv;
       }
 
@@ -1507,24 +1507,24 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(oklab)
       {
         auto rv = _parseChannels(str_oklab, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::oklab);
+          "channels", pstate, compiler, &ColorSpace2::oklab);
         return rv;
       }
 
       static BUILT_IN_FN(oklch)
       {
         return _parseChannels(str_oklch, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::oklch);
+          "channels", pstate, compiler, &ColorSpace2::oklch);
       }
       static BUILT_IN_FN(lab)
       {
         return _parseChannels(str_lab, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::lab);
+          "channels", pstate, compiler, &ColorSpace2::lab);
       }
       static BUILT_IN_FN(lch)
       {
         return _parseChannels(str_lch, arguments[0],
-          "channels", pstate, compiler, &ColorSpace::lch);
+          "channels", pstate, compiler, &ColorSpace2::lch);
       }
 
       /*******************************************************************/
@@ -1745,8 +1745,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       ColorSpaced* mixLegacy(Logger& logger, ColorSpaced* color1, ColorSpaced* color2, const Number* weight)
       {
 
-        ColorSpaced* rgb1 = color1->toSpace(ColorSpace::rgb, color1->pstate());
-        ColorSpaced* rgb2 = color2->toSpace(ColorSpace::rgb, color2->pstate());
+        ColorSpaced* rgb1 = color1->toSpace(ColorSpace2::rgb, color1->pstate());
+        ColorSpaced* rgb2 = color2->toSpace(ColorSpace2::rgb, color2->pstate());
 
 
         double weightScale = weight->valueInRange(logger, 0.0, 100.0, "weight") / 100.0;
@@ -1822,7 +1822,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
           // std::cerr << "Before legacy invert color " << color->debug() << "\n";
 
-          auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
+          auto rgb = color->toSpace2(ColorSpace2::rgb, pstate);
 
           // std::cerr << "Before legacy invert as rgb " << rgb->debug() << "\n";
 
@@ -1862,7 +1862,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         ColorSpaced* inverted = nullptr;
 
-        if (space == ColorSpace::hwb) {
+        if (space == ColorSpace2::hwb) {
           inverted = ColorSpaced::hwb(pstate,
             _invertChannel(compiler, inSpace, space._channels[0], inSpace->getChannel0OrNull()),
             inSpace->getChannel2OrNull(),
@@ -1870,7 +1870,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             inSpace->getAlpha());
 
         }
-        else if (space == ColorSpace::hsl || space == ColorSpace::lch || space == ColorSpace::oklch) {
+        else if (space == ColorSpace2::hsl || space == ColorSpace2::lch || space == ColorSpace2::oklch) {
           auto rv = ColorSpaced::forSpaceInternal(pstate, space,
             _invertChannel(compiler, inSpace, space._channels[0], inSpace->getChannel0OrNull()),
             inSpace->getChannel1OrNull(),
@@ -1959,7 +1959,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           // Use [ColorSpace.convert] manually so that we can convert missing
           // channels to 0 without having to create new intermediate color objects.
           return color->space().convert(
-            ColorSpace::xyzd65,
+            ColorSpace2::xyzd65,
             color->pstate(),
             color->getChannel0(),
             color->getChannel1(),
@@ -2019,7 +2019,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "red() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
-        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
+        ColorSpacedObj rgb = color->toSpace(ColorSpace2::rgb, pstate, false);
         double value = Sass::round64(rgb->getChannel0(), compiler.epsilon);
         return SASS_MEMORY_NEW(Number, pstate, value);
       }
@@ -2032,7 +2032,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "green() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
-        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
+        ColorSpacedObj rgb = color->toSpace(ColorSpace2::rgb, pstate, false);
         double value = Sass::round64(rgb->getChannel1(), compiler.epsilon);
         return SASS_MEMORY_NEW(Number, pstate, value);
       }
@@ -2045,7 +2045,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "blue() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
-        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
+        ColorSpacedObj rgb = color->toSpace(ColorSpace2::rgb, pstate, false);
         double value = Sass::round64(rgb->getChannel2(), compiler.epsilon);
         return SASS_MEMORY_NEW(Number, pstate, value);
       }
@@ -2058,7 +2058,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "hue() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
-        ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, pstate);
+        ColorSpaced* hsl = color->toSpace(ColorSpace2::hsl, pstate);
         return SASS_MEMORY_NEW(Number, pstate, hsl->getChannel0(), unit_deg);
       }
 
@@ -2070,7 +2070,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "saturation() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
-        ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, pstate);
+        ColorSpaced* hsl = color->toSpace(ColorSpace2::hsl, pstate);
         return SASS_MEMORY_NEW(Number, pstate, hsl->getChannel1(), unit_percent);
       }
 
@@ -2082,7 +2082,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "lightness() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
-        ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, pstate);
+        ColorSpaced* hsl = color->toSpace(ColorSpace2::hsl, pstate);
         return SASS_MEMORY_NEW(Number, pstate, hsl->getChannel2(), unit_percent);
       }
 
@@ -2094,7 +2094,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "whiteness() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
-        ColorSpaced* hwb = color->toSpace(ColorSpace::hwb, pstate);
+        ColorSpaced* hwb = color->toSpace(ColorSpace2::hwb, pstate);
         return SASS_MEMORY_NEW(Number, pstate, hwb->getChannel1(), unit_percent);
       }
 
@@ -2106,7 +2106,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "blackness() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
-        ColorSpaced* hwb = color->toSpace(ColorSpace::hwb, pstate);
+        ColorSpaced* hwb = color->toSpace(ColorSpace2::hwb, pstate);
         return SASS_MEMORY_NEW(Number, pstate, hwb->getChannel2(), unit_percent);
       }
 
@@ -2230,7 +2230,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
 
         const ColorSpace& space = color->isLegacy() && isNull(arguments[1]) ?
-          ColorSpace::hsl : ColorSpace::fromValueRef(compiler, arguments[1]);
+          ColorSpace2::hsl : ColorSpace::fromValueRef(compiler, arguments[1]);
 
         if (!space.isPolar()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2293,11 +2293,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         if (color->isLegacy())
         {
-          ColorSpacedObj hsl = color->toSpace(ColorSpace::hsl, pstate);
+          ColorSpacedObj hsl = color->toSpace(ColorSpace2::hsl, pstate);
           hsl->c1(0.0); return hsl->toSpace(color->space(), pstate, false);
         }
         else {
-          ColorSpacedObj oklch = color->toSpace(ColorSpace::oklch, pstate);
+          ColorSpacedObj oklch = color->toSpace(ColorSpace2::oklch, pstate);
           oklch->c1(0.0); return oklch->toSpace(color->space(), pstate);
         }
       }
@@ -2330,7 +2330,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.adjust() instead with an explicit $space argument.");
         }
 
-        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+        auto hsl = color->toSpace(ColorSpace2::hsl, pstate);
         double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
         double lightness = clampLikeCss(hsl->getChannel2() - adjust, 0.0, 100.0);
         ColorSpaced* rv = ColorSpaced::hsl(hsl->pstate(),
@@ -2355,7 +2355,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.adjust() instead with an explicit $space argument.");
         }
 
-        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+        auto hsl = color->toSpace(ColorSpace2::hsl, pstate);
         double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
         double lightness = clampLikeCss(hsl->getChannel2() + adjust, 0.0, 100.0);
         ColorSpaced* rv = ColorSpaced::hsl(hsl->pstate(),
@@ -2380,7 +2380,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.adjust() instead with an explicit $space argument.");
         }
 
-        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+        auto hsl = color->toSpace(ColorSpace2::hsl, pstate);
         double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
         double saturation = clampLikeCss(hsl->getChannel1() + adjust, 0.0, 100.0);
         ColorSpaced* rv = ColorSpaced::hsl(hsl->pstate(),
@@ -2405,7 +2405,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.adjust() instead with an explicit $space argument.");
         }
 
-        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+        auto hsl = color->toSpace(ColorSpace2::hsl, pstate);
         double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
         double saturation = clampLikeCss(hsl->getChannel1() - adjust, 0.0, 100.0);
         ColorSpaced* rv = ColorSpaced::hsl(hsl->pstate(),
@@ -2670,7 +2670,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(ieHexStr)
       {
         ColorSpaced* color = arguments[0]->assertColorSpaced2(compiler, Strings::color);
-        ColorSpaced* spaced = color->toSpace(ColorSpace::rgb, pstate);
+        ColorSpaced* spaced = color->toSpace(ColorSpace2::rgb, pstate);
         ColorSpaced* rgba = spaced->toGamut(GamutMapMethod::localMinde);
         // clamp should not be needed here
         double r = clamp(rgba->getChannel0(), 0.0, 255.0);
@@ -2731,16 +2731,16 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         for(auto kv : *kwds)
         {
           const sass::string& key = kv.first.norm();
-          if (key == "red") return &ColorSpace::rgb;
-          if (key == "green") return &ColorSpace::rgb;
-          if (key == "blue") return &ColorSpace::rgb;
-          if (key == "saturation") return &ColorSpace::hsl;
-          if (key == "lightness") return &ColorSpace::hsl;
-          if (key == "whiteness") return &ColorSpace::hwb;
-          if (key == "blackness") return &ColorSpace::hwb;
+          if (key == "red") return &ColorSpace2::rgb;
+          if (key == "green") return &ColorSpace2::rgb;
+          if (key == "blue") return &ColorSpace2::rgb;
+          if (key == "saturation") return &ColorSpace2::hsl;
+          if (key == "lightness") return &ColorSpace2::hsl;
+          if (key == "whiteness") return &ColorSpace2::hwb;
+          if (key == "blackness") return &ColorSpace2::hwb;
         }
         if (kwds->count(key_hue) != 0)
-          return &ColorSpace::hsl;
+          return &ColorSpace2::hsl;
         else return nullptr;
       }
 
@@ -3264,7 +3264,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
               "More info: https://sass-lang.com/d/color-functions";
           });
 
-        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+        auto hsl = color->toSpace(ColorSpace2::hsl, pstate);
 
         auto rv = ColorSpaced::hsl(
           hsl->pstate(),
@@ -3809,7 +3809,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       Number* b = _b->assertNumber(logger, Strings::blue);
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
-      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::rgb,
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace2::rgb,
         fuzzyRound(_percentageOrUnitless(r, 255, "$red", logger), logger.epsilon),
         fuzzyRound(_percentageOrUnitless(g, 255, "$green", logger), logger.epsilon),
         fuzzyRound(_percentageOrUnitless(b, 255, "$blue", logger), logger.epsilon),
@@ -3848,7 +3848,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       tl::optional<double> a = a_val;
 
       return _colorFromChannels(logger, pstate,
-        &ColorSpace::rgb, r, g, b, a, true, true);
+        &ColorSpace2::rgb, r, g, b, a, true, true);
     }
 
     /*******************************************************************/
@@ -3880,7 +3880,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       Number* b = _b->assertNumber(logger, Strings::lightness);
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
-      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::hsl,
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace2::hsl,
         fuzzyRound(_percentageOrUnitless(r, 255, "$hue", logger), logger.epsilon),
         fuzzyRound(_percentageOrUnitless(g, 255, "$saturation", logger), logger.epsilon),
         fuzzyRound(_percentageOrUnitless(b, 255, "$lightness", logger), logger.epsilon),
@@ -3919,7 +3919,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       tl::optional<double> a = a_val;
 
       return _colorFromChannels(logger, pstate,
-        &ColorSpace::hsl, r, g, b, a, true, true);
+        &ColorSpace2::hsl, r, g, b, a, true, true);
     }
 
     /*******************************************************************/
@@ -3951,7 +3951,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       Number* b = _b->assertNumber(logger, Strings::blackness);
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
-      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace::hwb,
+      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace2::hwb,
         fuzzyRound(_percentageOrUnitless(r, 255, "$hue", logger), logger.epsilon),
         fuzzyRound(_percentageOrUnitless(g, 255, "$whiteness", logger), logger.epsilon),
         fuzzyRound(_percentageOrUnitless(b, 255, "$blackness", logger), logger.epsilon),
@@ -3990,7 +3990,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       tl::optional<double> a = a_val;
 
       return _colorFromChannels(logger, pstate,
-        &ColorSpace::hwb, r, g, b, a, true, true);
+        &ColorSpace2::hwb, r, g, b, a, true, true);
     }
 
     /*******************************************************************/

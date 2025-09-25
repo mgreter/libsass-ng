@@ -1278,7 +1278,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = forSpaceInternal(pstate,
-        ColorSpace::hsl,
+        ColorSpace2::hsl,
         red, green, blue, alpha);
       return rv;
     }
@@ -1291,7 +1291,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = forSpaceInternal(pstate,
-        ColorSpace::hwb,
+        ColorSpace2::hwb,
         red, green, blue, alpha);
       return rv;
     }
@@ -1305,7 +1305,7 @@ namespace Sass {
       bool forceRgb = false)
     {
       auto rv = _forSpace(pstate,
-        ColorSpace::rgb,
+        ColorSpace2::rgb,
         red, green, blue, alpha);
       if (rv != nullptr) rv->forceRgb = forceRgb;
       return rv;
@@ -1319,7 +1319,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = _forSpace(pstate,
-        ColorSpace::lab,
+        ColorSpace2::lab,
         lightness, a, b, alpha);
       return rv;
     }
@@ -1332,7 +1332,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = _forSpace(pstate,
-        ColorSpace::xyzd65,
+        ColorSpace2::xyzd65,
         x, y, z, alpha);
       return rv;
     }

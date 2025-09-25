@@ -913,7 +913,7 @@ namespace Sass {
   void Inspect::_writeHsl(ColorSpaced* color)
   {
 
-    ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, color->pstate());
+    ColorSpaced* hsl = color->toSpace(ColorSpace2::hsl, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -943,7 +943,7 @@ namespace Sass {
   void Inspect::_writeHwb(ColorSpaced* color)
   {
 
-    ColorSpaced* hwb = color->toSpace(ColorSpace::hwb, color->pstate());
+    ColorSpaced* hwb = color->toSpace(ColorSpace2::hwb, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -973,7 +973,7 @@ namespace Sass {
   void Inspect::_writeRgb(ColorSpaced* color)
   {
     sass::string ss;
-    ColorSpaced* rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    ColorSpaced* rgb = color->toSpace(ColorSpace2::rgb, color->pstate());
     // std::cerr << "write rgb " << rgb->debug() << "\n";
 
     if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {
@@ -999,7 +999,7 @@ namespace Sass {
   }
 
   bool _canUseHex(const ColorSpaced* rgb) {
-    if (rgb->space() == ColorSpace::rgb) {
+    if (rgb->space() == ColorSpace2::rgb) {
       return _canUseHexForChannel(rgb->getChannel0()) &&
         _canUseHexForChannel(rgb->getChannel1()) &&
         _canUseHexForChannel(rgb->getChannel2());
@@ -1041,12 +1041,12 @@ namespace Sass {
       return;
     }
 
-    if (color->space() == ColorSpace::hsl) {
+    if (color->space() == ColorSpace2::hsl) {
       _writeHsl(color);
       return;
     }
     else if (outopt.output_style == SASS_STYLE_COMPRESSED) {
-      if (color->space() == ColorSpace::hwb) {
+      if (color->space() == ColorSpace2::hwb) {
         _writeHwb(color);
         return;
       }
@@ -1064,7 +1064,7 @@ namespace Sass {
     }
 
     if (opaque) {
-      if (ColorSpaced* rgba = color->toSpace(ColorSpace::rgb, color->pstate())) {
+      if (ColorSpaced* rgba = color->toSpace(ColorSpace2::rgb, color->pstate())) {
         int numval = fuzzyRound(rgba->getChannel0(), sass::epsilon) * 0x10000
           + fuzzyRound(rgba->getChannel1(), sass::epsilon) * 0x100
           + fuzzyRound(rgba->getChannel2(), sass::epsilon);
@@ -1073,8 +1073,8 @@ namespace Sass {
           // Fix something that is actually correct to pass tests
           // Adjust the spec tests once we figure out how to proceed
 
-          if (!(color->space() == ColorSpace::hwb && strcmp("gray", disp) == 0) &&
-              !(color->space() == ColorSpace::rgb && strcmp("gray", disp) == 0)) {
+          if (!(color->space() == ColorSpace2::hwb && strcmp("gray", disp) == 0) &&
+              !(color->space() == ColorSpace2::rgb && strcmp("gray", disp) == 0)) {
             append_string(disp);
             return;
           }
@@ -1130,13 +1130,13 @@ namespace Sass {
   // Writes [color] using the `color()` function syntax.
   void Inspect::_writeColorFunction(const ColorSpaced* color)
   {
-    if (color->space() == ColorSpace::rgb ||
-        color->space() == ColorSpace::hsl ||
-        color->space() == ColorSpace::hwb ||
-        color->space() == ColorSpace::lab ||
-        color->space() == ColorSpace::oklab ||
-        color->space() == ColorSpace::lch ||
-        color->space() == ColorSpace::oklch)
+    if (color->space() == ColorSpace2::rgb ||
+        color->space() == ColorSpace2::hsl ||
+        color->space() == ColorSpace2::hwb ||
+        color->space() == ColorSpace2::lab ||
+        color->space() == ColorSpace2::oklab ||
+        color->space() == ColorSpace2::lch ||
+        color->space() == ColorSpace2::oklch)
     {
       std::cerr << "Wrong color space for writeColorFunction\n";
     }
@@ -1194,14 +1194,14 @@ namespace Sass {
     const ColorSpace& space = spaced->space();
     // std::cerr << "visitColor " << spaced->debug() << "\n";
 
-    if (spaced->space() == ColorSpace::rgb || spaced->space() == ColorSpace::hsl || spaced->space() == ColorSpace::hwb) {
+    if (spaced->space() == ColorSpace2::rgb || spaced->space() == ColorSpace2::hsl || spaced->space() == ColorSpace2::hwb) {
       if (!spaced->isChannel0Missing() && !spaced->isChannel1Missing() && !spaced->isChannel2Missing() && !spaced->isAlphaMissing()) {
         _writeLegacyColor(spaced);
         return;
       }
     }
 
-    if (space == ColorSpace::rgb) {
+    if (space == ColorSpace2::rgb) {
       append_string("rgb(");
       write_channel(spaced->getChannel0OrNull(), nullptr);
       append_mandatory_space();
@@ -1212,7 +1212,7 @@ namespace Sass {
       append_string(")");
     }
 
-    else if (space == ColorSpace::hsl || space == ColorSpace::hwb) {
+    else if (space == ColorSpace2::hsl || space == ColorSpace2::hwb) {
       append_string(space.name());
       append_string("(");
       write_channel(spaced->getChannel0OrNull(),
@@ -1232,7 +1232,7 @@ namespace Sass {
       append_comma_separator();
       // The XYZ space has no gamut restrictions, so we use it to represent
       // the out-of-gamut color before converting into the target space.
-      _writeColorFunction(spaced->toSpace(ColorSpace::xyzd65, spaced->pstate()));
+      _writeColorFunction(spaced->toSpace(ColorSpace2::xyzd65, spaced->pstate()));
       append_optional_space();
       append_string("100%");
       append_comma_separator();
@@ -1242,8 +1242,8 @@ namespace Sass {
     }
 
     // We know these spaces have first channel as convenient percent
-    else if (space == ColorSpace::lab || space == ColorSpace::oklab ||
-      space == ColorSpace::lch || space == ColorSpace::oklch) {
+    else if (space == ColorSpace2::lab || space == ColorSpace2::oklab ||
+      space == ColorSpace2::lch || space == ColorSpace2::oklch) {
 
       add_open_mapping(color, true);
 
