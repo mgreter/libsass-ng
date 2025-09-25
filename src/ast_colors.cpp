@@ -431,11 +431,11 @@ namespace Sass {
       return SASS_MEMORY_NEW(ColorSpaced, this);
     }
 
-    std::cerr << "Do toSpace from " << debug() << " to " << space.name() << " (" << legacyMissing << ")\n";
+    // std::cerr << "Do toSpace from " << debug() << " to " << space.name() << " (" << legacyMissing << ")\n";
 
     ColorSpaced* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
 
-    std::cerr << "  result " << converted->debug() << "\n";
+    // std::cerr << "  result " << converted->debug() << "\n";
 
     if (!legacyMissing &&
       converted->isLegacy() &&
@@ -444,7 +444,7 @@ namespace Sass {
         converted->isChannel2Missing() ||
         converted->isAlphaMissing()))
     {
-      std::cerr << "XXX Special case\n";
+      // std::cerr << "XXX Special case\n";
       return ColorSpaced::forSpaceInternal(
         pstate, converted->space(),
         converted->getChannel0(),
@@ -526,8 +526,8 @@ namespace Sass {
       }
       ColorSpaced* rgb1 = toSpace(ColorSpace::rgb, pstate());
       ColorSpaced* rgb2 = rhs.toSpace(ColorSpace::rgb, rhs.pstate());
-      std::cerr << "rgb1 " << rgb1->debug() << "\n";
-      std::cerr << "rgb2 " << rgb2->debug() << "\n";
+      // std::cerr << "rgb1 " << rgb1->debug() << "\n";
+      // std::cerr << "rgb2 " << rgb2->debug() << "\n";
       auto rv = fuzzyEquals(rgb1->c0_, rgb2->c0_, sass::epsilon)
         && fuzzyEquals(rgb1->c1_, rgb2->c1_, sass::epsilon)
         && fuzzyEquals(rgb1->c2_, rgb2->c2_, sass::epsilon);
@@ -772,9 +772,9 @@ namespace Sass {
     bool missingHue) const
   {
 
-    std::cerr << "CALL SRGB translate " << red.value_or(-42) << ", "
-      << green.value_or(-42) << ", " << blue.value_or(-42) << ", "
-      << alpha.value_or(-42) << "\n";
+    // std::cerr << "CALL SRGB translate " << red.value_or(-42) << ", "
+    //   << green.value_or(-42) << ", " << blue.value_or(-42) << ", "
+    //   << alpha.value_or(-42) << "\n";
 
     if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
       double nr_red = red.value_or(0);
@@ -921,9 +921,9 @@ namespace Sass {
     bool missingB) const
   {
 
-    std::cerr << "CALL XYZD50 translate " << x.value_or(-42) << ", "
-      << y.value_or(-42) << ", " << z.value_or(-42) << ", "
-      << alpha.value_or(-42) << "\n";
+    // std::cerr << "CALL XYZD50 translate " << x.value_or(-42) << ", "
+    //   << y.value_or(-42) << ", " << z.value_or(-42) << ", "
+    //   << alpha.value_or(-42) << "\n";
 
     if (dest.name() == "lab" || dest.name() == "lch") {
       // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
@@ -942,14 +942,14 @@ namespace Sass {
           missingA ? tl::optional<double>() : a,
           missingB ? tl::optional<double>() : b,
           alpha);
-        std::cerr << "==lab== " << rv->debug() << "\n";
+        // std::cerr << "==lab== " << rv->debug() << "\n";
         return rv;
       }
       else {
         auto rv = ColorSpaced::labToLch(pstate,
           ColorSpace::lch, lightness, a, b, alpha,
           missingChroma, missingHue);
-        std::cerr << "==lch== " << rv->debug() << "\n";
+        // std::cerr << "==lch== " << rv->debug() << "\n";
         return rv;
       }
     }
@@ -1195,7 +1195,7 @@ namespace Sass {
     bool missingHue) const
   {
 
-    std::cerr << "LAB.CONVERT " << lightness.value_or(-42) << "; " << a.value_or(-42) << ", " << b.value_or(-42) << "\n";
+    // std::cerr << "LAB.CONVERT " << lightness.value_or(-42) << "; " << a.value_or(-42) << ", " << b.value_or(-42) << "\n";
 
     if (dest.name() == "lab")
     {

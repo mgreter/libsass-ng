@@ -1692,7 +1692,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(toSpace)
       {
         auto rv = _colorInSpace(compiler, arguments[0], arguments[1], false);
-        std::cerr << "########## => " << rv->debug() << "\n";
+        // std::cerr << "########## => " << rv->debug() << "\n";
         return rv;
         // return _parseChannels(str_color, arguments[0], "description", pstate, compiler);
         // 
@@ -2237,11 +2237,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "space");
         }
 
-        std::cerr << "## input " << color->debug() << " - " << isNull(arguments[1]) << "\n";
+        // std::cerr << "## input " << color->debug() << " - " << isNull(arguments[1]) << "\n";
 
         ColorSpaced* col = color->toSpace(space, pstate, !isNull(arguments[1]));
 
-        std::cerr << "## in space " << col->debug() << " - " << isNull(arguments[1]) << "\n";
+        // std::cerr << "## in space " << col->debug() << " - " << isNull(arguments[1]) << "\n";
 
         if (space.isLegacy()) {
           col = ColorSpaced::forSpaceInternal(
@@ -2271,8 +2271,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             col->getAlphaOrNull());
         }
 
-        std::cerr << "adjusted space " << col->debug() << "\n";
-        std::cerr << "--------------------------------------\n";
+        // std::cerr << "adjusted space " << col->debug() << "\n";
+        // std::cerr << "--------------------------------------\n";
 
         return col->toSpace(color->space(), pstate, false);
       }
