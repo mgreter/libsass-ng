@@ -902,6 +902,18 @@ namespace Sass {
   }
   // EO readAtRootRule
 
+  // Adds [expression] to [buffer], or if it's an unquoted
+  // string adds the interpolation it contains instead.
+  static void addOrInject(InterpolationBuffer& buffer, Expression* expression)
+  {
+    auto strex = expression->isaStringExpression();
+    if (strex && strex->hasQuotes()) {
+      buffer.addInterpolation(strex->text());
+    } else {
+      buffer.add(expression);
+    }
+  }
+
   // Consumes a query expression of the form `(foo: bar)`.
   Interpolation* StylesheetParser::readAtRootQuery()
   {
@@ -917,12 +929,14 @@ namespace Sass {
     buffer.writeCharCode($lparen);
     scanWhitespace();
 
-    buffer.add(readExpression());
+    addOrInject(buffer, readExpression());
+    // buffer.add(readExpression());
     if (scanner.scanChar($colon)) {
       scanWhitespace();
       buffer.writeCharCode($colon);
       buffer.writeCharCode($space);
-      buffer.add(readExpression());
+      addOrInject(buffer, readExpression());
+      // buffer.add(readExpression());
     }
 
     scanner.expectChar($rparen);
