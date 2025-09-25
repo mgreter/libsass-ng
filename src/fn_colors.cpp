@@ -2177,8 +2177,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const ColorSpace& space = _spaceOrDefault(compiler, color, arguments[1], "space");
         const GamutMapMethod& method = GamutMapMethod::fromName(compiler, arguments[2], "method");
 
-        return color->toSpace(space, color->pstate())
-          ->toGamut(method)->toSpace(color->space(), color->pstate());
+        return color->toSpace(space, color->pstate())->toGamut(method)
+          ->toSpace(color->space(), color->pstate(), false);
       }
 
       /*
