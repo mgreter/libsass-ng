@@ -317,6 +317,49 @@ namespace Sass {
           }
           break;
 
+        case $asterisk:
+          if (scanner.peekChar(1) == $slash) {
+            buffer.writeCharCode(scanner.readChar());
+            buffer.writeCharCode(scanner.readChar());
+            auto span = scanner.rawSpanFrom(start);
+            scanWhitespace();
+
+            // For backwards compatibility, allow additional comments after
+            // the initial comment is closed.
+            while (isNewline(scanner.peekChar()) &&
+              peekIndentation() > parentIndentation) {
+              while (lookingAtDoubleNewline()) {
+                expectNewline();
+              }
+              readIndentation();
+              scanWhitespace();
+            }
+
+            if (!scanner.isDone() && !isNewline(scanner.peekChar())) {
+              auto errorStart = scanner.state();
+              while (!scanner.isDone() && !isNewline(scanner.peekChar())) {
+                scanner.readChar();
+              }
+              throw "unexpected text";
+              // throw MultiSpanSassFormatException(
+              //   "Unexpected text after end of comment",
+              //   scanner.spanFrom(errorStart),
+              //   "extra text",
+              //   { span: "comment" });
+            }
+            else {
+              SourceSpan pstate(scanner.rawSpanFrom(start));
+              InterpolationObj itpl = buffer.getInterpolation(pstate);
+              return SASS_MEMORY_NEW(LoudComment, std::move(pstate), itpl);
+              // LoudComment(buffer.interpolation(span));
+            }
+          }
+          else {
+            buffer.writeCharCode(scanner.readChar());
+          }
+
+          break;
+
         default:
           buffer.writeCharCode(scanner.readChar());
           break;
