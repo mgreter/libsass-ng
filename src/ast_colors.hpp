@@ -1134,7 +1134,6 @@ namespace Sass {
   ///////////////////////////////////////////////////////////////////////
 
   enum HueInterpolationMethod {
-    legacy,
     shorter,
     longer,
     increasing,
@@ -1147,11 +1146,11 @@ namespace Sass {
 
     const ColorSpace& space;
 
-    HueInterpolationMethod hue = legacy;
+    HueInterpolationMethod hue = shorter;
 
     InterpolationMethod(
       const ColorSpace& space,
-      HueInterpolationMethod hue = legacy) :
+      HueInterpolationMethod hue = shorter) :
       space(space), hue(hue)
     {}
 

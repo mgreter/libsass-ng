@@ -101,7 +101,9 @@ namespace Sass {
 
     }
 
-    return hue1 * weight + hue2 * (1.0 - weight);
+    auto rv = hue1 * weight + hue2 * (1.0 - weight);
+
+    return rv;
   }
 
   ColorSpaced* ColorSpaced::interpolate(Logger& logger, const SourceSpan& pstate, ColorSpaced* other, InterpolationMethod method, double weight, bool legacyMissing)
