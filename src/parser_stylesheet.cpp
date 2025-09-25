@@ -1905,6 +1905,8 @@ namespace Sass {
         scanner.expectChar($dot);
         scanner.expectChar($dot);
         scanWhitespace();
+        if (scanner.scanChar($comma))
+          scanWhitespace();
         restArgument = name.orig();
         // Defer adding variable until we parsed expression
         // Just in case the same variable is mentioned again
@@ -1983,6 +1985,8 @@ namespace Sass {
         else {
           kwdRest = expression;
           scanWhitespace();
+          if (scanner.scanChar($comma))
+            scanWhitespace();
           break;
         }
       }
