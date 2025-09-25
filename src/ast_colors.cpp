@@ -739,24 +739,6 @@ namespace Sass {
   }
 
 
-  extern const HwbColorSpace ColorSpace2::hwb = HwbColorSpace();
-  extern const HslColorSpace ColorSpace2::hsl = HslColorSpace();
-  extern const LabColorSpace ColorSpace2::lab = LabColorSpace();
-  extern const LchColorSpace ColorSpace2::lch = LchColorSpace();
-  extern const OkLabColorSpace ColorSpace2::oklab = OkLabColorSpace();
-  extern const OkLchColorSpace ColorSpace2::oklch = OkLchColorSpace();
-
-  extern const RgbColorSpace ColorSpace2::rgb = RgbColorSpace();
-  extern const SrgbColorSpace ColorSpace2::srgb = SrgbColorSpace();
-  extern const SrgbLinearColorSpace ColorSpace2::srgb_linear = SrgbLinearColorSpace();
-  extern const XyzD50ColorSpace ColorSpace2::xyzd50 = XyzD50ColorSpace();
-  extern const XyzD65ColorSpace ColorSpace2::xyzd65 = XyzD65ColorSpace();
-  extern const LmsColorSpace ColorSpace2::lms = LmsColorSpace();
-
-  extern const Rec2020ColorSpace ColorSpace2::rec2020 = Rec2020ColorSpace();
-  extern const DisplayP3ColorSpace ColorSpace2::displayP3 = DisplayP3ColorSpace();
-  extern const A98RgbColorSpace ColorSpace2::a98rgb = A98RgbColorSpace();
-  extern const ProphotoRgbColorSpace ColorSpace2::protophotoRgb = ProphotoRgbColorSpace();
 
   //const ColorSpace ColorSpacings::SRGB(str_srgb, SassColorSpace::SRGB, srgb_channels);
 
