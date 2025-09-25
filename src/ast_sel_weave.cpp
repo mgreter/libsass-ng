@@ -429,8 +429,8 @@ namespace Sass {
     // Optimize case when nothing is changed
     if (compound1->empty()) return compound1;
     // Make a copy of the existing elements (ToDo: optimize)
-    SimpleSelectors result(compound2->elements());
-    for (const auto& simple : compound1->elements()) {
+    SimpleSelectors result(compound1->elements());
+    for (const auto& simple : compound2->elements()) {
       result = simple->unify(result);
       if (result.empty()) return nullptr;
     }
