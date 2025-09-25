@@ -636,7 +636,7 @@ namespace Sass {
       hsl_channels, 3)
     {}
 
-    bool isPolar() const override final { return false; }
+    bool isPolar() const override final { return true; }
 
     ColorSpaced* convert(
       const ColorSpace& dest,
@@ -657,7 +657,7 @@ namespace Sass {
       hwb_channels, 3)
     {}
 
-    bool isPolar() const override final { return false; }
+    bool isPolar() const override final { return true; }
 
     ColorSpaced* convert(
       const ColorSpace& dest,
@@ -712,7 +712,7 @@ namespace Sass {
       lch_channels, 3)
     {}
 
-    bool isPolar() const override final { return false; }
+    bool isPolar() const override final { return true; }
     bool isBounded() const override final { return false; }
 
     ColorSpaced* convert(
@@ -827,7 +827,7 @@ namespace Sass {
       oklch_channels, 3)
     {}
 
-    bool isPolar() const override final { return false; }
+    bool isPolar() const override final { return true; }
     bool isBounded() const override final { return false; }
 
     ColorSpaced* convert(

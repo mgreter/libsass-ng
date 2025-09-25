@@ -1389,7 +1389,7 @@ namespace Sass {
         name);
     }
 
-    const ColorSpace& space = ColorSpace::fromValueRef(logger, value);
+    const ColorSpace& space = ColorSpace::fromValueRef(logger, list[0]);
 
     if (list.size() == 1) return InterpolationMethod(space);
 

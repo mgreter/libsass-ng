@@ -3148,23 +3148,17 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         weight->checkPercent(compiler, Strings::weight);
 
-        /*
+        if (!color1->isLegacy()) {
+          throw Exception::SassScriptException(compiler, color1->pstate(),
+            "To use color.mix() with non-legacy color " + color1->toCss()
+            + ", you must provide a $method.", "color1");
+        }
+        if (!color2->isLegacy()) {
+          throw Exception::SassScriptException(compiler, color2->pstate(),
+            "To use color.mix() with non-legacy color " + color2->toCss()
+            + ", you must provide a $method.", "color2");
+        }
 
-    if (!color1.isLegacy) {
-      throw SassScriptException(
-        "To use color.mix() with non-legacy color $color1, you must provide a "
-            "\$method.",
-        "color1",
-      );
-    } else if (!color2.isLegacy) {
-      throw SassScriptException(
-        "To use color.mix() with non-legacy color $color2, you must provide a "
-            "\$method.",
-        "color2",
-      );
-    }
-
-        */
         return _mixLegacy(color1, color2, weight, pstate, compiler);
       }
 
