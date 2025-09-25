@@ -1020,6 +1020,8 @@ namespace Sass {
     // Check if resulting color is considered fully opaque
     bool opaque = fuzzyEquals(color->alpha().value_or(1), 1, outopt.epsilon);
 
+    if (!color->space().isBounded()) return;
+
     if (outopt.output_style == SASS_STYLE_COMPRESSED) {
       // std::cerr << "COMPRESSED OUTPUT\n";
     }

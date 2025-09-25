@@ -673,6 +673,8 @@ namespace Sass {
       lab_channels, 3)
     {}
 
+    bool isBounded() const override final { return false; }
+
     ColorSpaced* translate(
       const ColorSpace& dest,
       const SourceSpan& pstate,
@@ -706,6 +708,8 @@ namespace Sass {
       lch_channels, 3)
     {}
 
+    bool isBounded() const override final { return false; }
+
     ColorSpaced* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
@@ -724,6 +728,8 @@ namespace Sass {
       SassColorSpace::LMS,
       lms_channels, 3)
     {}
+
+    bool isBounded() const override final { return false; }
 
     double toLinear(double channel) const override final {
       return channel;
@@ -781,6 +787,8 @@ namespace Sass {
       oklab_channels, 3)
     {}
 
+    bool isBounded() const override final { return false; }
+
     ColorSpaced* translate(
       const ColorSpace& dest,
       const SourceSpan& pstate,
@@ -814,6 +822,8 @@ namespace Sass {
       oklch_channels, 3)
     {}
 
+    bool isBounded() const override final { return false; }
+
     ColorSpaced* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
@@ -834,7 +844,7 @@ namespace Sass {
 
     double toLinear(double channel) const override final {
       double abs = std::abs(channel);
-      if (abs > 16.0 / 512) return channel / 16.0;
+      if (abs <= 16.0 / 512) return channel / 16.0;
       return (std::signbit(channel) ? -1 : +1) *
         std::pow(abs, 1.8 / 1.0);
 
@@ -1027,6 +1037,8 @@ namespace Sass {
       xyz_channels, 3)
     {}
 
+    bool isBounded() const override final { return false; }
+
     double toLinear(double channel) const override final {
       return channel;
     }
@@ -1089,6 +1101,8 @@ namespace Sass {
     double fromLinear(double channel) const override final {
       return channel;
     }
+
+    bool isBounded() const override final { return false; }
 
     const double* transformationMatrix(ColorSpace dest) const override final {
       if (dest.name() == str_rgb) return ColorSpaces::xyzD65ToLinearSrgb;

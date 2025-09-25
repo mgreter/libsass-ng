@@ -223,17 +223,15 @@ namespace Sass {
   bool isChannelInGamut(double value, const ColorChannel& channel)
   {
     if (channel.isLinear) {
-      return fuzzyLessThanOrEquals(value, channel.max, 0.00001)
-        && fuzzyGreaterThanOrEquals(value, channel.min, 0.00001);
+      return fuzzyLessThanOrEquals(value, channel.max, sass::epsilon)
+        && fuzzyGreaterThanOrEquals(value, channel.min, sass::epsilon);
     }
     return true;
   }
 
   bool ColorSpaced::isInGamut() const
   {
-    if (space_.name() != "rgb"
-      && space_.name() == "hwb"
-      && space_.name() == "hsl")
+    if (!space_.isBounded())
     {
       return true;
     }
@@ -427,10 +425,8 @@ namespace Sass {
       return SASS_MEMORY_NEW(ColorSpaced, this);
     }
 
-    // std::cerr << "Do toSpace from " << debug() << " to " << space.name() << "\n";
+    // std::cerr << "Do toSpace from " << debug() << " to " << space.name() << " (" << legacyMissing << ")\n";
 
-    // return SASS_MEMORY_NEW(ColorSpaced, this);
-    // std::cerr << "Convert from " << space_.name() << " to " << space.name() << "\n";
     ColorSpaced* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
 
     // std::cerr << "  result " << converted->debug() << "\n";
@@ -696,7 +692,7 @@ namespace Sass {
         transformedRed, transformedGreen, transformedBlue,
         alpha, missingLightness, missingChroma, missingHue);
     }
-    else if (dest == ColorSpace::lab || dest == ColorSpace::lch) {
+    else if (dest.name() == "lab" || dest.name() == "lch") {
       return ColorSpace::xyzd50.translate(dest, pstate,
         transformedRed, transformedGreen, transformedBlue,
         alpha, missingLightness, missingChroma, missingHue);
@@ -707,7 +703,7 @@ namespace Sass {
         alpha, missingLightness, missingChroma, missingHue);
     }
 
-    auto rv = ColorSpaced::_forSpace(
+    auto rv = ColorSpaced::forSpaceInternal(
       pstate, dest,
       red.has_value() ? transformedRed : red,
       green.has_value() ? transformedGreen : green,
@@ -1267,6 +1263,7 @@ namespace Sass {
 
   ColorSpaced* ClipGamutMap::map(ColorSpaced* color) const
   {
+    // std::cerr << "clip gammut " << color->debug() << "\n";
     return ColorSpaced::forSpaceInternal(
       color->pstate(), color->space(),
       _clampChannel(color->getChannel0OrNull(), color->space()._channels[0]),

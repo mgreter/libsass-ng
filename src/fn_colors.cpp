@@ -2173,8 +2173,16 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(toGamut)
       {
 
-        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, "color");
+        ColorSpaced* color = arguments[0]->assertColorSpaced2(compiler, "color");
         const ColorSpace& space = _spaceOrDefault(compiler, color, arguments[1], "space");
+
+        if (arguments[2] == nullptr || arguments[2]->isNull()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "color.to-gamut() requires a $method argument for forwards-"
+            "compatibility with changes in the CSS spec. Suggestion:\n"
+            "\n$method: local-minde", "method");
+        }
+
         const GamutMapMethod& method = GamutMapMethod::fromName(compiler, arguments[2], "method");
 
         return color->toSpace(space, color->pstate())->toGamut(method)
