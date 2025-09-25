@@ -491,16 +491,18 @@ namespace Sass {
 
     /// Returns [color1] and [color2], mixed
     // together and weighted by [weight].
-    /*
-    static ColorRgba* mixColors(
-      const Color* color1,
-      const Color* color2,
+
+    static ColorSpaced* _mixLegacy(
+      const ColorSpaced* color1,
+      const ColorSpaced* color2,
       const Number* weight,
       const SourceSpan& pstate,
       Logger& logger)
     {
-      ColorRgbaObj lhs(color1->toRGBA());
-      ColorRgbaObj rhs(color2->toRGBA());
+
+      auto rgb1 = color1->toSpace(ColorSpace::rgb, pstate);
+      auto rgb2 = color2->toSpace(ColorSpace::rgb, pstate);
+
       // This algorithm factors in both the user-provided weight (w) and the
       // difference between the alpha values of the two colors (a) to decide how
       // to perform the weighted average of the two RGB values.
@@ -519,19 +521,20 @@ namespace Sass {
       double weightScale = weight->assertRange(
         0.0, 100.0, unit_percent, logger, "weight") / 100.0;
       double normalizedWeight = weightScale * 2.0 - 1.0;
-      double alphaDistance = lhs->a() - color2->a();
+      double alphaDistance = rgb1->getAlpha() - rgb2->getAlpha();
       double combinedWeight1 = normalizedWeight * alphaDistance == -1
         ? normalizedWeight : (normalizedWeight + alphaDistance) /
         (1.0 + normalizedWeight * alphaDistance);
       double weight1 = (combinedWeight1 + 1.0) / 2.0;
       double weight2 = 1.0 - weight1;
-      return SASS_MEMORY_NEW(ColorRgba, pstate,
-        fuzzyRound(lhs->r() * weight1 + rhs->r() * weight2, logger.epsilon),
-        fuzzyRound(lhs->g() * weight1 + rhs->g() * weight2, logger.epsilon),
-        fuzzyRound(lhs->b() * weight1 + rhs->b() * weight2, logger.epsilon),
-        lhs->a() * weightScale + rhs->a() * (1 - weightScale));
+
+      return ColorSpaced::rgb(pstate,
+        rgb1->getChannel0() * weight1 + rgb2->getChannel0() * weight2,
+        rgb1->getChannel1() * weight1 + rgb2->getChannel1() * weight2,
+        rgb1->getChannel2() * weight1 + rgb2->getChannel2() * weight2,
+        rgb1->getAlpha() * weightScale + rgb2->getAlpha() * (1 - weightScale));
     }
-    */
+
     // EO mixColor
 
     static double scaleValue(
@@ -3126,14 +3129,20 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       //   return arguments[0];
       // }
 
-      // static BUILT_IN_FN(mix)
-      // {
-      //   const Color* color1 = arguments[0]->assertColor(compiler, "color1");
-      //   const Color* color2 = arguments[1]->assertColor(compiler, "color2");
-      //   const Number* weight = arguments[2]->assertNumber(compiler, "weight");
-      //   weight->checkPercent(compiler, Strings::weight);
-      //   return mixColors(color1, color2, weight, pstate, compiler);
-      // }
+      static BUILT_IN_FN(mix)
+      {
+        const ColorSpaced* color1 = arguments[0]->assertColorSpaced(compiler, "color1");
+        const ColorSpaced* color2 = arguments[1]->assertColorSpaced(compiler, "color2");
+        const Number* weight = arguments[2]->assertNumber(compiler, "weight");
+
+        if (arguments[3] != nullptr && !arguments[3]->isNull()) {
+          return arguments[0];
+
+        }
+
+        weight->checkPercent(compiler, Strings::weight);
+        return _mixLegacy(color1, color2, weight, pstate, compiler);
+      }
 
       /*******************************************************************/
 
@@ -3266,7 +3275,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         uint32_t idx_adjust = ctx.createBuiltInFunction(key_adjust, "$color, $kwargs...", adjust);
         uint32_t idx_change = ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
         // uint32_t idx_scale = ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale);
-        // uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%", mix);
+        uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%, $method: null", mix);
 
 
         uint32_t idx_to_gamut = ctx.createBuiltInFunction(key_to_gamut, "$color, $space: null, $method: null", toGamut);
@@ -3323,7 +3332,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         ctx.exposeFunction(key_adjust_color, idx_adjust);
         ctx.exposeFunction(key_change_color, idx_change);
 
-        // ctx.exposeFunction(key_mix, idx_mix);
+        ctx.exposeFunction(key_mix, idx_mix);
         ctx.exposeFunction(key_to_gamut, idx_to_gamut);
         // ctx.exposeFunction(key_opacify, idx_opacify_loose);
         // ctx.exposeFunction(key_fade_in, idx_fade_in_loose);
@@ -3376,7 +3385,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         module.addFunction(key_adjust, idx_adjust);
         module.addFunction(key_change, idx_change);
 
-        // module.addFunction(key_mix, idx_mix);
+        module.addFunction(key_mix, idx_mix);
         module.addFunction(key_to_gamut, idx_to_gamut);
         module.addFunction(key_opacify, idx_opacify_strict);
         module.addFunction(key_fade_in, idx_fade_in_strict);
