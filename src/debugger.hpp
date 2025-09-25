@@ -846,6 +846,8 @@ inline void debug_ast(AstNode* node, std::string ind)
   else if (Cast<SupportsFunction>(node)) {
   SupportsFunction* block = Cast<SupportsFunction>(node);
     std::cerr << ind << "SupportsFunction " << block;
+    std::cerr << " [" << block->name()->toString() << "]";
+    std::cerr << " [" << block->args()->toString() << "]";
     std::cerr << " (" << pstate_source_position(node) << ")"
       << std::endl;
     // debug_ast(block->condition(), ind + " condition) ");

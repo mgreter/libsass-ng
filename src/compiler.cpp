@@ -172,6 +172,8 @@ namespace Sass {
       compiled = eval._combineCss(root);
     }
 
+    // debug_ast(compiled);
+
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
     RemovePlaceholders remove_placeholders;

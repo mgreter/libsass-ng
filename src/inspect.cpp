@@ -337,7 +337,12 @@ namespace Sass {
 //      }
 //      else append_optional_space();
 //    } else
-    rule->condition()->accept(this);
+    if (auto str = rule->condition()->isaString()) {
+      append_token(str->value(), str);
+    }
+    else {
+      rule->condition()->accept(this);
+    }
     append_scope_opener();
 
     size_t L = rule->size();
