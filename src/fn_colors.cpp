@@ -584,7 +584,6 @@ namespace Sass {
 
     static double clampLikeCss(double val, double min, double max) {
       return std::isnan(val) ? min : std::min(std::max(val, min), max);
-
     }
 
     /// The implementation of the two-argument `rgb()` and `rgba()` functions.
@@ -2155,11 +2154,31 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           arguments, "opacify", "$alpha: ");
       }
 
+      const ColorSpace& _spaceOrDefault(
+        Logger& logger, const ColorSpaced* color,
+        Value* sname, const sass::string& vname)
+      {
+        if (sname == nullptr || sname->isNull()) {
+          return color->space();
+        }
+        else if (String* str = sname->assertString(logger, vname)) {
+          str->assertUnquoted(logger, vname);
+          return ColorSpace::fromNameRef(logger, *str);
+        }
+        else {
+          return color->space();
+        }
+      }
 
       static BUILT_IN_FN(toGamut)
       {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "t-gamut", "$alpha: ");
+
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, "color");
+        const ColorSpace& space = _spaceOrDefault(compiler, color, arguments[1], "space");
+        const GamutMapMethod& method = GamutMapMethod::fromName(compiler, arguments[2], "method");
+
+        return color->toSpace(space, color->pstate())
+          ->toGamut(method)->toSpace(color->space(), color->pstate());
       }
 
       /*

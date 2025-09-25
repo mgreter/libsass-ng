@@ -1168,6 +1168,10 @@ namespace Sass {
       return space_;
     }
 
+    ColorSpaced* toGamut(const GamutMapMethod& method) {
+      return isInGamut() ? this : method.map(this);
+    }
+
     tl::optional<double> getChannel0OrNull() const;
     tl::optional<double> getChannel1OrNull() const;
     tl::optional<double> getChannel2OrNull() const;

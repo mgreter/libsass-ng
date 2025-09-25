@@ -1250,4 +1250,136 @@ namespace Sass {
     return rv;
   }
 
+  static double clampLikeCss(double val, double min, double max) {
+    return std::isnan(val) ? min : std::min(std::max(val, min), max);
+  }
+
+  tl::optional<double> _clampChannel(tl::optional<double> value, const ColorChannel& channel)
+  {
+    if (value.has_value() == false) return value;
+    if (channel.isLinear == false) return value;
+    return clampLikeCss(value.value(), channel.min, channel.max);
+  }
+
+  const ClipGamutMap GamutMapMethod::clip = ClipGamutMap();
+  const LocalMindeGamutMap GamutMapMethod::localMinde = LocalMindeGamutMap();
+
+
+  ColorSpaced* ClipGamutMap::map(ColorSpaced* color) const
+  {
+    return ColorSpaced::forSpaceInternal(
+      color->pstate(), color->space(),
+      _clampChannel(color->getChannel0OrNull(), color->space()._channels[0]),
+      _clampChannel(color->getChannel1OrNull(), color->space()._channels[1]),
+      _clampChannel(color->getChannel2OrNull(), color->space()._channels[2]),
+      color->getAlphaOrNull());
+  }
+
+  const GamutMapMethod& GamutMapMethod::fromName(Logger& logger,
+    Value* value, const sass::string& vname)
+  {
+    if (value == nullptr) return GamutMapMethod::clip;
+    if (value->isNull()) return GamutMapMethod::clip;
+    String* mname = value->assertString(logger, vname);
+    mname->assertUnquoted(logger, vname);
+    if (mname->value() == "local-minde") return localMinde; 
+    else if (mname->value() == "clip") return clip;
+    throw Exception::SassScriptException(logger, value->pstate(),
+      "Unknown gamut map method \"" + mname->value() + "\".", vname);
+  }
+
+  /// Returns the ΔEOK measure between [color1] and [color2].
+  double _deltaEOK(ColorSpaced* color1, ColorSpaced* color2) {
+    // Algorithm from https://www.w3.org/TR/css-color-4/#color-difference-OK
+    auto lab1 = color1->toSpace(ColorSpace::oklab, color1->pstate());
+    auto lab2 = color2->toSpace(ColorSpace::oklab, color2->pstate());
+
+    return std::sqrt(
+      std::pow(lab1->getChannel0() - lab2->getChannel0(), 2) +
+      std::pow(lab1->getChannel1() - lab2->getChannel1(), 2) +
+      std::pow(lab1->getChannel2() - lab2->getChannel2(), 2));
+  }
+
+
+  ColorSpaced* LocalMindeGamutMap::map(ColorSpaced* color) const
+  {
+
+    /// A constant from the gamut-mapping algorithm.
+    double _jnd = 0.02;
+
+    /// A constant from the gamut-mapping algorithm.
+    double _epsilon = 0.0001;
+
+
+    // Algorithm from https://www.w3.org/TR/2022/CRD-css-color-4-20221101/#css-gamut-mapping-algorithm
+    auto originOklch = color->toSpace(ColorSpace::oklch, color->pstate());
+
+    // The channel equivalents to `current` in the Color 4 algorithm.
+    auto lightness = originOklch->getChannel0OrNull();
+    auto hue = originOklch->getChannel2OrNull();
+    auto alpha = originOklch->getAlphaOrNull();
+
+    if (fuzzyGreaterThanOrEquals(lightness.value_or(0), 1.0, sass::epsilon)) {
+      if (color->isLegacy()) return ColorSpaced::rgb(
+        color->pstate(), 255, 255, 255, color->getAlphaOrNull())
+        ->toSpace(color->space(), color->pstate());
+      return ColorSpaced::forSpaceInternal(
+        color->pstate(), color->space(),
+        1, 1, 1, color->getAlphaOrNull());
+    }
+    else if (fuzzyLessThanOrEquals(lightness.value_or(0), 0.0, sass::epsilon)) {
+      return ColorSpaced::rgb(
+        color->pstate(),
+        0, 0, 0, color->getAlphaOrNull())
+        ->toSpace(color->space(), color->pstate());
+    }
+
+    ColorSpaced* clipped = color->toGamut(GamutMapMethod::clip);
+
+    if (_deltaEOK(clipped, color) < _jnd) return clipped;
+
+    double min = 0.0;
+    double max = originOklch->getChannel1();
+    bool minInGamut = true;
+    while (max - min > _epsilon) {
+      double chroma = (min + max) / 2.0;
+
+      // In the Color 4 algorithm `current` is in Oklch, but all its actual uses
+      // other than modifying chroma convert it to `color.space` first so we
+      // just store it in that space to begin with.
+      ColorSpaced* current = ColorSpace::oklch.convert(
+        color->space(),
+        color->pstate(),
+        lightness,
+        chroma,
+        hue,
+        alpha);
+
+      // Per [this comment], the intention of the algorithm is to fall through
+      // this clause if `minInGamut = false` without checking
+      // `current.isInGamut` at all, even though that's unclear from the
+      // pseudocode. `minInGamut = false` *should* imply `current.isInGamut =
+      // false`.
+      //
+      // [this comment]: https://github.com/w3c/csswg-drafts/issues/10226#issuecomment-2065534713
+      if (minInGamut && current->isInGamut()) {
+        min = chroma;
+        continue;
+      }
+
+      clipped = current->toGamut(GamutMapMethod::clip);
+      double e = _deltaEOK(clipped, current);
+      if (e < _jnd) {
+        if (_jnd - e < _epsilon) return clipped;
+        minInGamut = false;
+        min = chroma;
+      }
+      else {
+        max = chroma;
+      }
+    }
+    return clipped;
+
+  }
+
 }
