@@ -1685,28 +1685,6 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgba->r(), compiler.epsilon));
       }
 
-      static BUILT_IN_FN(red)
-      {
-        bool deprecate = global;
-        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
-        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
-        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgb->getChannel(0), compiler.epsilon));
-      }
-      
-      static BUILT_IN_FN(green)
-      {
-        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
-        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
-        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgb->getChannel(1), compiler.epsilon));
-      }
-      
-      static BUILT_IN_FN(blue)
-      {
-        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
-        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
-        return SASS_MEMORY_NEW(Number, pstate, Sass::round64(rgb->getChannel(2), compiler.epsilon));
-      }
-
       /*******************************************************************/
 
 /// Returns the inverse of the given [value] in a linear color channel.
@@ -1952,12 +1930,94 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       //   return SASS_MEMORY_NEW(Number, pstate, hsla->s(), Strings::percent);
       // }
       // 
-      // static BUILT_IN_FN(lightness)
-      // {
-      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-      //   ColorHslaObj hsla(color->toHSLA()); // This probably creates a copy
-      //   return SASS_MEMORY_NEW(Number, pstate, hsla->l(), Strings::percent);
-      // }
+
+      static BUILT_IN_FN(red)
+      {
+        bool deprecate = global;
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "red() is only supported for legacy colors. Please use "
+            "color.channel() instead with an explicit $space argument.");
+        }
+        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
+        double value = Sass::round64(rgb->getChannel0(), compiler.epsilon);
+        return SASS_MEMORY_NEW(Number, pstate, value);
+      }
+
+      static BUILT_IN_FN(green)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "green() is only supported for legacy colors. Please use "
+            "color.channel() instead with an explicit $space argument.");
+        }
+        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
+        double value = Sass::round64(rgb->getChannel1(), compiler.epsilon);
+        return SASS_MEMORY_NEW(Number, pstate, value);
+      }
+
+      static BUILT_IN_FN(blue)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "blue() is only supported for legacy colors. Please use "
+            "color.channel() instead with an explicit $space argument.");
+        }
+        ColorSpacedObj rgb = color->toSpace(ColorSpace::rgb, pstate, false);
+        double value = Sass::round64(rgb->getChannel2(), compiler.epsilon);
+        return SASS_MEMORY_NEW(Number, pstate, value);
+      }
+
+      static BUILT_IN_FN(saturation)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "whiteness() is only supported for legacy colors. Please use "
+            "color.channel() instead with an explicit $space argument.");
+        }
+        ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, pstate);
+        return SASS_MEMORY_NEW(Number, pstate, hsl->getChannel1(), unit_percent);
+      }
+
+      static BUILT_IN_FN(lightness)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "whiteness() is only supported for legacy colors. Please use "
+            "color.channel() instead with an explicit $space argument.");
+        }
+        ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, pstate);
+        return SASS_MEMORY_NEW(Number, pstate, hsl->getChannel2(), unit_percent);
+      }
+
+      static BUILT_IN_FN(whiteness)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "whiteness() is only supported for legacy colors. Please use "
+            "color.channel() instead with an explicit $space argument.");
+        }
+        ColorSpaced* hwb = color->toSpace(ColorSpace::hwb, pstate);
+        return SASS_MEMORY_NEW(Number, pstate, hwb->getChannel1(), unit_percent);
+      }
+
+      static BUILT_IN_FN(blackness)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "whiteness() is only supported for legacy colors. Please use "
+            "color.channel() instead with an explicit $space argument.");
+        }
+        ColorSpaced* hwb = color->toSpace(ColorSpace::hwb, pstate);
+        return SASS_MEMORY_NEW(Number, pstate, hwb->getChannel2(), unit_percent);
+      }
 
       static BUILT_IN_FN(noLighten)
       {
@@ -3335,10 +3395,12 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         uint32_t idx_green = ctx.createBuiltInFunction(key_green, "$color", green);
         uint32_t idx_blue = ctx.createBuiltInFunction(key_blue, "$color", blue);
         // uint32_t idx_hue = ctx.createBuiltInFunction(key_hue, "$color", hue);
-        // uint32_t idx_lightness = ctx.createBuiltInFunction(key_lightness, "$color", lightness);
-        // uint32_t idx_saturation = ctx.createBuiltInFunction(key_saturation, "$color", saturation);
-        // uint32_t idx_blackness = ctx.createBuiltInFunction(key_blackness, "$color", blackness);
-        // uint32_t idx_whiteness = ctx.createBuiltInFunction(key_whiteness, "$color", whiteness);
+
+        uint32_t idx_lightness = ctx.createBuiltInFunction(key_lightness, "$color", lightness);
+        uint32_t idx_saturation = ctx.createBuiltInFunction(key_saturation, "$color", saturation);
+        uint32_t idx_blackness = ctx.createBuiltInFunction(key_blackness, "$color", blackness);
+        uint32_t idx_whiteness = ctx.createBuiltInFunction(key_whiteness, "$color", whiteness);
+
         // uint32_t idx_invert_strict = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", fnInvert);
         // uint32_t idx_invert_loose = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
         uint32_t idx_invert = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%, $space: null", invert);
@@ -3413,13 +3475,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         ctx.exposeFunction(key_space, idx_space);
         ctx.exposeFunction(key_color, idx_color);
         ctx.exposeFunction(key_red, idx_red);
-        // ctx.exposeFunction(key_green, idx_green);
-        // ctx.exposeFunction(key_blue, idx_blue);
+        ctx.exposeFunction(key_green, idx_green);
+        ctx.exposeFunction(key_blue, idx_blue);
         // ctx.exposeFunction(key_hue, idx_hue);
-        // ctx.exposeFunction(key_lightness, idx_lightness);
-        // ctx.exposeFunction(key_saturation, idx_saturation);
-        // ctx.exposeFunction(key_blackness, idx_blackness);
-        // ctx.exposeFunction(key_whiteness, idx_whiteness);
+        ctx.exposeFunction(key_lightness, idx_lightness);
+        ctx.exposeFunction(key_saturation, idx_saturation);
+        ctx.exposeFunction(key_blackness, idx_blackness);
+        ctx.exposeFunction(key_whiteness, idx_whiteness);
         ctx.exposeFunction(key_invert, idx_invert);
         // ctx.exposeFunction(key_grayscale, idx_grayscale_loose);
         // ctx.exposeFunction(key_complement, idx_complement);
@@ -3473,10 +3535,10 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         module.addFunction(key_green, idx_green);
         module.addFunction(key_blue, idx_blue);
         // module.addFunction(key_hue, idx_hue);
-        // module.addFunction(key_lightness, idx_lightness);
-        // module.addFunction(key_saturation, idx_saturation);
-        // module.addFunction(key_blackness, idx_blackness);
-        // module.addFunction(key_whiteness, idx_whiteness);
+        module.addFunction(key_lightness, idx_lightness);
+        module.addFunction(key_saturation, idx_saturation);
+        module.addFunction(key_blackness, idx_blackness);
+        module.addFunction(key_whiteness, idx_whiteness);
         module.addFunction(key_invert, idx_invert);
         // module.addFunction(key_grayscale, idx_grayscale_strict);
         // module.addFunction(key_complement, idx_complement);
