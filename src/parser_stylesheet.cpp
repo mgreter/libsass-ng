@@ -3795,7 +3795,7 @@ namespace Sass {
 
       case $lbrace:
         if (!allowOpenBrace)
-          break;
+          goto endOfLoop;
         // fall through
 
       case $lparen:
