@@ -1422,7 +1422,7 @@ namespace Sass {
       }
     }
 
-    return InterpolationMethod(space, legacy);
+    return InterpolationMethod(space, hueMethod);
 
   }
 
