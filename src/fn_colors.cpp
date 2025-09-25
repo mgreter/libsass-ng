@@ -2053,15 +2053,86 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       //   return copy.detach(); // Return HSLA
       // }
       // 
-      // static BUILT_IN_FN(darken)
-      // {
-      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-      //   const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-      //   double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
-      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-      //   copy->l(clamp(copy->l() - nr, 0.0, 100.0));
-      //   return copy.detach(); // Return HSLA
-      // }
+
+      static BUILT_IN_FN(darken)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "darken() is only supported for legacy colors. Please use "
+            "color.adjust() instead with an explicit $space argument.");
+        }
+
+        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+        double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
+        double lightness = clampLikeCss(hsl->getChannel2() - adjust, 0.0, 100.0);
+        ColorSpaced* rv = ColorSpaced::hsl(hsl->pstate(),
+          hsl->c0(), hsl->c1(), lightness, hsl->alpha());
+        return rv->toSpace(color->space(), pstate);
+      }
+
+      static BUILT_IN_FN(lighten)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "lighten() is only supported for legacy colors. Please use "
+            "color.adjust() instead with an explicit $space argument.");
+        }
+
+        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+        double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
+        double lightness = clampLikeCss(hsl->getChannel2() + adjust, 0.0, 100.0);
+        ColorSpaced* rv = ColorSpaced::hsl(hsl->pstate(),
+          hsl->c0(), hsl->c1(), lightness, hsl->alpha());
+        return rv->toSpace(color->space(), pstate);
+      }
+
+      static BUILT_IN_FN(saturate2)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "saturate() is only supported for legacy colors. Please use "
+            "color.adjust() instead with an explicit $space argument.");
+        }
+
+        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+        double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
+        double saturation = clampLikeCss(hsl->getChannel1() + adjust, 0.0, 100.0);
+        ColorSpaced* rv = ColorSpaced::hsl(hsl->pstate(),
+          hsl->c0(), saturation, hsl->c2(), hsl->alpha());
+        return rv->toSpace(color->space(), pstate);
+      }
+
+      static BUILT_IN_FN(desaturate)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
+        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "desaturate() is only supported for legacy colors. Please use "
+            "color.adjust() instead with an explicit $space argument.");
+        }
+
+        auto hsl = color->toSpace(ColorSpace::hsl, pstate);
+        double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
+        double saturation = clampLikeCss(hsl->getChannel1() - adjust, 0.0, 100.0);
+        ColorSpaced* rv = ColorSpaced::hsl(hsl->pstate(),
+          hsl->c0(), saturation, hsl->c2(), hsl->alpha());
+        return rv->toSpace(color->space(), pstate);
+      }
 
       /*******************************************************************/
 
@@ -3277,15 +3348,27 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // uint32_t idx_desaturate_strict = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", noDesaturate);
         // uint32_t idx_desaturate_loose = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
         // uint32_t idx_saturate_strict = ctx.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate);
-        // uint32_t idx_saturate_loose = ctx.createBuiltInOverloadFns(key_saturate, {
-        //   std::make_pair("$amount", saturate1arg),
-        //   std::make_pair("$color, $amount", saturate2arg),
-        //   });
+
+
+        uint32_t idx_saturate = ctx.createBuiltInOverloadFns(key_saturate, {
+          std::make_pair("$amount", saturate1arg),
+          std::make_pair("$color, $amount", saturate2),
+        });
+
+        uint32_t idx_desaturate = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
+        // uint32_t idx_saturate = ctx.createBuiltInFunction(key_saturate, "$color, $amount", saturate);
+
         // uint32_t idx_lighten_strict = ctx.createBuiltInFunction(key_lighten, "$color, $amount", noLighten);
         // uint32_t idx_lighten_loose = ctx.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
+
         // uint32_t idx_darken_strict = ctx.createBuiltInFunction(key_darken, "$color, $amount", noDarken);
         // uint32_t idx_darken_loose = ctx.createBuiltInFunction(key_darken, "$color, $amount", darken);
+
+        uint32_t idx_darken = ctx.createBuiltInFunction(key_darken, "$color, $amount", darken);
+        uint32_t idx_lighten = ctx.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
+
         // uint32_t idx_adjust_hue_strict = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue);
+
         uint32_t idx_adjust_hue = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
         // uint32_t idx_adjust = ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust);
 
@@ -3342,8 +3425,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // ctx.exposeFunction(key_complement, idx_complement);
         // ctx.exposeFunction(key_desaturate, idx_desaturate_loose);
         // ctx.exposeFunction(key_saturate, idx_saturate_loose);
+        ctx.exposeFunction(key_desaturate, idx_desaturate);
+        ctx.exposeFunction(key_saturate, idx_saturate);
         // ctx.exposeFunction(key_lighten, idx_lighten_loose);
-        // ctx.exposeFunction(key_darken, idx_darken_loose);
+        ctx.exposeFunction(key_darken, idx_darken);
+        ctx.exposeFunction(key_lighten, idx_lighten);
         ctx.exposeFunction(key_adjust_hue, idx_adjust_hue);
 
         ctx.exposeFunction(key_scale_color, idx_scale);
@@ -3396,8 +3482,12 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // module.addFunction(key_complement, idx_complement);
         // module.addFunction(key_desaturate, idx_desaturate_strict);
         // module.addFunction(key_saturate, idx_saturate_strict);
+        module.addFunction(key_desaturate, idx_desaturate);
+        module.addFunction(key_saturate, idx_saturate);
         // module.addFunction(key_lighten, idx_lighten_strict);
         // module.addFunction(key_darken, idx_darken_strict);
+        module.addFunction(key_darken, idx_darken);
+        module.addFunction(key_lighten, idx_lighten);
         module.addFunction(key_adjust_hue, idx_adjust_hue);
         module.addFunction(key_scale, idx_scale);
         module.addFunction(key_adjust, idx_adjust);
