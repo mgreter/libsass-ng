@@ -170,7 +170,7 @@ namespace Sass {
     ColorSpace(const sass::string name, SassColorSpace space, const ColorChannel* channels, int channelSize)
       : name_(name), space_(space), _channels(channels), _channelSize(channelSize)
     {
-
+      std::cerr << "init colorspace " << name << " " << this << "\n";
     }
 
     int getChannelIndex(const sass::string& name) const

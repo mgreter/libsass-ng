@@ -557,7 +557,7 @@ namespace Sass {
   class A98RgbColorSpace : public ColorSpace {
   public:
     A98RgbColorSpace() : ColorSpace(
-      str_a98_rgb,
+      "a98-rgb",
       SassColorSpace::A98RGB,
       rgb_channels, 3)
     {}
@@ -631,7 +631,7 @@ namespace Sass {
   class HslColorSpace : public ColorSpace {
   public:
     HslColorSpace() : ColorSpace(
-      str_hsl,
+      "hsl",
       SassColorSpace::HSL,
       hsl_channels, 3)
     {}
@@ -653,7 +653,7 @@ namespace Sass {
   class HwbColorSpace : public ColorSpace {
   public:
     HwbColorSpace() : ColorSpace(
-      str_hwb,
+      "hwb",
       SassColorSpace::HWB,
       hwb_channels, 3)
     {}
@@ -674,7 +674,7 @@ namespace Sass {
   class LabColorSpace : public ColorSpace {
   public:
     LabColorSpace() : ColorSpace(
-      str_lab,
+      "lab",
       SassColorSpace::LAB,
       lab_channels, 3)
     {}
@@ -709,7 +709,7 @@ namespace Sass {
   class LchColorSpace : public ColorSpace {
   public:
     LchColorSpace() : ColorSpace(
-      str_lch,
+      "lch",
       SassColorSpace::LCH,
       lch_channels, 3)
     {}
@@ -731,7 +731,7 @@ namespace Sass {
   class LmsColorSpace : public ColorSpace {
   public:
     LmsColorSpace() : ColorSpace(
-      str_lms,
+      "lms",
       SassColorSpace::LMS,
       lms_channels, 3)
     {}
@@ -789,7 +789,7 @@ namespace Sass {
   class OkLabColorSpace : public ColorSpace {
   public:
     OkLabColorSpace() : ColorSpace(
-      str_oklab,
+      "oklab",
       SassColorSpace::OKLAB,
       oklab_channels, 3)
     {}
@@ -824,7 +824,7 @@ namespace Sass {
   class OkLchColorSpace : public ColorSpace {
   public:
     OkLchColorSpace() : ColorSpace(
-      str_oklch,
+      "oklch",
       SassColorSpace::OKLCH,
       oklch_channels, 3)
     {}
@@ -845,7 +845,7 @@ namespace Sass {
   class ProphotoRgbColorSpace : public ColorSpace {
   public:
     ProphotoRgbColorSpace() : ColorSpace(
-      str_prophoto_rgb,
+      "prophoto-rgb",
       SassColorSpace::PROPHOTO_RGB,
       rgb_channels, 3)
     {}
@@ -889,7 +889,7 @@ namespace Sass {
   class Rec2020ColorSpace : public ColorSpace {
   public:
     Rec2020ColorSpace() : ColorSpace(
-      str_rec2020,
+      "rec2020",
       SassColorSpace::REC2020,
       rgb_channels, 3)
     {}
@@ -926,7 +926,7 @@ namespace Sass {
   class RgbColorSpace : public ColorSpace {
   public:
     RgbColorSpace() : ColorSpace(
-      str_rgb,
+      "rgb",
       SassColorSpace::RGB,
       rgb255_channels, 3)
     {}
@@ -954,7 +954,7 @@ namespace Sass {
   class SrgbLinearColorSpace : public ColorSpace {
   public:
     SrgbLinearColorSpace() : ColorSpace(
-      str_srgb_linear,
+      "srgb-linear",
       SassColorSpace::SRGB_LINEAR,
       rgb_channels, 3)
     {}
@@ -990,7 +990,7 @@ namespace Sass {
   class SrgbColorSpace : public ColorSpace {
   public:
     SrgbColorSpace() : ColorSpace(
-      str_srgb,
+      "srgb",
       SassColorSpace::SRGB,
       rgb_channels, 3)
     {}
@@ -1042,7 +1042,7 @@ namespace Sass {
   class XyzD50ColorSpace : public ColorSpace {
   public:
     XyzD50ColorSpace() : ColorSpace(
-      str_xyz_d50,
+      "xyz-d50",
       SassColorSpace::XYZ_D50,
       xyz_channels, 3)
     {}
@@ -1100,7 +1100,7 @@ namespace Sass {
   class XyzD65ColorSpace : public ColorSpace {
   public:
     XyzD65ColorSpace() : ColorSpace(
-      str_xyz_d65,
+      "xyz",
       SassColorSpace::XYZ_D65,
       xyz_channels, 3)
     {}
