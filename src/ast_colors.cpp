@@ -73,38 +73,42 @@ namespace Sass {
     switch (method) {
     case shorter:
       if (diff > 180.0) {
-        hue1 += 360;
+        hue1 += 360.0;
       }
       else if (diff < -180.0) {
-        hue2 += 360;
+        hue2 += 360.0;
       }
+      break;
 
     case longer:
       if (diff > 0.0 && diff < 180.0) {
-        hue2 += 360;
+        hue2 += 360.0;
       }
       else if (diff > -180.0 && diff <= 0.0) {
-        hue1 += 360;
+        hue1 += 360.0;
       }
+      break;
 
     case increasing:
       if (hue2 < hue1)
-        hue2 += 360;
+        hue2 += 360.0;
+      break;
 
     case decreasing:
       if (hue1 < hue2)
-        hue1 += 360;
+        hue1 += 360.0;
+      break;
 
     }
 
-    return hue1 * weight + hue2 * (1 - weight);
+    return hue1 * weight + hue2 * (1.0 - weight);
   }
 
   ColorSpaced* ColorSpaced::interpolate(Logger& logger, const SourceSpan& pstate, ColorSpaced* other, InterpolationMethod method, double weight, bool legacyMissing)
   {
 
-    if (fuzzyEquals(weight, 0.0, sass::epsilon)) return other;
-    if (fuzzyEquals(weight, 1.0, sass::epsilon)) return this;
+    if (fuzzyEquals(weight, 0.0, logger.epsilon)) return other;
+    if (fuzzyEquals(weight, 1.0, logger.epsilon)) return this;
 
     ColorSpaced* color1 = this->toSpace(method.space, pstate);
     ColorSpaced* color2 = other->toSpace(method.space, pstate);
