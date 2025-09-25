@@ -1195,6 +1195,13 @@ namespace Sass {
       return space_;
     }
 
+    bool hasMissingChannels() const {
+      return !c0_.has_value()
+        || !c1_.has_value()
+        || !c2_.has_value()
+        || !alpha_.has_value();
+    }
+
     ColorSpaced* toGamut(const GamutMapMethod& method) {
       return isInGamut() ? this : method.map(this);
     }
@@ -1314,6 +1321,19 @@ namespace Sass {
       auto rv = _forSpace(pstate,
         ColorSpace::lab,
         lightness, a, b, alpha);
+      return rv;
+    }
+
+    static ColorSpaced* xyzD65(
+      const SourceSpan& pstate,
+      tl::optional<double> x,
+      tl::optional<double> y,
+      tl::optional<double> z,
+      tl::optional<double> alpha)
+    {
+      auto rv = _forSpace(pstate,
+        ColorSpace::xyzd65,
+        x, y, z, alpha);
       return rv;
     }
 

@@ -483,6 +483,8 @@ namespace Sass {
     extern const sass::string green;
     extern const sass::string alpha;
     extern const sass::string color;
+    extern const sass::string color1;
+    extern const sass::string color2;
     extern const sass::string weight;
     extern const sass::string number;
     extern const sass::string amount;

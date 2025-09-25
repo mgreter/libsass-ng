@@ -476,6 +476,7 @@ namespace Sass {
     String* assertString(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
 
     // Implement type fetcher for base value class (throws in base implementation)
+    String* assertQuoted(Logger& logger, const sass::string& name = Strings::empty);
     String* assertUnquoted(Logger& logger, const sass::string& name = Strings::empty);
 
     // Implement some operations for base value class

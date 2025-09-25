@@ -516,11 +516,28 @@ namespace Sass {
 
   bool ColorSpaced::operator==(const ColorSpaced& rhs) const
   {
-    return space_ == rhs.space_ &&
-      c0_ == rhs.c0_ &&
-      c1_ == rhs.c1_ &&
-      c2_ == rhs.c2_ &&
-      alpha_ == rhs.alpha();
+    if (!fuzzyEquals(alpha_, rhs.alpha_, sass::epsilon)) return false;
+    if (isLegacy()) {
+      if (!rhs.isLegacy()) return false;
+      if (space_ == rhs.space_) {
+        return fuzzyEquals(c0_, rhs.c0_, sass::epsilon)
+          &&   fuzzyEquals(c1_, rhs.c1_, sass::epsilon)
+          &&   fuzzyEquals(c2_, rhs.c2_, sass::epsilon);
+      }
+      ColorSpaced* rgb1 = toSpace(ColorSpace::rgb, pstate());
+      ColorSpaced* rgb2 = rhs.toSpace(ColorSpace::rgb, rhs.pstate());
+      std::cerr << "rgb1 " << rgb1->debug() << "\n";
+      std::cerr << "rgb2 " << rgb2->debug() << "\n";
+      auto rv = fuzzyEquals(rgb1->c0_, rgb2->c0_, sass::epsilon)
+        && fuzzyEquals(rgb1->c1_, rgb2->c1_, sass::epsilon)
+        && fuzzyEquals(rgb1->c2_, rgb2->c2_, sass::epsilon);
+      return rv;
+    }
+    return space_ == rhs.space_
+      && fuzzyEquals(alpha_, rhs.alpha_, sass::epsilon)
+      && fuzzyEquals(c0_, rhs.c0_, sass::epsilon)
+      && fuzzyEquals(c1_, rhs.c1_, sass::epsilon)
+      && fuzzyEquals(c2_, rhs.c2_, sass::epsilon);
   }
 
   size_t ColorSpaced::hash() const

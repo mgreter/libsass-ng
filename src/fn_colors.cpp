@@ -1589,28 +1589,14 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       /*******************************************************************/
 
       
-
-      static BUILT_IN_FN(isInGamut)
+      ColorSpaced* _colorInSpace(ColorSpaced* colorUntyped, const String* spaceUntyped, Compiler& compiler, bool legacyMissing = true)
       {
-
-        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
-        return SASS_MEMORY_NEW(Boolean, pstate, color->isInGamut());
-      }
-
-      static BUILT_IN_FN(isLegacy)
-      {
-
-        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
-        return SASS_MEMORY_NEW(Boolean, pstate, color->isLegacy());
-      }
-
-      static BUILT_IN_FN(isPowerless)
-      {
-
-        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
-        const String* channel = arguments[1]->assertString(compiler, "channel");
-        bool chnValue = color->isChannelPowerless(compiler, channel, "color", "channel");
-        return SASS_MEMORY_NEW(Boolean, pstate, chnValue);
+        ColorSpaced* color = colorUntyped->assertColorSpaced2(compiler, "color");
+        if (spaceUntyped == nullptr) return color;
+        if (spaceUntyped->isNull()) return color;
+        const ColorSpace* space = ColorSpace::fromName(compiler, *spaceUntyped);
+        ColorSpaced* rv = color->toSpace(*space, colorUntyped->pstate(), legacyMissing);
+        return rv;
       }
 
       /// Returns the [colorUntyped] as a [SassColor] in the color space specified by
@@ -1622,18 +1608,46 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       /// Throws a [SassScriptException] if either argument isn't the expected type or
       /// if [spaceUntyped] isn't the name of a color space. If [spaceUntyped] is
       /// `sassNull`, it defaults to the color's existing space.
-      const ColorSpaced* _colorInSpace(Compiler& compiler, Value* col, Value* spc, bool legacyMissing = true)
+      ColorSpaced* _colorInSpace(Compiler& compiler, Value* col, Value* spc, bool legacyMissing = true)
       {
-        const ColorSpaced* color = col->assertColorSpaced(compiler, Strings::color);
+        ColorSpaced* color = col->assertColorSpaced2(compiler, Strings::color);
         // std::cerr << "Called color in space " << color->getChannel0() << ", "
         //   << color->getChannel1() << ", " << color->getChannel2() << "\n";
         if (spc == nullptr || spc->isNull()) return color;
         String* space = spc->assertString(compiler, "space");
         space->assertUnquoted(compiler, "space");
         const ColorSpace& cpsc = ColorSpace::fromNameRef(compiler, *space);
-        ColorSpaced* rv = color->toSpace(cpsc, col->pstate());
+        ColorSpaced* rv = color->toSpace(cpsc, col->pstate(), legacyMissing);
         return rv;
       }
+
+      static BUILT_IN_FN(isInGamut)
+      {
+
+        const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[1]);
+        // const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        return SASS_MEMORY_NEW(Boolean, pstate, color->isInGamut());
+      }
+
+      static BUILT_IN_FN(isLegacy)
+      {
+
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        return SASS_MEMORY_NEW(Boolean, pstate, color->isLegacy());
+      }
+
+
+      static BUILT_IN_FN(isPowerless)
+      {
+
+        const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[2]);
+        // const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        String* channel = arguments[1]->assertString(compiler, "channel");
+        channel->assertQuoted(compiler, "channel");
+        bool chnValue = color->isChannelPowerless(compiler, channel, "color", "channel");
+        return SASS_MEMORY_NEW(Boolean, pstate, chnValue);
+      }
+
 
       static BUILT_IN_FN(channel)
       {
@@ -1659,7 +1673,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(isMissing)
       {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
-        const String* channel = arguments[1]->assertString(compiler, "channel");
+        String* channel = arguments[1]->assertString(compiler, "channel");
+        channel->assertQuoted(compiler, "channel");
         bool missing = color->isChannelMissing(compiler, channel);
         return SASS_MEMORY_NEW(Boolean, pstate, missing);
       }
@@ -1668,6 +1683,17 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         return SASS_MEMORY_NEW(String, pstate, color->space().name());
+        // return _parseChannels(str_color, arguments[0], "description", pstate, compiler);
+        // 
+        // ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
+        // 
+      }
+
+      static BUILT_IN_FN(toSpace)
+      {
+        auto rv = _colorInSpace(compiler, arguments[0], arguments[1], false);
+        std::cerr << "########## => " << rv->debug() << "\n";
+        return rv;
         // return _parseChannels(str_color, arguments[0], "description", pstate, compiler);
         // 
         // ColorRgbaObj rgba(color->toRGBA()); // This might create a copy
@@ -1914,6 +1940,58 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       //   return invert(pstate, arguments, compiler, eval);
       // }
 
+      ColorSpaced* toXyzNoMissing(ColorSpaced* color)
+      {
+        if (color->space().name() == "xyz") {
+          if (!color->hasMissingChannels()) {
+            return color;
+          }
+          // Create copy of existing
+          return ColorSpaced::xyzD65(
+            color->pstate(),
+            color->getChannel0OrNull(),
+            color->getChannel1OrNull(),
+            color->getChannel2OrNull(),
+            color->getAlphaOrNull());
+        }
+        else {
+          // Use [ColorSpace.convert] manually so that we can convert missing
+          // channels to 0 without having to create new intermediate color objects.
+          return color->space().convert(
+            ColorSpace::xyzd65,
+            color->pstate(),
+            color->getChannel0(),
+            color->getChannel1(),
+            color->getChannel2(),
+            color->getAlpha());
+        }
+      };
+
+      static BUILT_IN_FN(same)
+      {
+        ColorSpaced* color1 = arguments[0]->assertColorSpaced2(compiler, Strings::color1);
+        ColorSpaced* color2 = arguments[1]->assertColorSpaced2(compiler, Strings::color2);
+        // Shortcut when alpha is not equal
+        // No need to compare any other channels
+        if (!fuzzyEquals(color1->getAlpha(), color2->getAlpha(), compiler.epsilon)) {
+          return SASS_MEMORY_NEW(Boolean, pstate, false);
+        }
+        if (color1->space().name() == color2->space().name()) {
+          return SASS_MEMORY_NEW(Boolean, pstate,
+            fuzzyEquals(color1->getChannel0(), color2->getChannel0(), compiler.epsilon)
+            && fuzzyEquals(color1->getChannel1(), color2->getChannel1(), compiler.epsilon)
+            && fuzzyEquals(color1->getChannel2(), color2->getChannel2(), compiler.epsilon));
+        }
+        else {
+          ColorSpacedObj xyz1 = toXyzNoMissing(color1);
+          ColorSpacedObj xyz2 = toXyzNoMissing(color2);
+          return SASS_MEMORY_NEW(Boolean, pstate,
+            fuzzyEquals(xyz1->getChannel0(), xyz2->getChannel0(), compiler.epsilon)
+            && fuzzyEquals(xyz1->getChannel1(), xyz2->getChannel1(), compiler.epsilon)
+            && fuzzyEquals(xyz1->getChannel2(), xyz2->getChannel2(), compiler.epsilon));
+        }
+      }
+
       /*******************************************************************/
 
       // static BUILT_IN_FN(hue)
@@ -1971,12 +2049,24 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return SASS_MEMORY_NEW(Number, pstate, value);
       }
 
+      static BUILT_IN_FN(hue)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "hue() is only supported for legacy colors. Please use "
+            "color.channel() instead with an explicit $space argument.");
+        }
+        ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, pstate);
+        return SASS_MEMORY_NEW(Number, pstate, hsl->getChannel0(), unit_deg);
+      }
+
       static BUILT_IN_FN(saturation)
       {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "whiteness() is only supported for legacy colors. Please use "
+            "saturation() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, pstate);
@@ -1988,7 +2078,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "whiteness() is only supported for legacy colors. Please use "
+            "lightness() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorSpaced* hsl = color->toSpace(ColorSpace::hsl, pstate);
@@ -2012,7 +2102,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "whiteness() is only supported for legacy colors. Please use "
+            "blackness() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorSpaced* hwb = color->toSpace(ColorSpace::hwb, pstate);
@@ -2224,6 +2314,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(darken)
       {
+        if (!global) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "The function darken() isn't in the sass:color module.");
+        }
+
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
         double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
@@ -2244,6 +2339,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(lighten)
       {
+        if (!global) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "The function lighten() isn't in the sass:color module.");
+        }
+
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
         double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
@@ -2264,6 +2364,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(saturate2)
       {
+        if (!global) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "The function saturate() isn't in the sass:color module.");
+        }
+
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
         double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
@@ -2284,6 +2389,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(desaturate)
       {
+        if (!global) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "The function desaturate() isn't in the sass:color module.");
+        }
+
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
         double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
@@ -2300,6 +2410,54 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         ColorSpaced* rv = ColorSpaced::hsl(hsl->pstate(),
           hsl->c0(), saturation, hsl->c2(), hsl->alpha());
         return rv->toSpace(color->space(), pstate);
+      }
+
+      static BUILT_IN_FN(opacify)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        const Number* nr = arguments[1]->assertNumber(compiler, Strings::amount);
+        double amount = nr->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
+
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "darken() is only supported for legacy colors. Please use "
+            "color.adjust() instead with an explicit $space argument.");
+        }
+
+        double a = color->getAlpha() + amount;
+        return ColorSpaced::forSpaceInternal(
+          pstate, color->space(),
+          color->getChannel0OrNull(),
+          color->getChannel1OrNull(),
+          color->getChannel2OrNull(),
+          clampLikeCss(a, 0, 1));
+      }
+      // 
+      static BUILT_IN_FN(transparentize)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+        const Number* nr = arguments[1]->assertNumber(compiler, Strings::amount);
+        double amount = nr->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
+
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "darken() is only supported for legacy colors. Please use "
+            "color.adjust() instead with an explicit $space argument.");
+        }
+
+        double a = color->getAlpha() - amount;
+        return ColorSpaced::forSpaceInternal(
+          pstate, color->space(),
+          color->getChannel0OrNull(),
+          color->getChannel1OrNull(),
+          color->getChannel2OrNull(),
+          clampLikeCss(a, 0, 1));
+      }
+
+      static BUILT_IN_FN(noOpacify)
+      {
+        throw Exception::DeprecatedColorAdjustFn(compiler,
+          arguments, "opacify", "$alpha: ");
       }
 
       /*******************************************************************/
@@ -2370,31 +2528,6 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       /*******************************************************************/
 
-      // static BUILT_IN_FN(opacify)
-      // {
-      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-      //   const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-      //   double nr = amount->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
-      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-      //   copy->a(clamp(copy->a() + nr, 0.0, 1.0));
-      //   return copy.detach(); // Return HSLA
-      // }
-      // 
-      // static BUILT_IN_FN(transparentize)
-      // {
-      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-      //   const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-      //   double nr = amount->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
-      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-      //   copy->a(clamp(copy->a() - nr, 0.0, 1.0));
-      //   return copy.detach(); // Return HSLA
-      // }
-
-      static BUILT_IN_FN(noOpacify)
-      {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "opacify", "$alpha: ");
-      }
 
       const ColorSpace& _spaceOrDefault(
         Logger& logger, const ColorSpaced* color,
@@ -2454,6 +2587,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "color.alpha() is only supported for legacy colors."
+            " Please use color.channel() instead.");
+        }
+
         return SASS_MEMORY_NEW(Number, pstate, color->alpha().value_or(1));
       }
 
@@ -2490,7 +2630,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(opacity)
       {
         // Gracefully handle if number is passed
-        if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0])) {
+        if (arguments[0]->isaNumber() || (global && isSpecialNumber(arguments[0]))) {
           return getFunctionString("opacity",
             pstate, arguments);
         }
@@ -2526,23 +2666,24 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return opacity(pstate, arguments, compiler, eval, false);
       }
 
-      // static BUILT_IN_FN(ieHexStr)
-      // {
-      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-      //   ColorRgbaObj rgba = color->toRGBA(); // This might create a copy
-      //   // clamp should not be needed here
-      //   double r = clamp(rgba->r(), 0.0, 255.0);
-      //   double g = clamp(rgba->g(), 0.0, 255.0);
-      //   double b = clamp(rgba->b(), 0.0, 255.0);
-      //   double a = clamp(rgba->a(), 0.0, 1.0) * 255.0;
-      //   sass::sstream ss;
-      //   ss << '#' << std::setw(2) << std::setfill('0') << std::uppercase;
-      //   ss << std::hex << std::setw(2) << fuzzyRound(a, compiler.epsilon);
-      //   ss << std::hex << std::setw(2) << fuzzyRound(r, compiler.epsilon);
-      //   ss << std::hex << std::setw(2) << fuzzyRound(g, compiler.epsilon);
-      //   ss << std::hex << std::setw(2) << fuzzyRound(b, compiler.epsilon);
-      //   return SASS_MEMORY_NEW(String, pstate, ss.str());
-      // }
+      static BUILT_IN_FN(ieHexStr)
+      {
+        ColorSpaced* color = arguments[0]->assertColorSpaced2(compiler, Strings::color);
+        ColorSpaced* spaced = color->toSpace(ColorSpace::rgb, pstate);
+        ColorSpaced* rgba = spaced->toGamut(GamutMapMethod::localMinde);
+        // clamp should not be needed here
+        double r = clamp(rgba->getChannel0(), 0.0, 255.0);
+        double g = clamp(rgba->getChannel1(), 0.0, 255.0);
+        double b = clamp(rgba->getChannel2(), 0.0, 255.0);
+        double a = clamp(rgba->getAlpha(), 0.0, 1.0) * 255.0;
+        sass::sstream ss;
+        ss << '#' << std::setw(2) << std::setfill('0') << std::uppercase;
+        ss << std::hex << std::setw(2) << fuzzyRound(a, compiler.epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(r, compiler.epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(g, compiler.epsilon);
+        ss << std::hex << std::setw(2) << fuzzyRound(b, compiler.epsilon);
+        return SASS_MEMORY_NEW(String, pstate, ss.str());
+      }
 
       static Number* getKwdNumber(ValueFlatMap* keywords, const EnvKey& name, Logger& logger)
       {
@@ -2602,15 +2743,6 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         else return nullptr;
       }
 
-      ColorSpaced* _colorInSpace(ColorSpaced* colorUntyped, const String* spaceUntyped, Compiler& compiler, bool legacyMissing = true)
-      {
-        ColorSpaced* color = colorUntyped->assertColorSpaced2(compiler, "color");
-        if (spaceUntyped == nullptr) return color;
-        if (spaceUntyped->isNull()) return color;
-        const ColorSpace* space = ColorSpace::fromName(compiler, *spaceUntyped);
-        ColorSpaced* rv = color->toSpace(*space, colorUntyped->pstate(), legacyMissing);
-        return rv;
-      }
 
       tl::optional<double> _adjustChannel(ColorSpaced* color, ColorChannel channel, tl::optional<double> oldValue, Number* adjustmentArg)
       {
@@ -3109,6 +3241,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(adjustHue)
       {
+        if (!global) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "The function darken() isn't in the sass:color module.");
+        }
+
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, "color");
         Number* angle = arguments[1]->assertNumber(compiler, "degrees");
         double degrees = _angleValue(angle, "degrees");
@@ -3447,15 +3584,16 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         uint32_t idx_is_powerless = ctx.createBuiltInFunction(key_is_powerless, "$color, $channel, $space: null", isPowerless);
 
         uint32_t idx_space = ctx.createBuiltInFunction(key_space, "$color", space);
+        uint32_t idx_to_space = ctx.createBuiltInFunction(key_to_space, "$color, $space", toSpace);
         uint32_t idx_is_missing = ctx.createBuiltInFunction(key_is_missing, "$color, $channel", isMissing);
 
+        uint32_t idx_same = ctx.createBuiltInFunction(key_same, "$color1, $color2", same);
 
 
         uint32_t idx_red = ctx.createBuiltInFunction(key_red, "$color", red);
         uint32_t idx_green = ctx.createBuiltInFunction(key_green, "$color", green);
         uint32_t idx_blue = ctx.createBuiltInFunction(key_blue, "$color", blue);
-        // uint32_t idx_hue = ctx.createBuiltInFunction(key_hue, "$color", hue);
-
+        uint32_t idx_hue = ctx.createBuiltInFunction(key_hue, "$color", hue);
         uint32_t idx_lightness = ctx.createBuiltInFunction(key_lightness, "$color", lightness);
         uint32_t idx_saturation = ctx.createBuiltInFunction(key_saturation, "$color", saturation);
         uint32_t idx_blackness = ctx.createBuiltInFunction(key_blackness, "$color", blackness);
@@ -3503,15 +3641,19 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         uint32_t idx_to_gamut = ctx.createBuiltInFunction(key_to_gamut, "$color, $space: null, $method: null", toGamut);
 
-        uint32_t idx_opacify_strict = ctx.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify);
-        // uint32_t idx_opacify_loose = ctx.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
+
+        uint32_t idx_fade_in = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", opacify);
+        uint32_t idx_opacify = ctx.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
+        uint32_t idx_fade_out = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
+        uint32_t idx_transparentize = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
+
         uint32_t idx_fade_in_strict = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", noFadeIn);
-        // uint32_t idx_fade_in_loose = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", opacify);
+        uint32_t idx_opacify_strict = ctx.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify);
         uint32_t idx_fade_out_strict = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", noFadeOut);
-        // uint32_t idx_fade_out_loose = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
         uint32_t idx_transparentize_strict = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", noTansparentize);
-        // uint32_t idx_transparentize_loose = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
-        // uint32_t idx_ie_hex_str = ctx.createBuiltInFunction(key_ie_hex_str, "$color", ieHexStr);
+
+        uint32_t idx_ie_hex_str = ctx.createBuiltInFunction(key_ie_hex_str, "$color", ieHexStr);
+
         uint32_t idx_alpha = ctx.createBuiltInOverloadFns(key_alpha, {
           // This does not give deprecations
           std::make_pair("$color", alphaOne),
@@ -3534,10 +3676,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // ctx.exposeFunction(key_hwba, idx_hwba_loose);
         ctx.exposeFunction(key_space, idx_space);
         ctx.exposeFunction(key_color, idx_color);
+
+        // ctx.exposeFunction(key_same, idx_same); // not exposed
+        
         ctx.exposeFunction(key_red, idx_red);
         ctx.exposeFunction(key_green, idx_green);
         ctx.exposeFunction(key_blue, idx_blue);
-        // ctx.exposeFunction(key_hue, idx_hue);
+        ctx.exposeFunction(key_hue, idx_hue);
         ctx.exposeFunction(key_lightness, idx_lightness);
         ctx.exposeFunction(key_saturation, idx_saturation);
         ctx.exposeFunction(key_blackness, idx_blackness);
@@ -3560,17 +3705,19 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         ctx.exposeFunction(key_mix, idx_mix);
         ctx.exposeFunction(key_to_gamut, idx_to_gamut);
-        // ctx.exposeFunction(key_opacify, idx_opacify_loose);
-        // ctx.exposeFunction(key_fade_in, idx_fade_in_loose);
-        // ctx.exposeFunction(key_fade_out, idx_fade_out_loose);
-        // ctx.exposeFunction(key_transparentize, idx_transparentize_loose);
-        // ctx.exposeFunction(key_ie_hex_str, idx_ie_hex_str);
+
+        ctx.exposeFunction(key_opacify, idx_opacify);
+        ctx.exposeFunction(key_fade_in, idx_fade_in);
+        ctx.exposeFunction(key_fade_out, idx_fade_out);
+        ctx.exposeFunction(key_transparentize, idx_transparentize);
+        ctx.exposeFunction(key_ie_hex_str, idx_ie_hex_str);
         ctx.exposeFunction(key_alpha, idx_alpha);
         ctx.exposeFunction(key_opacity, idx_opacity_loose);
 
         BuiltInMod& module(ctx.createModule("color"));
 
         module.addFunction(key_space, idx_space);
+        module.addFunction(key_to_space, idx_to_space);
         module.addFunction(key_color, idx_color);
         module.addFunction(key_channel, idx_channel);
         module.addFunction(key_is_legacy, idx_is_legacy);
@@ -3591,10 +3738,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         module.addFunction(key_lch, idx_lch_strict);
 
         // module.addFunction(key_hwba, idx_hwba_strict);
+        module.addFunction(key_same, idx_same);
         module.addFunction(key_red, idx_red);
         module.addFunction(key_green, idx_green);
         module.addFunction(key_blue, idx_blue);
-        // module.addFunction(key_hue, idx_hue);
+        module.addFunction(key_hue, idx_hue);
         module.addFunction(key_lightness, idx_lightness);
         module.addFunction(key_saturation, idx_saturation);
         module.addFunction(key_blackness, idx_blackness);
@@ -3617,11 +3765,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         module.addFunction(key_mix, idx_mix);
         module.addFunction(key_to_gamut, idx_to_gamut);
+
         module.addFunction(key_opacify, idx_opacify_strict);
         module.addFunction(key_fade_in, idx_fade_in_strict);
         module.addFunction(key_fade_out, idx_fade_out_strict);
         module.addFunction(key_transparentize, idx_transparentize_strict);
-        // module.addFunction(key_ie_hex_str, idx_ie_hex_str);
+
+        module.addFunction(key_ie_hex_str, idx_ie_hex_str);
         module.addFunction(key_alpha, idx_alpha);
         module.addFunction(key_opacity, idx_opacity_strict);
 

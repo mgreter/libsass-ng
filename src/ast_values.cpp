@@ -1230,8 +1230,17 @@ namespace Sass {
   String* String::assertUnquoted(Logger& logger, const sass::string& name)
   {
     if (hasQuotes_ == false) return this;
+    logger.callStack.push_back(pstate());
     throw Exception::SassScriptException(logger, pstate_,
       "Expected " + inspect() + " to be an unquoted string.");
+  }
+
+  String* String::assertQuoted(Logger& logger, const sass::string& name)
+  {
+    if (hasQuotes_ == true) return this;
+    logger.callStack.push_back(pstate());
+    throw Exception::SassScriptException(logger, pstate_,
+      "Expected " + inspect() + " to be a quoted string.");
   }
 
   Value* String::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const

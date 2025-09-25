@@ -456,6 +456,8 @@ namespace Sass
 		const sass::string green("green");
 		const sass::string alpha("alpha");
     const sass::string color("color");
+    const sass::string color1("color1");
+    const sass::string color2("color2");
     const sass::string weight("weight");
     const sass::string number("number");
     const sass::string amount("amount");

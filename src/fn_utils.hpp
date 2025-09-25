@@ -43,6 +43,13 @@ namespace Sass {
     return fabs(lhs - rhs) < epsilon;
   }
 
+  // Returns whether [lhs] and [rhs] are equal within [epsilon].
+  inline bool fuzzyEquals(tl::optional<double> lhs, tl::optional<double> rhs, double epsilon) {
+    if (!rhs.has_value()) return !lhs.has_value();
+    if (!lhs.has_value()) return false;
+    return fabs(lhs.value() - rhs.value()) < epsilon;
+  }
+
   // Returns whether [lhs] is less than [rhs], and not [fuzzyEquals].
   inline bool fuzzyLessThan(double lhs, double rhs, double epsilon) {
     return lhs < rhs && !fuzzyEquals(lhs, rhs, epsilon);
