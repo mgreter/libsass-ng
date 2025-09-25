@@ -3350,13 +3350,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // uint32_t idx_saturate_strict = ctx.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate);
 
 
-        uint32_t idx_saturate = ctx.createBuiltInOverloadFns(key_saturate, {
+        uint32_t global_saturate = ctx.createBuiltInOverloadFns(key_saturate, {
           std::make_pair("$amount", saturate1arg),
           std::make_pair("$color, $amount", saturate2),
         });
 
         uint32_t idx_desaturate = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
-        // uint32_t idx_saturate = ctx.createBuiltInFunction(key_saturate, "$color, $amount", saturate);
+        uint32_t idx_saturate = ctx.createBuiltInFunction(key_saturate, "$color, $amount", saturate2);
 
         // uint32_t idx_lighten_strict = ctx.createBuiltInFunction(key_lighten, "$color, $amount", noLighten);
         // uint32_t idx_lighten_loose = ctx.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
@@ -3426,7 +3426,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // ctx.exposeFunction(key_desaturate, idx_desaturate_loose);
         // ctx.exposeFunction(key_saturate, idx_saturate_loose);
         ctx.exposeFunction(key_desaturate, idx_desaturate);
-        ctx.exposeFunction(key_saturate, idx_saturate);
+        ctx.exposeFunction(key_saturate, global_saturate);
         // ctx.exposeFunction(key_lighten, idx_lighten_loose);
         ctx.exposeFunction(key_darken, idx_darken);
         ctx.exposeFunction(key_lighten, idx_lighten);
