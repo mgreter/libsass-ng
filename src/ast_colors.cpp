@@ -1043,13 +1043,19 @@ namespace Sass {
       !hue.has_value());
   }
 
-  ColorSpaced* OkLabColorSpace::translate(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> lightness, tl::optional<double> a, tl::optional<double> b, tl::optional<double> alpha, bool missingChroma, bool missingHue) const
+  ColorSpaced* OkLabColorSpace::translate(const ColorSpace& dest, const SourceSpan& pstate,
+    tl::optional<double> lightness, tl::optional<double> a, tl::optional<double> b, tl::optional<double> alpha,
+    bool missingChroma, bool missingHue) const
   {
     // std::cerr << "OKLAB Translate\n";
     if (dest.name() == "oklch") {
       return ColorSpaced::labToLch(pstate, dest, lightness, a, b, alpha,
         missingChroma, missingHue);
     }
+
+    bool missingLightness = !lightness.has_value();
+    bool missingA = !a.has_value();
+    bool missingB = !b.has_value();
 
     if (!lightness.has_value()) lightness = 0;
     if (!a.has_value()) a = 0;
@@ -1073,11 +1079,11 @@ namespace Sass {
         ColorSpaces::oklabToLms[8] * b.value_or(0),
         3) + 0.0,
       alpha,
-      !lightness.has_value(),
+      missingLightness,
       missingChroma,
       missingHue,
-      !a.has_value(),
-      !b.has_value());
+      missingA,
+      missingB);
   }
 
   /// Converts a legacy HSL/HWB hue to an RGB channel.
