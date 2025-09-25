@@ -755,8 +755,9 @@ namespace Sass {
     bool missingHue) const
   {
 
-    // std::cerr << "CALL SRGB translate " << red.value_or(0) << ", "
-    //   << green.value_or(0) << ", " << blue.value_or(0) << ", " << "\n";
+    std::cerr << "CALL SRGB translate " << red.value_or(-42) << ", "
+      << green.value_or(-42) << ", " << blue.value_or(-42) << ", "
+      << alpha.value_or(-42) << "\n";
 
     if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
       double nr_red = red.value_or(0);
@@ -800,13 +801,16 @@ namespace Sass {
         // std::cerr << "  to hsl " << hue << ", " << saturation << ", " << lightness << "\n";
 
         tl::optional<double> c0;
-        if (!fuzzyEquals(saturation, 0.0, sass::epsilon)) {
+        if (!(missingHue || fuzzyEquals(saturation, 0.0, sass::epsilon))) {
           c0 = std::fmod(hue, 360.0);
         }
-        tl::optional<double> c1 = saturation;
-        tl::optional<double> c2 = lightness * 100;
+        tl::optional<double> c1;
+        if (!missingChroma) c1 = saturation;
+        tl::optional<double> c2;
+        if (!missingLightness) c2 = lightness * 100;
 
-        return ColorSpaced::_forSpace(pstate, dest, c0, c1, c2, alpha);
+        return ColorSpaced::forSpaceInternal(
+          pstate, dest, c0, c1, c2, alpha);
 
         // std::cerr << "other";
       }
@@ -900,8 +904,9 @@ namespace Sass {
     bool missingB) const
   {
 
-    // std::cerr << "CALL XYZD50 translate " << x.value_or(0) << ", "
-    //   << y.value_or(0) << ", " << z.value_or(0) << ", " << "\n";
+    std::cerr << "CALL XYZD50 translate " << x.value_or(-42) << ", "
+      << y.value_or(-42) << ", " << z.value_or(-42) << ", "
+      << alpha.value_or(-42) << "\n";
 
     if (dest.name() == "lab" || dest.name() == "lch") {
       // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
@@ -910,24 +915,29 @@ namespace Sass {
       double f1 = _convertComponentToLabF(y.value_or(0) / d50[1]);
       double f2 = _convertComponentToLabF(z.value_or(0) / d50[2]);
 
-      tl::optional<double> a;
-      tl::optional<double> b;
       tl::optional<double> lightness;
-      if (!missingA) { a = 500 * (f0 - f1); }
-      if (!missingB) { b = 200 * (f1 - f2); }
+      double a = 500 * (f0 - f1);
+      double b = 200 * (f1 - f2);
       if (!missingLightness) { lightness = (116.0 * f1) - 16.0; }
 
       if (dest.name() == "lab") {
-        return ColorSpaced::lab(pstate, lightness, a, b, alpha);
+        auto rv = ColorSpaced::lab(pstate, lightness,
+          missingA ? tl::optional<double>() : a,
+          missingB ? tl::optional<double>() : b,
+          alpha);
+        std::cerr << "==lab== " << rv->debug() << "\n";
+        return rv;
       }
       else {
-        return ColorSpaced::labToLch(pstate,
+        auto rv = ColorSpaced::labToLch(pstate,
           ColorSpace::lch, lightness, a, b, alpha,
           missingChroma, missingHue);
+        std::cerr << "==lch== " << rv->debug() << "\n";
+        return rv;
       }
     }
 
-    return ColorSpace::convertLinear(
+    auto rv = ColorSpace::convertLinear(
       dest, pstate,
       x, y, z, alpha,
       missingLightness,
@@ -935,6 +945,8 @@ namespace Sass {
       missingHue,
       missingA,
       missingB);
+
+    return rv;
   }
 
   double _cubeRootPreservingSign(double number)
@@ -1160,7 +1172,7 @@ namespace Sass {
     bool missingHue) const
   {
 
-    // std::cerr << "LAB.CONVERT " << lightness.value_or(0) << "; " << a.value_or(0) << ", " << b.value_or(0) << "\n";
+    std::cerr << "LAB.CONVERT " << lightness.value_or(-42) << "; " << a.value_or(-42) << ", " << b.value_or(-42) << "\n";
 
     if (dest.name() == "lab")
     {

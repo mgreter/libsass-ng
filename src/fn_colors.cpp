@@ -2182,6 +2182,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         std::cerr << "adjusted space " << col->debug() << "\n";
+        std::cerr << "--------------------------------------\n";
 
         return col->toSpace(color->space(), pstate, false);
       }
