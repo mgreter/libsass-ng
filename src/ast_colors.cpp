@@ -431,11 +431,11 @@ namespace Sass {
       return SASS_MEMORY_NEW(ColorSpaced, this);
     }
 
-    // std::cerr << "Do toSpace from " << debug() << " to " << space.name() << " (" << legacyMissing << ")\n";
+    std::cerr << "Do toSpace from " << debug() << " to " << space.name() << " (" << legacyMissing << ")\n";
 
     ColorSpaced* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
 
-    // std::cerr << "  result " << converted->debug() << "\n";
+    std::cerr << "  result " << converted->debug() << "\n";
 
     if (!legacyMissing &&
       converted->isLegacy() &&
@@ -444,7 +444,7 @@ namespace Sass {
         converted->isChannel2Missing() ||
         converted->isAlphaMissing()))
     {
-      // std::cerr << "XXX Special case\n";
+      std::cerr << "XXX Special case\n";
       return ColorSpaced::forSpaceInternal(
         pstate, converted->space(),
         converted->getChannel0(),
@@ -922,7 +922,8 @@ namespace Sass {
       }
       else {
         return ColorSpaced::labToLch(pstate,
-          ColorSpace::lch, lightness, a, b, alpha);
+          ColorSpace::lch, lightness, a, b, alpha,
+          missingChroma, missingHue);
       }
     }
 

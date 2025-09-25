@@ -636,6 +636,7 @@ namespace Sass {
       hsl_channels, 3)
     {}
 
+    bool isLegacy() const override final { return true; }
     bool isPolar() const override final { return true; }
 
     ColorSpaced* convert(
@@ -657,6 +658,7 @@ namespace Sass {
       hwb_channels, 3)
     {}
 
+    bool isLegacy() const override final { return true; }
     bool isPolar() const override final { return true; }
 
     ColorSpaced* convert(
@@ -928,6 +930,8 @@ namespace Sass {
       SassColorSpace::RGB,
       rgb255_channels, 3)
     {}
+
+    bool isLegacy() const override final { return true; }
 
     ColorSpaced* convert(
       const ColorSpace& dest,

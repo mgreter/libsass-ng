@@ -2079,29 +2079,136 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       //     arguments, "adjust-hue", "$hue: ", Strings::degrees);
       // }
       // 
-      // static BUILT_IN_FN(complement)
-      // {
-      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-      //   copy->h(absmod(copy->h() + 180.0, 360.0));
-      //   return copy.detach();
-      // }
+
+      static bool isNull(Value* value) {
+        return value == nullptr
+          || value->isNull();
+      }
+
+      tl::optional<double> _adjustChannel(Compiler& compiler, const SourceSpan& pstate,
+        const ColorSpaced* color, const ColorChannel& channel,
+        tl::optional<double> oldValue, Number* adjustmentArg)
+      {
+        if (adjustmentArg == nullptr) return oldValue;
+
+        if (!oldValue.has_value()) throw Exception::MissingColorChannel(compiler, color, channel);
+
+        if ((color->space().name() == "hsl" || color->space().name() == "hwb") && channel.isPolarAngle)
+        {
+          adjustmentArg = SASS_MEMORY_NEW(Number,
+            adjustmentArg->pstate(),
+            _angleValue(adjustmentArg, "hue"));
+        }
+        else if (color->space().name() == "hsl" && (channel.name == "saturation" || channel.name == "lightness"))
+        {
+          // _checkPercent(adjustmentArg, channel.name);
+          adjustmentArg = SASS_MEMORY_NEW(Number,
+            adjustmentArg->pstate(),
+            adjustmentArg->value(),
+            unit_percent);
+        }
+        else if (channel.name == "alpha" && adjustmentArg->hasUnits()) {
+          adjustmentArg = SASS_MEMORY_NEW(Number,
+            adjustmentArg->pstate(),
+            adjustmentArg->value());
+        }
+
+        auto adjusted = _channelFromValue(compiler, channel, adjustmentArg, false);
+
+        if (adjusted.has_value() == false) return oldValue;
+
+        double result = oldValue.value() + adjusted.value();
+
+        // std::cerr << "Adjust channel " << channel.name << " -> " << result << "\n";
+
+        if (channel.lowerClamped == true && result < channel.min) {
+          // std::cerr << "Clamp to lower\n";
+          return oldValue.value() < channel.min ? std::max(oldValue.value(), result) : channel.min;
+        }
+        else if (channel.upperClamped == true && result > channel.max) {
+          // std::cerr << "Clamp to upper\n";
+          return oldValue.value() > channel.max ? std::min(oldValue.value(), result) : channel.max;
+        }
+
+        return result;
+      }
+
+
+      static BUILT_IN_FN(complement)
+      {
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+
+        const ColorSpace& space = color->isLegacy() && isNull(arguments[1]) ?
+          ColorSpace::hsl : ColorSpace::fromValueRef(compiler, arguments[1]);
+
+        if (!space.isPolar()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            "Color space " + space.name() + " doesn't have a hue channel.",
+            "space");
+        }
+
+        std::cerr << "## input " << color->debug() << " - " << isNull(arguments[1]) << "\n";
+
+        ColorSpaced* col = color->toSpace(space, pstate, !isNull(arguments[1]));
+
+        std::cerr << "## in space " << col->debug() << " - " << isNull(arguments[1]) << "\n";
+
+        if (space.isLegacy()) {
+          col = ColorSpaced::forSpaceInternal(
+            pstate, space,
+            _adjustChannel(
+              compiler, pstate,
+              col,
+              space._channels[0],
+              col->getChannel0OrNull(),
+              SASS_MEMORY_NEW(Number, pstate, 180)),
+            col->getChannel1OrNull(),
+            col->getChannel2OrNull(),
+            col->getAlphaOrNull()
+          );
+        }
+        else {
+          col = ColorSpaced::forSpaceInternal(
+            pstate, space,
+            col->getChannel0OrNull(),
+            col->getChannel1OrNull(),
+            _adjustChannel(
+              compiler, pstate,
+              col,
+              space._channels[2],
+              col->getChannel2OrNull(),
+              SASS_MEMORY_NEW(Number, pstate, 180)),
+            col->getAlphaOrNull());
+        }
+
+        std::cerr << "adjusted space " << col->debug() << "\n";
+
+        return col->toSpace(color->space(), pstate, false);
+      }
 
       /*******************************************************************/
 
-      // static BUILT_IN_FN(grayscale)
-      // {
-      //   // Gracefully handle if number is passed
-      //   if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0])) {
-      //     return getFunctionString(
-      //       Strings::grayscale,
-      //       pstate, arguments);
-      //   }
-      //   const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-      //   ColorHslaObj copy(color->copyAsHSLA()); // Must make a copy!
-      //   copy->s(0.0); // Simply reset the saturation
-      //   return copy.detach(); // Return HSLA
-      // }
+      static BUILT_IN_FN(grayscale)
+      {
+        // Gracefully handle if number is passed
+        if (arguments[0]->isaNumber() || (global && isSpecialNumber(arguments[0]))) {
+          return getFunctionString(Strings::grayscale, pstate, arguments);
+        }
+
+        // if (global) warForGlobalBuiltIn(compiler, "color", "grayscale");
+
+        const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
+
+        if (color->isLegacy())
+        {
+          ColorSpacedObj hsl = color->toSpace(ColorSpace::hsl, pstate);
+          hsl->c1(0.0); return hsl->toSpace(color->space(), pstate, false);
+        }
+        else {
+          ColorSpacedObj oklch = color->toSpace(ColorSpace::oklch, pstate);
+          oklch->c1(0.0); return oklch->toSpace(color->space(), pstate);
+        }
+      }
       // 
       // static BUILT_IN_FN(lighten)
       // {
@@ -2807,54 +2914,6 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return rv;
       }
 
-      tl::optional<double> _adjustChannel(Compiler& compiler, const SourceSpan& pstate,
-        const ColorSpaced* color, const ColorChannel& channel,
-        tl::optional<double> oldValue, Number* adjustmentArg)
-      {
-        if (adjustmentArg == nullptr) return oldValue;
-
-        if (!oldValue.has_value()) throw Exception::MissingColorChannel(compiler, color, channel);
-
-        if ((color->space().name() == "hsl" || color->space().name() == "hwb") && channel.isPolarAngle)
-        {
-          adjustmentArg = SASS_MEMORY_NEW(Number,
-            adjustmentArg->pstate(),
-            _angleValue(adjustmentArg, "hue"));
-        }
-        else if (color->space().name() == "hsl" && (channel.name == "saturation" || channel.name == "lightness"))
-        {
-          // _checkPercent(adjustmentArg, channel.name);
-          adjustmentArg = SASS_MEMORY_NEW(Number,
-            adjustmentArg->pstate(),
-            adjustmentArg->value(),
-            unit_percent);
-        }
-        else if (channel.name == "alpha" && adjustmentArg->hasUnits()) {
-          adjustmentArg = SASS_MEMORY_NEW(Number,
-            adjustmentArg->pstate(),
-            adjustmentArg->value());
-        }
-
-        auto adjusted = _channelFromValue(compiler, channel, adjustmentArg, false);
-
-        if (adjusted.has_value() == false) return oldValue;
-
-        double result = oldValue.value() + adjusted.value();
-
-        // std::cerr << "Adjust channel " << channel.name << " -> " << result << "\n";
-
-        if (channel.lowerClamped == true && result < channel.min) {
-          // std::cerr << "Clamp to lower\n";
-          return oldValue.value() < channel.min ? std::max(oldValue.value(), result) : channel.min;
-        }
-        else if (channel.upperClamped == true && result > channel.max) {
-          // std::cerr << "Clamp to upper\n";
-          return oldValue.value() > channel.max ? std::min(oldValue.value(), result) : channel.max;
-        }
-
-        return result;
-      }
-
       ColorSpaced* _adjustColor(Compiler& compiler, const SourceSpan& pstate,
         const ColorSpaced* color, const NumberVector& args, Number* alpha)
       {
@@ -3405,8 +3464,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // uint32_t idx_invert_loose = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
         uint32_t idx_invert = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%, $space: null", invert);
         // uint32_t idx_grayscale_strict = ctx.createBuiltInFunction(key_grayscale, "$color", noGrayscale);
-        // uint32_t idx_grayscale_loose = ctx.createBuiltInFunction(key_grayscale, "$color", grayscale);
-        // uint32_t idx_complement = ctx.createBuiltInFunction(key_complement, "$color", complement);
+        uint32_t idx_grayscale = ctx.createBuiltInFunction(key_grayscale, "$color", grayscale);
+        uint32_t idx_complement = ctx.createBuiltInFunction(key_complement, "$color, $space: null", complement);
         // uint32_t idx_desaturate_strict = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", noDesaturate);
         // uint32_t idx_desaturate_loose = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
         // uint32_t idx_saturate_strict = ctx.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate);
@@ -3483,8 +3542,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         ctx.exposeFunction(key_blackness, idx_blackness);
         ctx.exposeFunction(key_whiteness, idx_whiteness);
         ctx.exposeFunction(key_invert, idx_invert);
-        // ctx.exposeFunction(key_grayscale, idx_grayscale_loose);
-        // ctx.exposeFunction(key_complement, idx_complement);
+        ctx.exposeFunction(key_grayscale, idx_grayscale);
+        ctx.exposeFunction(key_complement, idx_complement);
         // ctx.exposeFunction(key_desaturate, idx_desaturate_loose);
         // ctx.exposeFunction(key_saturate, idx_saturate_loose);
         ctx.exposeFunction(key_desaturate, idx_desaturate);
@@ -3540,8 +3599,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         module.addFunction(key_blackness, idx_blackness);
         module.addFunction(key_whiteness, idx_whiteness);
         module.addFunction(key_invert, idx_invert);
-        // module.addFunction(key_grayscale, idx_grayscale_strict);
-        // module.addFunction(key_complement, idx_complement);
+        module.addFunction(key_grayscale, idx_grayscale);
+        module.addFunction(key_complement, idx_complement);
         // module.addFunction(key_desaturate, idx_desaturate_strict);
         // module.addFunction(key_saturate, idx_saturate_strict);
         module.addFunction(key_desaturate, idx_desaturate);
