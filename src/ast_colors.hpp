@@ -602,7 +602,7 @@ namespace Sass {
   class DisplayP3ColorSpace : public ColorSpace {
   public:
     DisplayP3ColorSpace() : ColorSpace(
-      str_display_p3,
+      "display-p3",
       SassColorSpace::DISPLAY_P3,
       rgb_channels, 3)
     {}
