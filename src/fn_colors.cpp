@@ -44,6 +44,8 @@ namespace Sass {
       if (double factor = number->getUnitConversionFactor(unit_deg)) {
         return number->value() * factor;
       }
+      SourceSpan span(number->pstate());
+      CallStackFrame csf(logger, span);
       throw Exception::NoAngleArgument(logger, number, name);
     }
 
@@ -1775,6 +1777,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (arguments[2] == nullptr || arguments[2]->isNull()) {
 
           if (!color->isLegacy()) {
+            SourceSpan span(color->pstate());
+            CallStackFrame csf(compiler, span);
             throw Exception::SassScriptException(compiler, pstate,
               "To use color.invert() with non-legacy color " + color->toCss()
               + ", you must provide a $space.", "color");
@@ -3451,11 +3455,15 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         weight->checkPercent(compiler, Strings::weight);
 
         if (!color1->isLegacy()) {
+          SourceSpan span(color1->pstate());
+          CallStackFrame csf(compiler, span);
           throw Exception::SassScriptException(compiler, color1->pstate(),
             "To use color.mix() with non-legacy color " + color1->toCss()
             + ", you must provide a $method.", "color1");
         }
         if (!color2->isLegacy()) {
+          SourceSpan span(color2->pstate());
+          CallStackFrame csf(compiler, span);
           throw Exception::SassScriptException(compiler, color2->pstate(),
             "To use color.mix() with non-legacy color " + color2->toCss()
             + ", you must provide a $method.", "color2");

@@ -1277,7 +1277,7 @@ namespace Sass {
   {
     if (hasQuotes_ == false) return this;
     logger.callStack.push_back(pstate());
-    throw Exception::SassScriptException(logger, pstate_,
+    throw Exception::SassScriptException(logger, name,
       "Expected " + inspect() + " to be an unquoted string.");
   }
 
