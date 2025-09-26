@@ -191,6 +191,12 @@ namespace Sass {
 
     class SassScriptException : public Base {
     public:
+
+      SassScriptException(
+        BackTraces traces,
+        sass::string name,
+        sass::string msg);
+
       SassScriptException(
         BackTraces traces,
         SourceSpan pstate,
@@ -246,6 +252,18 @@ namespace Sass {
       public:
         DuplicateKeyError(BackTraces traces,
           const Map& dup, const Value& org);
+    };
+
+    class TooManyColorSlashes : public SassScriptException {
+    public:
+      TooManyColorSlashes(BackTraces traces,
+        const Value& input, const sass::string& name = "");
+    };
+
+    class TooManyColorChannels : public SassScriptException {
+    public:
+      TooManyColorChannels(BackTraces traces, const ColorSpace& space,
+        const Value& input, const sass::string& name = "");
     };
 
     class TooFewArguments : public RuntimeException {

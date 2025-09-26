@@ -187,12 +187,8 @@ namespace Sass {
         ListObj args = SASS_MEMORY_NEW(List, channels->pstate(),
           { channels->start(), channels->stop() });
         if (args->size() != 2) {
-          sass::sstream message;
-          message << "Only 2 slash-separated elements allowed, but ";
-          message << channels->lengthAsList() << " ";
-          message << pluralize("was", channels->lengthAsList(), "were");
-          message << " passed.";
-          throw Exception::SassScriptException(message.str(), compiler, pstate);
+          throw Exception::TooManyColorSlashes(
+            compiler, *args, "channels");
         }
 
         alphaFromSlashList = args->get(1);
@@ -320,12 +316,8 @@ namespace Sass {
         ListObj args = SASS_MEMORY_NEW(List, channels->pstate(),
           { channels->start(), channels->stop() });
         if (args->size() != 2) {
-          sass::sstream message;
-          message << "Only 2 slash-separated elements allowed, but ";
-          message << channels->lengthAsList() << " ";
-          message << pluralize("was", channels->lengthAsList(), "were");
-          message << " passed.";
-          throw Exception::SassScriptException(message.str(), compiler, pstate);
+          throw Exception::TooManyColorSlashes(
+            compiler, *args, "channels");
         }
 
         alphaFromSlashList = args->get(1);
@@ -877,11 +869,8 @@ namespace Sass {
         }
         // Otherwise throw an error
         else {
-          sass::sstream message;
-          message << "Only 2 slash-separated elements allowed, but " << list.size()
-            << " " << pluralize("was", input->lengthAsList(), "were") << " passed.";
-          throw Exception::SassScriptException(
-            message.str(), ctx, pstate, "$channels");
+          throw Exception::TooManyColorSlashes(
+            ctx, *input, "channels");
         }
       }
 
@@ -967,7 +956,7 @@ namespace Sass {
       if (list.size() == 0) {
         throw Exception::SassScriptException(
           "Color component list may not be empty.",
-          ctx, pstate);
+          ctx, pstate, "channels");
       }
 
       if (String* str = list.front()->isaString()) {
@@ -1120,9 +1109,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 */
 
       if (channels.size() != 3) {
-        throw Exception::SassScriptException(
-          "The $space color space has 3 channels but $input has",
-          ctx, pstate);
+        throw Exception::TooManyColorChannels(
+          ctx, *space, *input, "channels");
       }
 
       auto rv = _colorFromChannels(

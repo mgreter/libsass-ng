@@ -344,6 +344,12 @@ namespace Sass {
       BackTraces traces, SourceSpan pstate,
       sass::string msg, sass::string name) :
       Base(name.empty() ? msg : "$" + name + ": " + msg, traces)
+    {
+    }
+
+    SassScriptException::SassScriptException(
+      BackTraces traces, sass::string name, sass::string msg) :
+      Base(name.empty() ? msg : "$" + name + ": " + msg, traces)
     {}
 
     SassScriptException::SassScriptException(sass::string msg,
@@ -512,6 +518,36 @@ namespace Sass {
   {
     // this->traces.push_back(color->pstate());
   }
+
+  static sass::string formatTooManyColorChannels(
+    const ColorSpace& space, const Value& input) {
+    sass::sstream strm; strm << "The " << space.name()
+      << " color space has " << space._channelSize
+      << " but (" << input.inspect() << ") has "
+      << input.lengthAsList() << ".";
+    return strm.str();
+  }
+
+  TooManyColorChannels::TooManyColorChannels(
+    BackTraces traces, const ColorSpace& space,
+    const Value& input, const sass::string& name)
+    : SassScriptException(traces, name,
+      formatTooManyColorChannels(space, input))
+  {}
+
+  static sass::string formatTooManyColorSlashes(const Value& input) {
+    sass::sstream strm; strm << "Only 2 slash-separated "
+      << "elements allowed, but " << input.lengthAsList() << " "
+      << pluralize("was", input.lengthAsList(), "were") << " passed.";
+    return strm.str();
+  }
+
+
+  TooManyColorSlashes::TooManyColorSlashes(BackTraces traces,
+    const Value& input, const sass::string& name)
+    : SassScriptException(traces, name,
+      formatTooManyColorSlashes(input))
+  { }
 
 }
 
