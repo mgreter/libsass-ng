@@ -718,10 +718,15 @@ namespace Sass {
       throw Exception::SassScriptException(logger, name,
         "Expected an unbracketed list, was " + inspect());
     }
-    else if (separator() == SassSeparator::SASS_COMMA) {
+    else if (allowSlash && separator() == SassSeparator::SASS_COMMA) {
       CallStackFrame frame(logger, pstate());
       throw Exception::SassScriptException(logger, name, "Expected "
         "a space- or slash-separated list, was (" + inspect() + ")");
+    }
+    else {
+      CallStackFrame frame(logger, pstate());
+      throw Exception::SassScriptException(logger, name, "Expected "
+        "a space-separated list, was (" + inspect() + ")");
     }
   }
 

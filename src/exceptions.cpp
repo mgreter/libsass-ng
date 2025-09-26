@@ -522,9 +522,15 @@ namespace Sass {
   static sass::string formatTooManyColorChannels(
     const ColorSpace& space, const Value& input) {
     sass::sstream strm; strm << "The " << space.name()
-      << " color space has " << space._channelSize
-      << " channels but (" << input.inspect()
-      << ") has " << input.lengthAsList() << ".";
+      << " color space has " << space._channelSize;
+    if (input.lengthAsList() == 1) {
+        strm << " channels but " << input.inspect()
+        << " has " << input.lengthAsList() << ".";
+    }
+    else {
+        strm << " channels but (" << input.inspect()
+        << ") has " << input.lengthAsList() << ".";
+    }
     return strm.str();
   }
 

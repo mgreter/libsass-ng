@@ -844,6 +844,8 @@ namespace Sass {
         }
         // Otherwise throw an error
         else {
+          SourceSpan span(input->pstate());
+          CallStackFrame csf(compiler, span);
           throw Exception::TooManyColorSlashes(
             compiler, *input, "channels");
         }
@@ -929,6 +931,8 @@ namespace Sass {
       ValueVector list = components->assertCommonListStyle(compiler, Strings::channels, false);
 
       if (list.size() == 0) {
+        SourceSpan span(components->pstate());
+        CallStackFrame csf(compiler, span);
         throw Exception::SassScriptException(
           "Color component list may not be empty.",
           compiler, pstate, "channels");
@@ -1088,6 +1092,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 */
 
       if (channels.size() != 3) {
+        SourceSpan span(components->pstate());
+        CallStackFrame csf(compiler, span);
         throw Exception::TooManyColorChannels(
           compiler, *space, *input, "channels");
       }
