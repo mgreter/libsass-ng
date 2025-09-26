@@ -689,7 +689,7 @@ namespace Sass {
   }
 
 
-  ValueVector Value::assertCommonListStyle(Logger& ctx, const sass::string& name, bool allowSlash)
+  ValueVector Value::assertCommonListStyle(Logger& logger, const sass::string& name, bool allowSlash)
   {
     auto invalidSeparator = separator() == SassSeparator::SASS_COMMA ||
       (!allowSlash && separator() == SassSeparator::SASS_DIV);
@@ -712,8 +712,14 @@ namespace Sass {
         throw Exception::RuntimeException(compiler, msg.str());
       }
     */
-
-    throw Exception::SassScriptException("not valid list", ctx, pstate());
+    if (hasBrackets()) {
+      throw Exception::SassScriptException(logger, name,
+        "Expected an unbracketed list, was " + inspect());
+    }
+    else if (separator() == SassSeparator::SASS_COMMA) {
+      throw Exception::SassScriptException(logger, name, "Expected "
+        "a space- or slash-separated list, was (" + inspect() + ")");
+    }
   }
 
   /////////////////////////////////////////////////////////////////////////
