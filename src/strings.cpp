@@ -450,6 +450,9 @@ namespace Sass
     const sass::string lab("lab");
     const sass::string lch("lch");
 
+    const sass::string base("base");
+    const sass::string exponent("exponent");
+
     const sass::string deg("deg");
     const sass::string red("red");
 		const sass::string hue("hue");

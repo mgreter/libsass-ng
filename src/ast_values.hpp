@@ -333,9 +333,20 @@ namespace Sass {
     // Implement type fetcher for base value class (throws in base implementation)
     Number* assertNumber(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
 
+    // Assert that this number has no unit and throws if any unit is present
+    Number* assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name = Strings::empty);
+
     // Implement number specific assertions
     long assertInt(Logger& logger, const sass::string& name = Strings::empty) const;
-    const Number* assertUnitless(Logger& logger, const sass::string& name = Strings::empty) const;
+
+    // Asserts that [number] is a percentage or has no units, and normalizes the
+    // value. If [number] has no units, its value is clamped to be greater than `0`
+    // or less than [max] and returned. If [number] is a percentage, it's scaled to
+    // be within `0` and [max]. Otherwise, this throws a [SassScriptException].
+    // [name] is used to identify the argument in the error message.
+    double assertPercentageOrUnitless(Logger& logger, double max, const sass::string& name) const;
+
+    const Number* assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name = Strings::empty) const;
 		Number* assertHasUnits(Logger& logger, const sass::string& unit, const sass::string& name = Strings::empty);
     void assertNoUnits(Logger& logger, const sass::string& name = Strings::empty) const;
     double assertRange(double min, double max, const Units& units, Logger& logger, const sass::string& name = Strings::empty) const;

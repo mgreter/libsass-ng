@@ -189,7 +189,7 @@ namespace Sass {
       if (number == nullptr) return SASS_MEMORY_NEW(
         Calculation, pstate, str_sqrt, { simplified });
       // No support for units square root
-      number->assertUnitless(logger, str_number);
+      number->assertNumberStrictWithoutUnit(logger, str_number);
       return number->copyWithNewValue(std::sqrt(number->value()));
     }
     // EO calc_sqrt
@@ -216,7 +216,7 @@ namespace Sass {
       const Number* number = simplified->isaNumber();
       if (number == nullptr) return SASS_MEMORY_NEW(
         Calculation, pstate, str_exp, { simplified });
-      number->assertUnitless(logger, str_number);
+      number->assertNumberStrictWithoutUnit(logger, str_number);
       return number->copyWithNewValue(number->isNaN()
         ? number->value() : std::exp(number->value()));
     }
@@ -285,7 +285,7 @@ namespace Sass {
       const Number* number = SASS_CAST(Number, simplified);
       if (number == nullptr) return SASS_MEMORY_NEW(
         Calculation, pstate, str_asin, { simplified });
-      number->assertNoUnits(logger, str_number);
+      number->assertNumberStrictWithoutUnit(logger, str_number);
       double degs = std::asin(number->value()) * Constants::Math::RAD_TO_DEG;
       return SASS_MEMORY_NEW(Number, number->pstate(), degs, unit_deg);
     }
@@ -300,7 +300,7 @@ namespace Sass {
       const Number* number = SASS_CAST(Number, simplified);
       if (number == nullptr) return SASS_MEMORY_NEW(
         Calculation, pstate, str_acos, { simplified });
-      number->assertNoUnits(logger, str_number);
+      number->assertNumberStrictWithoutUnit(logger, str_number);
       double degs = std::acos(number->value()) * Constants::Math::RAD_TO_DEG;
       return SASS_MEMORY_NEW(Number, number->pstate(), degs, unit_deg);
     }
@@ -315,7 +315,7 @@ namespace Sass {
       const Number* number = SASS_CAST(Number, simplified);
       if (number == nullptr) return SASS_MEMORY_NEW(
         Calculation, pstate, str_atan, { simplified });
-      number->assertNoUnits(logger, str_number);
+      number->assertNumberStrictWithoutUnit(logger, str_number);
       double degs = std::atan(number->value()) * Constants::Math::RAD_TO_DEG;
       return SASS_MEMORY_NEW(Number, number->pstate(), degs, unit_deg);
     }
@@ -332,13 +332,13 @@ namespace Sass {
       AstNodeObj arg_nr = args[0] ? args[0]->simplify(logger) : nullptr;
       AstNodeObj arg_base = args.size() > 1 ? args[1]->simplify(logger) : nullptr;
       if (const Number* nr_value = SASS_CAST(Number, arg_nr)) {
-        nr_value->assertNoUnits(logger, str_number);
+        nr_value->assertNumberStrictWithoutUnit(logger, str_number);
         if (arg_base == nullptr) {
           return SASS_MEMORY_NEW(Number, pstate,
             std::log(nr_value->value()));
         }
         if (const Number* nr_base = SASS_CAST(Number, arg_base)) {
-          nr_base->assertNoUnits(logger, str_base);
+          nr_base->assertNumberStrictWithoutUnit(logger, str_base);
           return SASS_MEMORY_NEW(Number, pstate,
             std::log(nr_value->value()) /
               std::log(nr_base->value()));
@@ -413,8 +413,8 @@ namespace Sass {
       AstNodeObj arg_exp = args[1]->simplify(logger);
       if (Number* nr_base = arg_base->isaNumber()) {
         if (Number* nr_exp = arg_exp->isaNumber()) {
-          nr_base->assertNoUnits(logger, str_base);
-          nr_exp->assertNoUnits(logger, str_exp);
+          nr_base->assertNumberStrictWithoutUnit(logger, str_base);
+          nr_exp->assertNumberStrictWithoutUnit(logger, str_exp);
           return SASS_MEMORY_NEW(Number, pstate,
             std::pow(nr_base->value(), nr_exp->value()));
         }

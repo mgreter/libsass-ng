@@ -537,33 +537,6 @@ namespace Sass {
       return current + (scale > 0.0 ? max - current : current) * scale;
     }
 
-    // Asserts that [number] is a percentage or has no units, and normalizes the
-    // value. If [number] has no units, its value is clamped to be greater than `0`
-    // or less than [max] and returned. If [number] is a percentage, it's scaled to
-    // be within `0` and [max]. Otherwise, this throws a [SassScriptException].
-    // [name] is used to identify the argument in the error message.
-    static double _percentageOrUnitless(
-      const Number* number, double max,
-      const sass::string& name,
-      Logger& traces)
-    {
-      double value = 0.0;
-      if (!number->hasUnits()) {
-        value = number->value();
-      }
-      else if (number->hasUnit(Strings::percent)) {
-        value = max * number->value() / 100;
-      }
-      else {
-        CallStackFrame csf(traces, number->pstate());
-        throw Exception::RuntimeException(traces,
-          name + ": Expected " + number->inspect()
-          + " to have no units or \"%\".");
-      }
-      // if (value < 0.0) return 0.0;
-      // if (value > max) return max;
-      return value;
-    }
 
     static String* _functionRgbString(sass::string name, const ColorSpaced* color, Value* alpha, const SourceSpan& pstate)
     {
@@ -613,7 +586,7 @@ namespace Sass {
       }
 
       const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
-      double a = _percentageOrUnitless(alpha, 1.0, "$alpha", logger);
+      double a = alpha->assertPercentageOrUnitless(logger, 1.0, Strings::alpha);
       return rgb->changeAlpha(clampLikeCss(a, 0.0, 1.0));
 
 
@@ -646,8 +619,7 @@ namespace Sass {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(logger, Strings::color);
         const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
         ColorSpacedObj copy = SASS_MEMORY_COPY(color);
-        copy->alpha(_percentageOrUnitless(
-          alpha, 1.0, "$alpha", logger));
+        copy->alpha(alpha->assertPercentageOrUnitless(logger, 1.0, Strings::alpha));
         copy->parsed(false);
         return copy.detach();
       }
@@ -686,15 +658,15 @@ namespace Sass {
         }
         else if (chnInfo.lowerClamped == false && chnInfo.upperClamped == false) {
           if (percent) return chnInfo.max * chnValue->value() / 100;
-          return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
+          return chnValue->assertPercentageOrUnitless(logger, chnInfo.max, chnInfo.name);
         }
         else if (clamp == false) {
           if (percent) return chnInfo.max * chnValue->value() / 100;
-          return _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
+          return chnValue->assertPercentageOrUnitless(logger, chnInfo.max, chnInfo.name);
         }
         else { // if (chnInfo.lowerClamped == true || chnInfo.upperClamped == true) {
           double val = percent ? chnInfo.max * chnValue->value() / 100 :
-            _percentageOrUnitless(chnValue, chnInfo.max, chnInfo.name, logger);
+            chnValue->assertPercentageOrUnitless(logger, chnInfo.max, chnInfo.name);
           double min = chnInfo.lowerClamped ? chnInfo.min : -std::numeric_limits<double>::infinity();
           double max = chnInfo.upperClamped ? chnInfo.max : +std::numeric_limits<double>::infinity();
           return std::isnan(val) ? min : std::min(std::max(val, min), max);
@@ -1057,7 +1029,7 @@ namespace Sass {
         }
         if (alpha.has_value()) {
           Number* nr = alphaValue->assertNumber(ctx, name);
-          alpha = _percentageOrUnitless(nr, 1, "alpha", ctx);
+          alpha = nr->assertPercentageOrUnitless(ctx, 1, Strings::alpha);
           alpha = std::max(0.0, std::min(alpha.value(), 1.0));
         }
       }
@@ -3798,10 +3770,10 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
       return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace2::rgb,
-        fuzzyRound(_percentageOrUnitless(r, 255, "$red", logger), logger.epsilon),
-        fuzzyRound(_percentageOrUnitless(g, 255, "$green", logger), logger.epsilon),
-        fuzzyRound(_percentageOrUnitless(b, 255, "$blue", logger), logger.epsilon),
-        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
+        fuzzyRound(r->assertPercentageOrUnitless(logger, 255, Strings::red), logger.epsilon),
+        fuzzyRound(g->assertPercentageOrUnitless(logger, 255, Strings::green), logger.epsilon),
+        fuzzyRound(b->assertPercentageOrUnitless(logger, 255, Strings::blue), logger.epsilon),
+        _a ? a->assertPercentageOrUnitless(logger, 1.0, Strings::alpha) : 1.0, "", true); // Hmmm
 
     }
 
@@ -3831,7 +3803,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       Number* b = _b->assertNumber(logger, Strings::blue);
 
       Number* a_nr = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
-      double a_val = _a ? _percentageOrUnitless(a_nr, 1.0, "$alpha", logger) : 1.0;
+      double a_val = _a ? a_nr->assertPercentageOrUnitless(logger, 1.0, Strings::alpha) : 1.0;
       a_val = std::isnan(a_val) ? 0.0 : std::max(0.0, std::min(1.0, a_val));
       tl::optional<double> a = a_val;
 
@@ -3869,10 +3841,10 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
       return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace2::hsl,
-        fuzzyRound(_percentageOrUnitless(r, 255, "$hue", logger), logger.epsilon),
-        fuzzyRound(_percentageOrUnitless(g, 255, "$saturation", logger), logger.epsilon),
-        fuzzyRound(_percentageOrUnitless(b, 255, "$lightness", logger), logger.epsilon),
-        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
+        fuzzyRound(r->assertPercentageOrUnitless(logger, 255, Strings::hue), logger.epsilon),
+        fuzzyRound(g->assertPercentageOrUnitless(logger, 255, Strings::saturation), logger.epsilon),
+        fuzzyRound(b->assertPercentageOrUnitless(logger, 255, Strings::lightness), logger.epsilon),
+        _a ? a->assertPercentageOrUnitless(logger, 1.0, Strings::alpha) : 1.0, "", true); // Hmmm
 
     }
 
@@ -3902,7 +3874,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       Number* b = _b->assertNumber(logger, Strings::lightness);
 
       Number* a_nr = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
-      double a_val = _a ? _percentageOrUnitless(a_nr, 1.0, "$alpha", logger) : 1.0;
+      double a_val = _a ? a_nr->assertPercentageOrUnitless(logger, 1.0, Strings::alpha) : 1.0;
       a_val = std::isnan(a_val) ? 0.0 : std::max(0.0, std::min(1.0, a_val));
       tl::optional<double> a = a_val;
 
@@ -3940,10 +3912,10 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       Number* a = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
 
       return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace2::hwb,
-        fuzzyRound(_percentageOrUnitless(r, 255, "$hue", logger), logger.epsilon),
-        fuzzyRound(_percentageOrUnitless(g, 255, "$whiteness", logger), logger.epsilon),
-        fuzzyRound(_percentageOrUnitless(b, 255, "$blackness", logger), logger.epsilon),
-        _a ? _percentageOrUnitless(a, 1.0, "$alpha", logger) : 1.0, "", true); // Hmmm
+        fuzzyRound(r->assertPercentageOrUnitless(logger, 255, Strings::hue), logger.epsilon),
+        fuzzyRound(g->assertPercentageOrUnitless(logger, 255, Strings::whiteness), logger.epsilon),
+        fuzzyRound(b->assertPercentageOrUnitless(logger, 255, Strings::blackness), logger.epsilon),
+        _a ? a->assertPercentageOrUnitless(logger, 1.0, Strings::alpha) : 1.0, "", true); // Hmmm
 
     }
 
@@ -3973,7 +3945,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       Number* b = _b->assertNumber(logger, Strings::blackness);
 
       Number* a_nr = _a ? _a->assertNumber(logger, Strings::alpha) : nullptr;
-      double a_val = _a ? _percentageOrUnitless(a_nr, 1.0, "$alpha", logger) : 1.0;
+      double a_val = _a ? a_nr->assertPercentageOrUnitless(logger, 1.0, Strings::alpha) : 1.0;
       a_val = std::isnan(a_val) ? 0.0 : std::max(0.0, std::min(1.0, a_val));
       tl::optional<double> a = a_val;
 

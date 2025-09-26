@@ -523,8 +523,8 @@ namespace Sass {
     const ColorSpace& space, const Value& input) {
     sass::sstream strm; strm << "The " << space.name()
       << " color space has " << space._channelSize
-      << " but (" << input.inspect() << ") has "
-      << input.lengthAsList() << ".";
+      << " channels but (" << input.inspect()
+      << ") has " << input.lengthAsList() << ".";
     return strm.str();
   }
 

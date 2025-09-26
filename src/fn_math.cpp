@@ -33,7 +33,7 @@ namespace Sass {
 
       static BUILT_IN_FN(round)
       {
-        Number* number = arguments[0]->assertNumber(compiler, "number");
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
           std::round(number->value()),
           number->unit());
@@ -43,7 +43,7 @@ namespace Sass {
 
       static BUILT_IN_FN(ceil)
       {
-        Number* number = arguments[0]->assertNumber(compiler, "number");
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
           std::ceil(number->value()),
           number->unit());
@@ -52,7 +52,7 @@ namespace Sass {
       {
 
         Number* min = arguments[0]->assertNumber(compiler, "min");
-        Number* number = arguments[1]->assertNumber(compiler, "number");
+        Number* number = arguments[1]->assertNumber(compiler, Strings::number);
         Number* max = arguments[2]->assertNumber(compiler, "max");
         if (min->hasUnits() == number->hasUnits() && number->hasUnits() == max->hasUnits()) {
           if (min->greaterThanOrEquals(max, compiler, pstate)) return min;
@@ -74,7 +74,7 @@ namespace Sass {
 
       static BUILT_IN_FN(floor)
       {
-        Number* number = arguments[0]->assertNumber(compiler, "number");
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
           std::floor(number->value()),
           number->unit());
@@ -84,7 +84,7 @@ namespace Sass {
 
       static BUILT_IN_FN(abs)
       {
-        Number* number = arguments[0]->assertNumber(compiler, "number");
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         if (number->hasUnit("%")) {
           compiler.addDeprecation(number->pstate(),
             Logger::WARN_ABS_PERCENT, [number]() {
@@ -142,10 +142,7 @@ namespace Sass {
       static BUILT_IN_FN(fnLog)
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
-        if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler, "$number: "
-            "Expected " + number->inspect() + " to have no units.");
-        }
+        number->assertNumberStrictWithoutUnit(compiler, Strings::number);
 
         if (arguments[1]->isNull()) {
           return SASS_MEMORY_NEW(Number,
@@ -154,8 +151,7 @@ namespace Sass {
 
         auto base = arguments[1]->assertNumber(compiler, "base");
         if (base->hasUnits()) {
-          throw Exception::RuntimeException(compiler, "$base: "
-            "Expected " + base->inspect() + " to have no units.");
+          throw Exception::UnitMissing(compiler, *number, "base");
         }
 
         return SASS_MEMORY_NEW(Number, pstate,
@@ -188,37 +184,20 @@ namespace Sass {
 
       static BUILT_IN_FN(fnPow)
       {
-
-        auto base = arguments[0]->assertNumber(compiler, "base");
-        auto exponent = arguments[1]->assertNumber(compiler, "exponent");
-        if (base->hasUnits()) {
-          throw Exception::RuntimeException(compiler, "$base: "
-            "Expected " + base->inspect() + " to have no units.");
-        }
-        if (exponent->hasUnits()) {
-          throw Exception::RuntimeException(compiler, "$exponent: "
-            "Expected " + exponent->inspect() + " to have no units.");
-        }
-
-        // Exponentiating certain real numbers leads to special behaviors. Ensure that
-        // these behaviors are consistent for numbers within the precision limit.
-        auto baseValue = base->value();
-        auto expValue = exponent->value();
-        return SASS_MEMORY_NEW(Number, pstate,
-          std::pow(baseValue, expValue));
-
-
+        Number* base = arguments[0]->assertNumber(compiler, Strings::base);
+        Number* exponent = arguments[1]->assertNumber(compiler, Strings::exponent);
+        base->assertNumberStrictWithoutUnit(compiler, Strings::base);
+        exponent->assertNumberStrictWithoutUnit(compiler, Strings::exponent);
+        // Exponentiating certain real numbers leads to special behaviors. Ensure
+        // that these behaviors are consistent for numbers within the precision limit.
+        return SASS_MEMORY_NEW(Number, pstate, std::pow(base->value(), exponent->value()));
       }
 
       static BUILT_IN_FN(fnSqrt)
       {
-        auto number = arguments[0]->assertNumber(compiler, "number");
-        if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler, "$number: "
-            "Expected " + number->inspect() + " to have no units.");
-        }
-        return SASS_MEMORY_NEW(Number, pstate, std::sqrt(
-          number->value()));
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
+        number->assertNumberStrictWithoutUnit(compiler, Strings::number);
+        return SASS_MEMORY_NEW(Number, pstate, std::sqrt(number->value()));
       }
       
 
@@ -268,7 +247,7 @@ namespace Sass {
 
       static BUILT_IN_FN(unit)
       {
-        Number* number = arguments[0]->assertNumber(compiler, "number");
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         sass::string copy(number->unit());
         return SASS_MEMORY_NEW(String, pstate, std::move(copy), true);
       }
@@ -277,7 +256,7 @@ namespace Sass {
 
       static BUILT_IN_FN(isUnitless)
       {
-        Number* number = arguments[0]->assertNumber(compiler, "number");
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Boolean, pstate, !number->hasUnits());
       }
 
@@ -285,8 +264,8 @@ namespace Sass {
 
       static BUILT_IN_FN(percentage)
       {
-        Number* number = arguments[0]->assertNumber(compiler, "number");
-        number->assertUnitless(compiler, "number");
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
+        number->assertNumberStrictWithoutUnit(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
           number->value() * 100, "%");
       }
@@ -311,21 +290,9 @@ namespace Sass {
 
       static BUILT_IN_FN(fnCos)
       {
-        // if (arguments.size() > 1) throw Exception::TooManyArguments(compiler, arguments.size(), 1);
-        // else if (arguments.size() < 1) throw Exception::MissingArgument(compiler, str_angle);
-        // AstNode* simplified = arguments[0]->simplify(compiler);
-        // auto* number = dynamic_cast<Number*>(simplified);
-        // if (number == nullptr) return SASS_MEMORY_NEW(
-        //   Calculation, pstate, str_cos, { simplified });
-        // double factor = number->factorToUnits(unit_rad);
-        // if (factor == 0.0) throw Exception::NoAngleArgument(compiler, number, str_angle);
-        // auto result = std::cos(number->value() * factor);
-        // return SASS_MEMORY_NEW(Number, number->pstate(), result);
-
-
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
-        return SASS_MEMORY_NEW(Number, pstate,
-          std::cos(number->coerceToUnit(compiler, unit_rad, Strings::number)));
+        return SASS_MEMORY_NEW(Number, pstate, std::cos(number
+          ->coerceToUnit(compiler, unit_rad, Strings::number)));
       }
 
       /*******************************************************************/
@@ -333,8 +300,8 @@ namespace Sass {
       static BUILT_IN_FN(fnSin)
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
-        return SASS_MEMORY_NEW(Number, pstate,
-          std::sin(number->coerceToUnit(compiler, unit_rad, Strings::number)));
+        return SASS_MEMORY_NEW(Number, pstate, std::sin(number
+          ->coerceToUnit(compiler, unit_rad, Strings::number)));
       }
 
       /*******************************************************************/
@@ -342,67 +309,59 @@ namespace Sass {
       static BUILT_IN_FN(fnTan)
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
-        return SASS_MEMORY_NEW(Number, pstate,
-          std::tan(number->coerceToUnit(compiler, unit_rad, Strings::number)));
+        return SASS_MEMORY_NEW(Number, pstate, std::tan(number
+          ->coerceToUnit(compiler, unit_rad, Strings::number)));
       }
 
       /*******************************************************************/
 
       static BUILT_IN_FN(fnACos)
       {
-        auto number = arguments[0]->assertNumber(compiler, Strings::number);
-        if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler, "$number: "
-            "Expected " + number->inspect() + " to have no units.");
-        }
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
+        number->assertNumberStrictWithoutUnit(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
-          std::acos(number->value()) * 180 / PI, "deg");
+          std::acos(number->value()) * 180.0 / PI,
+          unit_deg); // Force number to have degrees
       }
 
       /*******************************************************************/
 
       static BUILT_IN_FN(fnASin)
       {
-        auto number = arguments[0]->assertNumber(compiler, Strings::number);
-        if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler, "$number: "
-            "Expected " + number->inspect() + " to have no units.");
-        }
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
+        number->assertNumberStrictWithoutUnit(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
-          std::asin(number->value()) * 180 / PI, "deg");
+          std::asin(number->value()) * 180.0 / PI,
+          unit_deg);
       }
 
       /*******************************************************************/
 
       static BUILT_IN_FN(fnATan)
       {
-        auto number = arguments[0]->assertNumber(compiler, Strings::number);
-        if (number->hasUnits()) {
-          throw Exception::RuntimeException(compiler, "$number: "
-            "Expected " + number->inspect() + " to have no units.");
-        }
+        Number* number = arguments[0]->assertNumber(compiler, Strings::number);
+        number->assertNumberStrictWithoutUnit(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
-          std::atan(number->value()) * 180 / PI, "deg");
+          std::atan(number->value()) * 180.0 / PI,
+          unit_deg);
       }
 
       /*******************************************************************/
 
       static BUILT_IN_FN(fnATan2)
       {
-        auto y = arguments[0]->assertNumber(compiler, "y");
-        auto x = arguments[1]->assertNumber(compiler, "x");
+        Number* y = arguments[0]->assertNumber(compiler, "y");
+        Number* x = arguments[1]->assertNumber(compiler, "x");
         if (y->hasUnits() != x->hasUnits()) {
           throw Exception::RuntimeException(compiler,
             "$x: " + x->inspect() + " and $y: " +
             y->inspect() + " have incompatible units " +
             "(one has units and the other doesn't).");
         }
-
         if (double factor = x->getUnitConversionFactor(y)) {
-          double result = std::atan2(y->value(), x->value() * factor) * 180 / PI;
-          return SASS_MEMORY_NEW(Number, pstate, result, "deg");
+          double result = std::atan2(y->value(), x->value() * factor) * 180.0 / PI;
+          return SASS_MEMORY_NEW(Number, pstate, result, unit_deg);
         }
-
         throw Exception::UnitMismatch(compiler, *y, *x);
       }
 

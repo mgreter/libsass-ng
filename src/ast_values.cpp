@@ -901,9 +901,53 @@ namespace Sass {
       logger, span, name);
   }
 
-  const Number* Number::assertUnitless(Logger& logger, const sass::string& name) const
+  // Asserts that [number] is a percentage or has no units, and normalizes the
+  // value. If [number] has no units, its value is clamped to be greater than `0`
+  // or less than [max] and returned. If [number] is a percentage, it's scaled to
+  // be within `0` and [max]. Otherwise, this throws a [SassScriptException].
+  // [name] is used to identify the argument in the error message.
+  double Number::assertPercentageOrUnitless(Logger& logger, double max, const sass::string& name) const
+  {
+    double rv = 0.0;
+    if (!hasUnits()) { rv = value(); }
+    else if (unit_percent == this) {
+      rv = max * value() / 100;
+    }
+    else {
+      CallStackFrame csf(logger, pstate());
+      throw Exception::RuntimeException(logger,
+        name + ": Expected " + inspect()
+        + " to have no units or \"%\".");
+    }
+    // if (value < 0.0) return 0.0;
+    // if (value > max) return max;
+    return rv;
+
+  }
+
+  Number* Number::assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name)
   {
     if (!hasUnits()) return this;
+    SourceSpan span(this->pstate());
+    CallStackFrame csf(logger, span);
+    throw Exception::SassScriptException(
+      "Expected " + inspect() + " to have no units.",
+      logger, span, name);
+  }
+
+  const Number* Number::assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name) const
+  {
+    if (!hasUnits()) return this;
+    SourceSpan span(this->pstate());
+    CallStackFrame csf(logger, span);
+    throw Exception::SassScriptException(
+      "Expected " + inspect() + " to have no units.",
+      logger, span, name);
+  }
+
+  void Number::assertNoUnits(Logger& logger, const sass::string& name) const
+  {
+    if (numerators.empty() && denominators.empty()) return;
     SourceSpan span(this->pstate());
     CallStackFrame csf(logger, span);
     throw Exception::SassScriptException(
@@ -921,15 +965,6 @@ namespace Sass {
       logger, span, name);
   }
 
-  void Number::assertNoUnits(Logger& logger, const sass::string& name) const
-  {
-    if (numerators.empty() && denominators.empty()) return;
-    SourceSpan span(this->pstate());
-    CallStackFrame csf(logger, span);
-    throw Exception::SassScriptException(
-      "Expected " + inspect() + " to have no units.",
-      logger, span, name);
-  }
 
   double Number::assertRange(double min, double max, const Units& units, Logger& logger, const sass::string& name) const
   {

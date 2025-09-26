@@ -87,7 +87,7 @@ namespace Sass {
         String* insert = arguments[1]->assertString(compiler, "insert");
         size_t len = Unicode::codePointCount(string->value());
         long index = arguments[2]->assertNumber(compiler, "index")
-          ->assertUnitless(compiler, "index")
+          ->assertNumberStrictWithoutUnit(compiler, "index")
           ->assertInt(compiler, "index");
 
         // str-insert has unusual behavior for negative inputs. It guarantees that
@@ -134,8 +134,8 @@ namespace Sass {
         const Number* beg = arguments[1]->assertNumber(compiler, "start-at");
         const Number* end = arguments[2]->assertNumber(compiler, "end-at");
         size_t len = Unicode::codePointCount(string->value());
-        beg = beg->assertUnitless(compiler, "start-at");
-        end = end->assertUnitless(compiler, "end-at");
+        beg = beg->assertNumberStrictWithoutUnit(compiler, "start-at");
+        end = end->assertNumberStrictWithoutUnit(compiler, "end-at");
         long begInt = beg->assertInt(compiler, "start-at");
         long endInt = end->assertInt(compiler, "end-at");
 

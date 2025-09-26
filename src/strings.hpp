@@ -477,6 +477,9 @@ namespace Sass {
     extern const sass::string lab;
     extern const sass::string lch;
 
+    extern const sass::string base;
+    extern const sass::string exponent;
+
     extern const sass::string deg;
     extern const sass::string red;
     extern const sass::string hue;
