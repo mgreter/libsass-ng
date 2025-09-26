@@ -874,6 +874,8 @@ namespace Sass {
 
     bool isSpecialNumber(bool withNoneKwd = false) const override final { return true; }
 
+    const Value* assertColorChannel(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
+
     // Implement interface for base Value class
     size_t hash() const override final;
 

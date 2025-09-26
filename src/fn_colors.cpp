@@ -982,7 +982,7 @@ namespace Sass {
 
         for (int i = 0; i < channels.size(); i++) {
 
-          channels[i]->assertColorChannel(ctx, Strings::red);
+          channels[i]->assertColorChannel(ctx, Strings::channels);
 
           // auto channel = channels[i];
           // 
