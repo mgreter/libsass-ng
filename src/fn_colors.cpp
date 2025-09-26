@@ -832,7 +832,7 @@ namespace Sass {
     )
     {
       // Get the list from the channels input variable (or throw)
-      ValueVector list = input->assertCommonListStyle(compiler, fname, true);
+      ValueVector list = input->assertCommonListStyle(compiler, Strings::channels, true);
 
       if (list.empty()) return { input, nullptr };
 
@@ -926,7 +926,7 @@ namespace Sass {
       String* spaceName = nullptr;
 
       // Get the list from the channels input variable (or throw)
-      ValueVector list = components->assertCommonListStyle(compiler, fname, false);
+      ValueVector list = components->assertCommonListStyle(compiler, Strings::channels, false);
 
       if (list.size() == 0) {
         throw Exception::SassScriptException(
