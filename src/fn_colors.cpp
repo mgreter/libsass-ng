@@ -80,8 +80,8 @@ namespace Sass {
     // "var(", "env(", "min(" or "max(".
     static bool isSpecialNumber(const Value* value)
     {
-      return value->isSpecialNumber();
       if (value == nullptr) return false;
+      return value->isSpecialNumber();
       if (/*const Calculation* calc = */value->isaCalculation()) {
         return true;
       }
