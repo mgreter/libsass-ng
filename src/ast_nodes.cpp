@@ -604,11 +604,12 @@ namespace Sass {
       logger, pstate(), name);
   }
 
-  const Value* Value::assertColorChannel(Logger& logger, const sass::string& name) const
+  const Value* Value::assertColorChannel(Logger& logger,
+    const sass::string& channel, const sass::string& name) const
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(logger, name,
-      "Expected " + name + " channel to be "
+      "Expected " + channel + " channel to be "
       "a number, was " + inspect() + ".");
   }
 

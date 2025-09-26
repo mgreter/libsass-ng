@@ -347,7 +347,7 @@ namespace Sass {
     double assertPercentageOrUnitless(Logger& logger, double max, const sass::string& name) const;
 
     // Sin
-    const Value* assertColorChannel(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
+    const Value* assertColorChannel(Logger& logger, const sass::string& channel, const sass::string& name = Strings::empty) const override final { return this; }
 
     const Number* assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name = Strings::empty) const;
 		Number* assertHasUnits(Logger& logger, const sass::string& unit, const sass::string& name = Strings::empty);
@@ -491,7 +491,7 @@ namespace Sass {
     // Implement type fetcher for base value class (throws in base implementation)
     String* assertString(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
 
-    const Value* assertColorChannel(Logger& logger, const sass::string& name = Strings::empty) const override final;
+    const Value* assertColorChannel(Logger& logger, const sass::string& channel, const sass::string& name = Strings::empty) const override final;
 
     // Implement type fetcher for base value class (throws in base implementation)
     const String* assertQuoted(Logger& logger, const sass::string& name = Strings::empty) const;
@@ -874,7 +874,7 @@ namespace Sass {
 
     bool isSpecialNumber(bool withNoneKwd = false) const override final { return true; }
 
-    const Value* assertColorChannel(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
+    const Value* assertColorChannel(Logger& logger, const sass::string& channel, const sass::string& name = Strings::empty) const override final { return this; }
 
     // Implement interface for base Value class
     size_t hash() const override final;

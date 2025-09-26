@@ -808,13 +808,13 @@ namespace Sass {
 
 
     Value* _parseNumberOrString(
-      Compiler& ctx,
+      Compiler& compiler,
       const SourceSpan& pstate,
       const sass::string& data)
     {
       SourceDataObj src = new SourceString(
         "sass://color", data);
-      ScssParser parser(ctx, src);
+      ScssParser parser(compiler, src);
       try {
         return parser.readSingleNumber();
       }
@@ -825,12 +825,12 @@ namespace Sass {
     }
 
     std::pair<ValueObj, ValueObj> _parseSlashChannels2(
-      Compiler& ctx, const SourceSpan& pstate,
+      Compiler& compiler, const SourceSpan& pstate,
       Value* input, const sass::string& fname
     )
     {
       // Get the list from the channels input variable (or throw)
-      ValueVector list = input->assertCommonListStyle(ctx, fname, true);
+      ValueVector list = input->assertCommonListStyle(compiler, fname, true);
 
       if (list.empty()) return { input, nullptr };
 
@@ -843,7 +843,7 @@ namespace Sass {
         // Otherwise throw an error
         else {
           throw Exception::TooManyColorSlashes(
-            ctx, *input, "channels");
+            compiler, *input, "channels");
         }
       }
 
@@ -856,8 +856,8 @@ namespace Sass {
           else if (parts.size() == 2) {
             auto initial = SASS_MEMORY_NEW(List, pstate, {
               list.begin(), list.end() - 1 }, SASS_SPACE);
-            initial->append(_parseNumberOrString(ctx, pstate, parts[0]));
-            return { initial, _parseNumberOrString(ctx, pstate, parts[1]) };
+            initial->append(_parseNumberOrString(compiler, pstate, parts[0]));
+            return { initial, _parseNumberOrString(compiler, pstate, parts[1]) };
           }
         }
       }
@@ -891,7 +891,7 @@ namespace Sass {
     Value* _parseChannels(const sass::string& fname,
       Value* input, sass::string name,
       const SourceSpan& pstate,
-      Compiler& ctx,
+      Compiler& compiler,
       const ColorSpace* space = nullptr)
     {
 
@@ -904,7 +904,7 @@ namespace Sass {
       }
 
       // If last can look like "1/none", which is passed as string
-      auto sp = _parseSlashChannels2(ctx, pstate, input, fname);
+      auto sp = _parseSlashChannels2(compiler, pstate, input, fname);
 
       // debug_ast(sp.first);
       // debug_ast(sp.second);
@@ -924,12 +924,12 @@ namespace Sass {
       String* spaceName = nullptr;
 
       // Get the list from the channels input variable (or throw)
-      ValueVector list = components->assertCommonListStyle(ctx, fname, false);
+      ValueVector list = components->assertCommonListStyle(compiler, fname, false);
 
       if (list.size() == 0) {
         throw Exception::SassScriptException(
           "Color component list may not be empty.",
-          ctx, pstate, "channels");
+          compiler, pstate, "channels");
       }
 
       if (String* str = list.front()->isaString()) {
@@ -950,10 +950,10 @@ namespace Sass {
         if (space == nullptr) {
           Value* first = list.front();
           list.erase(list.begin());
-          spaceName = first->assertString(ctx, fname);
-          spaceName->assertUnquoted(ctx, fname);
+          spaceName = first->assertString(compiler, fname);
+          spaceName->assertUnquoted(compiler, fname);
           if (isVar(spaceName) == false) {
-            space = ColorSpace::fromName(ctx, *spaceName);
+            space = ColorSpace::fromName(compiler, *spaceName);
           }
           // Move list to channels
           channels = std::move(list);
@@ -982,7 +982,8 @@ namespace Sass {
 
         for (int i = 0; i < channels.size(); i++) {
 
-          channels[i]->assertColorChannel(ctx, Strings::channels);
+          channels[i]->assertColorChannel(compiler,
+            space->_channels[i].name, Strings::channels);
 
           // auto channel = channels[i];
           // 
@@ -993,7 +994,7 @@ namespace Sass {
           // 
           //   throw Exception::SassScriptException(
           //     "Expected to be a number was",
-          //     ctx, pstate);
+          //     compiler, pstate);
           // }
         }
 
@@ -1032,8 +1033,8 @@ namespace Sass {
           if (!astr->hasQuotes() && astr->value() == "none") alpha.reset();
         }
         if (alpha.has_value()) {
-          Number* nr = alphaValue->assertNumber(ctx, name);
-          alpha = nr->assertPercentageOrUnitless(ctx, 1, Strings::alpha);
+          Number* nr = alphaValue->assertNumber(compiler, name);
+          alpha = nr->assertPercentageOrUnitless(compiler, 1, Strings::alpha);
           alpha = std::max(0.0, std::min(alpha.value(), 1.0));
         }
       }
@@ -1086,11 +1087,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       if (channels.size() != 3) {
         throw Exception::TooManyColorChannels(
-          ctx, *space, *input, "channels");
+          compiler, *space, *input, "channels");
       }
 
       auto rv = _colorFromChannels(
-        ctx, pstate, space,
+        compiler, pstate, space,
         channels[0]->isaNumber(),
         channels[1]->isaNumber(),
         channels[2]->isaNumber(),
@@ -1107,10 +1108,10 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       // _parseSlashChannels
       // std::cerr << "foobar\n";
       /*
-      ValueVector args = input->assertCommonListStyle(ctx, name, true);
+      ValueVector args = input->assertCommonListStyle(compiler, name, true);
 
-      StringObj spaceName = args[0]->assertString(ctx, name)->assertUnquoted(ctx, name);
-      auto space = ColorSpace::fromName(ctx, spaceName);
+      StringObj spaceName = args[0]->assertString(compiler, name)->assertUnquoted(compiler, name);
+      auto space = ColorSpace::fromName(compiler, spaceName);
       int startIdx = 1;
 
       Value* alphaValue = nullptr;
@@ -3457,229 +3458,229 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       /*******************************************************************/
 
-      void registerFunctions(Compiler& ctx)
+      void registerFunctions(Compiler& compiler)
       {
 
         // Some functions are stricter if called from module namespace
-        uint32_t idx_rgb_strict = ctx.createBuiltInOverloadFns(key_rgb, {
+        uint32_t idx_rgb_strict = compiler.createBuiltInOverloadFns(key_rgb, {
           std::make_pair("$red, $green, $blue, $alpha", fnRgb4arg),
           std::make_pair("$red, $green, $blue", fnRgb3arg),
           std::make_pair("$color, $alpha", fnRgb2arg),
           std::make_pair("$channels", fnRgb1arg),
         });
-        uint32_t idx_rgb_loose = ctx.createBuiltInOverloadFns(key_rgb, {
+        uint32_t idx_rgb_loose = compiler.createBuiltInOverloadFns(key_rgb, {
           std::make_pair("$red, $green, $blue, $alpha", rgb4arg),
           std::make_pair("$red, $green, $blue", rgb3arg),
           std::make_pair("$color, $alpha", rgb2arg),
           std::make_pair("$channels", rgb1arg),
           });
-        uint32_t idx_rgba_strict = ctx.createBuiltInOverloadFns(key_rgba, {
+        uint32_t idx_rgba_strict = compiler.createBuiltInOverloadFns(key_rgba, {
           std::make_pair("$red, $green, $blue, $alpha", fnRgba4arg),
           std::make_pair("$red, $green, $blue", fnRgba3arg),
           std::make_pair("$color, $alpha", fnRgba2arg),
           std::make_pair("$channels", fnRgba1arg),
         });
-        uint32_t idx_rgba_loose = ctx.createBuiltInOverloadFns(key_rgba, {
+        uint32_t idx_rgba_loose = compiler.createBuiltInOverloadFns(key_rgba, {
           std::make_pair("$red, $green, $blue, $alpha", rgba4arg),
           std::make_pair("$red, $green, $blue", rgba3arg),
           std::make_pair("$color, $alpha", rgba2arg),
           std::make_pair("$channels", rgba1arg),
         });
-        uint32_t idx_hsl_strict = ctx.createBuiltInOverloadFns(key_hsl, {
+        uint32_t idx_hsl_strict = compiler.createBuiltInOverloadFns(key_hsl, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsl4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsl3arg),
           std::make_pair("$hue, $saturation", fnHsl2arg),
           std::make_pair("$channels", fnHsl1arg),
         });
-        uint32_t idx_hsl_loose = ctx.createBuiltInOverloadFns(key_hsl, {
+        uint32_t idx_hsl_loose = compiler.createBuiltInOverloadFns(key_hsl, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsl4arg),
           std::make_pair("$hue, $saturation, $lightness", hsl3arg),
           std::make_pair("$hue, $saturation", hsl2arg),
           std::make_pair("$channels", hsl1arg),
         });
-        uint32_t idx_hsla_strict = ctx.createBuiltInOverloadFns(key_hsla, {
+        uint32_t idx_hsla_strict = compiler.createBuiltInOverloadFns(key_hsla, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", fnHsla4arg),
           std::make_pair("$hue, $saturation, $lightness", fnHsla3arg),
           std::make_pair("$hue, $saturation", fnHsla2arg),
           std::make_pair("$channels", fnHsla1arg),
         });
-        uint32_t idx_hsla_loose = ctx.createBuiltInOverloadFns(key_hsla, {
+        uint32_t idx_hsla_loose = compiler.createBuiltInOverloadFns(key_hsla, {
           std::make_pair("$hue, $saturation, $lightness, $alpha", hsla4arg),
           std::make_pair("$hue, $saturation, $lightness", hsla3arg),
           std::make_pair("$hue, $saturation", hsla2arg),
           std::make_pair("$channels", hsla1arg),
         });
-        uint32_t idx_hwb_strict = ctx.createBuiltInOverloadFns(key_hwb, {
+        uint32_t idx_hwb_strict = compiler.createBuiltInOverloadFns(key_hwb, {
           std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", fnHwb4arg),
           // std::make_pair("$hue, $whiteness, $blackness", fnHwb3arg),
           std::make_pair("$color, $alpha", fnHwb2arg),
           std::make_pair("$channels", fnHwb1arg),
         });
 
-        uint32_t idx_hwb_loose = ctx.createBuiltInOverloadFns(key_hwb, {
+        uint32_t idx_hwb_loose = compiler.createBuiltInOverloadFns(key_hwb, {
           // std::make_pair("$hue, $whiteness, $blackness, $alpha: 1", hwb4arg),
           // std::make_pair("$hue, $whiteness, $blackness", hwb3arg),
           // std::make_pair("$color, $alpha", hwb2arg),
           std::make_pair("$channels", hwb1arg),
         });
 
-        uint32_t idx_oklab_strict = ctx.createBuiltInFunction(key_oklab, "$channels", oklab);
-        uint32_t idx_oklch_strict = ctx.createBuiltInFunction(key_oklch, "$channels", oklch);
-        uint32_t idx_lab_strict = ctx.createBuiltInFunction(key_lab, "$channels", lab);
-        uint32_t idx_lch_strict = ctx.createBuiltInFunction(key_lch, "$channels", lch);
+        uint32_t idx_oklab_strict = compiler.createBuiltInFunction(key_oklab, "$channels", oklab);
+        uint32_t idx_oklch_strict = compiler.createBuiltInFunction(key_oklch, "$channels", oklch);
+        uint32_t idx_lab_strict = compiler.createBuiltInFunction(key_lab, "$channels", lab);
+        uint32_t idx_lch_strict = compiler.createBuiltInFunction(key_lch, "$channels", lch);
 
-        // uint32_t idx_hwba_strict = ctx.createBuiltInOverloadFns(key_hwba, {
+        // uint32_t idx_hwba_strict = compiler.createBuiltInOverloadFns(key_hwba, {
         //   std::make_pair("$hue, $whiteness, $blackness, $alpha", fnHwba4arg),
         //   std::make_pair("$hue, $whiteness, $blackness", fnHwba3arg),
         //   std::make_pair("$color, $alpha", fnHwba2arg),
         //   std::make_pair("$channels", fnHwba1arg),
         // });
-        // uint32_t idx_hwba_loose = ctx.createBuiltInOverloadFns(key_hwba, {
+        // uint32_t idx_hwba_loose = compiler.createBuiltInOverloadFns(key_hwba, {
         //   std::make_pair("$hue, $whiteness, $blackness, $alpha", hwba4arg),
         //   std::make_pair("$hue, $whiteness, $blackness", hwba3arg),
         //   std::make_pair("$color, $alpha", hwba2arg),
         //   std::make_pair("$channels", hwba1arg),
         // });
 
-        uint32_t idx_color = ctx.createBuiltInFunction(key_color, "$description", color);
-        uint32_t idx_is_legacy = ctx.createBuiltInFunction(key_is_legacy, "$color", isLegacy);
-        uint32_t idx_is_in_gamut = ctx.createBuiltInFunction(key_is_in_gamut, "$color, $space: null", isInGamut);
+        uint32_t idx_color = compiler.createBuiltInFunction(key_color, "$description", color);
+        uint32_t idx_is_legacy = compiler.createBuiltInFunction(key_is_legacy, "$color", isLegacy);
+        uint32_t idx_is_in_gamut = compiler.createBuiltInFunction(key_is_in_gamut, "$color, $space: null", isInGamut);
 
-        uint32_t idx_channel = ctx.createBuiltInFunction(key_channel, "$color, $channel, $space: null", channel);
-        uint32_t idx_is_powerless = ctx.createBuiltInFunction(key_is_powerless, "$color, $channel, $space: null", isPowerless);
+        uint32_t idx_channel = compiler.createBuiltInFunction(key_channel, "$color, $channel, $space: null", channel);
+        uint32_t idx_is_powerless = compiler.createBuiltInFunction(key_is_powerless, "$color, $channel, $space: null", isPowerless);
 
-        uint32_t idx_space = ctx.createBuiltInFunction(key_space, "$color", space);
-        uint32_t idx_to_space = ctx.createBuiltInFunction(key_to_space, "$color, $space", toSpace);
-        uint32_t idx_is_missing = ctx.createBuiltInFunction(key_is_missing, "$color, $channel", isMissing);
+        uint32_t idx_space = compiler.createBuiltInFunction(key_space, "$color", space);
+        uint32_t idx_to_space = compiler.createBuiltInFunction(key_to_space, "$color, $space", toSpace);
+        uint32_t idx_is_missing = compiler.createBuiltInFunction(key_is_missing, "$color, $channel", isMissing);
 
-        uint32_t idx_same = ctx.createBuiltInFunction(key_same, "$color1, $color2", same);
-
-
-        uint32_t idx_red = ctx.createBuiltInFunction(key_red, "$color", red);
-        uint32_t idx_green = ctx.createBuiltInFunction(key_green, "$color", green);
-        uint32_t idx_blue = ctx.createBuiltInFunction(key_blue, "$color", blue);
-        uint32_t idx_hue = ctx.createBuiltInFunction(key_hue, "$color", hue);
-        uint32_t idx_lightness = ctx.createBuiltInFunction(key_lightness, "$color", lightness);
-        uint32_t idx_saturation = ctx.createBuiltInFunction(key_saturation, "$color", saturation);
-        uint32_t idx_blackness = ctx.createBuiltInFunction(key_blackness, "$color", blackness);
-        uint32_t idx_whiteness = ctx.createBuiltInFunction(key_whiteness, "$color", whiteness);
-
-        // uint32_t idx_invert_strict = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", fnInvert);
-        // uint32_t idx_invert_loose = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
-        uint32_t idx_invert = ctx.createBuiltInFunction(key_invert, "$color, $weight: 100%, $space: null", invert);
-        // uint32_t idx_grayscale_strict = ctx.createBuiltInFunction(key_grayscale, "$color", noGrayscale);
-        uint32_t idx_grayscale = ctx.createBuiltInFunction(key_grayscale, "$color", grayscale);
-        uint32_t idx_complement = ctx.createBuiltInFunction(key_complement, "$color, $space: null", complement);
-        // uint32_t idx_desaturate_strict = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", noDesaturate);
-        // uint32_t idx_desaturate_loose = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
-        // uint32_t idx_saturate_strict = ctx.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate);
+        uint32_t idx_same = compiler.createBuiltInFunction(key_same, "$color1, $color2", same);
 
 
-        uint32_t global_saturate = ctx.createBuiltInOverloadFns(key_saturate, {
+        uint32_t idx_red = compiler.createBuiltInFunction(key_red, "$color", red);
+        uint32_t idx_green = compiler.createBuiltInFunction(key_green, "$color", green);
+        uint32_t idx_blue = compiler.createBuiltInFunction(key_blue, "$color", blue);
+        uint32_t idx_hue = compiler.createBuiltInFunction(key_hue, "$color", hue);
+        uint32_t idx_lightness = compiler.createBuiltInFunction(key_lightness, "$color", lightness);
+        uint32_t idx_saturation = compiler.createBuiltInFunction(key_saturation, "$color", saturation);
+        uint32_t idx_blackness = compiler.createBuiltInFunction(key_blackness, "$color", blackness);
+        uint32_t idx_whiteness = compiler.createBuiltInFunction(key_whiteness, "$color", whiteness);
+
+        // uint32_t idx_invert_strict = compiler.createBuiltInFunction(key_invert, "$color, $weight: 100%", fnInvert);
+        // uint32_t idx_invert_loose = compiler.createBuiltInFunction(key_invert, "$color, $weight: 100%", invert);
+        uint32_t idx_invert = compiler.createBuiltInFunction(key_invert, "$color, $weight: 100%, $space: null", invert);
+        // uint32_t idx_grayscale_strict = compiler.createBuiltInFunction(key_grayscale, "$color", noGrayscale);
+        uint32_t idx_grayscale = compiler.createBuiltInFunction(key_grayscale, "$color", grayscale);
+        uint32_t idx_complement = compiler.createBuiltInFunction(key_complement, "$color, $space: null", complement);
+        // uint32_t idx_desaturate_strict = compiler.createBuiltInFunction(key_desaturate, "$color, $amount", noDesaturate);
+        // uint32_t idx_desaturate_loose = compiler.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
+        // uint32_t idx_saturate_strict = compiler.createBuiltInFunction(key_saturate, "$color, $amount", noSaturate);
+
+
+        uint32_t global_saturate = compiler.createBuiltInOverloadFns(key_saturate, {
           std::make_pair("$amount", saturate1arg),
           std::make_pair("$color, $amount", saturate2),
         });
 
-        uint32_t idx_desaturate = ctx.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
-        uint32_t idx_saturate = ctx.createBuiltInFunction(key_saturate, "$color, $amount", saturate2);
+        uint32_t idx_desaturate = compiler.createBuiltInFunction(key_desaturate, "$color, $amount", desaturate);
+        uint32_t idx_saturate = compiler.createBuiltInFunction(key_saturate, "$color, $amount", saturate2);
 
-        // uint32_t idx_lighten_strict = ctx.createBuiltInFunction(key_lighten, "$color, $amount", noLighten);
-        // uint32_t idx_lighten_loose = ctx.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
+        // uint32_t idx_lighten_strict = compiler.createBuiltInFunction(key_lighten, "$color, $amount", noLighten);
+        // uint32_t idx_lighten_loose = compiler.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
 
-        // uint32_t idx_darken_strict = ctx.createBuiltInFunction(key_darken, "$color, $amount", noDarken);
-        // uint32_t idx_darken_loose = ctx.createBuiltInFunction(key_darken, "$color, $amount", darken);
+        // uint32_t idx_darken_strict = compiler.createBuiltInFunction(key_darken, "$color, $amount", noDarken);
+        // uint32_t idx_darken_loose = compiler.createBuiltInFunction(key_darken, "$color, $amount", darken);
 
-        uint32_t idx_darken = ctx.createBuiltInFunction(key_darken, "$color, $amount", darken);
-        uint32_t idx_lighten = ctx.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
+        uint32_t idx_darken = compiler.createBuiltInFunction(key_darken, "$color, $amount", darken);
+        uint32_t idx_lighten = compiler.createBuiltInFunction(key_lighten, "$color, $amount", lighten);
 
-        // uint32_t idx_adjust_hue_strict = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue);
+        // uint32_t idx_adjust_hue_strict = compiler.createBuiltInFunction(key_adjust_hue, "$color, $degrees", noAdjustHue);
 
-        uint32_t idx_adjust_hue = ctx.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
-        // uint32_t idx_adjust = ctx.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust);
+        uint32_t idx_adjust_hue = compiler.createBuiltInFunction(key_adjust_hue, "$color, $degrees", adjustHue);
+        // uint32_t idx_adjust = compiler.registerBuiltInFunction(key_adjust_color, "$color, $kwargs...", adjust);
 
-        uint32_t idx_scale = ctx.createBuiltInFunction(key_scale, "$color, $kwargs...", scale);
-        uint32_t idx_adjust = ctx.createBuiltInFunction(key_adjust, "$color, $kwargs...", adjust);
-        uint32_t idx_change = ctx.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
-        // uint32_t idx_scale = ctx.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale);
-        uint32_t idx_mix = ctx.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%, $method: null", mix);
-
-
-        uint32_t idx_to_gamut = ctx.createBuiltInFunction(key_to_gamut, "$color, $space: null, $method: null", toGamut);
+        uint32_t idx_scale = compiler.createBuiltInFunction(key_scale, "$color, $kwargs...", scale);
+        uint32_t idx_adjust = compiler.createBuiltInFunction(key_adjust, "$color, $kwargs...", adjust);
+        uint32_t idx_change = compiler.registerBuiltInFunction(key_change_color, "$color, $kwargs...", change);
+        // uint32_t idx_scale = compiler.registerBuiltInFunction(key_scale_color, "$color, $kwargs...", scale);
+        uint32_t idx_mix = compiler.registerBuiltInFunction(key_mix, "$color1, $color2, $weight: 50%, $method: null", mix);
 
 
-        uint32_t idx_fade_in = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", opacify);
-        uint32_t idx_opacify = ctx.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
-        uint32_t idx_fade_out = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
-        uint32_t idx_transparentize = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
+        uint32_t idx_to_gamut = compiler.createBuiltInFunction(key_to_gamut, "$color, $space: null, $method: null", toGamut);
 
-        uint32_t idx_fade_in_strict = ctx.createBuiltInFunction(key_fade_in, "$color, $amount", noFadeIn);
-        uint32_t idx_opacify_strict = ctx.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify);
-        uint32_t idx_fade_out_strict = ctx.createBuiltInFunction(key_fade_out, "$color, $amount", noFadeOut);
-        uint32_t idx_transparentize_strict = ctx.createBuiltInFunction(key_transparentize, "$color, $amount", noTansparentize);
 
-        uint32_t idx_ie_hex_str = ctx.createBuiltInFunction(key_ie_hex_str, "$color", ieHexStr);
+        uint32_t idx_fade_in = compiler.createBuiltInFunction(key_fade_in, "$color, $amount", opacify);
+        uint32_t idx_opacify = compiler.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
+        uint32_t idx_fade_out = compiler.createBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
+        uint32_t idx_transparentize = compiler.createBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
 
-        uint32_t idx_alpha = ctx.createBuiltInOverloadFns(key_alpha, {
+        uint32_t idx_fade_in_strict = compiler.createBuiltInFunction(key_fade_in, "$color, $amount", noFadeIn);
+        uint32_t idx_opacify_strict = compiler.createBuiltInFunction(key_opacify, "$color, $amount", noOpacify);
+        uint32_t idx_fade_out_strict = compiler.createBuiltInFunction(key_fade_out, "$color, $amount", noFadeOut);
+        uint32_t idx_transparentize_strict = compiler.createBuiltInFunction(key_transparentize, "$color, $amount", noTansparentize);
+
+        uint32_t idx_ie_hex_str = compiler.createBuiltInFunction(key_ie_hex_str, "$color", ieHexStr);
+
+        uint32_t idx_alpha = compiler.createBuiltInOverloadFns(key_alpha, {
           // This does not give deprecations
           std::make_pair("$color", alphaOne),
           std::make_pair("$args...", alphaAny),
           });
-        uint32_t idx_opacity_strict = ctx.createBuiltInFunction(key_opacity, "$color", noOpacity);
-        uint32_t idx_opacity_loose = ctx.createBuiltInFunction(key_opacity, "$color", opacity);
+        uint32_t idx_opacity_strict = compiler.createBuiltInFunction(key_opacity, "$color", noOpacity);
+        uint32_t idx_opacity_loose = compiler.createBuiltInFunction(key_opacity, "$color", opacity);
 
-        ctx.exposeFunction(key_rgb, idx_rgb_loose);
-        ctx.exposeFunction(key_rgba, idx_rgba_loose);
-        ctx.exposeFunction(key_hsl, idx_hsl_loose);
-        ctx.exposeFunction(key_hsla, idx_hsla_loose);
-        ctx.exposeFunction(key_hwb, idx_hwb_loose);
+        compiler.exposeFunction(key_rgb, idx_rgb_loose);
+        compiler.exposeFunction(key_rgba, idx_rgba_loose);
+        compiler.exposeFunction(key_hsl, idx_hsl_loose);
+        compiler.exposeFunction(key_hsla, idx_hsla_loose);
+        compiler.exposeFunction(key_hwb, idx_hwb_loose);
 
-        ctx.exposeFunction(key_oklab, idx_oklab_strict);
-        ctx.exposeFunction(key_oklch, idx_oklch_strict);
-        ctx.exposeFunction(key_lab, idx_lab_strict);
-        ctx.exposeFunction(key_lch, idx_lch_strict);
+        compiler.exposeFunction(key_oklab, idx_oklab_strict);
+        compiler.exposeFunction(key_oklch, idx_oklch_strict);
+        compiler.exposeFunction(key_lab, idx_lab_strict);
+        compiler.exposeFunction(key_lch, idx_lch_strict);
 
-        // ctx.exposeFunction(key_hwba, idx_hwba_loose);
-        ctx.exposeFunction(key_space, idx_space);
-        ctx.exposeFunction(key_color, idx_color);
+        // compiler.exposeFunction(key_hwba, idx_hwba_loose);
+        compiler.exposeFunction(key_space, idx_space);
+        compiler.exposeFunction(key_color, idx_color);
 
-        // ctx.exposeFunction(key_same, idx_same); // not exposed
+        // compiler.exposeFunction(key_same, idx_same); // not exposed
         
-        ctx.exposeFunction(key_red, idx_red);
-        ctx.exposeFunction(key_green, idx_green);
-        ctx.exposeFunction(key_blue, idx_blue);
-        ctx.exposeFunction(key_hue, idx_hue);
-        ctx.exposeFunction(key_lightness, idx_lightness);
-        ctx.exposeFunction(key_saturation, idx_saturation);
-        ctx.exposeFunction(key_blackness, idx_blackness);
-        ctx.exposeFunction(key_whiteness, idx_whiteness);
-        ctx.exposeFunction(key_invert, idx_invert);
-        ctx.exposeFunction(key_grayscale, idx_grayscale);
-        ctx.exposeFunction(key_complement, idx_complement);
-        // ctx.exposeFunction(key_desaturate, idx_desaturate_loose);
-        // ctx.exposeFunction(key_saturate, idx_saturate_loose);
-        ctx.exposeFunction(key_desaturate, idx_desaturate);
-        ctx.exposeFunction(key_saturate, global_saturate);
-        // ctx.exposeFunction(key_lighten, idx_lighten_loose);
-        ctx.exposeFunction(key_darken, idx_darken);
-        ctx.exposeFunction(key_lighten, idx_lighten);
-        ctx.exposeFunction(key_adjust_hue, idx_adjust_hue);
+        compiler.exposeFunction(key_red, idx_red);
+        compiler.exposeFunction(key_green, idx_green);
+        compiler.exposeFunction(key_blue, idx_blue);
+        compiler.exposeFunction(key_hue, idx_hue);
+        compiler.exposeFunction(key_lightness, idx_lightness);
+        compiler.exposeFunction(key_saturation, idx_saturation);
+        compiler.exposeFunction(key_blackness, idx_blackness);
+        compiler.exposeFunction(key_whiteness, idx_whiteness);
+        compiler.exposeFunction(key_invert, idx_invert);
+        compiler.exposeFunction(key_grayscale, idx_grayscale);
+        compiler.exposeFunction(key_complement, idx_complement);
+        // compiler.exposeFunction(key_desaturate, idx_desaturate_loose);
+        // compiler.exposeFunction(key_saturate, idx_saturate_loose);
+        compiler.exposeFunction(key_desaturate, idx_desaturate);
+        compiler.exposeFunction(key_saturate, global_saturate);
+        // compiler.exposeFunction(key_lighten, idx_lighten_loose);
+        compiler.exposeFunction(key_darken, idx_darken);
+        compiler.exposeFunction(key_lighten, idx_lighten);
+        compiler.exposeFunction(key_adjust_hue, idx_adjust_hue);
 
-        ctx.exposeFunction(key_scale_color, idx_scale);
-        ctx.exposeFunction(key_adjust_color, idx_adjust);
-        ctx.exposeFunction(key_change_color, idx_change);
+        compiler.exposeFunction(key_scale_color, idx_scale);
+        compiler.exposeFunction(key_adjust_color, idx_adjust);
+        compiler.exposeFunction(key_change_color, idx_change);
 
-        ctx.exposeFunction(key_mix, idx_mix);
-        ctx.exposeFunction(key_to_gamut, idx_to_gamut);
+        compiler.exposeFunction(key_mix, idx_mix);
+        compiler.exposeFunction(key_to_gamut, idx_to_gamut);
 
-        ctx.exposeFunction(key_opacify, idx_opacify);
-        ctx.exposeFunction(key_fade_in, idx_fade_in);
-        ctx.exposeFunction(key_fade_out, idx_fade_out);
-        ctx.exposeFunction(key_transparentize, idx_transparentize);
-        ctx.exposeFunction(key_ie_hex_str, idx_ie_hex_str);
-        ctx.exposeFunction(key_alpha, idx_alpha);
-        ctx.exposeFunction(key_opacity, idx_opacity_loose);
+        compiler.exposeFunction(key_opacify, idx_opacify);
+        compiler.exposeFunction(key_fade_in, idx_fade_in);
+        compiler.exposeFunction(key_fade_out, idx_fade_out);
+        compiler.exposeFunction(key_transparentize, idx_transparentize);
+        compiler.exposeFunction(key_ie_hex_str, idx_ie_hex_str);
+        compiler.exposeFunction(key_alpha, idx_alpha);
+        compiler.exposeFunction(key_opacity, idx_opacity_loose);
 
-        BuiltInMod& module(ctx.createModule("color"));
+        BuiltInMod& module(compiler.createModule("color"));
 
         module.addFunction(key_space, idx_space);
         module.addFunction(key_to_space, idx_to_space);

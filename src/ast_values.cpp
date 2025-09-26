@@ -1281,11 +1281,12 @@ namespace Sass {
       "Expected " + inspect() + " to be an unquoted string.");
   }
 
-  const Value* String::assertColorChannel(Logger& logger, const sass::string& name) const
+  const Value* String::assertColorChannel(Logger& logger,
+    const sass::string& channel, const sass::string& name) const
   {
     if (isSpecialNumber(true)) return this;
     // Base will always throw and never returns
-    return Value::assertColorChannel(logger, name);
+    return Value::assertColorChannel(logger, channel, name);
   }
 
   const String* String::assertQuoted(Logger& logger, const sass::string& name) const
