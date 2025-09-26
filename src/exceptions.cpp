@@ -274,7 +274,7 @@ namespace Sass {
     {}
 
     NoAngleArgument::NoAngleArgument(BackTraces traces, const Value* value, const sass::string& name)
-      : RuntimeException(traces, "$" + name + ": Expected " + value->toString() + " to have an angle unit (deg, grad, rad, turn).")
+      : SassScriptException(traces, name, "Expected " + value->toString() + " to have an angle unit (deg, grad, rad, turn).")
     {}
 
     MustHaveArguments::MustHaveArguments(BackTraces traces, const sass::string& name)

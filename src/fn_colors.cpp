@@ -37,13 +37,14 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    static double coerceToDeg(Logger& logger, const Number* number)
+    static double coerceToDeg(Logger& logger, const Number* number,
+      const sass::string& name = Strings::empty)
     {
       // Returns conversion factor `0` if not convertible
       if (double factor = number->getUnitConversionFactor(unit_deg)) {
         return number->value() * factor;
       }
-      throw Exception::NoAngleArgument(logger, number, str_angle);
+      throw Exception::NoAngleArgument(logger, number, name);
     }
 
     /////////////////////////////////////////////////////////////////////////
@@ -678,7 +679,8 @@ namespace Sass {
       }
       else {
         // Coerce into degrees
-        return absmod(coerceToDeg(logger, chnValue), 360.0);
+        return absmod(coerceToDeg(logger, chnValue,
+          chnInfo.name), 360.0);
       }
     }
 

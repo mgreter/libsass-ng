@@ -285,7 +285,7 @@ namespace Sass {
         TooManyArguments(BackTraces traces, const ValueFlatMap* superfluous);
     };
 
-    class NoAngleArgument : public RuntimeException {
+    class NoAngleArgument : public SassScriptException {
     public:
       NoAngleArgument(BackTraces traces, const Value* value, const sass::string& name);
     };
