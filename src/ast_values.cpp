@@ -914,10 +914,10 @@ namespace Sass {
       rv = max * value() / 100;
     }
     else {
-      CallStackFrame csf(logger, pstate());
-      throw Exception::RuntimeException(logger,
-        name + ": Expected " + inspect()
-        + " to have no units or \"%\".");
+      SourceSpan span(this->pstate());
+      CallStackFrame csf(logger, span);
+      throw Exception::SassScriptException(logger, name,
+        "Expected " + inspect() + " to have unit \"%\" or no units.");
     }
     // if (value < 0.0) return 0.0;
     // if (value > max) return max;
@@ -930,9 +930,8 @@ namespace Sass {
     if (!hasUnits()) return this;
     SourceSpan span(this->pstate());
     CallStackFrame csf(logger, span);
-    throw Exception::SassScriptException(
-      "Expected " + inspect() + " to have no units.",
-      logger, span, name);
+    throw Exception::SassScriptException(logger, name,
+      "Expected " + inspect() + " to have no units.");
   }
 
   const Number* Number::assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name) const
@@ -940,9 +939,8 @@ namespace Sass {
     if (!hasUnits()) return this;
     SourceSpan span(this->pstate());
     CallStackFrame csf(logger, span);
-    throw Exception::SassScriptException(
-      "Expected " + inspect() + " to have no units.",
-      logger, span, name);
+    throw Exception::SassScriptException(logger, name,
+      "Expected " + inspect() + " to have no units.");
   }
 
   void Number::assertNoUnits(Logger& logger, const sass::string& name) const
@@ -950,9 +948,8 @@ namespace Sass {
     if (numerators.empty() && denominators.empty()) return;
     SourceSpan span(this->pstate());
     CallStackFrame csf(logger, span);
-    throw Exception::SassScriptException(
-      "Expected " + inspect() + " to have no units.",
-      logger, span, name);
+    throw Exception::SassScriptException(logger, name,
+      "Expected " + inspect() + " to have no units.");
   }
 
   Number* Number::assertHasUnits(Logger& logger, const sass::string& unit, const sass::string& name)
@@ -960,9 +957,8 @@ namespace Sass {
     if (hasUnit(unit)) return this;
     SourceSpan span(this->pstate());
     CallStackFrame csf(logger, span);
-    throw Exception::SassScriptException(
-      "Expected " + inspect() + " to have unit \"" + unit + "\".",
-      logger, span, name);
+    throw Exception::SassScriptException(logger, name,
+      "Expected " + inspect() + " to have unit \"" + unit + "\".");
   }
 
 
@@ -976,7 +972,7 @@ namespace Sass {
       SourceSpan span(this->pstate());
       CallStackFrame csf(logger, span);
       throw Exception::SassScriptException(
-        msg.str(), logger, span, name);
+        logger, name, msg.str());
     }
     return value_;
   }
