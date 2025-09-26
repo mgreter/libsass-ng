@@ -588,6 +588,10 @@ namespace Sass {
     // Assert and return a calculation value or throws if incompatible
     virtual Calculation* assertCalculation(Logger& logger, const sass::string& name = Strings::empty);
 
+    virtual const Value* assertColorChannel(Logger& logger, const sass::string& name = Strings::empty) const;
+
+    virtual bool isSpecialNumber(bool withNoneKwd = false) const { return false; }
+
     // Assert and return a mixin value or throws if incompatible
     virtual Mixin* assertMixin(Logger& logger, const sass::string& name = Strings::empty);
 

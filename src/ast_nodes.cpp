@@ -604,6 +604,14 @@ namespace Sass {
       logger, pstate(), name);
   }
 
+  const Value* Value::assertColorChannel(Logger& logger, const sass::string& name) const
+  {
+    CallStackFrame csf(logger, pstate());
+    throw Exception::SassScriptException(logger, name,
+      "Expected " + name + " channel to be "
+      "a number, was " + inspect() + ".");
+  }
+
   // Assert and return a mixin value or throws if incompatible
   Mixin* Value::assertMixin(Logger& logger, const sass::string& name)
   {

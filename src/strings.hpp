@@ -478,6 +478,8 @@ namespace Sass {
     extern const sass::string lch;
 
     extern const sass::string base;
+    extern const sass::string channel;
+    extern const sass::string channels;
     extern const sass::string exponent;
 
     extern const sass::string deg;

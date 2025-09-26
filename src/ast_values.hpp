@@ -346,6 +346,9 @@ namespace Sass {
     // [name] is used to identify the argument in the error message.
     double assertPercentageOrUnitless(Logger& logger, double max, const sass::string& name) const;
 
+    // Sin
+    const Value* assertColorChannel(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
+
     const Number* assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name = Strings::empty) const;
 		Number* assertHasUnits(Logger& logger, const sass::string& unit, const sass::string& name = Strings::empty);
     void assertNoUnits(Logger& logger, const sass::string& name = Strings::empty) const;
@@ -483,12 +486,17 @@ namespace Sass {
     // Implement same class compare operator
     bool operator==(const String& rhs) const;
 
+    bool isSpecialNumber(bool withNoneKwd = false) const override final;
+
     // Implement type fetcher for base value class (throws in base implementation)
     String* assertString(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
+
+    const Value* assertColorChannel(Logger& logger, const sass::string& name = Strings::empty) const override final;
 
     // Implement type fetcher for base value class (throws in base implementation)
     const String* assertQuoted(Logger& logger, const sass::string& name = Strings::empty) const;
     const String* assertUnquoted(Logger& logger, const sass::string& name = Strings::empty) const;
+
 
     // Implement some operations for base value class
     Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
@@ -864,11 +872,14 @@ namespace Sass {
     bool isBlank() const override final { return false; }
     bool isTruthy() const override final { return true; }
 
+    bool isSpecialNumber(bool withNoneKwd = false) const override final { return true; }
+
     // Implement interface for base Value class
     size_t hash() const override final;
 
     SassValueType getTag() const override final { return SASS_CALCULATION; }
     const sass::string& type() const override final { return Strings::calculation; }
+
 
     // Implement equality comparators for base value class
     bool operator==(const Value& rhs) const override final;

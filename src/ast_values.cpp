@@ -1242,6 +1242,21 @@ namespace Sass {
     return value() == rhs.value();
   }
 
+  bool String::isSpecialNumber(bool withNoneKwd) const
+  {
+    if (hasQuotes()) return false;
+    // We may allow the special none keyword for color channels
+    if (withNoneKwd && StringUtils::equalsIgnoreCase(value(), "none", 4)) return true;
+    // if (value().size() < 6) return false;
+    return StringUtils::startsWithIgnoreCase(value(), "calc(", 5)
+        || StringUtils::startsWithIgnoreCase(value(), "var(", 4)
+        || StringUtils::startsWithIgnoreCase(value(), "env(", 4)
+        || StringUtils::startsWithIgnoreCase(value(), "min(", 4)
+        || StringUtils::startsWithIgnoreCase(value(), "max(", 4)
+        || StringUtils::startsWithIgnoreCase(value(), "attr(", 5)
+        || StringUtils::startsWithIgnoreCase(value(), "clamp(", 6);
+  }
+
   bool String::isVar() const
   {
     return !hasQuotes_ && value_.size() > 7 &&
@@ -1264,6 +1279,13 @@ namespace Sass {
     logger.callStack.push_back(pstate());
     throw Exception::SassScriptException(logger, pstate_,
       "Expected " + inspect() + " to be an unquoted string.");
+  }
+
+  const Value* String::assertColorChannel(Logger& logger, const sass::string& name) const
+  {
+    if (isSpecialNumber(true)) return this;
+    // Base will always throw and never returns
+    return Value::assertColorChannel(logger, name);
   }
 
   const String* String::assertQuoted(Logger& logger, const sass::string& name) const

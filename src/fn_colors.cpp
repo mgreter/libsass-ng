@@ -79,6 +79,7 @@ namespace Sass {
     // "var(", "env(", "min(" or "max(".
     static bool isSpecialNumber(const Value* value)
     {
+      return value->isSpecialNumber();
       if (value == nullptr) return false;
       if (/*const Calculation* calc = */value->isaCalculation()) {
         return true;
@@ -980,17 +981,20 @@ namespace Sass {
         }
 
         for (int i = 0; i < channels.size(); i++) {
-          auto channel = channels[i];
-          if (!isSpecialNumber(channel) &&
-            !channel->isaNumber() &&
-            !isNone(channel)) {
 
-            auto qwe = isNone(channel);
+          channels[i]->assertColorChannel(ctx, Strings::red);
 
-            throw Exception::SassScriptException(
-              "Expected to be a number was",
-              ctx, pstate);
-          }
+          // auto channel = channels[i];
+          // 
+          // if (!isSpecialNumber(channel) &&
+          //   !channel->isaNumber() &&
+          //   !isNone(channel)) {
+          // 
+          // 
+          //   throw Exception::SassScriptException(
+          //     "Expected to be a number was",
+          //     ctx, pstate);
+          // }
         }
 
       }
