@@ -24,6 +24,7 @@
 #include <limits>
 
 #include "environment.hpp"
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -275,6 +276,10 @@ namespace Sass {
     // Get reference to positional arguments in the result object
     // Multiple calls to the same function may re-use the object
     ValueVector& positional(results.positional());
+
+    // std::cerr << "positional " << VecToString2(positional) << "\n";
+    // std::cerr << "parameters " << VecToString2(parameters) << "\n";
+    // std::cerr << "positional " << VecToString2(results.named()) << "\n";
 
     // Needed here for a specific edge case: restargs must be consumed
     // Those can be consumed e.g. by passing them to other functions

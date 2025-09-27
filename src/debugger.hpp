@@ -64,7 +64,7 @@ sass::string VecToString2(sass::vector<T> exts) {
   bool joiner = false;
   for (auto& entry : exts) {
     if (joiner) msg += ", ";
-    msg += entry->inspect();
+    msg += entry->toString();
     joiner = true;
   }
   return msg + "]";

@@ -314,7 +314,7 @@ namespace Sass {
       argument = arguments_[i];
       if (i < evaluated.positional().size()) {
         if (evaluated.hasNamed(argument->name())) {
-          return false;
+          // return false;
         }
       }
       else if (evaluated.hasNamed(argument->name())) {
