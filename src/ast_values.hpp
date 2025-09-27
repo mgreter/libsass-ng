@@ -167,19 +167,15 @@ namespace Sass {
 
     // Implement interface for base Value class
     virtual size_t hash() const override = 0;
-    SassValueType getTag() const override final { return SASS_COLOR; }
-    const sass::string& type() const override final { return Strings::color; }
+    SassValueType getTag() const override { return SASS_COLOR; }
+    const sass::string& type() const override { return Strings::color; }
 
     // Implement some operations for base value class
-    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-
-    // Implement type fetcher for base value class (throws in base implementation)
-    Color* assertColor2(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
-    const Color* assertColor(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
+    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
+    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
+    Value* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
+    Value* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
 
     // Main entry point for Value Visitor pattern
     void accept(ValueVisitor<void>* visitor) override final {

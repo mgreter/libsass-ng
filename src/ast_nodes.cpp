@@ -495,23 +495,6 @@ namespace Sass {
   }
 
   // Assert and return a color or throws if incompatible
-  const Color* Value::assertColor(Logger& logger, const sass::string& name) const
-  {
-    CallStackFrame csf(logger, pstate());
-    throw Exception::SassScriptException(
-      toString() + " is not a color.",
-      logger, pstate(), name);
-  }
-
-  Color* Value::assertColor2(Logger& logger, const sass::string& name)
-  {
-    CallStackFrame csf(logger, pstate());
-    throw Exception::SassScriptException(
-      toString() + " is not a color.",
-      logger, pstate(), name);
-  }
-
-  // Assert and return a color or throws if incompatible
   const ColorSpaced* Value::assertColorSpaced(Logger& logger, const sass::string& name) const
   {
     CallStackFrame csf(logger, pstate());

@@ -373,6 +373,45 @@ namespace Sass {
       logger, pstate, this, other, "%%");
   }
 
+  Value* ColorSpaced::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  {
+    if (other->isaNumber() || other->isaColor()) {
+      throw Exception::UndefinedOperation(
+        logger, pstate, this, other, "+");
+    }
+    return Value::plus(other, logger, pstate);
+  }
+
+  Value* ColorSpaced::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  {
+    if (other->isaNumber() || other->isaColor()) {
+      throw Exception::UndefinedOperation(
+        logger, pstate, this, other, "-");
+    }
+    return Value::minus(other, logger, pstate);
+  }
+
+  Value* ColorSpaced::dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  {
+    if (other->isaNumber() || other->isaColor()) {
+      throw Exception::UndefinedOperation(
+        logger, pstate, this, other, "/");
+    }
+    return Value::dividedBy(other, logger, pstate);
+  }
+
+  Value* ColorSpaced::modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  {
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "%");
+  }
+
+  Value* ColorSpaced::remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  {
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "%%");
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 

@@ -1462,10 +1462,19 @@ namespace Sass {
 
     double channel(const sass::string& channel) const;
 
-    // Implement interface for base color class
+    // Implement interface for base value class
     size_t hash() const override final;
+    SassValueType getTag() const override final { return SASS_COLOR; }
+    const sass::string& type() const override final { return Strings::color; }
 
-    // Implement equality comparators for base value class
+    // Implement some operations for base value class
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+
+    // Im ement equality comparators for base value class
     bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
     bool operator==(const ColorSpaced& rhs) const;
