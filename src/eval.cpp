@@ -850,7 +850,7 @@ namespace Sass {
       case Interpolant::ExpressionInterpolant:
           value = static_cast<Expression*>(itpl)->accept(this);
         if (warnForColor) {
-          if (ColorSpaced* color = value->isaColorSpaced()) {
+          if (Color* color = value->isaColor()) {
             //return "foobar";
             // ColorRgbaObj rgba = color->toRGBA();
             // double numval = rgba->r() * 0x10000

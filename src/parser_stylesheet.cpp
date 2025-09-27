@@ -2720,7 +2720,7 @@ namespace Sass {
     if (keep == false) original = str_empty; // reset!?
     // Color* color = SASS_MEMORY_NEW(ColorRgba, pstate,
     //   red, green, blue, alpha, original, false);
-    ColorSpaced* color = SASS_MEMORY_NEW(ColorSpaced, pstate,
+    Color* color = SASS_MEMORY_NEW(Color, pstate,
       ColorSpace2::rgb, red, green, blue, alpha, original, false);
     // std::cerr << "Parsed color " << color->debug() << "\n";
     return SASS_MEMORY_NEW(ColorExpression, pstate, color);
@@ -3196,9 +3196,9 @@ namespace Sass {
             SASS_MEMORY_NEW(Null, pstate));
         }
 
-        if (const ColorSpaced* color = name_to_color(plain)) {
+        if (const Color* color = name_to_color(plain)) {
           // ToDo: can we avoid this copy here?
-          ColorSpaced* copy = SASS_MEMORY_COPY(color);
+          Color* copy = SASS_MEMORY_COPY(color);
           // copy->disp(plain); copy->parsed(true);
           copy->pstate(identifier->pstate());
           copy->disp(plain);

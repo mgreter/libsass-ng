@@ -192,162 +192,162 @@ namespace Sass
 	{
 
     const SourceSpan color_table(SourceSpan::internal32("[COLOR TABLE]"));
-		const ColorSpaced aliceblue(color_table, ColorSpace2::rgb, 240, 248, 255, 1);
-    const ColorSpaced antiquewhite(color_table, ColorSpace2::rgb, 250, 235, 215, 1);
-    const ColorSpaced cyan(color_table, ColorSpace2::rgb, 0, 255, 255, 1);
-    const ColorSpaced aqua(color_table, ColorSpace2::rgb, 0, 255, 255, 1);
-    const ColorSpaced aquamarine(color_table, ColorSpace2::rgb, 127, 255, 212, 1);
-    const ColorSpaced azure(color_table, ColorSpace2::rgb, 240, 255, 255, 1);
-    const ColorSpaced beige(color_table, ColorSpace2::rgb, 245, 245, 220, 1);
-    const ColorSpaced bisque(color_table, ColorSpace2::rgb, 255, 228, 196, 1);
-    const ColorSpaced black(color_table, ColorSpace2::rgb, 0, 0, 0, 1);
-    const ColorSpaced blanchedalmond(color_table, ColorSpace2::rgb, 255, 235, 205, 1);
-    const ColorSpaced blue(color_table, ColorSpace2::rgb, 0, 0, 255, 1);
-    const ColorSpaced blueviolet(color_table, ColorSpace2::rgb, 138, 43, 226, 1);
-    const ColorSpaced brown(color_table, ColorSpace2::rgb, 165, 42, 42, 1);
-    const ColorSpaced burlywood(color_table, ColorSpace2::rgb, 222, 184, 135, 1);
-    const ColorSpaced cadetblue(color_table, ColorSpace2::rgb, 95, 158, 160, 1);
-    const ColorSpaced chartreuse(color_table, ColorSpace2::rgb, 127, 255, 0, 1);
-    const ColorSpaced chocolate(color_table, ColorSpace2::rgb, 210, 105, 30, 1);
-    const ColorSpaced coral(color_table, ColorSpace2::rgb, 255, 127, 80, 1);
-    const ColorSpaced cornflowerblue(color_table, ColorSpace2::rgb, 100, 149, 237, 1);
-    const ColorSpaced cornsilk(color_table, ColorSpace2::rgb, 255, 248, 220, 1);
-    const ColorSpaced crimson(color_table, ColorSpace2::rgb, 220, 20, 60, 1);
-    const ColorSpaced darkblue(color_table, ColorSpace2::rgb, 0, 0, 139, 1);
-    const ColorSpaced darkcyan(color_table, ColorSpace2::rgb, 0, 139, 139, 1);
-    const ColorSpaced darkgoldenrod(color_table, ColorSpace2::rgb, 184, 134, 11, 1);
-    const ColorSpaced darkgray(color_table, ColorSpace2::rgb, 169, 169, 169, 1);
-    const ColorSpaced darkgrey(color_table, ColorSpace2::rgb, 169, 169, 169, 1);
-    const ColorSpaced darkgreen(color_table, ColorSpace2::rgb, 0, 100, 0, 1);
-    const ColorSpaced darkkhaki(color_table, ColorSpace2::rgb, 189, 183, 107, 1);
-    const ColorSpaced darkmagenta(color_table, ColorSpace2::rgb, 139, 0, 139, 1);
-    const ColorSpaced darkolivegreen(color_table, ColorSpace2::rgb, 85, 107, 47, 1);
-    const ColorSpaced darkorange(color_table, ColorSpace2::rgb, 255, 140, 0, 1);
-    const ColorSpaced darkorchid(color_table, ColorSpace2::rgb, 153, 50, 204, 1);
-    const ColorSpaced darkred(color_table, ColorSpace2::rgb, 139, 0, 0, 1);
-    const ColorSpaced darksalmon(color_table, ColorSpace2::rgb, 233, 150, 122, 1);
-    const ColorSpaced darkseagreen(color_table, ColorSpace2::rgb, 143, 188, 143, 1);
-    const ColorSpaced darkslateblue(color_table, ColorSpace2::rgb, 72, 61, 139, 1);
-    const ColorSpaced darkslategray(color_table, ColorSpace2::rgb, 47, 79, 79, 1);
-    const ColorSpaced darkslategrey(color_table, ColorSpace2::rgb, 47, 79, 79, 1);
-    const ColorSpaced darkturquoise(color_table, ColorSpace2::rgb, 0, 206, 209, 1);
-    const ColorSpaced darkviolet(color_table, ColorSpace2::rgb, 148, 0, 211, 1);
-    const ColorSpaced deeppink(color_table, ColorSpace2::rgb, 255, 20, 147, 1);
-    const ColorSpaced deepskyblue(color_table, ColorSpace2::rgb, 0, 191, 255, 1);
-    const ColorSpaced dimgray(color_table, ColorSpace2::rgb, 105, 105, 105, 1);
-    const ColorSpaced dimgrey(color_table, ColorSpace2::rgb, 105, 105, 105, 1);
-    const ColorSpaced dodgerblue(color_table, ColorSpace2::rgb, 30, 144, 255, 1);
-    const ColorSpaced firebrick(color_table, ColorSpace2::rgb, 178, 34, 34, 1);
-    const ColorSpaced floralwhite(color_table, ColorSpace2::rgb, 255, 250, 240, 1);
-    const ColorSpaced forestgreen(color_table, ColorSpace2::rgb, 34, 139, 34, 1);
-    const ColorSpaced magenta(color_table, ColorSpace2::rgb, 255, 0, 255, 1);
-    const ColorSpaced fuchsia(color_table, ColorSpace2::rgb, 255, 0, 255, 1);
-    const ColorSpaced gainsboro(color_table, ColorSpace2::rgb, 220, 220, 220, 1);
-    const ColorSpaced ghostwhite(color_table, ColorSpace2::rgb, 248, 248, 255, 1);
-    const ColorSpaced gold(color_table, ColorSpace2::rgb, 255, 215, 0, 1);
-    const ColorSpaced goldenrod(color_table, ColorSpace2::rgb, 218, 165, 32, 1);
-    const ColorSpaced gray(color_table, ColorSpace2::rgb, 128, 128, 128, 1);
-    const ColorSpaced grey(color_table, ColorSpace2::rgb, 128, 128, 128, 1);
-    const ColorSpaced green(color_table, ColorSpace2::rgb, 0, 128, 0, 1);
-    const ColorSpaced greenyellow(color_table, ColorSpace2::rgb, 173, 255, 47, 1);
-    const ColorSpaced honeydew(color_table, ColorSpace2::rgb, 240, 255, 240, 1);
-    const ColorSpaced hotpink(color_table, ColorSpace2::rgb, 255, 105, 180, 1);
-    const ColorSpaced indianred(color_table, ColorSpace2::rgb, 205, 92, 92, 1);
-    const ColorSpaced indigo(color_table, ColorSpace2::rgb, 75, 0, 130, 1);
-    const ColorSpaced ivory(color_table, ColorSpace2::rgb, 255, 255, 240, 1);
-    const ColorSpaced khaki(color_table, ColorSpace2::rgb, 240, 230, 140, 1);
-    const ColorSpaced lavender(color_table, ColorSpace2::rgb, 230, 230, 250, 1);
-    const ColorSpaced lavenderblush(color_table, ColorSpace2::rgb, 255, 240, 245, 1);
-    const ColorSpaced lawngreen(color_table, ColorSpace2::rgb, 124, 252, 0, 1);
-    const ColorSpaced lemonchiffon(color_table, ColorSpace2::rgb, 255, 250, 205, 1);
-    const ColorSpaced lightblue(color_table, ColorSpace2::rgb, 173, 216, 230, 1);
-    const ColorSpaced lightcoral(color_table, ColorSpace2::rgb, 240, 128, 128, 1);
-    const ColorSpaced lightcyan(color_table, ColorSpace2::rgb, 224, 255, 255, 1);
-    const ColorSpaced lightgoldenrodyellow(color_table, ColorSpace2::rgb, 250, 250, 210, 1);
-    const ColorSpaced lightgray(color_table, ColorSpace2::rgb, 211, 211, 211, 1);
-    const ColorSpaced lightgrey(color_table, ColorSpace2::rgb, 211, 211, 211, 1);
-    const ColorSpaced lightgreen(color_table, ColorSpace2::rgb, 144, 238, 144, 1);
-    const ColorSpaced lightpink(color_table, ColorSpace2::rgb, 255, 182, 193, 1);
-    const ColorSpaced lightsalmon(color_table, ColorSpace2::rgb, 255, 160, 122, 1);
-    const ColorSpaced lightseagreen(color_table, ColorSpace2::rgb, 32, 178, 170, 1);
-    const ColorSpaced lightskyblue(color_table, ColorSpace2::rgb, 135, 206, 250, 1);
-    const ColorSpaced lightslategray(color_table, ColorSpace2::rgb, 119, 136, 153, 1);
-    const ColorSpaced lightslategrey(color_table, ColorSpace2::rgb, 119, 136, 153, 1);
-    const ColorSpaced lightsteelblue(color_table, ColorSpace2::rgb, 176, 196, 222, 1);
-    const ColorSpaced lightyellow(color_table, ColorSpace2::rgb, 255, 255, 224, 1);
-    const ColorSpaced lime(color_table, ColorSpace2::rgb, 0, 255, 0, 1);
-    const ColorSpaced limegreen(color_table, ColorSpace2::rgb, 50, 205, 50, 1);
-    const ColorSpaced linen(color_table, ColorSpace2::rgb, 250, 240, 230, 1);
-    const ColorSpaced maroon(color_table, ColorSpace2::rgb, 128, 0, 0, 1);
-    const ColorSpaced mediumaquamarine(color_table, ColorSpace2::rgb, 102, 205, 170, 1);
-    const ColorSpaced mediumblue(color_table, ColorSpace2::rgb, 0, 0, 205, 1);
-    const ColorSpaced mediumorchid(color_table, ColorSpace2::rgb, 186, 85, 211, 1);
-    const ColorSpaced mediumpurple(color_table, ColorSpace2::rgb, 147, 112, 219, 1);
-    const ColorSpaced mediumseagreen(color_table, ColorSpace2::rgb, 60, 179, 113, 1);
-    const ColorSpaced mediumslateblue(color_table, ColorSpace2::rgb, 123, 104, 238, 1);
-    const ColorSpaced mediumspringgreen(color_table, ColorSpace2::rgb, 0, 250, 154, 1);
-    const ColorSpaced mediumturquoise(color_table, ColorSpace2::rgb, 72, 209, 204, 1);
-    const ColorSpaced mediumvioletred(color_table, ColorSpace2::rgb, 199, 21, 133, 1);
-    const ColorSpaced midnightblue(color_table, ColorSpace2::rgb, 25, 25, 112, 1);
-    const ColorSpaced mintcream(color_table, ColorSpace2::rgb, 245, 255, 250, 1);
-    const ColorSpaced mistyrose(color_table, ColorSpace2::rgb, 255, 228, 225, 1);
-    const ColorSpaced moccasin(color_table, ColorSpace2::rgb, 255, 228, 181, 1);
-    const ColorSpaced navajowhite(color_table, ColorSpace2::rgb, 255, 222, 173, 1);
-    const ColorSpaced navy(color_table, ColorSpace2::rgb, 0, 0, 128, 1);
-    const ColorSpaced oldlace(color_table, ColorSpace2::rgb, 253, 245, 230, 1);
-    const ColorSpaced olive(color_table, ColorSpace2::rgb, 128, 128, 0, 1);
-    const ColorSpaced olivedrab(color_table, ColorSpace2::rgb, 107, 142, 35, 1);
-    const ColorSpaced orange(color_table, ColorSpace2::rgb, 255, 165, 0, 1);
-    const ColorSpaced orangered(color_table, ColorSpace2::rgb, 255, 69, 0, 1);
-    const ColorSpaced orchid(color_table, ColorSpace2::rgb, 218, 112, 214, 1);
-    const ColorSpaced palegoldenrod(color_table, ColorSpace2::rgb, 238, 232, 170, 1);
-    const ColorSpaced palegreen(color_table, ColorSpace2::rgb, 152, 251, 152, 1);
-    const ColorSpaced paleturquoise(color_table, ColorSpace2::rgb, 175, 238, 238, 1);
-    const ColorSpaced palevioletred(color_table, ColorSpace2::rgb, 219, 112, 147, 1);
-    const ColorSpaced papayawhip(color_table, ColorSpace2::rgb, 255, 239, 213, 1);
-    const ColorSpaced peachpuff(color_table, ColorSpace2::rgb, 255, 218, 185, 1);
-    const ColorSpaced peru(color_table, ColorSpace2::rgb, 205, 133, 63, 1);
-    const ColorSpaced pink(color_table, ColorSpace2::rgb, 255, 192, 203, 1);
-    const ColorSpaced plum(color_table, ColorSpace2::rgb, 221, 160, 221, 1);
-    const ColorSpaced powderblue(color_table, ColorSpace2::rgb, 176, 224, 230, 1);
-    const ColorSpaced purple(color_table, ColorSpace2::rgb, 128, 0, 128, 1);
-    const ColorSpaced red(color_table, ColorSpace2::rgb, 255, 0, 0, 1, "red", true);
-    const ColorSpaced rosybrown(color_table, ColorSpace2::rgb, 188, 143, 143, 1);
-    const ColorSpaced royalblue(color_table, ColorSpace2::rgb, 65, 105, 225, 1);
-    const ColorSpaced saddlebrown(color_table, ColorSpace2::rgb, 139, 69, 19, 1);
-    const ColorSpaced salmon(color_table, ColorSpace2::rgb, 250, 128, 114, 1);
-    const ColorSpaced sandybrown(color_table, ColorSpace2::rgb, 244, 164, 96, 1);
-    const ColorSpaced seagreen(color_table, ColorSpace2::rgb, 46, 139, 87, 1);
-    const ColorSpaced seashell(color_table, ColorSpace2::rgb, 255, 245, 238, 1);
-    const ColorSpaced sienna(color_table, ColorSpace2::rgb, 160, 82, 45, 1);
-    const ColorSpaced silver(color_table, ColorSpace2::rgb, 192, 192, 192, 1);
-    const ColorSpaced skyblue(color_table, ColorSpace2::rgb, 135, 206, 235, 1);
-    const ColorSpaced slateblue(color_table, ColorSpace2::rgb, 106, 90, 205, 1);
-    const ColorSpaced slategray(color_table, ColorSpace2::rgb, 112, 128, 144, 1);
-    const ColorSpaced slategrey(color_table, ColorSpace2::rgb, 112, 128, 144, 1);
-    const ColorSpaced snow(color_table, ColorSpace2::rgb, 255, 250, 250, 1);
-    const ColorSpaced springgreen(color_table, ColorSpace2::rgb, 0, 255, 127, 1);
-    const ColorSpaced steelblue(color_table, ColorSpace2::rgb, 70, 130, 180, 1);
-    const ColorSpaced tan(color_table, ColorSpace2::rgb, 210, 180, 140, 1);
-    const ColorSpaced teal(color_table, ColorSpace2::rgb, 0, 128, 128, 1);
-    const ColorSpaced thistle(color_table, ColorSpace2::rgb, 216, 191, 216, 1);
-    const ColorSpaced tomato(color_table, ColorSpace2::rgb, 255, 99, 71, 1);
-    const ColorSpaced turquoise(color_table, ColorSpace2::rgb, 64, 224, 208, 1);
-    const ColorSpaced violet(color_table, ColorSpace2::rgb, 238, 130, 238, 1);
-    const ColorSpaced wheat(color_table, ColorSpace2::rgb, 245, 222, 179, 1);
-    const ColorSpaced white(color_table, ColorSpace2::rgb, 255, 255, 255, 1);
-    const ColorSpaced whitesmoke(color_table, ColorSpace2::rgb, 245, 245, 245, 1);
-    const ColorSpaced yellow(color_table, ColorSpace2::rgb, 255, 255, 0, 1);
-    const ColorSpaced yellowgreen(color_table, ColorSpace2::rgb, 154, 205, 50, 1);
-    const ColorSpaced rebeccapurple(color_table, ColorSpace2::rgb, 102, 51, 153, 1);
-    const ColorSpaced transparent(color_table, ColorSpace2::rgb, 0, 0, 0, 0);
+		const Color aliceblue(color_table, ColorSpace2::rgb, 240, 248, 255, 1);
+    const Color antiquewhite(color_table, ColorSpace2::rgb, 250, 235, 215, 1);
+    const Color cyan(color_table, ColorSpace2::rgb, 0, 255, 255, 1);
+    const Color aqua(color_table, ColorSpace2::rgb, 0, 255, 255, 1);
+    const Color aquamarine(color_table, ColorSpace2::rgb, 127, 255, 212, 1);
+    const Color azure(color_table, ColorSpace2::rgb, 240, 255, 255, 1);
+    const Color beige(color_table, ColorSpace2::rgb, 245, 245, 220, 1);
+    const Color bisque(color_table, ColorSpace2::rgb, 255, 228, 196, 1);
+    const Color black(color_table, ColorSpace2::rgb, 0, 0, 0, 1);
+    const Color blanchedalmond(color_table, ColorSpace2::rgb, 255, 235, 205, 1);
+    const Color blue(color_table, ColorSpace2::rgb, 0, 0, 255, 1);
+    const Color blueviolet(color_table, ColorSpace2::rgb, 138, 43, 226, 1);
+    const Color brown(color_table, ColorSpace2::rgb, 165, 42, 42, 1);
+    const Color burlywood(color_table, ColorSpace2::rgb, 222, 184, 135, 1);
+    const Color cadetblue(color_table, ColorSpace2::rgb, 95, 158, 160, 1);
+    const Color chartreuse(color_table, ColorSpace2::rgb, 127, 255, 0, 1);
+    const Color chocolate(color_table, ColorSpace2::rgb, 210, 105, 30, 1);
+    const Color coral(color_table, ColorSpace2::rgb, 255, 127, 80, 1);
+    const Color cornflowerblue(color_table, ColorSpace2::rgb, 100, 149, 237, 1);
+    const Color cornsilk(color_table, ColorSpace2::rgb, 255, 248, 220, 1);
+    const Color crimson(color_table, ColorSpace2::rgb, 220, 20, 60, 1);
+    const Color darkblue(color_table, ColorSpace2::rgb, 0, 0, 139, 1);
+    const Color darkcyan(color_table, ColorSpace2::rgb, 0, 139, 139, 1);
+    const Color darkgoldenrod(color_table, ColorSpace2::rgb, 184, 134, 11, 1);
+    const Color darkgray(color_table, ColorSpace2::rgb, 169, 169, 169, 1);
+    const Color darkgrey(color_table, ColorSpace2::rgb, 169, 169, 169, 1);
+    const Color darkgreen(color_table, ColorSpace2::rgb, 0, 100, 0, 1);
+    const Color darkkhaki(color_table, ColorSpace2::rgb, 189, 183, 107, 1);
+    const Color darkmagenta(color_table, ColorSpace2::rgb, 139, 0, 139, 1);
+    const Color darkolivegreen(color_table, ColorSpace2::rgb, 85, 107, 47, 1);
+    const Color darkorange(color_table, ColorSpace2::rgb, 255, 140, 0, 1);
+    const Color darkorchid(color_table, ColorSpace2::rgb, 153, 50, 204, 1);
+    const Color darkred(color_table, ColorSpace2::rgb, 139, 0, 0, 1);
+    const Color darksalmon(color_table, ColorSpace2::rgb, 233, 150, 122, 1);
+    const Color darkseagreen(color_table, ColorSpace2::rgb, 143, 188, 143, 1);
+    const Color darkslateblue(color_table, ColorSpace2::rgb, 72, 61, 139, 1);
+    const Color darkslategray(color_table, ColorSpace2::rgb, 47, 79, 79, 1);
+    const Color darkslategrey(color_table, ColorSpace2::rgb, 47, 79, 79, 1);
+    const Color darkturquoise(color_table, ColorSpace2::rgb, 0, 206, 209, 1);
+    const Color darkviolet(color_table, ColorSpace2::rgb, 148, 0, 211, 1);
+    const Color deeppink(color_table, ColorSpace2::rgb, 255, 20, 147, 1);
+    const Color deepskyblue(color_table, ColorSpace2::rgb, 0, 191, 255, 1);
+    const Color dimgray(color_table, ColorSpace2::rgb, 105, 105, 105, 1);
+    const Color dimgrey(color_table, ColorSpace2::rgb, 105, 105, 105, 1);
+    const Color dodgerblue(color_table, ColorSpace2::rgb, 30, 144, 255, 1);
+    const Color firebrick(color_table, ColorSpace2::rgb, 178, 34, 34, 1);
+    const Color floralwhite(color_table, ColorSpace2::rgb, 255, 250, 240, 1);
+    const Color forestgreen(color_table, ColorSpace2::rgb, 34, 139, 34, 1);
+    const Color magenta(color_table, ColorSpace2::rgb, 255, 0, 255, 1);
+    const Color fuchsia(color_table, ColorSpace2::rgb, 255, 0, 255, 1);
+    const Color gainsboro(color_table, ColorSpace2::rgb, 220, 220, 220, 1);
+    const Color ghostwhite(color_table, ColorSpace2::rgb, 248, 248, 255, 1);
+    const Color gold(color_table, ColorSpace2::rgb, 255, 215, 0, 1);
+    const Color goldenrod(color_table, ColorSpace2::rgb, 218, 165, 32, 1);
+    const Color gray(color_table, ColorSpace2::rgb, 128, 128, 128, 1);
+    const Color grey(color_table, ColorSpace2::rgb, 128, 128, 128, 1);
+    const Color green(color_table, ColorSpace2::rgb, 0, 128, 0, 1);
+    const Color greenyellow(color_table, ColorSpace2::rgb, 173, 255, 47, 1);
+    const Color honeydew(color_table, ColorSpace2::rgb, 240, 255, 240, 1);
+    const Color hotpink(color_table, ColorSpace2::rgb, 255, 105, 180, 1);
+    const Color indianred(color_table, ColorSpace2::rgb, 205, 92, 92, 1);
+    const Color indigo(color_table, ColorSpace2::rgb, 75, 0, 130, 1);
+    const Color ivory(color_table, ColorSpace2::rgb, 255, 255, 240, 1);
+    const Color khaki(color_table, ColorSpace2::rgb, 240, 230, 140, 1);
+    const Color lavender(color_table, ColorSpace2::rgb, 230, 230, 250, 1);
+    const Color lavenderblush(color_table, ColorSpace2::rgb, 255, 240, 245, 1);
+    const Color lawngreen(color_table, ColorSpace2::rgb, 124, 252, 0, 1);
+    const Color lemonchiffon(color_table, ColorSpace2::rgb, 255, 250, 205, 1);
+    const Color lightblue(color_table, ColorSpace2::rgb, 173, 216, 230, 1);
+    const Color lightcoral(color_table, ColorSpace2::rgb, 240, 128, 128, 1);
+    const Color lightcyan(color_table, ColorSpace2::rgb, 224, 255, 255, 1);
+    const Color lightgoldenrodyellow(color_table, ColorSpace2::rgb, 250, 250, 210, 1);
+    const Color lightgray(color_table, ColorSpace2::rgb, 211, 211, 211, 1);
+    const Color lightgrey(color_table, ColorSpace2::rgb, 211, 211, 211, 1);
+    const Color lightgreen(color_table, ColorSpace2::rgb, 144, 238, 144, 1);
+    const Color lightpink(color_table, ColorSpace2::rgb, 255, 182, 193, 1);
+    const Color lightsalmon(color_table, ColorSpace2::rgb, 255, 160, 122, 1);
+    const Color lightseagreen(color_table, ColorSpace2::rgb, 32, 178, 170, 1);
+    const Color lightskyblue(color_table, ColorSpace2::rgb, 135, 206, 250, 1);
+    const Color lightslategray(color_table, ColorSpace2::rgb, 119, 136, 153, 1);
+    const Color lightslategrey(color_table, ColorSpace2::rgb, 119, 136, 153, 1);
+    const Color lightsteelblue(color_table, ColorSpace2::rgb, 176, 196, 222, 1);
+    const Color lightyellow(color_table, ColorSpace2::rgb, 255, 255, 224, 1);
+    const Color lime(color_table, ColorSpace2::rgb, 0, 255, 0, 1);
+    const Color limegreen(color_table, ColorSpace2::rgb, 50, 205, 50, 1);
+    const Color linen(color_table, ColorSpace2::rgb, 250, 240, 230, 1);
+    const Color maroon(color_table, ColorSpace2::rgb, 128, 0, 0, 1);
+    const Color mediumaquamarine(color_table, ColorSpace2::rgb, 102, 205, 170, 1);
+    const Color mediumblue(color_table, ColorSpace2::rgb, 0, 0, 205, 1);
+    const Color mediumorchid(color_table, ColorSpace2::rgb, 186, 85, 211, 1);
+    const Color mediumpurple(color_table, ColorSpace2::rgb, 147, 112, 219, 1);
+    const Color mediumseagreen(color_table, ColorSpace2::rgb, 60, 179, 113, 1);
+    const Color mediumslateblue(color_table, ColorSpace2::rgb, 123, 104, 238, 1);
+    const Color mediumspringgreen(color_table, ColorSpace2::rgb, 0, 250, 154, 1);
+    const Color mediumturquoise(color_table, ColorSpace2::rgb, 72, 209, 204, 1);
+    const Color mediumvioletred(color_table, ColorSpace2::rgb, 199, 21, 133, 1);
+    const Color midnightblue(color_table, ColorSpace2::rgb, 25, 25, 112, 1);
+    const Color mintcream(color_table, ColorSpace2::rgb, 245, 255, 250, 1);
+    const Color mistyrose(color_table, ColorSpace2::rgb, 255, 228, 225, 1);
+    const Color moccasin(color_table, ColorSpace2::rgb, 255, 228, 181, 1);
+    const Color navajowhite(color_table, ColorSpace2::rgb, 255, 222, 173, 1);
+    const Color navy(color_table, ColorSpace2::rgb, 0, 0, 128, 1);
+    const Color oldlace(color_table, ColorSpace2::rgb, 253, 245, 230, 1);
+    const Color olive(color_table, ColorSpace2::rgb, 128, 128, 0, 1);
+    const Color olivedrab(color_table, ColorSpace2::rgb, 107, 142, 35, 1);
+    const Color orange(color_table, ColorSpace2::rgb, 255, 165, 0, 1);
+    const Color orangered(color_table, ColorSpace2::rgb, 255, 69, 0, 1);
+    const Color orchid(color_table, ColorSpace2::rgb, 218, 112, 214, 1);
+    const Color palegoldenrod(color_table, ColorSpace2::rgb, 238, 232, 170, 1);
+    const Color palegreen(color_table, ColorSpace2::rgb, 152, 251, 152, 1);
+    const Color paleturquoise(color_table, ColorSpace2::rgb, 175, 238, 238, 1);
+    const Color palevioletred(color_table, ColorSpace2::rgb, 219, 112, 147, 1);
+    const Color papayawhip(color_table, ColorSpace2::rgb, 255, 239, 213, 1);
+    const Color peachpuff(color_table, ColorSpace2::rgb, 255, 218, 185, 1);
+    const Color peru(color_table, ColorSpace2::rgb, 205, 133, 63, 1);
+    const Color pink(color_table, ColorSpace2::rgb, 255, 192, 203, 1);
+    const Color plum(color_table, ColorSpace2::rgb, 221, 160, 221, 1);
+    const Color powderblue(color_table, ColorSpace2::rgb, 176, 224, 230, 1);
+    const Color purple(color_table, ColorSpace2::rgb, 128, 0, 128, 1);
+    const Color red(color_table, ColorSpace2::rgb, 255, 0, 0, 1, "red", true);
+    const Color rosybrown(color_table, ColorSpace2::rgb, 188, 143, 143, 1);
+    const Color royalblue(color_table, ColorSpace2::rgb, 65, 105, 225, 1);
+    const Color saddlebrown(color_table, ColorSpace2::rgb, 139, 69, 19, 1);
+    const Color salmon(color_table, ColorSpace2::rgb, 250, 128, 114, 1);
+    const Color sandybrown(color_table, ColorSpace2::rgb, 244, 164, 96, 1);
+    const Color seagreen(color_table, ColorSpace2::rgb, 46, 139, 87, 1);
+    const Color seashell(color_table, ColorSpace2::rgb, 255, 245, 238, 1);
+    const Color sienna(color_table, ColorSpace2::rgb, 160, 82, 45, 1);
+    const Color silver(color_table, ColorSpace2::rgb, 192, 192, 192, 1);
+    const Color skyblue(color_table, ColorSpace2::rgb, 135, 206, 235, 1);
+    const Color slateblue(color_table, ColorSpace2::rgb, 106, 90, 205, 1);
+    const Color slategray(color_table, ColorSpace2::rgb, 112, 128, 144, 1);
+    const Color slategrey(color_table, ColorSpace2::rgb, 112, 128, 144, 1);
+    const Color snow(color_table, ColorSpace2::rgb, 255, 250, 250, 1);
+    const Color springgreen(color_table, ColorSpace2::rgb, 0, 255, 127, 1);
+    const Color steelblue(color_table, ColorSpace2::rgb, 70, 130, 180, 1);
+    const Color tan(color_table, ColorSpace2::rgb, 210, 180, 140, 1);
+    const Color teal(color_table, ColorSpace2::rgb, 0, 128, 128, 1);
+    const Color thistle(color_table, ColorSpace2::rgb, 216, 191, 216, 1);
+    const Color tomato(color_table, ColorSpace2::rgb, 255, 99, 71, 1);
+    const Color turquoise(color_table, ColorSpace2::rgb, 64, 224, 208, 1);
+    const Color violet(color_table, ColorSpace2::rgb, 238, 130, 238, 1);
+    const Color wheat(color_table, ColorSpace2::rgb, 245, 222, 179, 1);
+    const Color white(color_table, ColorSpace2::rgb, 255, 255, 255, 1);
+    const Color whitesmoke(color_table, ColorSpace2::rgb, 245, 245, 245, 1);
+    const Color yellow(color_table, ColorSpace2::rgb, 255, 255, 0, 1);
+    const Color yellowgreen(color_table, ColorSpace2::rgb, 154, 205, 50, 1);
+    const Color rebeccapurple(color_table, ColorSpace2::rgb, 102, 51, 153, 1);
+    const Color transparent(color_table, ColorSpace2::rgb, 0, 0, 0, 0);
   } // namespace Colors
 
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   /*
-  static const auto* const colors_to_names2 = new std::unordered_set<const ColorSpaced, ColorSpaced::HashFunction>{
+  static const auto* const colors_to_names2 = new std::unordered_set<const Color, Color::HashFunction>{
     Colors::aliceblue,
     Colors::antiquewhite,
     Colors::cyan,
@@ -647,7 +647,7 @@ namespace Sass
   /////////////////////////////////////////////////////////////////////////
 
 	static const auto* const names_to_colors =
-		new std::unordered_map<sass::string, const ColorSpaced*>{
+		new std::unordered_map<sass::string, const Color*>{
 			{ColorNames::aliceblue, &Colors::aliceblue},
 			{ColorNames::antiquewhite, &Colors::antiquewhite},
 			{ColorNames::cyan, &Colors::cyan},
@@ -801,12 +801,12 @@ namespace Sass
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-	const ColorSpaced* name_to_color(const char* key)
+	const Color* name_to_color(const char* key)
 	{
 		return name_to_color(sass::string(key));
 	}
 
-	const ColorSpaced* name_to_color(const sass::string& key)
+	const Color* name_to_color(const sass::string& key)
 	{
 		// case insensitive lookup. See #2462
 		sass::string lcKey = key;

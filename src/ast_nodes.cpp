@@ -495,7 +495,7 @@ namespace Sass {
   }
 
   // Assert and return a color or throws if incompatible
-  const ColorSpaced* Value::assertColorSpaced(Logger& logger, const sass::string& name) const
+  const Color* Value::assertColor(Logger& logger, const sass::string& name) const
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
@@ -503,7 +503,7 @@ namespace Sass {
       logger, pstate(), name);
   }
   // Assert and return a color or throws if incompatible
-  ColorSpaced* Value::assertColorSpaced2(Logger& logger, const sass::string& name)
+  Color* Value::assertColor2(Logger& logger, const sass::string& name)
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(

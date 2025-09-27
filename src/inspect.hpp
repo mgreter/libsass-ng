@@ -78,17 +78,17 @@ namespace Sass {
     // Implement Value Visitors
     /////////////////////////////////////////////////////////////////////////
 
-    virtual void _writeHsl(ColorSpaced* color);
-    virtual void _writeHwb(ColorSpaced* color);
-    virtual void _writeRgb(ColorSpaced* color);
-    virtual void _writeLegacyColor(ColorSpaced* color);
+    virtual void _writeHsl(Color* color);
+    virtual void _writeHwb(Color* color);
+    virtual void _writeRgb(Color* color);
+    virtual void _writeLegacyColor(Color* color);
 
-    void _maybeWriteSlashAlpha(const ColorSpaced* color);
+    void _maybeWriteSlashAlpha(const Color* color);
 
-    void _writeColorFunction(const ColorSpaced* color);
+    void _writeColorFunction(const Color* color);
 
     virtual void visitBoolean(Boolean* value) override;
-    virtual void visitColor(ColorSpaced* value) override;
+    virtual void visitColor(Color* value) override;
     virtual void visitFunction(Function* value) override;
     virtual void visitCalculation(Calculation* value) override;
     virtual void visitCalcOperation(CalcOperation* value) override;

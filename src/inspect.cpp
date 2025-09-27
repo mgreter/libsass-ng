@@ -913,10 +913,10 @@ namespace Sass {
     return is_hex_doublet(r) && is_hex_doublet(g) && is_hex_doublet(b);
   }
 
-  void Inspect::_writeHsl(ColorSpaced* color)
+  void Inspect::_writeHsl(Color* color)
   {
 
-    ColorSpaced* hsl = color->toSpace(ColorSpace2::hsl, color->pstate());
+    Color* hsl = color->toSpace(ColorSpace2::hsl, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -943,10 +943,10 @@ namespace Sass {
     }
   }
 
-  void Inspect::_writeHwb(ColorSpaced* color)
+  void Inspect::_writeHwb(Color* color)
   {
 
-    ColorSpaced* hwb = color->toSpace(ColorSpace2::hwb, color->pstate());
+    Color* hwb = color->toSpace(ColorSpace2::hwb, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -973,10 +973,10 @@ namespace Sass {
     }
   }
 
-  void Inspect::_writeRgb(ColorSpaced* color)
+  void Inspect::_writeRgb(Color* color)
   {
     sass::string ss;
-    ColorSpaced* rgb = color->toSpace(ColorSpace2::rgb, color->pstate());
+    Color* rgb = color->toSpace(ColorSpace2::rgb, color->pstate());
     // std::cerr << "write rgb " << rgb->debug() << "\n";
 
     if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {
@@ -1001,7 +1001,7 @@ namespace Sass {
       fuzzyLessThan(channel, 256, sass::epsilon);
   }
 
-  bool _canUseHex(const ColorSpaced* rgb) {
+  bool _canUseHex(const Color* rgb) {
     if (rgb->space() == ColorSpace2::rgb) {
       return _canUseHexForChannel(rgb->getChannel0()) &&
         _canUseHexForChannel(rgb->getChannel1()) &&
@@ -1020,7 +1020,7 @@ namespace Sass {
     write_char(hexCharFor(color & 0xF));
   }
 
-  void Inspect::_writeLegacyColor(ColorSpaced* color)
+  void Inspect::_writeLegacyColor(Color* color)
   {
 
     // std::cerr << "write legacy color " << color->debug() << "\n";
@@ -1067,7 +1067,7 @@ namespace Sass {
     }
 
     if (opaque) {
-      if (ColorSpaced* rgba = color->toSpace(ColorSpace2::rgb, color->pstate())) {
+      if (Color* rgba = color->toSpace(ColorSpace2::rgb, color->pstate())) {
         // double a = std::round(std::round(rgba->getChannel0() * sass::iepsilon) * sass::epsilon);
         // double b = std::round(std::round(rgba->getChannel1() * sass::iepsilon) * sass::epsilon);
         // double c = std::round(std::round(rgba->getChannel2() * sass::iepsilon) * sass::epsilon);
@@ -1110,7 +1110,7 @@ namespace Sass {
         }
       }
 
-      //if (ColorSpaced* rgb = color->toSpace(ColorSpace::rgb, color->pstate())) {
+      //if (Color* rgb = color->toSpace(ColorSpace::rgb, color->pstate())) {
         // if (color_to_name(rgb))
       //}
       // if (color_to_name()
@@ -1130,7 +1130,7 @@ namespace Sass {
 
   }
 
-  void Inspect::_maybeWriteSlashAlpha(const ColorSpaced* color)
+  void Inspect::_maybeWriteSlashAlpha(const Color* color)
   {
     auto alpha = color->alpha();
     if (!alpha.has_value()) {
@@ -1148,7 +1148,7 @@ namespace Sass {
   }
 
   // Writes [color] using the `color()` function syntax.
-  void Inspect::_writeColorFunction(const ColorSpaced* color)
+  void Inspect::_writeColorFunction(const Color* color)
   {
     if (color->space() == ColorSpace2::rgb ||
         color->space() == ColorSpace2::hsl ||
@@ -1178,7 +1178,7 @@ namespace Sass {
     return false;
   }
 
-  bool Emitter::isRelativeColor(const ColorSpaced* color) const
+  bool Emitter::isRelativeColor(const Color* color) const
   {
     const ColorSpace& space = color->space();
     if (space.name() == "lab" || space.name() == "lch")
@@ -1200,10 +1200,10 @@ namespace Sass {
   }
 
   // T visitColorRGBA(SassColor value);
-  void Inspect::visitColor(ColorSpaced* color)
+  void Inspect::visitColor(Color* color)
   {
     
-    auto spaced = color->isaColorSpaced();
+    auto spaced = color->isaColor();
     if (spaced == nullptr) {
       std::cerr << "wrong input for visitColor\n";
       return;

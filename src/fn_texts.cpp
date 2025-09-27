@@ -45,7 +45,7 @@ namespace Sass {
 
       static BUILT_IN_FN(quote)
       {
-        if (ColorSpaced* col = arguments[0]->isaColorSpaced()) {
+        if (Color* col = arguments[0]->isaColor()) {
           if (!col->disp().empty()) {
             sass::string copy(col->disp());
             return SASS_MEMORY_NEW(String,

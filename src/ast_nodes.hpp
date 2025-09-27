@@ -554,8 +554,8 @@ namespace Sass {
     virtual Value* assertValue(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a color or throws if incompatible
-    virtual const ColorSpaced* assertColorSpaced(Logger& logger, const sass::string& name = Strings::empty) const;
-    virtual ColorSpaced* assertColorSpaced2(Logger& logger, const sass::string& name = Strings::empty);
+    virtual const Color* assertColor(Logger& logger, const sass::string& name = Strings::empty) const;
+    virtual Color* assertColor2(Logger& logger, const sass::string& name = Strings::empty);
 
     // Assert and return a function or throws if incompatible
     virtual Function* assertFunction(Logger& logger, const sass::string& name = Strings::empty);
@@ -654,7 +654,7 @@ namespace Sass {
     OVERRIDE_ISA_CASTER(String);
     OVERRIDE_ISA_CASTER(Number);
     // DECLARE_ISA_CASTER(Color);
-    DECLARE_ISA_CASTER(ColorSpaced);
+    DECLARE_ISA_CASTER(Color);
     DECLARE_ISA_CASTER(Boolean);
     DECLARE_ISA_CASTER(Function);
     DECLARE_ISA_CASTER(CustomError);

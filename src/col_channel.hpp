@@ -15,7 +15,7 @@
 #include "ast_def_macros.hpp"
 #include "memory_allocator.hpp"
 
-class ColorSpaced;
+class Color;
 
 namespace Sass {
 
@@ -41,7 +41,7 @@ namespace Sass {
 
     GamutMapMethod(const sass::string& name) : name(name) {}
 
-    virtual ColorSpaced* map(ColorSpaced* color) const = 0;
+    virtual Color* map(Color* color) const = 0;
 
     static const GamutMapMethod& fromName(Logger& logger,
       Value* value, const sass::string& vname);
@@ -53,14 +53,14 @@ namespace Sass {
   public:
 
     ClipGamutMap() : GamutMapMethod("clip") {}
-    ColorSpaced* map(ColorSpaced* color) const override final;
+    Color* map(Color* color) const override final;
 
   };
 
   class LocalMindeGamutMap : public GamutMapMethod {
   public:
     LocalMindeGamutMap() : GamutMapMethod("local-minde") {}
-    ColorSpaced* map(ColorSpaced* color) const override final;
+    Color* map(Color* color) const override final;
 
   };
 
@@ -190,7 +190,7 @@ namespace Sass {
     virtual double fromLinear(double channel) const;
     virtual const double* transformationMatrix(ColorSpace dest) const;
 
-    virtual ColorSpaced* convertLinear(
+    virtual Color* convertLinear(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -204,7 +204,7 @@ namespace Sass {
       bool missingB = false) const;
 
 
-    virtual ColorSpaced* convert(
+    virtual Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> channel0,

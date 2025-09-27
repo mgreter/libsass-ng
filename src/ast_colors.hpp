@@ -640,7 +640,7 @@ namespace Sass {
     bool isLegacy() const override final { return true; }
     bool isPolar() const override final { return true; }
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> hue,
@@ -662,7 +662,7 @@ namespace Sass {
     bool isLegacy() const override final { return true; }
     bool isPolar() const override final { return true; }
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> hue,
@@ -682,7 +682,7 @@ namespace Sass {
 
     bool isBounded() const override final { return false; }
 
-    ColorSpaced* translate(
+    Color* translate(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> hue,
@@ -692,7 +692,7 @@ namespace Sass {
       bool missingChroma = false,
       bool missingHue = false) const;
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> hue,
@@ -718,7 +718,7 @@ namespace Sass {
     bool isPolar() const override final { return true; }
     bool isBounded() const override final { return false; }
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> hue,
@@ -759,7 +759,7 @@ namespace Sass {
       return ColorSpace::transformationMatrix(dest);
     }
 
-    ColorSpaced* translate(
+    Color* translate(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -772,7 +772,7 @@ namespace Sass {
       bool missingA = false,
       bool missingB = false) const;
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -797,7 +797,7 @@ namespace Sass {
 
     bool isBounded() const override final { return false; }
 
-    ColorSpaced* translate(
+    Color* translate(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> lightness,
@@ -807,7 +807,7 @@ namespace Sass {
       bool missingChroma = false,
       bool missingHue = false) const;
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> lightness,
@@ -833,7 +833,7 @@ namespace Sass {
     bool isPolar() const override final { return true; }
     bool isBounded() const override final { return false; }
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> lightness,
@@ -934,7 +934,7 @@ namespace Sass {
 
     bool isLegacy() const override final { return true; }
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> channel0,
@@ -978,7 +978,7 @@ namespace Sass {
       return ColorSpace::transformationMatrix(dest);
     }
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> hue,
@@ -1014,7 +1014,7 @@ namespace Sass {
       return ColorSpace::transformationMatrix(dest);
     }
 
-    ColorSpaced* translate(
+    Color* translate(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -1025,7 +1025,7 @@ namespace Sass {
       bool missingChroma = false,
       bool missingHue = false) const;
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -1070,7 +1070,7 @@ namespace Sass {
       return ColorSpace::transformationMatrix(dest);
     }
 
-    ColorSpaced* translate(
+    Color* translate(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -1083,7 +1083,7 @@ namespace Sass {
       bool missingA = false,
       bool missingB = false) const;
 
-    ColorSpaced* convert(
+    Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
       tl::optional<double> red,
@@ -1166,7 +1166,7 @@ namespace Sass {
   };
 
 
-  class ColorSpaced final : public Value
+  class Color final : public Value
   {
   private:
 
@@ -1185,10 +1185,10 @@ namespace Sass {
     // ADD_PROPERTY(bool, frgb);
     bool forceRgb = false;
 
-    ColorSpaced* interpolate(
+    Color* interpolate(
       Logger& logger,
       const SourceSpan& pstate,
-      ColorSpaced* other,
+      Color* other,
       InterpolationMethod method,
       double weight = 0.5,
       bool legacyMissing = true);
@@ -1206,7 +1206,7 @@ namespace Sass {
         || !alpha_.has_value();
     }
 
-    ColorSpaced* toGamut(const GamutMapMethod& method) {
+    Color* toGamut(const GamutMapMethod& method) {
       return isInGamut() ? this : method.map(this);
     }
 
@@ -1245,26 +1245,26 @@ namespace Sass {
     bool isChannelPowerless(Logger& logger, const String* channel,
       const char* colorName, const char* channelName) const;
 
-    virtual ColorSpaced* toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
-    virtual ColorSpaced* toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
+    virtual Color* toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
+    virtual Color* toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
 
   public:
 
 
-    static ColorSpaced* _forSpace(
+    static Color* _forSpace(
       const SourceSpan& pstate, const ColorSpace& space,
       tl::optional<double> c0, tl::optional<double> c1,
       tl::optional<double> c2, tl::optional<double> alpha
       /*,Logger& logger, format */)
     {
-      ColorSpaced* color = SASS_MEMORY_NEW(ColorSpaced, pstate, space, c0, c1, c2,
+      Color* color = SASS_MEMORY_NEW(Color, pstate, space, c0, c1, c2,
         alpha/*.and_then([&](double a) { return tl::optional<double>(fuzzyAssertRange(a, 0, 1, logger)); })*/);
       // assert(space == ColorSpace::rgb);
       // assert(space != ColorSpace::lms);
       return color;
     }
 
-    static ColorSpaced* rgb(
+    static Color* rgb(
       const SourceSpan& pstate,
       tl::optional<double> red,
       tl::optional<double> green,
@@ -1274,7 +1274,7 @@ namespace Sass {
       return rgbInternal(pstate, red, green, blue, alpha);
     }
 
-    static ColorSpaced* hsl(
+    static Color* hsl(
       const SourceSpan& pstate,
       tl::optional<double> red,
       tl::optional<double> green,
@@ -1287,7 +1287,7 @@ namespace Sass {
       return rv;
     }
 
-    static ColorSpaced* hwb(
+    static Color* hwb(
       const SourceSpan& pstate,
       tl::optional<double> red,
       tl::optional<double> green,
@@ -1300,7 +1300,7 @@ namespace Sass {
       return rv;
     }
 
-    static ColorSpaced* rgbInternal(
+    static Color* rgbInternal(
       const SourceSpan& pstate,
       tl::optional<double> red,
       tl::optional<double> green,
@@ -1315,7 +1315,7 @@ namespace Sass {
       return rv;
     }
 
-    static ColorSpaced* lab(
+    static Color* lab(
       const SourceSpan& pstate,
       tl::optional<double> lightness,
       tl::optional<double> a,
@@ -1328,7 +1328,7 @@ namespace Sass {
       return rv;
     }
 
-    static ColorSpaced* xyzD65(
+    static Color* xyzD65(
       const SourceSpan& pstate,
       tl::optional<double> x,
       tl::optional<double> y,
@@ -1351,7 +1351,7 @@ namespace Sass {
         return rv;
     }
 
-    static ColorSpaced* forSpaceInternal(
+    static Color* forSpaceInternal(
       const SourceSpan& pstate, const ColorSpace& space,
       tl::optional<double> c0, tl::optional<double> c1,
       tl::optional<double> c2, tl::optional<double> alpha)
@@ -1388,24 +1388,24 @@ namespace Sass {
       }
     }
 
-    ColorSpaced* changeAlpha(double alpha) {
-      return ColorSpaced::forSpaceInternal(
+    Color* changeAlpha(double alpha) {
+      return Color::forSpaceInternal(
         pstate_, space_,
         c0_, c1_, c2_,
         alpha);
     }
 
-    static ColorSpaced* oklab(
+    static Color* oklab(
       const SourceSpan& pstate, const ColorSpace& space,
       tl::optional<double> lightness, tl::optional<double> a,
       tl::optional<double> b, tl::optional<double> alpha)
     {
-      return ColorSpaced::_forSpace(pstate,
+      return Color::_forSpace(pstate,
         space, lightness, a, b, alpha);
 
     }
 
-    static ColorSpaced* labToLch(
+    static Color* labToLch(
       const SourceSpan& pstate, const ColorSpace& space,
       tl::optional<double> lightness, tl::optional<double> a,
       tl::optional<double> b, tl::optional<double> alpha,
@@ -1427,17 +1427,17 @@ namespace Sass {
           if (hue < 0) hue.value() += 360.0;
         }
       }
-      auto rv = ColorSpaced::forSpaceInternal(pstate,
+      auto rv = Color::forSpaceInternal(pstate,
         space, lightness, chroma, hue, alpha);
       return rv;
     }
 
-    // static ColorSpacedObj _forSpaceInternal(
+    // static ColorObj _forSpaceInternal(
     //   const SourceSpan& pstate, const ColorSpace& space,
     //   tl::optional<double>* c, tl::optional<double> alpha,
     //   Logger& logger/*, format */)
     // {
-    //   ColorSpacedObj color = SASS_MEMORY_NEW(ColorSpaced, pstate, space, c[0], c[1], c[2],
+    //   ColorObj color = SASS_MEMORY_NEW(Color, pstate, space, c[0], c[1], c[2],
     //     alpha.and_then([&](double a) { return tl::optional<double>(fuzzyAssertRange(a, 0, 1, logger)); }));
     //   // assert(space == ColorSpace::rgb);
     //   assert(space != ColorSpace::lms);
@@ -1445,14 +1445,14 @@ namespace Sass {
     // }
 
     // Value constructor
-    ColorSpaced(const SourceSpan& pstate,
+    Color(const SourceSpan& pstate,
       const ColorSpace& space,
       double c0, double c1,
       double c2, double alpha = 1.0,
       const sass::string& disp = "",
       bool parsed = false);
 
-    ColorSpaced(const SourceSpan& pstate,
+    Color(const SourceSpan& pstate,
       const ColorSpace& space,
       tl::optional<double> c0,
       tl::optional<double> c1,
@@ -1462,7 +1462,7 @@ namespace Sass {
       bool parsed = false);
 
     // Copy constructor
-    ColorSpaced(const ColorSpaced* ptr);
+    Color(const Color* ptr);
 
     double channel(const sass::string& channel) const;
 
@@ -1489,25 +1489,25 @@ namespace Sass {
     // Im ement equality comparators for base value class
     bool operator==(const Value& rhs) const override final;
     // Implement same class compare operator
-    bool operator==(const ColorSpaced& rhs) const;
+    bool operator==(const Color& rhs) const;
 
-    const ColorSpaced* assertColorSpaced(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
-    ColorSpaced* assertColorSpaced2(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
+    const Color* assertColor(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
+    Color* assertColor2(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
 
     // Copy operations for childless items
-    ColorSpaced* copy(SASS_MEMORY_ARGS bool childless) const override final {
-      return SASS_MEMORY_NEW_DBG(ColorSpaced, this);
+    Color* copy(SASS_MEMORY_ARGS bool childless) const override final {
+      return SASS_MEMORY_NEW_DBG(Color, this);
     }
 
     struct HashFunction
     {
-      size_t operator()(const ColorSpaced& color) const
+      size_t operator()(const Color& color) const
       {
         return color.hash();
       }
     };
 
-    IMPLEMENT_ISA_CASTER(ColorSpaced);
+    IMPLEMENT_ISA_CASTER(Color);
   };
 
 
@@ -1521,14 +1521,14 @@ namespace Sass {
   private:
 
     // Color wrapped inside this expression
-    ADD_CONSTREF(ColorSpacedObj, value);
+    ADD_CONSTREF(ColorObj, value);
 
   public:
 
     // Value constructor
     ColorExpression(
       SourceSpan pstate,
-      ColorSpaced* color);
+      Color* color);
 
     // Expression visitor to sass values entry function
     Value* accept(ExpressionVisitor<Value*>* visitor) override final {

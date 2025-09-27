@@ -319,40 +319,40 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
 
-  Value* ColorSpaced::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (other->isaNumber() || other->isaColorSpaced()) {
+    if (other->isaNumber() || other->isaColor()) {
       throw Exception::UndefinedOperation(
         logger, pstate, this, other, "+");
     }
     return Value::plus(other, logger, pstate);
   }
 
-  Value* ColorSpaced::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (other->isaNumber() || other->isaColorSpaced()) {
+    if (other->isaNumber() || other->isaColor()) {
       throw Exception::UndefinedOperation(
         logger, pstate, this, other, "-");
     }
     return Value::minus(other, logger, pstate);
   }
 
-  Value* ColorSpaced::dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (other->isaNumber() || other->isaColorSpaced()) {
+    if (other->isaNumber() || other->isaColor()) {
       throw Exception::UndefinedOperation(
         logger, pstate, this, other, "/");
     }
     return Value::dividedBy(other, logger, pstate);
   }
 
-  Value* ColorSpaced::modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     throw Exception::UndefinedOperation(
       logger, pstate, this, other, "%");
   }
 
-  Value* ColorSpaced::remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  Value* Color::remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
     throw Exception::UndefinedOperation(
       logger, pstate, this, other, "%%");
@@ -774,7 +774,7 @@ namespace Sass {
       return operate(add, *nr, logger, pstate);
     }
     // May return a string instead
-    if (!other->isaColorSpaced()) return
+    if (!other->isaColor()) return
       Value::plus(other, logger, pstate);
     throw Exception::UndefinedOperation(
       logger, pstate, this, other, "+");
@@ -787,7 +787,7 @@ namespace Sass {
       return operate(sub, *nr, logger, pstate);
     }
     // May return a string instead
-    if (!other->isaColorSpaced()) return
+    if (!other->isaColor()) return
       Value::minus(other, logger, pstate);
     throw Exception::UndefinedOperation(
       logger, pstate, this, other, "-");

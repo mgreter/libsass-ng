@@ -26,8 +26,8 @@ namespace Sass {
   
   bool _isAnalogousChannelMissing(
     Logger& logger,
-    ColorSpaced* original,
-    ColorSpaced* output,
+    Color* original,
+    Color* output,
     int outputChannelIndex)
   {
     if (output->isChannelMissing(outputChannelIndex)) return true;
@@ -89,14 +89,14 @@ namespace Sass {
     return rv;
   }
 
-  ColorSpaced* ColorSpaced::interpolate(Logger& logger, const SourceSpan& pstate, ColorSpaced* other, InterpolationMethod method, double weight, bool legacyMissing)
+  Color* Color::interpolate(Logger& logger, const SourceSpan& pstate, Color* other, InterpolationMethod method, double weight, bool legacyMissing)
   {
 
     if (fuzzyEquals(weight, 0.0, logger.epsilon)) return other;
     if (fuzzyEquals(weight, 1.0, logger.epsilon)) return this;
 
-    ColorSpaced* color1 = this->toSpace(method.space, pstate);
-    ColorSpaced* color2 = other->toSpace(method.space, pstate);
+    Color* color1 = this->toSpace(method.space, pstate);
+    Color* color2 = other->toSpace(method.space, pstate);
 
     if (weight < 0 || weight > 1) {
       throw Exception::SassScriptException(logger, pstate, "Weight out of Range");
@@ -135,10 +135,10 @@ namespace Sass {
     tl::optional<double> mixed2 = missing1_2 && missing2_2 ? tl::optional<double>()
       : (channel1_2 * thisMultiplier + channel2_2 * otherMultiplier) / (mixedAlpha.value_or(1.0));
 
-    ColorSpaced* rv = nullptr;
+    Color* rv = nullptr;
 
     if (method.space.name() == "hsl" || method.space.name() == "hwb") {
-      rv = ColorSpaced::forSpaceInternal(
+      rv = Color::forSpaceInternal(
         pstate, method.space,
         missing1_0 && missing2_0
         ? tl::optional<double>()
@@ -146,7 +146,7 @@ namespace Sass {
         mixed1, mixed2, mixedAlpha);
     }
     else if (method.space.name() == "lch" || method.space.name() == "oklch") {
-      rv = ColorSpaced::forSpaceInternal(
+      rv = Color::forSpaceInternal(
         pstate, method.space,
         mixed0, mixed1,
         missing1_2 && missing2_2
@@ -155,7 +155,7 @@ namespace Sass {
         mixedAlpha);
     }
     else {
-      rv = ColorSpaced::forSpaceInternal(pstate,
+      rv = Color::forSpaceInternal(pstate,
         method.space, mixed0, mixed1, mixed2, mixedAlpha);
     }
 
@@ -168,7 +168,7 @@ namespace Sass {
 
   }
 
-  sass::string ColorSpaced::debug() const
+  sass::string Color::debug() const
   {
     sass::sstream ss;
     ss << space_.name() << ": ";
@@ -199,15 +199,15 @@ namespace Sass {
     return ss.str();
   }
 
-  tl::optional<double> ColorSpaced::getChannel0OrNull() const { return c0_; }
-  tl::optional<double> ColorSpaced::getChannel1OrNull() const { return c1_; }
-  tl::optional<double> ColorSpaced::getChannel2OrNull() const { return c2_; }
-  tl::optional<double> ColorSpaced::getAlphaOrNull() const { return alpha_; }
+  tl::optional<double> Color::getChannel0OrNull() const { return c0_; }
+  tl::optional<double> Color::getChannel1OrNull() const { return c1_; }
+  tl::optional<double> Color::getChannel2OrNull() const { return c2_; }
+  tl::optional<double> Color::getAlphaOrNull() const { return alpha_; }
 
-  double ColorSpaced::getChannel0() const { return c0_.value_or(0); }
-  double ColorSpaced::getChannel1() const { return c1_.value_or(0); }
-  double ColorSpaced::getChannel2() const { return c2_.value_or(0); }
-  double ColorSpaced::getAlpha() const { return alpha_.value_or(0); }
+  double Color::getChannel0() const { return c0_.value_or(0); }
+  double Color::getChannel1() const { return c1_.value_or(0); }
+  double Color::getChannel2() const { return c2_.value_or(0); }
+  double Color::getAlpha() const { return alpha_.value_or(0); }
 
   bool isChannelInGamut(double value, const ColorChannel& channel)
   {
@@ -218,7 +218,7 @@ namespace Sass {
     return true;
   }
 
-  bool ColorSpaced::isInGamut() const
+  bool Color::isInGamut() const
   {
     if (!space_.isBounded())
     {
@@ -234,14 +234,14 @@ namespace Sass {
       && isChannelInGamut(getChannel2(), space_._channels[2]);
   }
 
-  bool ColorSpaced::isLegacy() const
+  bool Color::isLegacy() const
   {
     return space_.name() == "rgb"
       || space_.name() == "hwb"
       || space_.name() == "hsl";
   }
 
-  tl::optional<double> ColorSpaced::getChannelOrNull(int idx) const
+  tl::optional<double> Color::getChannelOrNull(int idx) const
   {
     switch (idx) {
     case 0: return c0_;
@@ -252,7 +252,7 @@ namespace Sass {
     return 0.0;
   }
 
-  double ColorSpaced::getChannel(int idx) const
+  double Color::getChannel(int idx) const
   {
     switch (idx) {
       case 0: return c0_.value_or(0);
@@ -263,12 +263,12 @@ namespace Sass {
     return 0.0;
   }
 
-  bool ColorSpaced::isChannel0Missing() const { return !c0_.has_value(); }
-  bool ColorSpaced::isChannel1Missing() const { return !c1_.has_value(); }
-  bool ColorSpaced::isChannel2Missing() const { return !c2_.has_value(); }
-  bool ColorSpaced::isAlphaMissing() const { return !alpha_.has_value(); }
+  bool Color::isChannel0Missing() const { return !c0_.has_value(); }
+  bool Color::isChannel1Missing() const { return !c1_.has_value(); }
+  bool Color::isChannel2Missing() const { return !c2_.has_value(); }
+  bool Color::isAlphaMissing() const { return !alpha_.has_value(); }
 
-  int ColorSpaced::getChannelIndex(
+  int Color::getChannelIndex(
     Logger& logger, const String* channel,
     const char* colorName,
     const char* channelName) const
@@ -284,7 +284,7 @@ namespace Sass {
       channel->value() + ".", channelName);
   }
 
-  bool ColorSpaced::isChannelPowerless(
+  bool Color::isChannelPowerless(
     Logger& logger, const String* channel,
     const char* colorName,
     const char* channelName) const
@@ -300,7 +300,7 @@ namespace Sass {
       channelName);
   }
 
-  bool ColorSpaced::isChannelMissing(
+  bool Color::isChannelMissing(
     Logger& logger, const String* channel, const sass::string& arg) const
   {
     // channel must not be nullptr
@@ -313,7 +313,7 @@ namespace Sass {
       "$" + arg + ": Color " + toString() + " doesn\'t have a channel named " + channel->toString() + ".");
   }
 
-  bool ColorSpaced::isChannelMissing(
+  bool Color::isChannelMissing(
     Logger& logger, const sass::string& channel) const
   {
     // channel must not be nullptr
@@ -326,7 +326,7 @@ namespace Sass {
       "Color " + toString() + " doesn\'t have a channel named " + channel + ".");
   }
 
-  bool ColorSpaced::isChannel0Powerless() const
+  bool Color::isChannel0Powerless() const
   {
     if (space_.name() == "hsl") {
       return fuzzyEquals(getChannel1(), 0, 0.00001);
@@ -337,12 +337,12 @@ namespace Sass {
     return false;
   }
 
-  bool ColorSpaced::isChannel1Powerless() const
+  bool Color::isChannel1Powerless() const
   {
     return false;
   }
 
-  bool ColorSpaced::isChannel2Powerless() const
+  bool Color::isChannel2Powerless() const
   {
     if (space_.name() == "lch" || space_.name() == "oklch") {
       return fuzzyEquals(getChannel1(), 0, 0.00001);
@@ -350,7 +350,7 @@ namespace Sass {
     return false;
   }
 
-  bool ColorSpaced::isChannelMissing(int idx) const
+  bool Color::isChannelMissing(int idx) const
   {
     switch (idx) {
     case 0: return !c0_.has_value();
@@ -361,17 +361,17 @@ namespace Sass {
   }
 
 
-  ColorSpaced* ColorSpaced::toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
+  Color* Color::toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
   {
     if (space == this->space_) {
-      return SASS_MEMORY_NEW(ColorSpaced, this);
+      return SASS_MEMORY_NEW(Color, this);
     }
 
     // std::cerr << "Do toSpace from " << debug() << " to " << space.name() << "\n";
 
-    // return SASS_MEMORY_NEW(ColorSpaced, this);
+    // return SASS_MEMORY_NEW(Color, this);
     // std::cerr << "Convert from " << space_.name() << " to " << space.name() << "\n";
-    ColorSpaced* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
+    Color* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
 
     // std::cerr << "  result " << converted->debug() << "\n";
 
@@ -383,7 +383,7 @@ namespace Sass {
         converted->isAlphaMissing()))
     {
       // std::cerr << "XXX Special case\n";
-      return ColorSpaced::forSpaceInternal(
+      return Color::forSpaceInternal(
         pstate, converted->space(),
         converted->getChannel0(),
         converted->getChannel1(),
@@ -406,15 +406,15 @@ namespace Sass {
     return converted;
   }
 
-  ColorSpaced* ColorSpaced::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
+  Color* Color::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
   {
     if (space == this->space_) {
-      return SASS_MEMORY_NEW(ColorSpaced, this);
+      return SASS_MEMORY_NEW(Color, this);
     }
 
     // std::cerr << "Do toSpace from " << debug() << " to " << space.name() << " (" << legacyMissing << ")\n";
 
-    ColorSpaced* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
+    Color* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
 
     // std::cerr << "  result " << converted->debug() << "\n";
 
@@ -426,7 +426,7 @@ namespace Sass {
         converted->isAlphaMissing()))
     {
       // std::cerr << "XXX Special case\n";
-      return ColorSpaced::forSpaceInternal(
+      return Color::forSpaceInternal(
         pstate, converted->space(),
         converted->getChannel0(),
         converted->getChannel1(),
@@ -449,7 +449,7 @@ namespace Sass {
     return converted;
   }
 
-  ColorSpaced::ColorSpaced(const SourceSpan& pstate, const ColorSpace& space, double c0, double c1, double c2, double alpha, const sass::string& disp, bool parsed)
+  Color::Color(const SourceSpan& pstate, const ColorSpace& space, double c0, double c1, double c2, double alpha, const sass::string& disp, bool parsed)
     : Value(pstate), disp_(disp), parsed_(parsed), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
   {
 
@@ -457,7 +457,7 @@ namespace Sass {
 
   }
 
-  ColorSpaced::ColorSpaced(
+  Color::Color(
     const SourceSpan& pstate,
     const ColorSpace& space,
     tl::optional<double> c0,
@@ -470,12 +470,12 @@ namespace Sass {
   {
   }
 
-  ColorSpaced::ColorSpaced(const ColorSpaced* ptr)
+  Color::Color(const Color* ptr)
     : Value(ptr), disp_(ptr->disp_), parsed_(ptr->parsed_), space_(ptr->space_), c0_(ptr->c0_), c1_(ptr->c1_), c2_(ptr->c2_), alpha_(ptr->alpha_)
   {
   }
 
-  double ColorSpaced::channel(const sass::string& channel) const
+  double Color::channel(const sass::string& channel) const
   {
     auto qwe = space_._channels;
     if (channel == space_._channels[0].name) return c0_.value_or(0);
@@ -486,16 +486,16 @@ namespace Sass {
   }
 
 
-  bool ColorSpaced::operator==(const Value& rhs) const
+  bool Color::operator==(const Value& rhs) const
   {
-    if (const ColorSpaced* color = rhs.isaColorSpaced()) {
+    if (const Color* color = rhs.isaColor()) {
       // ColorHwba* hwba = color->toHWBA();
       return *this == *color;
     }
     return false;
   }
 
-  bool ColorSpaced::operator==(const ColorSpaced& rhs) const
+  bool Color::operator==(const Color& rhs) const
   {
     if (!fuzzyEquals(alpha_, rhs.alpha_, sass::epsilon)) return false;
     if (isLegacy()) {
@@ -505,8 +505,8 @@ namespace Sass {
           &&   fuzzyEquals(c1_, rhs.c1_, sass::epsilon)
           &&   fuzzyEquals(c2_, rhs.c2_, sass::epsilon);
       }
-      ColorSpaced* rgb1 = toSpace(ColorSpace2::rgb, pstate());
-      ColorSpaced* rgb2 = rhs.toSpace(ColorSpace2::rgb, rhs.pstate());
+      Color* rgb1 = toSpace(ColorSpace2::rgb, pstate());
+      Color* rgb2 = rhs.toSpace(ColorSpace2::rgb, rhs.pstate());
       // std::cerr << "rgb1 " << rgb1->debug() << "\n";
       // std::cerr << "rgb2 " << rgb2->debug() << "\n";
       auto rv = fuzzyEquals(rgb1->c0_, rgb2->c0_, sass::epsilon)
@@ -521,10 +521,10 @@ namespace Sass {
       && fuzzyEquals(c2_, rhs.c2_, sass::epsilon);
   }
 
-  size_t ColorSpaced::hash() const
+  size_t Color::hash() const
   {
     if (hash_ == 0) {
-      hash_start(hash_, typeid(ColorSpaced).hash_code());
+      hash_start(hash_, typeid(Color).hash_code());
       hash_combine(hash_, std::hash<double>{}(c0_.has_value()));
       hash_combine(hash_, std::hash<double>{}(c0_.value_or(0)));
       hash_combine(hash_, std::hash<double>{}(c1_.has_value()));
@@ -622,7 +622,7 @@ namespace Sass {
     return dest;
   }
 
-  ColorSpaced* ColorSpace::convertLinear(
+  Color* ColorSpace::convertLinear(
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> red,
@@ -701,23 +701,23 @@ namespace Sass {
         alpha, missingLightness, missingChroma, missingHue);
     }
 
-    auto rv = ColorSpaced::forSpaceInternal(
+    auto rv = Color::forSpaceInternal(
       pstate, dest,
       red.has_value() ? transformedRed : red,
       green.has_value() ? transformedGreen : green,
       blue.has_value() ? transformedBlue : blue,
       alpha);
     return rv;
-    // auto rv = ColorSpaced::_forSpace(pstate, dest, 1, 1, 1, 1, )
+    // auto rv = Color::_forSpace(pstate, dest, 1, 1, 1, 1, )
 
-    // return ColorSpaced::forSpaceInternal(;
+    // return Color::forSpaceInternal(;
   }
 
 
 
   //const ColorSpace ColorSpacings::SRGB(str_srgb, SassColorSpace::SRGB, srgb_channels);
 
-  ColorSpaced* SrgbColorSpace::translate(
+  Color* SrgbColorSpace::translate(
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> red,
@@ -783,7 +783,7 @@ namespace Sass {
         tl::optional<double> c2;
         if (!missingLightness) c2 = lightness * 100;
 
-        return ColorSpaced::forSpaceInternal(
+        return Color::forSpaceInternal(
           pstate, dest, c0, c1, c2, alpha);
 
         // std::cerr << "other";
@@ -791,7 +791,7 @@ namespace Sass {
       else {
         double whiteness = min * 100;
         double blackness = 100 - max * 100;
-        auto rv = ColorSpaced::forSpaceInternal(
+        auto rv = Color::forSpaceInternal(
           pstate, dest,
           missingHue || fuzzyGreaterThanOrEquals(whiteness + blackness, 100, 0.00001)
           ? tl::optional<double>()
@@ -802,17 +802,17 @@ namespace Sass {
         return rv;
 
       }
-      return SASS_MEMORY_NEW(ColorSpaced, pstate, ColorSpace2::rgb, 1, 1, 1, 1);
+      return SASS_MEMORY_NEW(Color, pstate, ColorSpace2::rgb, 1, 1, 1, 1);
     }
     else if (dest == ColorSpace2::rgb) {
-      return ColorSpaced::rgb(pstate,
+      return Color::rgb(pstate,
         red.has_value() ? red.value() * 255.0 : red,
         green.has_value() ? green.value() * 255.0 : green,
         blue.has_value() ? blue.value() * 255.0 : blue,
         alpha);
     }
     else if (dest == ColorSpace2::srgb_linear) {
-      auto rv = ColorSpaced::forSpaceInternal(pstate, dest,
+      auto rv = Color::forSpaceInternal(pstate, dest,
         red.has_value() ? toLinear(red.value()) : red,
         green.has_value() ? toLinear(green.value()) : green,
         blue.has_value() ? toLinear(blue.value()) : blue,
@@ -827,7 +827,7 @@ namespace Sass {
     return nullptr;
   }
 
-  ColorSpaced* RgbColorSpace::convert(
+  Color* RgbColorSpace::convert(
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> channel0,
@@ -864,7 +864,7 @@ namespace Sass {
   }
 
 
-  ColorSpaced* XyzD50ColorSpace::translate(
+  Color* XyzD50ColorSpace::translate(
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> x,
@@ -895,7 +895,7 @@ namespace Sass {
       if (!missingLightness) { lightness = (116.0 * f1) - 16.0; }
 
       if (dest.name() == "lab") {
-        auto rv = ColorSpaced::lab(pstate, lightness,
+        auto rv = Color::lab(pstate, lightness,
           missingA ? tl::optional<double>() : a,
           missingB ? tl::optional<double>() : b,
           alpha);
@@ -903,7 +903,7 @@ namespace Sass {
         return rv;
       }
       else {
-        auto rv = ColorSpaced::labToLch(pstate,
+        auto rv = Color::labToLch(pstate,
           ColorSpace2::lch, lightness, a, b, alpha,
           missingChroma, missingHue);
         // std::cerr << "==lch== " << rv->debug() << "\n";
@@ -929,7 +929,7 @@ namespace Sass {
       * std::pow(std::abs(number), 1.0 / 3.0);
   }
 
-  ColorSpaced* LmsColorSpace::translate(
+  Color* LmsColorSpace::translate(
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> lng,
@@ -952,7 +952,7 @@ namespace Sass {
       double mediumScaled = _cubeRootPreservingSign(med.value_or(0));
       double shortScaled = _cubeRootPreservingSign(shrt.value_or(0));
 
-      return ColorSpaced::oklab(pstate, dest,
+      return Color::oklab(pstate, dest,
         missingLightness ? tl::optional<double>() :
         ColorSpaces::lmsToOklab[0] * longScaled
         + ColorSpaces::lmsToOklab[1] * mediumScaled
@@ -977,7 +977,7 @@ namespace Sass {
       double mediumScaled = _cubeRootPreservingSign(med.value_or(0));
       double shortScaled = _cubeRootPreservingSign(shrt.value_or(0));
 
-      return ColorSpaced::labToLch(pstate, dest,
+      return Color::labToLch(pstate, dest,
         missingLightness ? tl::optional<double>() :
         ColorSpaces::lmsToOklab[0] * longScaled
         + ColorSpaces::lmsToOklab[1] * mediumScaled
@@ -1003,7 +1003,7 @@ namespace Sass {
 
   }
 
-  ColorSpaced* OkLchColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> lightness, tl::optional<double> chroma, tl::optional<double> hue, tl::optional<double> alpha) const
+  Color* OkLchColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> lightness, tl::optional<double> chroma, tl::optional<double> hue, tl::optional<double> alpha) const
   {
     // std::cerr << "OKLCH Translate\n";
     double hueRadians = hue.value_or(0) * PI / 180.0;
@@ -1017,13 +1017,13 @@ namespace Sass {
       !hue.has_value());
   }
 
-  ColorSpaced* OkLabColorSpace::translate(const ColorSpace& dest, const SourceSpan& pstate,
+  Color* OkLabColorSpace::translate(const ColorSpace& dest, const SourceSpan& pstate,
     tl::optional<double> lightness, tl::optional<double> a, tl::optional<double> b, tl::optional<double> alpha,
     bool missingChroma, bool missingHue) const
   {
     // std::cerr << "OKLAB Translate\n";
     if (dest.name() == "oklch") {
-      return ColorSpaced::labToLch(pstate, dest, lightness, a, b, alpha,
+      return Color::labToLch(pstate, dest, lightness, a, b, alpha,
         missingChroma, missingHue);
     }
 
@@ -1087,7 +1087,7 @@ namespace Sass {
     return val;
   }
 
-  ColorSpaced* HwbColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> hue, tl::optional<double> whiteness, tl::optional<double> blackness, tl::optional<double> alpha) const
+  Color* HwbColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> hue, tl::optional<double> whiteness, tl::optional<double> blackness, tl::optional<double> alpha) const
   {
     // From https://www.w3.org/TR/css-color-4/#hwb-to-rgb
     double scaledHue = std::fmod(hue.value_or(0), 360.0) / 360.0;
@@ -1116,7 +1116,7 @@ namespace Sass {
       !hue.has_value());
   }
 
-  ColorSpaced* LchColorSpace::convert(
+  Color* LchColorSpace::convert(
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> lightness,
@@ -1141,7 +1141,7 @@ namespace Sass {
     return cubed > labEpsilon ? cubed : (116.0 * component - 16.0) / labKappa;
   }
 
-  ColorSpaced* LabColorSpace::translate(
+  Color* LabColorSpace::translate(
     const ColorSpace& dest,
     const SourceSpan& pstate,
     tl::optional<double> lightness,
@@ -1157,7 +1157,7 @@ namespace Sass {
     if (dest.name() == "lab")
     {
       bool powerlessAB = !lightness.has_value() || fuzzyEquals(lightness.value(), 0, sass::epsilon);
-      return ColorSpaced::lab(pstate,
+      return Color::lab(pstate,
         lightness,
         !a.has_value() || powerlessAB ? tl::optional<double>() : a,
         !b.has_value() || powerlessAB ? tl::optional<double>() : b,
@@ -1165,7 +1165,7 @@ namespace Sass {
     }
     else if (dest.name() == "lch")
     {
-      return ColorSpaced::labToLch(pstate,
+      return Color::labToLch(pstate,
         dest, lightness, a, b, alpha,
         missingChroma, missingHue);
     }
@@ -1197,7 +1197,7 @@ namespace Sass {
 
   }
 
-  ColorSpaced* SrgbLinearColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate,
+  Color* SrgbLinearColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate,
     tl::optional<double> red, tl::optional<double> green, tl::optional<double> blue, tl::optional<double> alpha) const
   {
     if (dest.name() == "rgb" || dest.name() == "hsl" ||
@@ -1216,7 +1216,7 @@ namespace Sass {
   }
 
 
-  ColorSpaced* HslColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> hue, tl::optional<double> saturation, tl::optional<double> lightness, tl::optional<double> alpha) const
+  Color* HslColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate, tl::optional<double> hue, tl::optional<double> saturation, tl::optional<double> lightness, tl::optional<double> alpha) const
   {
     // Algorithm from the CSS3 spec: https://www.w3.org/TR/css3-color/#hsl-color.
     double scaledHue = std::fmod(hue.value_or(0) / 360.0, 1.0);
@@ -1260,10 +1260,10 @@ namespace Sass {
   const LocalMindeGamutMap GamutMapMethod::localMinde = LocalMindeGamutMap();
 
 
-  ColorSpaced* ClipGamutMap::map(ColorSpaced* color) const
+  Color* ClipGamutMap::map(Color* color) const
   {
     // std::cerr << "clip gammut " << color->debug() << "\n";
-    return ColorSpaced::forSpaceInternal(
+    return Color::forSpaceInternal(
       color->pstate(), color->space(),
       _clampChannel(color->getChannel0OrNull(), color->space()._channels[0]),
       _clampChannel(color->getChannel1OrNull(), color->space()._channels[1]),
@@ -1285,7 +1285,7 @@ namespace Sass {
   }
 
   /// Returns the ΔEOK measure between [color1] and [color2].
-  double _deltaEOK(ColorSpaced* color1, ColorSpaced* color2) {
+  double _deltaEOK(Color* color1, Color* color2) {
     // Algorithm from https://www.w3.org/TR/css-color-4/#color-difference-OK
     auto lab1 = color1->toSpace(ColorSpace2::oklab, color1->pstate());
     auto lab2 = color2->toSpace(ColorSpace2::oklab, color2->pstate());
@@ -1297,7 +1297,7 @@ namespace Sass {
   }
 
 
-  ColorSpaced* LocalMindeGamutMap::map(ColorSpaced* color) const
+  Color* LocalMindeGamutMap::map(Color* color) const
   {
 
     /// A constant from the gamut-mapping algorithm.
@@ -1316,21 +1316,21 @@ namespace Sass {
     auto alpha = originOklch->getAlphaOrNull();
 
     if (fuzzyGreaterThanOrEquals(lightness.value_or(0), 1.0, sass::epsilon)) {
-      if (color->isLegacy()) return ColorSpaced::rgb(
+      if (color->isLegacy()) return Color::rgb(
         color->pstate(), 255, 255, 255, color->getAlphaOrNull())
         ->toSpace(color->space(), color->pstate());
-      return ColorSpaced::forSpaceInternal(
+      return Color::forSpaceInternal(
         color->pstate(), color->space(),
         1, 1, 1, color->getAlphaOrNull());
     }
     else if (fuzzyLessThanOrEquals(lightness.value_or(0), 0.0, sass::epsilon)) {
-      return ColorSpaced::rgb(
+      return Color::rgb(
         color->pstate(),
         0, 0, 0, color->getAlphaOrNull())
         ->toSpace(color->space(), color->pstate());
     }
 
-    ColorSpaced* clipped = color->toGamut(GamutMapMethod::clip);
+    Color* clipped = color->toGamut(GamutMapMethod::clip);
 
     if (_deltaEOK(clipped, color) < _jnd) return clipped;
 
@@ -1343,7 +1343,7 @@ namespace Sass {
       // In the Color 4 algorithm `current` is in Oklch, but all its actual uses
       // other than modifying chroma convert it to `color.space` first so we
       // just store it in that space to begin with.
-      ColorSpaced* current = ColorSpace2::oklch.convert(
+      Color* current = ColorSpace2::oklch.convert(
         color->space(),
         color->pstate(),
         lightness,
@@ -1451,7 +1451,7 @@ namespace Sass {
 
   ColorExpression::ColorExpression(
     SourceSpan pstate,
-    ColorSpaced* value) :
+    Color* value) :
     Expression(std::move(pstate)),
     value_(value)
   {

@@ -204,7 +204,7 @@ extern "C" {
   {
     return newSassValue(SASS_MEMORY_NEW(Null, SourceSpan::internal32("sass://color")));
     // return newSassValue(SASS_MEMORY_NEW(
-    //   ColorSpaced, SourceSpan::internal32("sass://color"), r, g, b, a));
+    //   Color, SourceSpan::internal32("sass://color"), r, g, b, a));
   }
 
   struct SassValue* ADDCALL sass_make_string(const char* value, bool is_quoted)

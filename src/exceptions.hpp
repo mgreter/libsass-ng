@@ -350,7 +350,7 @@ namespace Sass {
     class MissingColorChannel : public SassScriptException {
     public:
       MissingColorChannel(BackTraces traces,
-        const ColorSpaced* color,
+        const Color* color,
         const ColorChannel& channel);
     };
 
