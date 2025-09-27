@@ -131,37 +131,6 @@ namespace Sass {
   // The Color Expression.
   /////////////////////////////////////////////////////////////////////////
 
-  class ColorExpression final : public Expression
-  {
-  private:
-
-    // Color wrapped inside this expression
-    ADD_CONSTREF(ColorObj, value);
-
-  public:
-
-    // Value constructor
-    ColorExpression(
-      SourceSpan pstate,
-      Color* color);
-
-    // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
-      return visitor->visitColorExpression(this);
-    }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
-      return visitor->visitColorExpression(this);
-    }
-
-    // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return false; }
-
-    // Convert to string (only for debugging)
-    sass::string toString() const override final;
-
-    // Implement specialized up-casting method
-    IMPLEMENT_ISA_CASTER(ColorExpression);
-  };
 
   /////////////////////////////////////////////////////////////////////////
   // The Number Expression.

@@ -450,7 +450,7 @@ namespace Sass {
   }
 
   ColorSpaced::ColorSpaced(const SourceSpan& pstate, const ColorSpace& space, double c0, double c1, double c2, double alpha, const sass::string& disp, bool parsed)
-    : Color(pstate), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha), disp_(disp), parsed_(parsed)
+    : Value(pstate), disp_(disp), parsed_(parsed), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
   {
 
 
@@ -466,12 +466,12 @@ namespace Sass {
     tl::optional<double> alpha,
     const sass::string& disp,
     bool parsed)
-    : Color(pstate), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
+    : Value(pstate), disp_(disp), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
   {
   }
 
   ColorSpaced::ColorSpaced(const ColorSpaced* ptr)
-    : Color(ptr), space_(ptr->space_), c0_(ptr->c0_), c1_(ptr->c1_), c2_(ptr->c2_), alpha_(ptr->alpha_)
+    : Value(ptr), disp_(ptr->disp_), parsed_(ptr->parsed_), space_(ptr->space_), c0_(ptr->c0_), c1_(ptr->c1_), c2_(ptr->c2_), alpha_(ptr->alpha_)
   {
   }
 
@@ -1447,6 +1447,20 @@ namespace Sass {
     throw Exception::SassScriptException(logger, value->pstate(),
       "Unknown hue interpolation method " + value->toCss() + ".",
       name);
+  }
+
+  ColorExpression::ColorExpression(
+    SourceSpan pstate,
+    ColorSpaced* value) :
+    Expression(std::move(pstate)),
+    value_(value)
+  {
+  }
+
+  // Convert to string (only for debugging)
+  sass::string ColorExpression::toString() const
+  {
+    return value_->inspect();
   }
 
 }

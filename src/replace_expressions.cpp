@@ -5,6 +5,7 @@
 
 #include "ast_callables.hpp"
 #include "environment_cnt.hpp"
+#include "ast_colors.hpp"
 
 namespace Sass {
 
