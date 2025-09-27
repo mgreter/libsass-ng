@@ -148,18 +148,6 @@ namespace Sass {
   // Base class for colors (either rgba or hsla).
   ///////////////////////////////////////////////////////////////////////
 
-  class Color : public Value
-  {
-
-  public:
-
-    // Value constructor
-    Color(const SourceSpan& pstate);
-
-    // Copy constructor
-    Color(const Color* ptr);
-
-  };
 
   ///////////////////////////////////////////////////////////////////////
   // A sass number with optional units

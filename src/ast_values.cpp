@@ -313,20 +313,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  Color::Color(
-    const SourceSpan& pstate) :
-    Value(pstate)/*,
-    disp_(disp),
-    parsed_(parsed)*/
-  {}
-
-  Color::Color(const Color* ptr)
-    : Value(ptr)/*,
-    // Reset on copy
-    // disp_(ptr->disp_),
-    parsed_(false)*/ // safe to assume?
-    // ptr->parsed_
-  {}
 
   /////////////////////////////////////////////////////////////////////////
   // Implement value operators for color

@@ -153,7 +153,6 @@ namespace Sass {
 
   class VariableExpression;
   class Number;
-  class Color;
   class ColorSpace;
   class ColorChannel;
   class ColorSpaced;
@@ -289,7 +288,6 @@ namespace Sass {
   IMPL_MEM_OBJ(CustomError);
   IMPL_MEM_OBJ(VariableExpression);
   IMPL_MEM_OBJ(Number);
-  IMPL_MEM_OBJ(Color);
   IMPL_MEM_OBJ(ColorSpaced);
   IMPL_MEM_OBJ(Boolean);
   IMPL_MEM_OBJ(String);
