@@ -34,7 +34,7 @@ namespace Sass {
   // whitespace, but nothing else, including comments.
   void ScssParser::expectStatementSeparator(sass::string name)
   {
-    scanWhitespaceWithoutComments(false);
+    scanWhitespaceWithoutComments();
     if (scanner.isDone()) return;
     uint8_t next = scanner.peekChar();
     if (next == $semicolon || next == $rbrace) return;

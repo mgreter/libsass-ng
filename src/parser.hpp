@@ -65,7 +65,7 @@ namespace Sass {
     virtual void scanWhitespace(bool consumeNewlines)
     {
       do {
-        scanWhitespaceWithoutComments(consumeNewlines);
+        scanWhitespaceWithoutComments();
       } while (scanComment());
     }
 
@@ -74,7 +74,7 @@ namespace Sass {
       scanWhitespace(false);
     }
 
-    virtual void expectWhitespace(bool consumeNewlines = false)
+    virtual void expectWhitespace()
     {
       if (scanner.isDone() || !(Character::isWhitespace(scanner.peekChar()) || scanComment())) {
         error("Expected whitespace.", scanner.rawSpan());
@@ -83,7 +83,7 @@ namespace Sass {
     }
 
     // Consumes whitespace, but not comments.
-    virtual void scanWhitespaceWithoutComments(bool consumeNewlines = false)
+    virtual void scanWhitespaceWithoutComments()
     {
       while (!scanner.isDone() && Character::isWhitespace(scanner.peekChar())) {
         scanner.readChar();

@@ -389,7 +389,7 @@ namespace Sass {
     return SASS_MEMORY_NEW(LoudComment, std::move(pstate), itpl);
   }
 
-  void SassParser::scanWhitespaceWithoutComments(bool consumeNewlines)
+  void SassParser::scanWhitespaceWithoutComments()
   {
     // This overrides whitespace consumption so that
     // it doesn't consume newlines or loud comments.
