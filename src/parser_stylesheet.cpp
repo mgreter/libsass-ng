@@ -3517,7 +3517,7 @@ namespace Sass {
   // Like [_urlContents], but returns `null` if the URL fails to parse.
   // [start] is the position before the beginning of the name.
   // [name] is the function's name; it defaults to `"url"`.
-  Interpolation* StylesheetParser::tryUrlContents(const Offset& start, sass::string name)
+  Interpolation* StylesheetParser::tryUrlContents(const Offset& start, const sass::string& name)
   {
     // NOTE: this logic is largely duplicated in Parser.tryUrl.
     // Most changes here should be mirrored there.
@@ -3750,6 +3750,7 @@ namespace Sass {
     Offset start(scanner.offset);
     sass::vector<uint8_t> brackets;
     bool wroteNewline = false;
+    bool isUrl = false;
     uint8_t next = 0;
 
     InterpolationObj itpl;
@@ -3857,13 +3858,20 @@ namespace Sass {
       case $u:
       case $U:
         beforeUrl = scanner.state();
-        if (!scanIdentifier("url")) {
+        isUrl = scanIdentifier("url");
+        if (!isUrl &&
+          // This isn't actually a standard CSS feature, but it was
+          // supported by the old `@document` rule so we continue to support
+          // it for backwards-compatibility.
+          !scanIdentifier("url-prefix"))
+        {
           buffer.write(scanner.readChar());
           wroteNewline = false;
           break;
         }
 
-        contents = tryUrlContents(beforeUrl.offset);
+        contents = tryUrlContents(beforeUrl.offset,
+          isUrl ? "url" : "url-prefix");
         if (contents == nullptr) {
           scanner.backtrack(beforeUrl);
           buffer.write(scanner.readChar());

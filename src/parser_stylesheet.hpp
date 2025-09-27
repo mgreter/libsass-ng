@@ -469,16 +469,16 @@ namespace Sass {
     // Consumes the contents of a plain-CSS `min()` or `max()` function into
     // [buffer] if one is available. Returns whether this succeeded. If [allowComma]
     // is `true` (the default), this allows `CalcValue` productions separated by commas.
-    bool tryMinMaxContents(InterpolationBuffer& buffer, bool allowComma = true);
+    // bool tryMinMaxContents(InterpolationBuffer& buffer, bool allowComma = true);
 
     // Consumes a function named [name] containing an optional `InterpolatedDeclarationValue`
     // and adds its text to [buffer]. Returns whether such a function could be consumed.
-    bool tryMinMaxFunction(InterpolationBuffer& buffer, sass::string name = "");
+    // bool tryMinMaxFunction(InterpolationBuffer& buffer, sass::string name = "");
 
     // Like [_urlContents], but returns `null` if the URL fails to parse.
     // [start] is the position before the beginning of the name.
     // [name] is the function's name; it defaults to `"url"`.
-    Interpolation* tryUrlContents(const Offset& start, sass::string name = "");
+    Interpolation* tryUrlContents(const Offset& start, const sass::string& name = "");
 
     // Consumes a [url] token that's allowed to contain SassScript.
     // Returns either a  `StringExpression` or a `FunctionExpression`
