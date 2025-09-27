@@ -314,9 +314,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Color::Color(
-    const SourceSpan& pstate,
-    const sass::string& disp,
-    bool parsed) :
+    const SourceSpan& pstate) :
     Value(pstate)/*,
     disp_(disp),
     parsed_(parsed)*/

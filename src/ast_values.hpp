@@ -150,42 +150,15 @@ namespace Sass {
 
   class Color : public Value
   {
-  private:
-
-    // ADD_CONSTREF(sass::string, disp);
-    // ADD_CONSTREF(bool, parsed);
 
   public:
 
     // Value constructor
-    Color(const SourceSpan& pstate,
-      const sass::string& disp = "",
-      bool parsed = false);
+    Color(const SourceSpan& pstate);
 
     // Copy constructor
     Color(const Color* ptr);
 
-    // Implement interface for base Value class
-    // virtual size_t hash() const override = 0;
-    // SassValueType getTag() const override { return SASS_COLOR; }
-    // const sass::string& type() const override { return Strings::color; }
-
-    // Implement some operations for base value class
-
-    // Main entry point for Value Visitor pattern
-    // void accept(ValueVisitor<void>* visitor) override final {
-    //   return visitor->visitColor(this);
-    // }
-    // Value* accept(ValueVisitor<Value*>* visitor) override final {
-    //   return visitor->visitColor(this);
-    // }
-
-    // This is a very interesting line, as it seems pointless, since the base class
-    // already marks this as an unimplemented interface methods, but by defining this
-    // line here, we make sure that callers know the return is a bit more specific.
-    // virtual Color* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
-
-    // IMPLEMENT_ISA_CASTER(Color);
   };
 
   ///////////////////////////////////////////////////////////////////////
