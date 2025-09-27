@@ -8,9 +8,14 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-#include "ast_nodes.hpp"
-#include "ast_values.hpp"
+// #include "ast_nodes.hpp"
+// #include "ast_values.hpp"
 #include "shim/optional.hpp"
+#include "ast_fwd_decl.hpp"
+#include "ast_def_macros.hpp"
+#include "memory_allocator.hpp"
+
+class ColorSpaced;
 
 namespace Sass {
 

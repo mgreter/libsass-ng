@@ -10,6 +10,7 @@
 
 #include "ast_nodes.hpp"
 #include "col_channel.hpp"
+#include "ast_values.hpp"
 
 namespace Sass {
 
