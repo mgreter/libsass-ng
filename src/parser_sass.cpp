@@ -336,11 +336,13 @@ namespace Sass {
             }
 
             if (!scanner.isDone() && !isNewline(scanner.peekChar())) {
-              auto errorStart = scanner.state();
-              while (!scanner.isDone() && !isNewline(scanner.peekChar())) {
-                scanner.readChar();
-              }
-              throw "unexpected text";
+              error("Unexpected text after end of comment.",
+                scanner.rawSpan());
+              // Dart-sass consumes the text for error reporting
+              // auto errorStart = scanner.state();
+              // while (!scanner.isDone() && !isNewline(scanner.peekChar())) {
+              //   scanner.readChar();
+              // }
               // throw MultiSpanSassFormatException(
               //   "Unexpected text after end of comment",
               //   scanner.spanFrom(errorStart),
