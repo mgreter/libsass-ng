@@ -71,6 +71,7 @@ namespace Sass {
       void append_string(const sass::string& text);
       void append_string(const char* text, size_t repeat);
       void append_string(const sass::string& text, size_t repeat);
+      void indent_comment(const sass::string& text);
       // append a single character to buffer
       void write_char(uint8_t chr);
       void append_char(uint8_t chr);

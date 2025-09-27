@@ -122,25 +122,42 @@ namespace Sass {
     if (output_style() == SASS_STYLE_COMPRESSED || output_style() == SASS_STYLE_COMPACT) {
       if (!important) return;
     }
+
+    // find lowest indentation for every line
+    // remove lowest indentation from every line
+    // Basically move it back as much as possible
+    // then add wanted indentation back to every line
+
     if (output_style() != SASS_STYLE_COMPRESSED || important) {
+
+      size_t id = indentation;
       // was comment on a new line or not?
       if (comment->isNewline() == false) {
-        scheduled_linefeed = false;
-        append_optional_space();
+        //scheduled_linefeed = false;
+        append_indentation();
+        // append_optional_space();
+        indent_comment(comment->text());
+        if (indentation == 0) {
+          append_mandatory_linefeed();
+        }
+        else {
+          append_optional_linefeed();
+        }
+        // append_optional_linefeed();
         // scheduled_space = false;
       }
       else {
         append_indentation();
+        indent_comment(comment->text());
+        if (indentation == 0) {
+          append_mandatory_linefeed();
+        }
+        else {
+          append_optional_linefeed();
+        }
       }
 //      
 
-      append_string(comment->text());
-      if (indentation == 0) {
-        append_mandatory_linefeed();
-      }
-      else {
-        append_optional_linefeed();
-      }
     }
   }
   // EO printCssComment

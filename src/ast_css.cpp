@@ -229,7 +229,9 @@ namespace Sass {
     text_(text),
     isPreserved_(preserve),
     isNewline_(newline)
-  {}
+  {
+     
+  }
 
   CssComment::CssComment(
     const CssComment* ptr) :

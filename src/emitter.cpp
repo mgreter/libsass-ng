@@ -185,6 +185,185 @@ namespace Sass {
     if (wbuf.srcmap) wbuf.srcmap->append(Offset(chr));
   }
 
+  static sass::string cleanComment(const sass::string& text)
+  {
+    size_t minIndent = 10e30,
+      curIndent = 0, i = 0;
+    while (i < text.size()) {
+      if (Character::isNewline(text[i++])) {
+        while (Character::isNewline(text[i++])) {}
+        curIndent = i; // store current position
+        while (Character::isSpaceOrTab(text[i++])) {}
+        if (!Character::isNewline(text[i - 1])) {
+          // std::cerr << "line has indent " << i - curIndent << "\n";
+          minIndent = std::min(minIndent, i - curIndent);
+        }
+      }
+    }
+
+    bool firstLine = true;
+    i = 0; sass::string cleaned;
+
+    while (i < text.size()) {
+      if (Character::isNewline(text[i++])) {
+        firstLine = false;
+        cleaned += text[i - 1];
+        while (Character::isNewline(text[i++])) {
+          cleaned += text[i - 1];
+        }
+        curIndent = 0;
+        while (Character::isSpaceOrTab(text[i++])) {
+          curIndent++;
+          if (curIndent > minIndent) {
+            cleaned += ' ';
+          }
+        }
+        if (!Character::isNewline(text[i - 1])) {
+          cleaned += text[i - 1];
+        }
+        else {
+          cleaned += text[i - 1];
+        }
+      }
+      else if (firstLine) {
+        cleaned += text[i - 1];
+      }
+      else {
+        curIndent = 0;
+        if (Character::isSpaceOrTab(text[i - 1])) {
+          while (Character::isSpaceOrTab(text[i++])) {
+            curIndent++;
+            if (curIndent > minIndent) {
+              cleaned += ' ';
+            }
+            // cleaned += '=';
+          }
+        }
+        cleaned += text[i - 1];
+      }
+    }
+
+    std::cerr << " min indent is " << minIndent << "\n";
+    // ignore first line
+    // remove indentation from comment as much as possible
+    std::cerr << "=============\n";
+    std::cerr << text << "\n";
+    std::cerr << "=============\n";
+    std::cerr << cleaned << "\n";
+    std::cerr << "=============\n";
+    return text;
+  }
+
+  // append some text or token to the buffer
+  // comments indent also depend on where original
+  // opener of the comment was in the original file
+  void Emitter::indent_comment(const sass::string& text)
+  {
+    // write space/lf
+    flush_schedules();
+    if (text.empty() == false)
+      parentheses_opened = false;
+    // add to buffer
+
+
+
+
+    size_t minIndent = 10e30,
+      curIndent = 0, i = 0;
+    while (i < text.size()) {
+      if (Character::isNewline(text[i++])) {
+        while (Character::isNewline(text[i++])) {}
+        curIndent = i; // store current position
+        while (Character::isSpaceOrTab(text[i++])) {}
+        if (!Character::isNewline(text[i - 1])) {
+          std::cerr << "line has indent " << i - curIndent << "\n";
+          minIndent = std::min(minIndent, i - curIndent - 1);
+        }
+      }
+    }
+
+    bool firstLine = true;
+    bool startLine = true;
+    i = 0; sass::string cleaned;
+
+    while (i < text.size()) {
+      if (Character::isNewline(text[i++])) {
+        firstLine = false;
+        startLine = true;
+        wbuf.buffer += text[i - 1];
+        while (Character::isNewline(text[i++])) {
+          wbuf.buffer += text[i - 1];
+        }
+        curIndent = 0;
+        if (startLine) {
+          // wbuf.buffer += '#';
+          startLine = false;
+          append_indentation();
+          if (Character::isSpaceOrTab(text[i - 1])) {
+            while (Character::isSpaceOrTab(text[i - 1])) {
+              curIndent++;
+              if (curIndent > minIndent) {
+                wbuf.buffer += ' ';
+              }
+              i++;
+            }
+          }
+        }
+
+        if (!Character::isNewline(text[i - 1])) {
+          wbuf.buffer += text[i - 1];
+        }
+        else {
+          wbuf.buffer += text[i - 1];
+        }
+      }
+      else if (firstLine) {
+        wbuf.buffer += text[i - 1];
+      }
+      else {
+        curIndent = 0;
+        if (startLine) {
+          // wbuf.buffer += '#';
+          startLine = false;
+          if (Character::isSpaceOrTab(text[i - 1])) {
+            append_indentation();
+            while (Character::isSpaceOrTab(text[i - 1])) {
+              curIndent++;
+              if (curIndent > minIndent) {
+                wbuf.buffer += ' ';
+              }
+              i++;
+              // wbuf.buffer += '=';
+            }
+          }
+        }
+        else {
+          startLine = false;
+          wbuf.buffer += text[i - 1];
+        }
+      }
+    }
+
+    // std::cerr << " min indent is " << minIndent << "\n";
+    // // ignore first line
+    // // remove indentation from comment as much as possible
+    // std::cerr << "=============\n";
+    // std::cerr << text << "\n";
+    // std::cerr << "=============\n";
+    // std::cerr << cleaned << "\n";
+    // std::cerr << "=============\n";
+
+
+
+
+
+
+
+    // wbuf.buffer.append(text);
+    // account for data in source-maps
+    if (wbuf.srcmap) wbuf.srcmap->append(Offset(text));
+  }
+
   // append some text or token to the buffer
   void Emitter::append_string(const sass::string& text)
   {
