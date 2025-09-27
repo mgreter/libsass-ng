@@ -1211,6 +1211,7 @@ namespace Sass {
         sass::string flag(readIdentifier());
         if (flag == "default") {
           guarded = true;
+          scanWhitespace();
         }
         else {
           error("Invalid flag name.",
@@ -1474,8 +1475,10 @@ namespace Sass {
     //  throw Exception::InvalidSassIdentifier(compiler, url);
     //}
 
+    scanWhitespace();
     sass::vector<WithConfigVar> config;
     bool hasWith(readWithConfiguration(config, false));
+    scanWhitespace();
     expectStatementSeparator("@use rule");
 
     if (isUseAllowed == false) {
@@ -1565,8 +1568,10 @@ namespace Sass {
       isHidden = true;
     }
 
+    scanWhitespace();
     sass::vector<WithConfigVar> config;
     bool hasWith(readWithConfiguration(config, true));
+    scanWhitespace();
     // RAII_FLAG(hasWithConfig, hasWithConfig || hasWith);
     expectStatementSeparator("@forward rule");
 
