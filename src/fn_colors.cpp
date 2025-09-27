@@ -865,6 +865,7 @@ namespace Sass {
             initial->append(_parseNumberOrString(compiler, pstate, parts[0]));
             return { initial, _parseNumberOrString(compiler, pstate, parts[1]) };
           }
+          return { nullptr, nullptr };
         }
       }
 
