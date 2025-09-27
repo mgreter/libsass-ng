@@ -173,12 +173,12 @@ namespace Sass {
     // Implement some operations for base value class
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
-      return visitor->visitColor(this);
-    }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
-      return visitor->visitColor(this);
-    }
+    // void accept(ValueVisitor<void>* visitor) override final {
+    //   return visitor->visitColor(this);
+    // }
+    // Value* accept(ValueVisitor<Value*>* visitor) override final {
+    //   return visitor->visitColor(this);
+    // }
 
     // This is a very interesting line, as it seems pointless, since the base class
     // already marks this as an unimplemented interface methods, but by defining this

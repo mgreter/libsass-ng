@@ -1467,6 +1467,14 @@ namespace Sass {
     SassValueType getTag() const override final { return SASS_COLOR; }
     const sass::string& type() const override final { return Strings::color; }
 
+    // Main entry point for Value Visitor pattern
+    void accept(ValueVisitor<void>* visitor) override final {
+      return visitor->visitColor(this);
+    }
+    Value* accept(ValueVisitor<Value*>* visitor) override final {
+      return visitor->visitColor(this);
+    }
+
     // Implement some operations for base value class
     Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
     Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
