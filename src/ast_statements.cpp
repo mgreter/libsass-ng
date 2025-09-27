@@ -510,9 +510,10 @@ namespace Sass {
 
   LoudComment::LoudComment(
     SourceSpan&& pstate,
-    Interpolation* text) :
+    Interpolation* text,
+    bool newline) :
     Statement(std::move(pstate)),
-    text_(text)
+    text_(text), newline_(newline)
   {}
 
   /////////////////////////////////////////////////////////////////////////

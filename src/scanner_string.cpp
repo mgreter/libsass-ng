@@ -40,6 +40,24 @@ namespace Sass {
     }
   }
 
+  // Check wether current position start new line
+  bool StringScanner::isOnNewline() const
+  {
+    const char* track = position - 1;
+    while (track >= startpos) {
+      if (isNewline(*track)) {
+        return true;
+      }
+      else if (isWhitespace(*track)) {
+        track -= 1;
+      }
+      else {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // Whether the scanner has completely consumed [string].
   bool StringScanner::isDone() const
   {

@@ -2902,7 +2902,7 @@ namespace Sass {
 
     sass::string text(acceptInterpolation(c->text(), false));
     bool preserve = text[2] == '!';
-    current->append(SASS_MEMORY_NEW(CssComment, c->pstate(), std::move(text), preserve));
+    current->append(SASS_MEMORY_NEW(CssComment, c->pstate(), std::move(text), preserve, c->newline()));
     return nullptr;
   }
 

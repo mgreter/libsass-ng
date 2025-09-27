@@ -123,7 +123,17 @@ namespace Sass {
       if (!important) return;
     }
     if (output_style() != SASS_STYLE_COMPRESSED || important) {
-      append_indentation();
+      // was comment on a new line or not?
+      if (comment->isNewline() == false) {
+        scheduled_linefeed = false;
+        append_optional_space();
+        // scheduled_space = false;
+      }
+      else {
+        append_indentation();
+      }
+//      
+
       append_string(comment->text());
       if (indentation == 0) {
         append_mandatory_linefeed();

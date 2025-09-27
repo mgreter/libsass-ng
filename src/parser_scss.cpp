@@ -213,6 +213,9 @@ namespace Sass {
   {
     InterpolationBuffer buffer(scanner);
     Offset start(scanner.offset);
+
+    bool newline = scanner.isOnNewline();
+
     scanner.expect("/*");
     buffer.write("/*");
     while (true) {
@@ -233,7 +236,8 @@ namespace Sass {
         return SASS_MEMORY_NEW(LoudComment,
           scanner.rawSpanFrom(start),
           buffer.getInterpolation(
-            scanner.rawSpanFrom(start)));
+            scanner.rawSpanFrom(start)),
+          newline);
 
       case $cr:
         scanner.readChar();

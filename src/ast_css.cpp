@@ -223,17 +223,20 @@ namespace Sass {
   CssComment::CssComment(
     const SourceSpan& pstate,
     sass::string&& text,
-    bool preserve) :
+    bool preserve,
+    bool newline) :
     CssNode(pstate),
     text_(text),
-    isPreserved_(preserve)
+    isPreserved_(preserve),
+    isNewline_(newline)
   {}
 
   CssComment::CssComment(
     const CssComment* ptr) :
     CssNode(ptr),
     text_(ptr->text_),
-    isPreserved_(ptr->isPreserved_)
+    isPreserved_(ptr->isPreserved_),
+    isNewline_(ptr->isNewline_)
   {}
 
   /////////////////////////////////////////////////////////////////////////

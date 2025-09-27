@@ -221,10 +221,12 @@ namespace Sass {
   private:
     ADD_CONSTREF(sass::string, text);
     ADD_CONSTREF(bool, isPreserved);
+    ADD_CONSTREF(bool, isNewline);
   public:
     CssComment(const SourceSpan& pstate,
       sass::string&& text,
-      bool preserve = false);
+      bool preserve = false,
+      bool newline = false);
     CssComment(const CssComment* ptr);
 
     // Css visitor and rendering entry function

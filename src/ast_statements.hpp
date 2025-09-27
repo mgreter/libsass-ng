@@ -732,12 +732,15 @@ namespace Sass {
     // The interpolated text of this comment, including comment characters.
     ADD_CONSTREF(InterpolationObj, text)
 
+    ADD_PROPERTY(bool, newline);
+
   public:
 
     // Value constructor
     LoudComment(
       SourceSpan&& pstate,
-      Interpolation* text);
+      Interpolation* text,
+      bool newline = false);
 
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) override final {

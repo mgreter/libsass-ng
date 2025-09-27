@@ -58,6 +58,8 @@ namespace Sass {
     // Attached logger
     Logger& logger;
 
+    bool isOnNewline() const;
+
     // Whether the scanner has completely consumed [string].
     bool isDone() const;
 
