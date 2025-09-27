@@ -751,9 +751,14 @@ namespace Sass {
           const String* cplxStr = complex->isaString();
           if (cplxStr) { result.emplace_back(cplxStr->value()); }
           else if (cplxLst && cplxLst->separator() == SASS_SPACE) {
-            sass::string string = complex->getSelectorString(logger);
-            if (string.empty()) return false;
-            result.emplace_back(string);
+            sass::string string;
+            if (complex->selectorStringOrNull(logger, string)) {
+              if (string.empty()) return false;
+              result.emplace_back(string);
+            }
+            else {
+              return false;
+            }
           }
           else return false;
         }

@@ -150,9 +150,7 @@ namespace Sass {
         }
 
         auto base = arguments[1]->assertNumber(compiler, "base");
-        if (base->hasUnits()) {
-          throw Exception::UnitMissing(compiler, *number, "base");
-        }
+        base->assertNumberStrictWithoutUnit(compiler, "base");
 
         return SASS_MEMORY_NEW(Number, pstate,
           std::log(number->value()) / std::log(base->value()));

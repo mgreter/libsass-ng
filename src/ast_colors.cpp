@@ -1432,7 +1432,7 @@ namespace Sass {
       }
       if (!space.isPolar()) {
         throw Exception::SassScriptException(logger, value->pstate(),
-          "Hue interpolation method \"" + name + " hue\" may not be"
+          "Hue interpolation method \"" + list[1]->toString() + " hue\" may not be"
           " set for rectangular color space " + space.name() + ".",
           name);
       }
