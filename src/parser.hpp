@@ -62,11 +62,16 @@ namespace Sass {
     bool isIdentifier(sass::string text);
 
     // Consumes whitespace, including any comments.
-    virtual void scanWhitespace()
+    virtual void scanWhitespace(bool consumeNewlines)
     {
       do {
         scanWhitespaceWithoutComments();
       } while (scanComment());
+    }
+
+    void scanWhitespace()
+    {
+      scanWhitespace(false);
     }
 
     virtual void expectWhitespace()

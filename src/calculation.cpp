@@ -677,6 +677,8 @@ namespace Sass {
       if (auto str_number = SASS_CAST(String, arg_0)) {
         return SASS_MEMORY_NEW(Calculation, pstate, str_round, { str_number });
       }
+      return SASS_MEMORY_NEW(Calculation, pstate, str_round, { arg_0 });
+
       CallStackFrame frame(logger, arg_0->pstate());
       throw Exception::SassScriptException("Single argument " +
         arg_0->toString() + " expected to be simplifiable.",
@@ -823,7 +825,7 @@ namespace Sass {
           return value ? value->simplify(logger) : nullptr;
         });
       return SASS_MEMORY_NEW(Calculation, pstate,
-        str_hypot, std::move(simplifieds));
+        str_calc_size, std::move(simplifieds));
     }
 
     // Creates an `calc-size()` calculation with the given [basis] and [value].
@@ -833,6 +835,13 @@ namespace Sass {
     // it can determine that the calculation will definitely produce invalid CSS.
     Value* calc_size(Logger& logger, const SourceSpan& pstate, const ValueVector& args)
     {
+
+      for (auto qwe : args) {
+        if (qwe->isaString())
+          return calc_size_2(logger, pstate, args);
+      }
+
+      // If any is string, return as is?
       switch (args.size()) {
       case 0: throw Exception::MissingArgument(logger, str_number);
       case 1: throw Exception::TooFewArguments(logger, args.size(), 3);

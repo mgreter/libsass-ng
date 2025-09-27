@@ -962,6 +962,7 @@ namespace Sass {
     CallableArgumentsObj args;
     if (scanner.peekChar() == $lparen) {
       args = readArgumentInvocation(true);
+      scanWhitespace();
     }
     else {
       args = SASS_MEMORY_NEW(CallableArguments,
