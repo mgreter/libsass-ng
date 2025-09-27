@@ -1044,7 +1044,10 @@ namespace Sass {
 
     InterpolationObj value = readAlmostAnyValue();
     bool optional = scanner.scanChar($exclamation);
-    if (optional) expectIdentifier("optional", "\"optional\"");
+    if (optional) {
+      expectIdentifier("optional", "\"optional\"");
+      scanWhitespace();
+    }
     expectStatementSeparator("@extend rule");
     return SASS_MEMORY_NEW(ExtendRule,
       scanner.relevantSpanFrom(start), value, optional);
