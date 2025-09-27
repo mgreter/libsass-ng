@@ -653,7 +653,7 @@ namespace Sass {
     DECLARE_ISA_CASTER(Null);
     OVERRIDE_ISA_CASTER(String);
     OVERRIDE_ISA_CASTER(Number);
-    DECLARE_ISA_CASTER(Color);
+    // DECLARE_ISA_CASTER(Color);
     DECLARE_ISA_CASTER(ColorSpaced);
     DECLARE_ISA_CASTER(Boolean);
     DECLARE_ISA_CASTER(Function);

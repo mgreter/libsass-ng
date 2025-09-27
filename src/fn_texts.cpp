@@ -8,6 +8,7 @@
 #include "compiler.hpp"
 #include "exceptions.hpp"
 #include "ast_values.hpp"
+#include "ast_colors.hpp"
 
 #ifdef __MINGW32__
 # ifndef NOMINMAX
@@ -44,7 +45,7 @@ namespace Sass {
 
       static BUILT_IN_FN(quote)
       {
-        if (Color* col = arguments[0]->isaColor()) {
+        if (ColorSpaced* col = arguments[0]->isaColorSpaced()) {
           if (!col->disp().empty()) {
             sass::string copy(col->disp());
             return SASS_MEMORY_NEW(String,

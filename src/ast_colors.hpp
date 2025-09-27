@@ -1169,6 +1169,9 @@ namespace Sass {
   {
   private:
 
+    ADD_CONSTREF(sass::string, disp);
+    ADD_CONSTREF(bool, parsed);
+
     const ColorSpace& space_;
     ADD_PROPERTY(tl::optional<double>, c0);
     ADD_PROPERTY(tl::optional<double>, c1);

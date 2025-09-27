@@ -450,7 +450,7 @@ namespace Sass {
   }
 
   ColorSpaced::ColorSpaced(const SourceSpan& pstate, const ColorSpace& space, double c0, double c1, double c2, double alpha, const sass::string& disp, bool parsed)
-    : Color(pstate, disp), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha)
+    : Color(pstate, disp), space_(space), c0_(c0), c1_(c1), c2_(c2), alpha_(alpha), disp_(disp), parsed_(parsed)
   {
 
 

@@ -317,16 +317,16 @@ namespace Sass {
     const SourceSpan& pstate,
     const sass::string& disp,
     bool parsed) :
-    Value(pstate),
+    Value(pstate)/*,
     disp_(disp),
-    parsed_(parsed)
+    parsed_(parsed)*/
   {}
 
   Color::Color(const Color* ptr)
-    : Value(ptr),
+    : Value(ptr)/*,
     // Reset on copy
     // disp_(ptr->disp_),
-    parsed_(false) // safe to assume?
+    parsed_(false)*/ // safe to assume?
     // ptr->parsed_
   {}
 
@@ -337,7 +337,7 @@ namespace Sass {
 
   Value* ColorSpaced::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (other->isaNumber() || other->isaColor()) {
+    if (other->isaNumber() || other->isaColorSpaced()) {
       throw Exception::UndefinedOperation(
         logger, pstate, this, other, "+");
     }
@@ -346,7 +346,7 @@ namespace Sass {
 
   Value* ColorSpaced::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (other->isaNumber() || other->isaColor()) {
+    if (other->isaNumber() || other->isaColorSpaced()) {
       throw Exception::UndefinedOperation(
         logger, pstate, this, other, "-");
     }
@@ -355,7 +355,7 @@ namespace Sass {
 
   Value* ColorSpaced::dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {
-    if (other->isaNumber() || other->isaColor()) {
+    if (other->isaNumber() || other->isaColorSpaced()) {
       throw Exception::UndefinedOperation(
         logger, pstate, this, other, "/");
     }
@@ -790,7 +790,7 @@ namespace Sass {
       return operate(add, *nr, logger, pstate);
     }
     // May return a string instead
-    if (!other->isaColor()) return
+    if (!other->isaColorSpaced()) return
       Value::plus(other, logger, pstate);
     throw Exception::UndefinedOperation(
       logger, pstate, this, other, "+");
@@ -803,7 +803,7 @@ namespace Sass {
       return operate(sub, *nr, logger, pstate);
     }
     // May return a string instead
-    if (!other->isaColor()) return
+    if (!other->isaColorSpaced()) return
       Value::minus(other, logger, pstate);
     throw Exception::UndefinedOperation(
       logger, pstate, this, other, "-");
