@@ -56,7 +56,7 @@ namespace Sass {
 
 	  // assert(singleExpression != null);
 
-	  parser.scanWhitespace();
+	  parser.scanWhitespace(true);
 
 
     if (op == SassOperator::MOD && !parser.lookingAtExpression()) {
@@ -220,6 +220,8 @@ namespace Sass {
       singleEqualsOperand = {};
 
     }
+
+    // whitespace(consumeNewlines: consumeNewlines || bracketList);
       /*
 	  // Seem to be for ms stuff
 	  singleExpression = SASS_MEMORY_NEW(BinaryOpExpression,

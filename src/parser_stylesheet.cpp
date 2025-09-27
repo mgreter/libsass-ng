@@ -122,7 +122,7 @@ namespace Sass {
       isUseAllowed = false;
       start = scanner.offset;
       scanner.readChar();
-      scanWhitespace();
+      scanWhitespace(true);
       return readMixinRule(start);
 
     case $rbrace:
@@ -666,7 +666,7 @@ namespace Sass {
     Offset start(scanner.offset);
     scanner.expectChar($at, "@-rule");
     InterpolationObj name = readInterpolatedIdentifier();
-    scanWhitespace();
+    // scanWhitespace();
 
     // We want to set [isUseAllowed] to `false` *unless* we're parsing
     // `@charset`, `@forward`, or `@use`. To avoid double-comparing the rule
@@ -872,7 +872,7 @@ namespace Sass {
   {
     scanner.expectChar($at, "@-rule");
     sass::string name = readIdentifier();
-    scanWhitespace();
+    // scanWhitespace();
     return name;
   }
 
@@ -883,9 +883,9 @@ namespace Sass {
 
     EnvFrame local(compiler, false);
 
+    scanWhitespace();
     if (scanner.peekChar() == $lparen) {
       InterpolationObj query = readAtRootQuery();
-      scanWhitespace();
       return withChildren<AtRootRule>(
         &StylesheetParser::readChildStatement,
         start, query, local.idxs);
@@ -927,15 +927,15 @@ namespace Sass {
     InterpolationBuffer buffer(scanner);
     scanner.expectChar($lparen);
     buffer.writeCharCode($lparen);
-    scanWhitespace();
+    scanWhitespace(true);
 
-    addOrInject(buffer, readExpression());
+    addOrInject(buffer, readExpression(false, false, true));
     // buffer.add(readExpression());
     if (scanner.scanChar($colon)) {
-      scanWhitespace();
+      scanWhitespace(true);
       buffer.writeCharCode($colon);
       buffer.writeCharCode($space);
-      addOrInject(buffer, readExpression());
+      addOrInject(buffer, readExpression(false, false, true));
       // buffer.add(readExpression());
     }
 
@@ -1004,21 +1004,23 @@ namespace Sass {
   // children that are specifically allowed in the caller's context.
   EachRule* StylesheetParser::readEachRule(Offset start, Statement* (StylesheetParser::* child)())
   {
+    scanWhitespace(true);
     // This must be enabled to pass tests
     RAII_FLAG(inControlDirective, true);
     sass::vector<EnvKey> variables;
     EnvFrame local(compiler, true);
     variables.emplace_back(variableName());
     local.idxs->createVariable(variables.back());
-    scanWhitespace();
+    scanWhitespace(true);
     while (scanner.scanChar($comma)) {
-      scanWhitespace();
+      scanWhitespace(true);
       variables.emplace_back(variableName());
       local.idxs->createVariable(variables.back());
-      scanWhitespace();
+      scanWhitespace(true);
     }
+    scanWhitespace(true); // superfluous?
     expectIdentifier("in", "\"in\"");
-    scanWhitespace();
+    scanWhitespace(true);
     ExpressionObj list = readExpression();
     return withChildren<EachRule>(
       child, start, variables, list, local.idxs);
@@ -1026,7 +1028,9 @@ namespace Sass {
 
   ErrorRule* StylesheetParser::readErrorRule(Offset start)
   {
+    scanWhitespace(true);
     ExpressionObj value = readExpression();
+    // ToDo: var expressionEnd = scanner.state;
     expectStatementSeparator("@error rule");
     return SASS_MEMORY_NEW(ErrorRule,
       scanner.relevantSpanFrom(start), value);
@@ -1037,6 +1041,7 @@ namespace Sass {
   // [start] should point before the `@`.
   ExtendRule* StylesheetParser::readExtendRule(Offset start)
   {
+    scanWhitespace(true);
     if (!inStyleRule && !inMixin && !inContentBlock) {
       error("@extend may only be used within style rules.",
         scanner.relevantSpanFrom(start));
@@ -1073,24 +1078,25 @@ namespace Sass {
 
   ForRule* StylesheetParser::readForRule(Offset start, Statement* (StylesheetParser::* child)())
   {
+    scanWhitespace(true);
     RAII_FLAG(inControlDirective, true);
     EnvFrame local(compiler, true);
     sass::string variable = variableName();
     local.idxs->createVariable(variable);
-    scanWhitespace();
+    scanWhitespace(true);
     expectIdentifier("from", "\"from\"");
-    scanWhitespace();
+    scanWhitespace(true);
     // ExpressionObj from = readSingleExpression();
     _exclusiveAtForRule = false;
     _foundForRuleExpression = false;
-    ExpressionObj from = readExpression(false, false,
+    ExpressionObj from = readExpression(false, false, true,
       &StylesheetParser::lookingAtForRuleContinuation);
     if (!_foundForRuleExpression) {
       error("Expected \"to\" or \"through\".",
         scanner.relevantSpan());
     }
 
-    scanWhitespace();
+    scanWhitespace(true);
     ExpressionObj to = readExpression();
     auto qwe = withChildren<ForRule>(child, start,
       variable, from, to, !_exclusiveAtForRule, local.idxs);
@@ -1100,6 +1106,7 @@ namespace Sass {
   // ToDo: dart-sass stores all else ifs in the same object, smart ...
   IfRule* StylesheetParser::readIfRule(Offset start, Statement* (StylesheetParser::* child)())
   {
+    scanWhitespace(true);
     // var ifIndentation = currentIndentation;
     size_t ifIndentation = 0;
     RAII_FLAG(inControlDirective, true);
@@ -1127,7 +1134,7 @@ namespace Sass {
       scanWhitespace();
       // scanned a else if
       if (scanIdentifier("if")) {
-        scanWhitespace();
+        scanWhitespace(true);
 
         ExpressionObj predicate = readExpression();
         start = scanner.offset;
@@ -1168,7 +1175,7 @@ namespace Sass {
   sass::string StylesheetParser::readUseNamespace(const sass::string& url, const Offset& start)
   {
     if (scanIdentifier("as")) {
-      scanWhitespace();
+      scanWhitespace(true);
       return scanner.scanChar($asterisk)
         ? "*" : readIdentifier();
     }
@@ -1190,19 +1197,19 @@ namespace Sass {
 
     if (!scanIdentifier("with")) return false;
 
-    scanWhitespace();
+    scanWhitespace(true);
     scanner.expectChar($lparen);
 
     std::set<EnvKey> seen;
 
     while (true) {
-      scanWhitespace();
+      scanWhitespace(true);
 
       Offset variableStart(scanner.offset);
       sass::string name(variableName());
-      scanWhitespace();
+      scanWhitespace(true);
       scanner.expectChar($colon);
-      scanWhitespace();
+      scanWhitespace(true);
       ExpressionObj expression = readExpressionUntilComma();
 
       bool guarded = false;
@@ -1211,6 +1218,7 @@ namespace Sass {
         sass::string flag(readIdentifier());
         if (flag == "default") {
           guarded = true;
+          scanWhitespace(true);
         }
         else {
           error("Invalid flag name.",
@@ -1233,11 +1241,11 @@ namespace Sass {
       vars.push_back(kvar);
 
       if (!scanner.scanChar($comma)) break;
-      scanWhitespace();
+      scanWhitespace(true);
       if (!lookingAtExpression()) break;
     }
 
-    scanWhitespace();
+    // scanWhitespace();
     scanner.expectChar($rparen);
     return true;
   }
@@ -1320,7 +1328,8 @@ namespace Sass {
           }
           else {
             buffer.writeCharCode($lparen);
-            auto itpl = readInterpolatedDeclarationValue(true, true);
+            auto itpl = readInterpolatedDeclarationValue(
+              true, true, true, true, true, true);
             // std::cerr << "1 ++ " << itpl->toString() << "\n";
             buffer.addInterpolation(itpl);
             buffer.writeCharCode($rparen);
@@ -1366,8 +1375,9 @@ namespace Sass {
   // Consumes the contents of a `supports()` function after
   // an `@import` rule (but not the function name or parentheses).
   SupportsCondition* StylesheetParser::readImportSupportsQuery() {
+    scanWhitespace(true);
     if (scanIdentifier("not")) {
-      scanWhitespace();
+      scanWhitespace(true);
       Offset start(scanner.offset);
       // StringScannerState state(scanner.state());
       return new SupportsNegation(
@@ -1375,7 +1385,7 @@ namespace Sass {
         readSupportsConditionInParens());
     }
     else if (scanner.peekChar() == $lparen) {
-      return readSupportsCondition();
+      return readSupportsCondition(); // inParentheses: true
     }
     else {
       auto function = tryImportSupportsFunction();
@@ -1383,7 +1393,7 @@ namespace Sass {
 
       Offset start(scanner.offset);
       // StringScannerState state(scanner.state());
-      ExpressionObj name = readExpression();
+      ExpressionObj name = readExpression(false, false, true);
       scanner.expectChar($colon);
       return readSupportsDeclarationValue(name, start);
     }
@@ -1405,7 +1415,8 @@ namespace Sass {
       return nullptr;
     }
 
-    auto value = readInterpolatedDeclarationValue(true, true);
+    auto value = readInterpolatedDeclarationValue(
+      true, true, true, true, true, true);
     scanner.expectChar($rparen);
 
     return new SupportsFunction(
@@ -1459,7 +1470,7 @@ namespace Sass {
   UseRule* StylesheetParser::readUseRule(Offset start)
   {
 
-    scanWhitespace();
+    scanWhitespace(true);
     sass::string url(string());
     scanWhitespace();
     sass::string ns(readUseNamespace(url, start));
@@ -1538,13 +1549,13 @@ namespace Sass {
   Statement* StylesheetParser::readForwardRule(Offset start)
   {
   //  return readUseRule(start);
-    scanWhitespace();
+    scanWhitespace(true);
     sass::string url = string();
 
     scanWhitespace();
     sass::string ns;
     if (scanIdentifier("as")) {
-      scanWhitespace();
+      scanWhitespace(true);
       ns = readIdentifier();
       scanner.expectChar($asterisk);
       scanWhitespace();
@@ -1557,10 +1568,12 @@ namespace Sass {
     std::set<EnvKey> callFilters;
     // Offset beforeShow(scanner.offset);
     if (scanIdentifier("show")) {
+      scanWhitespace(true);
       readForwardMembers(varFilters, callFilters);
       isShown = true;
     }
     else if (scanIdentifier("hide")) {
+      scanWhitespace(true);
       readForwardMembers(varFilters, callFilters);
       isHidden = true;
     }
@@ -1625,7 +1638,7 @@ namespace Sass {
   // [start] should point before the `@`.
   IncludeRule* StylesheetParser::readIncludeRule(Offset start)
   {
-
+    scanWhitespace(true);
     sass::string ns;
     StringToken name = readIdentifierToken();
     if (scanner.scanChar($dot)) {
@@ -1644,7 +1657,7 @@ namespace Sass {
 
     CallableSignatureObj contentArguments;
     if (scanIdentifier("using")) {
-      scanWhitespace();
+      scanWhitespace(true);
       contentArguments = parseArgumentDeclaration();
       scanWhitespace();
     }
@@ -1695,6 +1708,7 @@ namespace Sass {
   // [start] should point before the `@`.
   MediaRule* StylesheetParser::readMediaRule(Offset start)
   {
+    scanWhitespace();
     // std::cerr << "read media rule\n";
     EnvFrame local(compiler, false);
     InterpolationObj query = readMediaQueryList();
@@ -1710,7 +1724,7 @@ namespace Sass {
   // [the specification]: http://www.w3.org/TR/css3-conditional/
   AtRule* StylesheetParser::readMozDocumentRule(Offset start, Interpolation* name)
   {
-
+    scanWhitespace();
     Offset valueStart(scanner.offset);
     InterpolationBuffer buffer(scanner);
     bool needsDeprecationWarning = false;
@@ -1800,6 +1814,7 @@ namespace Sass {
   // [start] should point before the `@`.
   ReturnRule* StylesheetParser::readReturnRule(Offset start)
   {
+    scanWhitespace(true);
     ExpressionObj value = readExpression();
     expectStatementSeparator("@return rule");
     return SASS_MEMORY_NEW(ReturnRule,
@@ -1811,6 +1826,7 @@ namespace Sass {
   // [start] should point before the `@`.
   SupportsRule* StylesheetParser::readSupportsRule(Offset start)
   {
+    scanWhitespace();
     SupportsConditionObj condition(readSupportsCondition());
     scanWhitespace();
     EnvFrame local(compiler, true);
@@ -1825,7 +1841,9 @@ namespace Sass {
   // [start] should point before the `@`.
   DebugRule* StylesheetParser::readDebugRule(Offset start)
   {
+    scanWhitespace(true);
     ExpressionObj value(readExpression());
+    // ToDo: var expressionEnd = scanner.state;
     expectStatementSeparator("@debug rule");
     return SASS_MEMORY_NEW(DebugRule,
       scanner.relevantSpanFrom(start), value);
@@ -1836,7 +1854,9 @@ namespace Sass {
   // [start] should point before the `@`.
   WarnRule* StylesheetParser::readWarnRule(Offset start)
   {
+    scanWhitespace(true);
     ExpressionObj value(readExpression());
+    // ToDo: var expressionEnd = scanner.state;
     expectStatementSeparator("@warn rule");
     return SASS_MEMORY_NEW(WarnRule,
       scanner.relevantSpanFrom(start), value);
@@ -1847,6 +1867,7 @@ namespace Sass {
   // to consume any children that are specifically allowed in the caller's context.
   WhileRule* StylesheetParser::readWhileRule(Offset start, Statement* (StylesheetParser::* child)())
   {
+    scanWhitespace(true);
     RAII_FLAG(inControlDirective, true);
     EnvFrame local(compiler, true);
     ExpressionObj condition(readExpression());
@@ -1860,6 +1881,7 @@ namespace Sass {
   AtRule* StylesheetParser::readAnyAtRule(Offset start, Interpolation* name) // unknownAtRule
   {
     RAII_FLAG(inUnknownAtRule, true);
+    scanWhitespace();
     EnvFrame local(compiler, false);
 
     InterpolationObj value;
@@ -1885,6 +1907,7 @@ namespace Sass {
     // Parse almost any value to report disallowed at-rule
   Statement* StylesheetParser::throwDisallowedAtRule(Offset start)
   {
+    scanWhitespace();
     InterpolationObj value(readInterpolatedDeclarationValue(
       /* allowEmpty: true, allowOpenBrace: false */
       true, false, true, false, true,false));
@@ -1902,26 +1925,26 @@ namespace Sass {
 
     Offset start(scanner.offset);
     scanner.expectChar($lparen);
-    scanWhitespace();
+    scanWhitespace(true);
     sass::vector<ArgumentObj> arguments;
     EnvKeySet named;
     EnvKey restArgument;
     while (scanner.peekChar() == $dollar) {
       Offset variableStart(scanner.offset);
       EnvKey name(variableName());
-      scanWhitespace();
+      scanWhitespace(true);
 
       ExpressionObj defaultValue;
       if (scanner.scanChar($colon)) {
-        scanWhitespace();
+        scanWhitespace(true);
         defaultValue = readExpressionUntilComma();
       }
       else if (scanner.scanChar($dot)) {
         scanner.expectChar($dot);
         scanner.expectChar($dot);
-        scanWhitespace();
+        scanWhitespace(true);
         if (scanner.scanChar($comma))
-          scanWhitespace();
+          scanWhitespace(true);
         restArgument = name.orig();
         // Defer adding variable until we parsed expression
         // Just in case the same variable is mentioned again
@@ -1943,7 +1966,7 @@ namespace Sass {
       }
 
       if (!scanner.scanChar($comma)) break;
-      scanWhitespace();
+      scanWhitespace(true);
     }
     scanner.expectChar($rparen);
 
@@ -1965,7 +1988,7 @@ namespace Sass {
 
     Offset start(scanner.offset);
     scanner.expectChar($lparen);
-    scanWhitespace();
+    scanWhitespace(true);
 
     ExpressionVector positional;
     // Maybe make also optional?
@@ -1979,10 +2002,10 @@ namespace Sass {
         error("Expected expression.",
           scanner.rawSpanOrRelevant());
       }
-      scanWhitespace();
+      scanWhitespace(true);
       VariableExpression* var = expression->isaVariableExpression();
       if (var && scanner.scanChar($colon)) {
-        scanWhitespace();
+        scanWhitespace(true);
         if (!named) named = SASS_MEMORY_NEW(ExpressionFlatMap);
         if (named->count(var->name()) == 1) {
           error("Duplicate argument.",
@@ -1999,9 +2022,9 @@ namespace Sass {
         }
         else {
           kwdRest = expression;
-          scanWhitespace();
+          scanWhitespace(true);
           if (scanner.scanChar($comma))
-            scanWhitespace();
+            scanWhitespace(true);
           break;
         }
       }
@@ -2017,9 +2040,9 @@ namespace Sass {
         positional.emplace_back(expression);
       }
 
-      scanWhitespace();
+      scanWhitespace(true);
       if (!scanner.scanChar($comma)) break;
-      scanWhitespace();
+      scanWhitespace(true);
 
       if (allowEmptySecondArg &&
         positional.size() == 1 &&
@@ -2052,8 +2075,12 @@ namespace Sass {
   // Microsoft-style `=` operator at the top level. If [until] is passed, it's
   // called each time the expression could end and still be a valid expression.
   // When it returns `true`, this returns the expression.
+  /// If [consumeNewlines] is `true`, the indented syntax will consume newlines
+  /// as whitespace. It should only be set to `true` in positions when a
+  /// statement can't end.
   Expression* StylesheetParser::readExpression(
     bool bracketList, bool singleEquals,
+    bool consumeNewlines, // superfluous?
     bool(StylesheetParser::* until)())
   {
 
@@ -2072,7 +2099,7 @@ namespace Sass {
     if (bracketList) {
       // beforeBracket = scanner.position;
       scanner.expectChar($lbracket);
-      scanWhitespace();
+      scanWhitespace(true);
 
       if (scanner.scanChar($rbracket)) {
         ListExpression* list = SASS_MEMORY_NEW(ListExpression,
@@ -2557,7 +2584,7 @@ namespace Sass {
 
     Offset start(scanner.offset);
     scanner.expectChar($lparen);
-    scanWhitespace();
+    scanWhitespace(true);
     if (!lookingAtExpression()) {
       scanner.expectChar($rparen);
       return SASS_MEMORY_NEW(ListExpression,
@@ -2567,7 +2594,7 @@ namespace Sass {
 
     ExpressionObj first = readExpressionUntilComma();
     if (scanner.scanChar($colon)) {
-      scanWhitespace();
+      scanWhitespace(true);
       return readMapExpression(first, start);
     }
 
@@ -2576,7 +2603,7 @@ namespace Sass {
       return SASS_MEMORY_NEW(ParenthesizedExpression,
         scanner.relevantSpanFrom(start), first);
     }
-    scanWhitespace();
+    scanWhitespace(true);
 
     ExpressionVector
       expressions = { first };
@@ -2593,7 +2620,7 @@ namespace Sass {
         break;
       }
       list->separator(SASS_COMMA);
-      scanWhitespace();
+      scanWhitespace(true);
     }
 
     scanner.expectChar($rparen);
@@ -2615,12 +2642,12 @@ namespace Sass {
     map->append(readExpressionUntilComma());
 
     while (scanner.scanChar($comma)) {
-      scanWhitespace();
+      scanWhitespace(true);
       if (!lookingAtExpression()) break;
 
       map->append(readExpressionUntilComma());
       scanner.expectChar($colon);
-      scanWhitespace();
+      scanWhitespace(true);
       map->append(readExpressionUntilComma());
     }
 
@@ -2785,7 +2812,7 @@ namespace Sass {
       "importantExpression expects an exclamation");
     Offset start(scanner.offset);
     scanner.readChar();
-    scanWhitespace();
+    scanWhitespace(true);
     expectIdentifier("important", "\"important\"");
     return SASS_MEMORY_NEW(StringExpression,
       scanner.relevantSpanFrom(start),
@@ -2829,7 +2856,7 @@ namespace Sass {
         scanner.relevantSpan());
     }
 
-    scanWhitespace();
+    scanWhitespace(true);
     Expression* operand = readSingleExpression();
     return SASS_MEMORY_NEW(UnaryOpExpression,
       scanner.relevantSpanFrom(start),
@@ -3163,7 +3190,7 @@ namespace Sass {
           invocation->pstate(), invocation);
       }
       else if (plain == "not") {
-        scanWhitespace();
+        scanWhitespace(true);
         Expression* expression = readSingleExpression();
         return SASS_MEMORY_NEW(UnaryOpExpression,
           scanner.relevantSpanFrom(start),
@@ -3515,7 +3542,7 @@ namespace Sass {
     // Most changes here should be mirrored there.
     StringScannerState beginningOfContents = scanner.state();
     if (!scanner.scanChar($lparen)) return nullptr;
-    scanWhitespaceWithoutComments();
+    scanWhitespaceWithoutComments(true);
 
     // Match Ruby Sass's behavior: parse a raw URL() if possible, and if not
     // backtrack and re-parse as a function expression.
@@ -3542,7 +3569,7 @@ namespace Sass {
         buffer.write(scanner.readChar());
       }
       else if (isWhitespace(next)) {
-        scanWhitespaceWithoutComments();
+        scanWhitespaceWithoutComments(true);
         if (scanner.peekChar() != $rparen) break;
       }
       else if (next == $rparen) {
@@ -3609,6 +3636,8 @@ namespace Sass {
     uint8_t next = 0;
 
     sass::string urlid;
+
+    // var brackets = <int>[]; // ToDo
 
     while (true) {
       if (!scanner.peekChar(next)) {
@@ -3804,7 +3833,7 @@ namespace Sass {
       case $lf:
       case $cr:
       case $ff:
-        if (isIndented()) goto endOfLoop;
+        if (isIndented() && !consumeNewlines /* && brackets.isEmpty */) goto endOfLoop;
         if (!isNewline(scanner.peekChar(-1))) {
           buffer.write("\n");
         }
@@ -3966,8 +3995,8 @@ namespace Sass {
   {
     Offset start(scanner.offset);
     scanner.expect("#{");
-    scanWhitespace();
-    ExpressionObj contents(readExpression());
+    scanWhitespace(true);
+    ExpressionObj contents(readExpression(false, false, true));
     scanner.expectChar($rbrace);
 
     if (parsingCss()) {
@@ -4039,34 +4068,34 @@ namespace Sass {
     // std::cerr << "read media in parens\n";
     scanner.expectChar($lparen, "media condition in parentheses");
     buffer.writeCharCode($lparen);
-    scanWhitespace();
+    scanWhitespace(true);
 
     if (scanner.peekChar() == $lparen) {
       readMediaInParens(buffer);
-      scanWhitespace();
+      scanWhitespace(true);
       if (scanIdentifier("and")) {
         buffer.write(" and ");
-        expectWhitespace();
+        expectWhitespace(true);
         readMediaLogicSequence(buffer, "and");
       }
       else if (scanIdentifier("or")) {
         buffer.write(" or ");
-        expectWhitespace();
+        expectWhitespace(true);
         readMediaLogicSequence(buffer, "or");
       }
     }
     else if (scanIdentifier("not")) {
       buffer.write("not ");
-      expectWhitespace();
+      expectWhitespace(true);
       readMediaOrInterp(buffer);
     }
     else {
       buffer.add(readExpressionUntilComparison());
       if (scanner.scanChar($colon)) {
-        scanWhitespace();
+        scanWhitespace(true);
         buffer.writeCharCode($colon);
         buffer.writeCharCode($space);
-        buffer.add(readExpression());
+        buffer.add(readExpression(false, false, true));
       }
       else {
         auto next = scanner.peekChar();
@@ -4080,7 +4109,7 @@ namespace Sass {
           }
           buffer.writeCharCode($space);
 
-          scanWhitespace();
+          scanWhitespace(true);
           buffer.add(readExpressionUntilComparison());
 
           // dart-lang/sdk#45356
@@ -4092,7 +4121,7 @@ namespace Sass {
                 buffer.writeCharCode($equal);
               buffer.writeCharCode($space);
 
-              scanWhitespace();
+              scanWhitespace(true);
               buffer.add(readExpressionUntilComparison());
             }
           }
@@ -4257,24 +4286,24 @@ namespace Sass {
   // top-level `<`, `>`, or a `=` that's not `==`.
   Expression* StylesheetParser::readExpressionUntilComparison()
   {
-    return readExpression(false, false,
+    return readExpression(false, false, true,
       &StylesheetParser::lookingAtExpressionEnd);
   }
 
   // Consumes a `@supports` condition.
-  SupportsCondition* StylesheetParser::readSupportsCondition()
+  SupportsCondition* StylesheetParser::readSupportsCondition(bool inParentheses)
   {
     Offset start(scanner.offset);
 
     if (scanIdentifier("not")) {
-      scanWhitespace();
+      scanWhitespace(inParentheses);
       return SASS_MEMORY_NEW(SupportsNegation,
         scanner.relevantSpanFrom(start), readSupportsConditionInParens());
     }
 
     SupportsConditionObj condition =
       readSupportsConditionInParens();
-    scanWhitespace();
+    scanWhitespace(inParentheses);
     bool hasOp = false;
     SupportsOperation::Operand op{};
     while (lookingAtIdentifier()) {
@@ -4293,12 +4322,12 @@ namespace Sass {
         op = SupportsOperation::AND;
         hasOp = true;
       }
-      scanWhitespace();
+      scanWhitespace(inParentheses);
       SupportsConditionObj right =
         readSupportsConditionInParens();
       condition = SASS_MEMORY_NEW(SupportsOperation,
         scanner.relevantSpanFrom(start), condition, right, op);
-      scanWhitespace();
+      scanWhitespace(inParentheses);
     }
     return condition.detach();
   }
@@ -4318,7 +4347,8 @@ namespace Sass {
 
       if (scanner.scanChar($lparen)) {
         InterpolationObj arguments =
-          readInterpolatedDeclarationValue(true, true);
+          readInterpolatedDeclarationValue(
+            true, true, true, true, true, true);
         scanner.expectChar($rparen);
         return SASS_MEMORY_NEW(SupportsFunction,
           scanner.relevantSpanFrom(start),
@@ -4333,9 +4363,9 @@ namespace Sass {
     }
 
     scanner.expectChar($lparen);
-    scanWhitespace();
+    scanWhitespace(true);
     if (scanIdentifier("not")) {
-      scanWhitespace();
+      scanWhitespace(true);
       SupportsConditionObj condition
         = readSupportsConditionInParens();
       scanner.expectChar($rparen);
@@ -4345,7 +4375,7 @@ namespace Sass {
     }
     else if (scanner.peekChar() == $lparen) {
       SupportsConditionObj condition
-        = readSupportsCondition();
+        = readSupportsCondition(true);
       scanner.expectChar($rparen);
       return condition.detach();
     }
@@ -4353,7 +4383,7 @@ namespace Sass {
     ExpressionObj name;
     StringScannerState state(scanner.state());
     try {
-      name = readExpression();
+      name = readExpression(false, false, true);
       scanner.expectChar($colon);
     }
     catch (Exception::ParserException& err) {
@@ -4372,7 +4402,7 @@ namespace Sass {
       // after all, so we rethrow the declaration-parsing error.
       InterpolationBuffer buffer(scanner);
       buffer.addInterpolation(identifier);
-      buffer.addInterpolation(readInterpolatedDeclarationValue(true, true, false));
+      buffer.addInterpolation(readInterpolatedDeclarationValue(true, true, false, true, true, true));
       if (scanner.peekChar() == $colon) throw err;
       scanner.expectChar($rparen);
 
@@ -4436,8 +4466,8 @@ namespace Sass {
         }
       }
     }
-    scanWhitespace();
-    value = readExpression();
+    scanWhitespace(true);
+    value = readExpression(true, true, true);
     return SASS_MEMORY_NEW(SupportsDeclaration,
       scanner.relevantSpanFrom(start),
       name, value);
@@ -4454,7 +4484,7 @@ namespace Sass {
     if (!expression->isaExpression()) return nullptr;
     StringScannerState state(scanner.state());
 
-    scanWhitespace();
+    scanWhitespace(true);
 
     bool hasOp = false;
     SupportsOperation::Operand op{};
@@ -4479,7 +4509,7 @@ namespace Sass {
         return nullptr;
       }
 
-      scanWhitespace();
+      scanWhitespace(true);
 
       SupportsConditionObj rhs = readSupportsConditionInParens();
 
@@ -4497,7 +4527,7 @@ namespace Sass {
           wrapped.ptr(), rhs, op);
       }
 
-      scanWhitespace();
+      scanWhitespace(true);
     }
 
     return operation.detach();
@@ -4619,9 +4649,9 @@ namespace Sass {
         scanner.relevantSpanFrom(start));
     }
 
-    scanWhitespace();
+    scanWhitespace(true);
     scanner.expectChar($colon);
-    scanWhitespace();
+    scanWhitespace(true);
 
     ExpressionObj value = readExpression();
 
@@ -4709,6 +4739,7 @@ namespace Sass {
   // [start] should point before the `@`.
   MixinRule* StylesheetParser::readMixinRule(Offset start)
   {
+    scanWhitespace(true);
 
     EnvRefs* frame = compiler.getCurrentScope();
 
@@ -4772,6 +4803,7 @@ namespace Sass {
   // [start] should point before the `@`.
   FunctionRule* StylesheetParser::readFunctionRule(Offset start)
   {
+    scanWhitespace(true);
     // Variables should not be hoisted through
     EnvRefs* parent = compiler.envstack.back();
     EnvFrame local(compiler, false);
@@ -4800,9 +4832,9 @@ namespace Sass {
 
     sass::string normalized(name.str);
 
-    scanWhitespace();
+    scanWhitespace(true);
 
-    CallableSignatureObj arguments = parseArgumentDeclaration();
+    CallableSignatureObj arguments = parseArgumentDeclaration(); // ToDo parseParameterList
 
     if (inMixin || inContentBlock) {
       error("Mixins may not contain function declarations.",

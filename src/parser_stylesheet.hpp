@@ -383,6 +383,7 @@ namespace Sass {
     // When it returns `true`, this returns the expression.
     Expression* readExpression(
       bool bracketList = false, bool singleEquals = false,
+      bool consumeNewlines = false,
       bool(StylesheetParser::* until)() = nullptr);
 
     // Returns `true` if scanner reached a `,`
@@ -536,7 +537,7 @@ namespace Sass {
     Expression* readExpressionUntilComparison();
 
     // Consumes a `@supports` condition.
-    SupportsCondition* readSupportsCondition();
+    SupportsCondition* readSupportsCondition(bool consumeNewlines = false);
 
     // Consumes a parenthesized supports condition, or an interpolation.
     SupportsCondition* readSupportsConditionInParens();

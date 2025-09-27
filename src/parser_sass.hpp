@@ -121,7 +121,7 @@ namespace Sass {
     // it doesn't consume multi-line comments.
     void scanLoudComment() override final;
 
-    void scanWhitespaceWithoutComments() override final;
+    void scanWhitespaceWithoutComments(bool consumeNewlines = false) override final;
 
     // Expect and consume a single newline character.
     void expectNewline();
