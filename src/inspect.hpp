@@ -88,7 +88,7 @@ namespace Sass {
     void _writeColorFunction(const ColorSpaced* color);
 
     virtual void visitBoolean(Boolean* value) override;
-    virtual void visitColor(Color* value) override;
+    virtual void visitColor(ColorSpaced* value) override;
     virtual void visitFunction(Function* value) override;
     virtual void visitCalculation(Calculation* value) override;
     virtual void visitCalcOperation(CalcOperation* value) override;

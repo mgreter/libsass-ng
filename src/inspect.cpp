@@ -1200,7 +1200,7 @@ namespace Sass {
   }
 
   // T visitColorRGBA(SassColor value);
-  void Inspect::visitColor(Color* color)
+  void Inspect::visitColor(ColorSpaced* color)
   {
     
     auto spaced = color->isaColorSpaced();

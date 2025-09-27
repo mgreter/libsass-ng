@@ -25,7 +25,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
 
     virtual T visitBoolean(Boolean* value) = 0;
-    virtual T visitColor(Color* value) = 0;
+    virtual T visitColor(ColorSpaced* value) = 0;
     virtual T visitFunction(Function* value) = 0;
     virtual T visitCalculation(Calculation* value) = 0;
     virtual T visitCalcOperation(CalcOperation* value) = 0;
