@@ -120,6 +120,29 @@ namespace Sass {
     append_scope_closer();
   }
 
+  template <typename octet_iterator>
+  bool Inspect::_tryPrivateUseCharacter(const octet_iterator& begin, const octet_iterator& end, size_t& offset) {
+    octet_iterator it = begin + offset;
+    if (output_style() == SASS_STYLE_COMPRESSED) return false;
+    // check if char is utf8 character
+    auto asd = utf8::internal::sequence_length(it);
+    if (asd > 1) {
+      uint32_t code_point = 0;
+      /*auto foo =*/ utf8::internal::validate_next(it, end, code_point);
+      if (code_point >= 0xE000 && code_point <= 0xF8FF) {
+        append_char($backslash);
+        // ToDo: do without sstream
+        sass::sstream is;
+        is << std::hex << code_point;
+        append_string(is.str());
+        offset += asd - 1;
+        return true;
+      }
+    }
+    return false;
+  }
+
+
   void Inspect::renderUnquotedString(const sass::string& text)
   {
     bool afterNewline = false;
@@ -138,33 +161,13 @@ namespace Sass {
         break;
 
       default:
-        append_char(chr);
         afterNewline = false;
+        if (!_tryPrivateUseCharacter(text.begin(), text.end(), i)) {
+          append_char(chr);
+        }
         break;
       }
     }
-  }
-
-  template <typename octet_iterator>
-  bool Inspect::_tryPrivateUseCharacter(const octet_iterator& begin, const octet_iterator& end, size_t& offset) {
-    octet_iterator it = begin + offset;
-    if (output_style() == SASS_STYLE_COMPRESSED) return false;
-    // check if char is utf8 character
-    auto asd = utf8::internal::sequence_length(it);
-    if (asd > 1) {
-      uint32_t code_point = 0;
-      /*auto foo =*/ utf8::internal::validate_next(it, end, code_point);
-      if (code_point >= 0xE000 && code_point <= 0xF8FF) {
-        append_char($backslash);
-        // ToDo: do without sstream
-        sass::sstream is;
-        is << std::hex << code_point;
-        append_string(is.str());
-        offset += asd;
-        return true;
-      }
-    }
-    return false;
   }
 
   void Inspect::renderQuotedString(const sass::string& text, uint8_t quotes)

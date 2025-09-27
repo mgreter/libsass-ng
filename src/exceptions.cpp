@@ -462,6 +462,7 @@ namespace Sass {
       for (const auto& kv : *superfluous)
       {
         if (joiner) msg = ",";
+        this->traces.push_back(kv.second->pstate());
         msg += " $" + kv.first.norm();
         joiner = true;
       }

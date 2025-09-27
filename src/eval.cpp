@@ -356,6 +356,8 @@ namespace Sass {
     // either don't have any or somebody called `keywords` method
     if (restargs->hasAllKeywordsConsumed()) return result.detach();
 
+    // CallStackFrame frame(logger, arg.pstate());
+
     // Throw error since not all named arguments were consumed
     throw Exception::DuplicateKeyArgument(logger, restargs->keywords());
   }
