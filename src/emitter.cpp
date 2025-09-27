@@ -276,7 +276,7 @@ namespace Sass {
         curIndent = i; // store current position
         while (Character::isSpaceOrTab(text[i++])) {}
         if (!Character::isNewline(text[i - 1])) {
-          std::cerr << "line has indent " << i - curIndent << "\n";
+          // std::cerr << "line has indent " << i - curIndent << "\n";
           minIndent = std::min(minIndent, i - curIndent - 1);
         }
       }

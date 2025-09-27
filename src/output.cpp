@@ -127,7 +127,7 @@ namespace Sass {
     // remove lowest indentation from every line
     // Basically move it back as much as possible
     // then add wanted indentation back to every line
-
+/*
     if (output_style() != SASS_STYLE_COMPRESSED || important) {
 
       size_t id = indentation;
@@ -156,7 +156,26 @@ namespace Sass {
           append_optional_linefeed();
         }
       }
+*/
+    if (output_style() != SASS_STYLE_COMPRESSED || important) {
+      // was comment on a new line or not?
+      if (comment->isNewline() == false) {
+        scheduled_linefeed = false;
+        append_optional_space();
+        // scheduled_space = false;
+      }
+      else {
+        append_indentation();
+      }
 //      
+
+      indent_comment(comment->text());
+      if (indentation == 0) {
+        append_mandatory_linefeed();
+      }
+      else {
+        append_optional_linefeed();
+      }
 
     }
   }
