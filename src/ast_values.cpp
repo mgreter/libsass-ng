@@ -334,44 +334,6 @@ namespace Sass {
   // Implement value operators for color
   /////////////////////////////////////////////////////////////////////////
 
-  Value* Color::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
-  {
-    if (other->isaNumber() || other->isaColor()) {
-      throw Exception::UndefinedOperation(
-        logger, pstate, this, other, "+");
-    }
-    return Value::plus(other, logger, pstate);
-  }
-
-  Value* Color::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
-  {
-    if (other->isaNumber() || other->isaColor()) {
-      throw Exception::UndefinedOperation(
-        logger, pstate, this, other, "-");
-    }
-    return Value::minus(other, logger, pstate);
-  }
-
-  Value* Color::dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const
-  {
-    if (other->isaNumber() || other->isaColor()) {
-      throw Exception::UndefinedOperation(
-        logger, pstate, this, other, "/");
-    }
-    return Value::dividedBy(other, logger, pstate);
-  }
-
-  Value* Color::modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const
-  {
-    throw Exception::UndefinedOperation(
-      logger, pstate, this, other, "%");
-  }
-
-  Value* Color::remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const
-  {
-    throw Exception::UndefinedOperation(
-      logger, pstate, this, other, "%%");
-  }
 
   Value* ColorSpaced::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
   {

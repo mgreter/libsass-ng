@@ -171,11 +171,6 @@ namespace Sass {
     const sass::string& type() const override { return Strings::color; }
 
     // Implement some operations for base value class
-    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
-    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
-    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
-    Value* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
-    Value* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const override ;
 
     // Main entry point for Value Visitor pattern
     void accept(ValueVisitor<void>* visitor) override final {
