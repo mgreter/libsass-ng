@@ -145,7 +145,7 @@ namespace Sass {
         : _interpolateHues(channel1_0, channel2_0, method.hue, weight),
         mixed1, mixed2, mixedAlpha);
     }
-    else if (method.space.name() == "lch" || method.space.name() == "oklch") {
+    else if (method.space == ColorSpace2::lch || method.space.name() == "oklch") {
       rv = Color::forSpaceInternal(
         pstate, method.space,
         mixed0, mixed1,
@@ -344,7 +344,7 @@ namespace Sass {
 
   bool Color::isChannel2Powerless() const
   {
-    if (space_.name() == "lch" || space_.name() == "oklch") {
+    if (space_ == ColorSpace2::lch || space_.name() == "oklch") {
       return fuzzyEquals(getChannel1(), 0, 0.00001);
     }
     return false;
@@ -617,7 +617,7 @@ namespace Sass {
   const ColorSpace& getLinearDest(const ColorSpace& dest)
   {
     if (dest.name() == "hsl" || dest.name() == "hwb") { return ColorSpace2::srgb; }
-    else if (dest.name() == "lab" || dest.name() == "lch") { return ColorSpace2::xyzd50; }
+    else if (dest == ColorSpace2::lab || dest == ColorSpace2::lch) { return ColorSpace2::xyzd50; }
     else if (dest.name() == "oklab" || dest.name() == "oklch") { return ColorSpace2::lms; }
     return dest;
   }
@@ -690,7 +690,7 @@ namespace Sass {
         transformedRed, transformedGreen, transformedBlue,
         alpha, missingLightness, missingChroma, missingHue);
     }
-    else if (dest.name() == "lab" || dest.name() == "lch") {
+    else if (dest == ColorSpace2::lab || dest == ColorSpace2::lch) {
       return ColorSpace2::xyzd50.translate(dest, pstate,
         transformedRed, transformedGreen, transformedBlue,
         alpha, missingLightness, missingChroma, missingHue);
@@ -882,7 +882,7 @@ namespace Sass {
     //   << y.value_or(-42) << ", " << z.value_or(-42) << ", "
     //   << alpha.value_or(-42) << "\n";
 
-    if (dest.name() == "lab" || dest.name() == "lch") {
+    if (dest == ColorSpace2::lab || dest == ColorSpace2::lch) {
       // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
       // and http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
       double f0 = _convertComponentToLabF(x.value_or(0) / d50[0]);
@@ -894,7 +894,7 @@ namespace Sass {
       double b = 200 * (f1 - f2);
       if (!missingLightness) { lightness = (116.0 * f1) - 16.0; }
 
-      if (dest.name() == "lab") {
+      if (dest == ColorSpace2::lab) {
         auto rv = Color::lab(pstate, lightness,
           missingA ? tl::optional<double>() : a,
           missingB ? tl::optional<double>() : b,
@@ -943,10 +943,7 @@ namespace Sass {
     bool missingB) const
   {
 
-    // std::cerr << "CALL LMS translate " << lng.value_or(0) << ", "
-    //   << med.value_or(0) << ", " << shrt.value_or(0) << ", " << "\n";
-
-    if (dest.name() == "oklab") {
+    if (dest == ColorSpace2::oklab) {
       // Algorithm from https://drafts.csswg.org/css-color-4/#color-conversion-code
       double longScaled = _cubeRootPreservingSign(lng.value_or(0));
       double mediumScaled = _cubeRootPreservingSign(med.value_or(0));
@@ -969,7 +966,7 @@ namespace Sass {
 
       return nullptr;
     }
-    else if (dest.name() == "oklch") {
+    else if (dest == ColorSpace2::oklch) {
       // This is equivalent to converting to OKLab and then to OKLCH, but we
       // do it inline to avoid extra list allocations since we expect
       // conversions to and from OKLCH to be very common.
@@ -1091,8 +1088,8 @@ namespace Sass {
   {
     // From https://www.w3.org/TR/css-color-4/#hwb-to-rgb
     double scaledHue = std::fmod(hue.value_or(0), 360.0) / 360.0;
-    double scaledWhiteness = (whiteness.value_or(0)) / 100.0;
-    double scaledBlackness = (blackness.value_or(0)) / 100.0;
+    double scaledWhiteness = whiteness.value_or(0) / 100.0;
+    double scaledBlackness = blackness.value_or(0) / 100.0;
 
     double sum = scaledWhiteness + scaledBlackness;
     if (sum > 1) {
@@ -1102,10 +1099,9 @@ namespace Sass {
 
     double factor = 1.0 - scaledWhiteness - scaledBlackness;
 
-//     double toRgb(double hue) = > hueToRgb(0, 1, hue) * factor + scaledWhiteness;
 
-    // Non-null because an in-gamut HSL color is guaranteed to be in-gamut for
-    // HWB as well.
+    // Non-null because an in-gamut HSL color is
+    // guaranteed to be in-gamut for HWB as well.
     return ColorSpace2::srgb.translate(
       dest, pstate,
       nnan(hueToRgb(0.0, 1.0, scaledHue + 1.0 / 3.0)* factor + scaledWhiteness),
@@ -1154,7 +1150,7 @@ namespace Sass {
 
     // std::cerr << "LAB.CONVERT " << lightness.value_or(-42) << "; " << a.value_or(-42) << ", " << b.value_or(-42) << "\n";
 
-    if (dest.name() == "lab")
+    if (dest == ColorSpace2::lab)
     {
       bool powerlessAB = !lightness.has_value() || fuzzyEquals(lightness.value(), 0, sass::epsilon);
       return Color::lab(pstate,
@@ -1163,7 +1159,7 @@ namespace Sass {
         !b.has_value() || powerlessAB ? tl::optional<double>() : b,
         alpha);
     }
-    else if (dest.name() == "lch")
+    else if (dest == ColorSpace2::lch)
     {
       return Color::labToLch(pstate,
         dest, lightness, a, b, alpha,
@@ -1197,11 +1193,16 @@ namespace Sass {
 
   }
 
-  Color* SrgbLinearColorSpace::convert(const ColorSpace& dest, const SourceSpan& pstate,
-    tl::optional<double> red, tl::optional<double> green, tl::optional<double> blue, tl::optional<double> alpha) const
+  Color* SrgbLinearColorSpace::convert(
+    const ColorSpace& dest,
+    const SourceSpan& pstate,
+    tl::optional<double> red,
+    tl::optional<double> green,
+    tl::optional<double> blue,
+    tl::optional<double> alpha) const
   {
-    if (dest.name() == "rgb" || dest.name() == "hsl" ||
-        dest.name() == "hwb" || dest.name() == "srgb")
+    if (dest == ColorSpace2::rgb || dest == ColorSpace2::hsl ||
+        dest == ColorSpace2::hwb || dest == ColorSpace2::srgb)
     {
       return ColorSpace2::srgb.convert(
         dest, pstate,
@@ -1225,12 +1226,11 @@ namespace Sass {
 
     double m2 = scaledLightness <= 0.5
       ? scaledLightness * (scaledSaturation + 1)
-      : scaledLightness +
-      scaledSaturation -
-      scaledLightness * scaledSaturation;
+      : scaledLightness + scaledSaturation -
+        scaledLightness * scaledSaturation;
     double m1 = scaledLightness * 2 - m2;
 
-    auto rv = ColorSpace2::srgb.translate(
+    return ColorSpace2::srgb.translate(
       dest, pstate,
       hueToRgb(m1, m2, scaledHue + 1.0 / 3.0),
       hueToRgb(m1, m2, scaledHue),
@@ -1239,10 +1239,6 @@ namespace Sass {
       !lightness.has_value(),
       !saturation.has_value(),
       !hue.has_value());
-
-    // std::cerr << "covert " << rv->debug() << "\n";
-
-    return rv;
   }
 
   static double clampLikeCss(double val, double min, double max) {
@@ -1425,10 +1421,11 @@ namespace Sass {
 
   }
 
-  HueInterpolationMethod InterpolationMethod::hueFromValue(Logger& logger, Value* value, const sass::string& name)
+  HueInterpolationMethod InterpolationMethod::hueFromValue(
+    Logger& logger, Value* value, const sass::string& name)
   {
 
-    auto string = value->assertString(logger, name);
+    const String* string = value->assertString(logger, name);
     string->assertUnquoted(logger, name);
 
     if (StringUtils::equalsIgnoreCase(string->value(), "shorter", 7)) {
@@ -1449,6 +1446,9 @@ namespace Sass {
       name);
   }
 
+  ///////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////
+
   ColorExpression::ColorExpression(
     SourceSpan pstate,
     Color* value) :
@@ -1462,5 +1462,8 @@ namespace Sass {
   {
     return value_->inspect();
   }
+
+  ///////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////
 
 }
