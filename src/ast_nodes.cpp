@@ -873,7 +873,7 @@ namespace Sass {
     }
     else if (const List* list = dynamic_cast<const List*>(this)) {
       if (list->hasBrackets() || list->lengthAsList() == 0 ||
-        list->lengthAsList() == 1 && list->separator() == SASS_COMMA) {
+        (list->lengthAsList() == 1 && list->separator() == SASS_COMMA)) {
         return list->inspect();
       }
       return "(" + list->inspect() + ")";

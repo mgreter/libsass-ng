@@ -916,7 +916,7 @@ namespace Sass {
   void Inspect::_writeHsl(Color* color)
   {
 
-    Color* hsl = color->toSpace(ColorSpace2::hsl, color->pstate());
+    Color* hsl = color->toSpace(ColorSpace::hsl, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -946,7 +946,7 @@ namespace Sass {
   void Inspect::_writeHwb(Color* color)
   {
 
-    Color* hwb = color->toSpace(ColorSpace2::hwb, color->pstate());
+    Color* hwb = color->toSpace(ColorSpace::hwb, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -976,7 +976,7 @@ namespace Sass {
   void Inspect::_writeRgb(Color* color)
   {
     sass::string ss;
-    Color* rgb = color->toSpace(ColorSpace2::rgb, color->pstate());
+    Color* rgb = color->toSpace(ColorSpace::rgb, color->pstate());
     // std::cerr << "write rgb " << rgb->debug() << "\n";
 
     if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {
@@ -1002,7 +1002,7 @@ namespace Sass {
   }
 
   bool _canUseHex(const Color* rgb) {
-    if (rgb->space() == ColorSpace2::rgb) {
+    if (rgb->space() == ColorSpace::rgb) {
       return _canUseHexForChannel(rgb->getChannel0()) &&
         _canUseHexForChannel(rgb->getChannel1()) &&
         _canUseHexForChannel(rgb->getChannel2());
@@ -1044,12 +1044,12 @@ namespace Sass {
       return;
     }
 
-    if (color->space() == ColorSpace2::hsl) {
+    if (color->space() == ColorSpace::hsl) {
       _writeHsl(color);
       return;
     }
     else if (outopt.output_style == SASS_STYLE_COMPRESSED) {
-      if (color->space() == ColorSpace2::hwb) {
+      if (color->space() == ColorSpace::hwb) {
         _writeHwb(color);
         return;
       }
@@ -1067,20 +1067,10 @@ namespace Sass {
     }
 
     if (opaque) {
-      if (Color* rgba = color->toSpace(ColorSpace2::rgb, color->pstate())) {
+      if (Color* rgba = color->toSpace(ColorSpace::rgb, color->pstate())) {
         // double a = std::round(std::round(rgba->getChannel0() * sass::iepsilon) * sass::epsilon);
         // double b = std::round(std::round(rgba->getChannel1() * sass::iepsilon) * sass::epsilon);
         // double c = std::round(std::round(rgba->getChannel2() * sass::iepsilon) * sass::epsilon);
-        double x1 = fuzzyRound(0.499, 10e-5);
-        double x2 = fuzzyRound(0.4999, 10e-5);
-        double x3 = fuzzyRound(0.49999, 10e-5);
-
-        double y1 = fuzzyRound(0.499, 10e+5);
-        double y2 = fuzzyRound(0.4999, 10e+5);
-        double y3 = fuzzyRound(0.49999, 10e+5);
-
-        double a1 = rgba->getChannel0();
-
         // cannot round, we need to check if it is either within fuzzy range of ceil or floor
 
         if (fuzzyIsInt(rgba->getChannel0(), 10e-11) &&
@@ -1116,7 +1106,7 @@ namespace Sass {
       // if (color_to_name()
     }
 
-    if (color->space().name() == "hwb") {
+    if (color->space() == ColorSpace::hwb) {
       _writeHsl(color);
     }
     // else if (color->parsed() && !color->isaColorHwba()) {
@@ -1150,13 +1140,13 @@ namespace Sass {
   // Writes [color] using the `color()` function syntax.
   void Inspect::_writeColorFunction(const Color* color)
   {
-    if (color->space() == ColorSpace2::rgb ||
-        color->space() == ColorSpace2::hsl ||
-        color->space() == ColorSpace2::hwb ||
-        color->space() == ColorSpace2::lab ||
-        color->space() == ColorSpace2::oklab ||
-        color->space() == ColorSpace2::lch ||
-        color->space() == ColorSpace2::oklch)
+    if (color->space() == ColorSpace::rgb ||
+        color->space() == ColorSpace::hsl ||
+        color->space() == ColorSpace::hwb ||
+        color->space() == ColorSpace::lab ||
+        color->space() == ColorSpace::oklab ||
+        color->space() == ColorSpace::lch ||
+        color->space() == ColorSpace::oklch)
     {
       std::cerr << "Wrong color space for writeColorFunction\n";
     }
@@ -1214,14 +1204,14 @@ namespace Sass {
     const ColorSpace& space = spaced->space();
     // std::cerr << "visitColor " << spaced->debug() << "\n";
 
-    if (spaced->space() == ColorSpace2::rgb || spaced->space() == ColorSpace2::hsl || spaced->space() == ColorSpace2::hwb) {
+    if (spaced->space() == ColorSpace::rgb || spaced->space() == ColorSpace::hsl || spaced->space() == ColorSpace::hwb) {
       if (!spaced->isChannel0Missing() && !spaced->isChannel1Missing() && !spaced->isChannel2Missing() && !spaced->isAlphaMissing()) {
         _writeLegacyColor(spaced);
         return;
       }
     }
 
-    if (space == ColorSpace2::rgb) {
+    if (space == ColorSpace::rgb) {
       append_string("rgb(");
       write_channel(spaced->getChannel0OrNull(), nullptr);
       append_mandatory_space();
@@ -1232,7 +1222,7 @@ namespace Sass {
       append_string(")");
     }
 
-    else if (space == ColorSpace2::hsl || space == ColorSpace2::hwb) {
+    else if (space == ColorSpace::hsl || space == ColorSpace::hwb) {
       append_string(space.name());
       append_string("(");
       write_channel(spaced->getChannel0OrNull(),
@@ -1252,7 +1242,7 @@ namespace Sass {
       append_comma_separator();
       // The XYZ space has no gamut restrictions, so we use it to represent
       // the out-of-gamut color before converting into the target space.
-      _writeColorFunction(spaced->toSpace(ColorSpace2::xyzd65, spaced->pstate()));
+      _writeColorFunction(spaced->toSpace(ColorSpace::xyzd65, spaced->pstate()));
       append_optional_space();
       append_string("100%");
       append_comma_separator();
@@ -1262,18 +1252,15 @@ namespace Sass {
     }
 
     // We know these spaces have first channel as convenient percent
-    else if (space == ColorSpace2::lab || space == ColorSpace2::oklab ||
-      space == ColorSpace2::lch || space == ColorSpace2::oklch) {
+    else if (space == ColorSpace::lab || space == ColorSpace::oklab ||
+      space == ColorSpace::lch || space == ColorSpace::oklch) {
 
       add_open_mapping(color, true);
 
       write_string(space.name());
       append_string("(");
 
-
-
       // parentheses_opened = true;
-      double max = 100.0; //  space._channels[0]
       if (spaced->isChannel0Missing()) {
         append_string("none");
       }

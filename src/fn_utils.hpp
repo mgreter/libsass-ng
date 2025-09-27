@@ -16,14 +16,14 @@
 namespace sass {
 
   // Dart computes some edge cases different
-  static double min(double a, double b) {
+  inline static double min(double a, double b) {
     if (std::isnan(a)) return a;
     if (std::isnan(b)) return b;
     return std::min(a, b);
   }
 
   // Dart computes some edge cases different
-  static double max(double a, double b) {
+  inline static double max(double a, double b) {
     if (std::isnan(a)) return a;
     if (std::isnan(b)) return b;
     return std::max(a, b);

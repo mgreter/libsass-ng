@@ -1193,7 +1193,7 @@ namespace Sass {
       double weight = 0.5,
       bool legacyMissing = true);
 
-    sass::string debug() const;
+    // sass::string debug() const;
 
     const ColorSpace& space() const {
       return space_;
@@ -1282,7 +1282,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = forSpaceInternal(pstate,
-        ColorSpace2::hsl,
+        ColorSpace::hsl,
         red, green, blue, alpha);
       return rv;
     }
@@ -1295,7 +1295,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = forSpaceInternal(pstate,
-        ColorSpace2::hwb,
+        ColorSpace::hwb,
         red, green, blue, alpha);
       return rv;
     }
@@ -1309,7 +1309,7 @@ namespace Sass {
       bool forceRgb = false)
     {
       auto rv = _forSpace(pstate,
-        ColorSpace2::rgb,
+        ColorSpace::rgb,
         red, green, blue, alpha);
       if (rv != nullptr) rv->forceRgb = forceRgb;
       return rv;
@@ -1323,7 +1323,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = _forSpace(pstate,
-        ColorSpace2::lab,
+        ColorSpace::lab,
         lightness, a, b, alpha);
       return rv;
     }
@@ -1336,7 +1336,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = _forSpace(pstate,
-        ColorSpace2::xyzd65,
+        ColorSpace::xyzd65,
         x, y, z, alpha);
       return rv;
     }
@@ -1360,19 +1360,19 @@ namespace Sass {
        // std::cerr << "=> forSpaceInternal " << space.name() << " " << c0.value_or(-32) << ", "
        //   << c1.value_or(-42) << ", " << c2.value_or(-52) << "\n";
 
-      if (space.name() == "hsl") {
+      if (space == ColorSpace::hsl) {
         return _forSpace(pstate, space,
           _normalizeHue(c0, c1.value_or(0) < 0.0),
           c1.has_value() ? std::abs(c1.value()) : c1,
           c2, alpha);
       }
-      else if (space.name() == "hwb")
+      else if (space == ColorSpace::hwb)
       {
         return _forSpace(pstate, space,
           _normalizeHue(c0, false),
           c1, c2, alpha);
       }
-      else if (space.name() == "lch" || space.name() == "oklch") {
+      else if (space == ColorSpace::lch || space == ColorSpace::oklch) {
         auto rv = _forSpace(pstate, space,
           c0,
           c1.has_value() ? std::abs(c1.value()) : c1,
