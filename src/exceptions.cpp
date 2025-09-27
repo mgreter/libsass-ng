@@ -101,16 +101,20 @@ namespace Sass {
     {}
 
     UnitMismatch::UnitMismatch(BackTraces traces, const Number& lhs, const Number& rhs)
-      : RuntimeException(traces, "Incompatible units "
-        + (rhs.isUnitless() ? "[unitless]" : rhs.unit()) + " and "
-        + (lhs.isUnitless() ? "[unitless]" : lhs.unit()) + ".")
+      : RuntimeException(traces, lhs.inspect() + " and " + rhs.inspect() + " have incompatible units.")
     {
       this->traces.push_back(lhs.pstate());
       this->traces.push_back(rhs.pstate());
     }
 
+    UnitMissing::UnitMissing(BackTraces traces, const Number& number, const sass::string& unit, const sass::string& name)
+      : SassScriptException(traces, name, "Expected " + number.inspect() + " to have unit \"" + unit + "\".")
+    {
+      this->traces.push_back(number.pstate());
+    }
+
     UnitMissing::UnitMissing(BackTraces traces, const Number& number, const sass::string& unit)
-      : RuntimeException(traces, "Expected " + number.inspect() + " to have unit \"" + unit + "\".")
+      : SassScriptException(traces, "Expected " + number.inspect() + " to have unit \"" + unit + "\".", "")
     {
       this->traces.push_back(number.pstate());
     }
@@ -224,9 +228,10 @@ namespace Sass {
       : RuntimeException(traces, formatTooFewArguments(superflous))
     {}
 
-    static sass::string formatTooManyArguments(size_t given, size_t expected) {
+    static sass::string formatTooManyArguments(size_t given, size_t expected, bool positional = false) {
       sass::ostream msg;
       msg << "Only " << expected << " ";
+      if (positional) msg << "positional ";
       msg << pluralize("argument", expected);
       msg << " allowed, but " << given << " ";
       msg << pluralize("was", given, "were");
@@ -256,8 +261,8 @@ namespace Sass {
     //     toSentence(superfluous, "or", "$") + ".";
     // }
 
-    static sass::string formatTooManyArguments(const ValueFlatMap* superfluous) {
-      return "No argument named " +
+    static sass::string formatTooManyArguments(const ValueFlatMap* superfluous, bool parameter) {
+      return sass::string("No ") + (parameter ? "parameter" : "argument") + " named " +
         toSentence(getKeyVector(superfluous), "or", "$") + ".";
     }
 
@@ -270,8 +275,13 @@ namespace Sass {
     {}
 
     TooManyArguments::TooManyArguments(BackTraces traces, const ValueFlatMap* superflous)
-      : RuntimeException(traces, formatTooManyArguments(superflous))
+      : RuntimeException(traces, formatTooManyArguments(superflous, true))
     {}
+
+    TooManyArguments::TooManyArguments(BackTraces traces, size_t given, const CallableSignature * signature)
+      : RuntimeException(traces, formatTooManyArguments(given, signature->maxArgs(), false)) // signature->restArg().norm() != ""
+    {
+    }
 
     NoAngleArgument::NoAngleArgument(BackTraces traces, const Value* value, const sass::string& name)
       : SassScriptException(traces, name, "Expected " + value->toString() + " to have an angle unit (deg, grad, rad, turn).")
@@ -343,18 +353,18 @@ namespace Sass {
     SassScriptException::SassScriptException(
       BackTraces traces, SourceSpan pstate,
       sass::string msg, sass::string name) :
-      Base(name.empty() ? msg : "$" + name + ": " + msg, traces)
+      Base(name.empty() ? msg : (name == "" ? "" : "$" + name + ": ") + msg, traces)
     {
     }
 
     SassScriptException::SassScriptException(
       BackTraces traces, sass::string name, sass::string msg) :
-      Base(name.empty() ? msg : "$" + name + ": " + msg, traces)
+      Base(name.empty() ? msg : (name == "" ? "" : "$" + name + ": ") + msg, traces)
     {}
 
     SassScriptException::SassScriptException(sass::string msg,
       BackTraces traces, SourceSpan pstate, sass::string name) :
-      Base(name.empty() ? msg : "$" + name + ": " + msg, traces)
+      Base(name.empty() ? msg : (name == "" ? "" : "$" + name + ": ") + msg, traces)
     {}
 
 
@@ -511,34 +521,28 @@ namespace Sass {
   }
 
   MissingColorChannel::MissingColorChannel(BackTraces traces, const ColorSpaced* color, const ColorChannel& channel)
-    : Base("Because the CSS working group is still deciding on the best behavior, "
+    : SassScriptException("Because the CSS working group is still deciding on the best behavior, "
       "Sass doesn't currently support modifying missing channels (color: " +
-      color->toCss() + ".",
-    traces, color->pstate())
+      color->toCss() + ".", traces, color->pstate(), channel.name)
   {
     // this->traces.push_back(color->pstate());
   }
 
   static sass::string formatTooManyColorChannels(
-    const ColorSpace& space, const Value& input) {
+    const ColorSpace& space, const Value& input, size_t size) {
     sass::sstream strm; strm << "The " << space.name()
-      << " color space has " << space._channelSize;
-    if (input.lengthAsList() == 1) {
-        strm << " channels but " << input.inspect()
-        << " has " << input.lengthAsList() << ".";
-    }
-    else {
-        strm << " channels but (" << input.inspect()
-        << ") has " << input.lengthAsList() << ".";
-    }
+      << " color space has " << space._channelSize << " "
+      << pluralize("channel", space._channelSize, "channels")
+      << " but " << input.toString() << " has " << size << ".";
     return strm.str();
   }
 
+  // Rename to mismatch (too few or too many)
   TooManyColorChannels::TooManyColorChannels(
     BackTraces traces, const ColorSpace& space,
-    const Value& input, const sass::string& name)
+    const Value& input, size_t size, const sass::string& name)
     : SassScriptException(traces, name,
-      formatTooManyColorChannels(space, input))
+      formatTooManyColorChannels(space, input, size))
   {}
 
   static sass::string formatTooManyColorSlashes(const Value& input) {
@@ -554,6 +558,13 @@ namespace Sass {
     : SassScriptException(traces, name,
       formatTooManyColorSlashes(input))
   { }
+
+  UnknownColorSpace::UnknownColorSpace(
+    BackTraces traces, const String& value, const sass::string& name)
+    : SassScriptException(traces, name, "Unknown color space \"" + value.toString() + "\".")
+  {
+    this->traces.push_back(value.pstate());
+  }
 
 }
 

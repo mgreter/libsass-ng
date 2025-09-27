@@ -1232,7 +1232,7 @@ namespace Sass {
     int getChannelIndex(Logger& logger, const String* channel,
       const char* colorName, const char* channelName) const;
 
-    bool isChannelMissing(Logger& logger, const String* channel) const;
+    bool isChannelMissing(Logger& logger, const String* channel, const sass::string& arg) const;
     bool isChannelMissing(Logger& logger, const sass::string& channel) const;
 
     bool isChannel0Powerless() const;
@@ -1477,6 +1477,14 @@ namespace Sass {
     ColorSpaced* copy(SASS_MEMORY_ARGS bool childless) const override final {
       return SASS_MEMORY_NEW_DBG(ColorSpaced, this);
     }
+
+    struct HashFunction
+    {
+      size_t operator()(const ColorSpaced& color) const
+      {
+        return color.hash();
+      }
+    };
 
     IMPLEMENT_ISA_CASTER(ColorSpaced);
   };

@@ -141,14 +141,6 @@ namespace Sass {
         const Number& rhs);
     };
 
-    class UnitMissing : public RuntimeException
-    {
-    public:
-      UnitMissing(
-        BackTraces traces,
-        const Number& number,
-        const sass::string& unit);
-    };
 
     class IncompatibleCalcValue : public RuntimeException
     {
@@ -208,9 +200,28 @@ namespace Sass {
         sass::string name = "");
     };
 
+    class UnitMissing : public SassScriptException
+    {
+    public:
+      UnitMissing(
+        BackTraces traces,
+        const Number& number,
+        const sass::string& unit);
+      UnitMissing(
+        BackTraces traces,
+        const Number& number,
+        const sass::string& unit,
+        const sass::string& name);
+    };
+
     class CustomImportNotFound : public RuntimeException {
     public:
       CustomImportNotFound(BackTraces traces, sass::string file);
+    };
+
+    class UnknownColorSpace : public SassScriptException {
+    public:
+      UnknownColorSpace(BackTraces traces, const String& value, const sass::string& name);
     };
 
     class CustomImportAmbigous : public RuntimeException {
@@ -263,7 +274,7 @@ namespace Sass {
     class TooManyColorChannels : public SassScriptException {
     public:
       TooManyColorChannels(BackTraces traces, const ColorSpace& space,
-        const Value& input, const sass::string& name = "");
+        const Value& input, size_t size, const sass::string& name = "");
     };
 
     class TooFewArguments : public RuntimeException {
@@ -283,6 +294,8 @@ namespace Sass {
         TooManyArguments(BackTraces traces, size_t given, size_t expected);
         TooManyArguments(BackTraces traces, const ExpressionFlatMap* given, const Sass::EnvKeySet& expected);
         TooManyArguments(BackTraces traces, const ValueFlatMap* superfluous);
+        TooManyArguments(BackTraces traces, size_t given, const CallableSignature* signature);
+        
     };
 
     class NoAngleArgument : public SassScriptException {
@@ -334,7 +347,7 @@ namespace Sass {
     };
 
 
-    class MissingColorChannel : public Base {
+    class MissingColorChannel : public SassScriptException {
     public:
       MissingColorChannel(BackTraces traces,
         const ColorSpaced* color,

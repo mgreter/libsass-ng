@@ -162,10 +162,10 @@ namespace Sass {
       return true;
     }
 
-    static const ColorSpace& fromValueRef(Logger& logger, Value* value);
-    static const ColorSpace& fromNameRef(Logger& logger, const String& name);
+    static const ColorSpace& fromValueRef(Logger& logger, Value* value, const sass::string& name);
+    static const ColorSpace& fromNameRef(Logger& logger, const String& space, const sass::string& name);
 
-    static const ColorSpace* fromName(Logger& logger, const String& name);
+    static const ColorSpace* fromName(Logger& logger, const String& space, const sass::string& name);
 
     ColorSpace(const sass::string name, SassColorSpace space, const ColorChannel* channels, int channelSize)
       : name_(name), space_(space), _channels(channels), _channelSize(channelSize)

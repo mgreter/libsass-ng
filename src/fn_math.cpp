@@ -26,7 +26,7 @@ namespace Sass {
           }
           CallStackFrame csf(compiler, number->pstate());
           throw Exception::RuntimeException(compiler, "$" + vname +
-            ": Expected " + number->inspect() + " to be an angle.");
+            ": Expected " + number->inspect() + " to have an angle unit (deg, grad, rad, turn).");
       }
 
       /*******************************************************************/

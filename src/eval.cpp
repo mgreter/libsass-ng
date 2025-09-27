@@ -320,7 +320,7 @@ namespace Sass {
       // Check that all positional arguments are consumed
       if (positional.size() > parameters.size()) {
         throw Exception::TooManyArguments(logger,
-          positional.size(), prototype->maxArgs());
+          positional.size(), prototype);
       }
 
       // Try to get needed function parameters from argument results
@@ -2774,8 +2774,8 @@ namespace Sass {
         CallStackFrame frame(logger, pstate);
         throw Exception::RuntimeException(logger,
           "Variable keyword argument map must have string keys.\n" +
-          kv.first->inspect() + " is not a string in " +
-          map->inspect() + ".");
+          kv.first->toString() + " is not a string in " +
+          map->toString() + ".");
       }
     }
   }
@@ -2793,8 +2793,8 @@ namespace Sass {
         CallStackFrame frame(logger, pstate);
         throw Exception::RuntimeException(logger,
           "Variable keyword argument map must have string keys.\n" +
-          kv.first->inspect() + " is not a string in " +
-          map->inspect() + ".");
+          kv.first->toString() + " is not a string in " +
+          map->toString() + ".");
       }
     }
   }

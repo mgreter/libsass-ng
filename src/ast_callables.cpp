@@ -94,7 +94,7 @@ namespace Sass {
         return pair;
       }
     }
-    return overloads_.back();
+    return overloads_.front();
   }
 
   // Equality comparator (needed for `get-function` value)

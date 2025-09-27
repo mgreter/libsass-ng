@@ -318,7 +318,7 @@ namespace Sass {
   }
 
   bool ColorSpaced::isChannelMissing(
-    Logger& logger, const String* channel) const
+    Logger& logger, const String* channel, const sass::string& arg) const
   {
     // channel must not be nullptr
     auto channels = space_._channels;
@@ -327,8 +327,7 @@ namespace Sass {
     if (channel->value() == channels[2].name) return isChannel2Missing();
     if (channel->value() == "alpha") return isAlphaMissing();
     throw Exception::RuntimeException(logger,
-      "Only one argument may be passed "
-      "to the plain-CSS invert() function.");
+      "$" + arg + ": Color " + toString() + " doesn\'t have a channel named " + channel->toString() + ".");
   }
 
   bool ColorSpaced::isChannelMissing(
@@ -341,8 +340,7 @@ namespace Sass {
     if (channel == channels[2].name) return isChannel2Missing();
     if (channel == "alpha") return isAlphaMissing();
     throw Exception::RuntimeException(logger,
-      "Only one argument may be passed "
-      "to the plain-CSS invert() function.");
+      "Color " + toString() + " doesn\'t have a channel named " + channel + ".");
   }
 
   bool ColorSpaced::isChannel0Powerless() const
@@ -550,76 +548,70 @@ namespace Sass {
       hash_combine(hash_, std::hash<double>{}(c1_.value_or(0)));
       hash_combine(hash_, std::hash<double>{}(c2_.has_value()));
       hash_combine(hash_, std::hash<double>{}(c2_.value_or(0)));
-      hash_combine(hash_, std::hash<double>{}(alpha_.value_or(0)));
+      hash_combine(hash_, std::hash<double>{}(alpha_.has_value()));
       hash_combine(hash_, std::hash<double>{}(alpha_.value_or(0)));
     }
     return hash_;
   }
 
-  const ColorSpace& ColorSpace::fromValueRef(Logger& logger, Value* value)
+  const ColorSpace& ColorSpace::fromValueRef(Logger& logger, Value* value, const sass::string& name)
   {
     // assert(value != nullptr, "Space value must not be null");
-    String* space_str = value->assertString(logger, "space");
-    space_str->assertUnquoted(logger, "space"); // may throw
-    return fromNameRef(logger, *space_str); // safe access
+    String* space_str = value->assertString(logger, name);
+    space_str->assertUnquoted(logger, name); // may throw
+    return fromNameRef(logger, *space_str, name); // safe access
 
     // TODO: insert return statement here
   }
 
-  const ColorSpace& ColorSpace::fromNameRef(Logger& logger, const String& name)
+  const ColorSpace& ColorSpace::fromNameRef(Logger& logger, const String& space, const sass::string& name)
   {
-    if (StringUtils::equalsIgnoreCase(name.value(), "rgb")) return ColorSpace2::rgb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "hwb")) return ColorSpace2::hwb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "hsl")) return ColorSpace2::hsl;
-    if (StringUtils::equalsIgnoreCase(name.value(), "srgb")) return ColorSpace2::srgb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "srgb-linear")) return ColorSpace2::srgb_linear;
+    if (StringUtils::equalsIgnoreCase(space.value(), "rgb")) return ColorSpace2::rgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "hwb")) return ColorSpace2::hwb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "hsl")) return ColorSpace2::hsl;
+    if (StringUtils::equalsIgnoreCase(space.value(), "srgb")) return ColorSpace2::srgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "srgb-linear")) return ColorSpace2::srgb_linear;
 
-    if (StringUtils::equalsIgnoreCase(name.value(), "display-p3")) return ColorSpace2::displayP3;
-    if (StringUtils::equalsIgnoreCase(name.value(), "a98-rgb")) return ColorSpace2::a98rgb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "prophoto-rgb")) return ColorSpace2::protophotoRgb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "rec2020")) return ColorSpace2::rec2020;
+    if (StringUtils::equalsIgnoreCase(space.value(), "display-p3")) return ColorSpace2::displayP3;
+    if (StringUtils::equalsIgnoreCase(space.value(), "a98-rgb")) return ColorSpace2::a98rgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "prophoto-rgb")) return ColorSpace2::protophotoRgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "rec2020")) return ColorSpace2::rec2020;
 
-    if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d65")) return ColorSpace2::xyzd65;
-    if (StringUtils::equalsIgnoreCase(name.value(), "xyz")) return ColorSpace2::xyzd65;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d65")) return ColorSpace2::xyzd65;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz")) return ColorSpace2::xyzd65;
 
-    if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d50")) return ColorSpace2::xyzd50;
-    if (StringUtils::equalsIgnoreCase(name.value(), "lab")) return ColorSpace2::lab;
-    if (StringUtils::equalsIgnoreCase(name.value(), "lch")) return ColorSpace2::lch;
-    if (StringUtils::equalsIgnoreCase(name.value(), "oklab")) return ColorSpace2::oklab;
-    if (StringUtils::equalsIgnoreCase(name.value(), "oklch")) return ColorSpace2::oklch;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d50")) return ColorSpace2::xyzd50;
+    if (StringUtils::equalsIgnoreCase(space.value(), "lab")) return ColorSpace2::lab;
+    if (StringUtils::equalsIgnoreCase(space.value(), "lch")) return ColorSpace2::lch;
+    if (StringUtils::equalsIgnoreCase(space.value(), "oklab")) return ColorSpace2::oklab;
+    if (StringUtils::equalsIgnoreCase(space.value(), "oklch")) return ColorSpace2::oklch;
 
-    CallStackFrame csf(logger, name.pstate());
-    throw Exception::SassScriptException(
-      sass::string("Unknown color space"),
-      logger, name.pstate());
+    throw Exception::UnknownColorSpace(logger, space, name);
 
   }
 
-  const ColorSpace* ColorSpace::fromName(Logger& logger, const String& name)
+  const ColorSpace* ColorSpace::fromName(Logger& logger, const String& space, const sass::string& name)
   {
-    if (StringUtils::equalsIgnoreCase(name.value(), "rgb")) return &ColorSpace2::rgb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "hwb")) return &ColorSpace2::hwb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "hsl")) return &ColorSpace2::hsl;
-    if (StringUtils::equalsIgnoreCase(name.value(), "srgb")) return &ColorSpace2::srgb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "srgb-linear")) return &ColorSpace2::srgb_linear;
+    if (StringUtils::equalsIgnoreCase(space.value(), "rgb")) return &ColorSpace2::rgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "hwb")) return &ColorSpace2::hwb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "hsl")) return &ColorSpace2::hsl;
+    if (StringUtils::equalsIgnoreCase(space.value(), "srgb")) return &ColorSpace2::srgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "srgb-linear")) return &ColorSpace2::srgb_linear;
 
-    if (StringUtils::equalsIgnoreCase(name.value(), "display-p3")) return &ColorSpace2::displayP3;
-    if (StringUtils::equalsIgnoreCase(name.value(), "a98-rgb")) return &ColorSpace2::a98rgb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "prophoto-rgb")) return &ColorSpace2::protophotoRgb;
-    if (StringUtils::equalsIgnoreCase(name.value(), "rec2020")) return &ColorSpace2::rec2020;
-    if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d65")) return &ColorSpace2::xyzd65;
-    if (StringUtils::equalsIgnoreCase(name.value(), "xyz")) return &ColorSpace2::xyzd65;
+    if (StringUtils::equalsIgnoreCase(space.value(), "display-p3")) return &ColorSpace2::displayP3;
+    if (StringUtils::equalsIgnoreCase(space.value(), "a98-rgb")) return &ColorSpace2::a98rgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "prophoto-rgb")) return &ColorSpace2::protophotoRgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "rec2020")) return &ColorSpace2::rec2020;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d65")) return &ColorSpace2::xyzd65;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz")) return &ColorSpace2::xyzd65;
 
-    if (StringUtils::equalsIgnoreCase(name.value(), "xyz-d50")) return &ColorSpace2::xyzd50;
-    if (StringUtils::equalsIgnoreCase(name.value(), "lab")) return &ColorSpace2::lab;
-    if (StringUtils::equalsIgnoreCase(name.value(), "lch")) return &ColorSpace2::lch;
-    if (StringUtils::equalsIgnoreCase(name.value(), "oklab")) return &ColorSpace2::oklab;
-    if (StringUtils::equalsIgnoreCase(name.value(), "oklch")) return &ColorSpace2::oklch;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d50")) return &ColorSpace2::xyzd50;
+    if (StringUtils::equalsIgnoreCase(space.value(), "lab")) return &ColorSpace2::lab;
+    if (StringUtils::equalsIgnoreCase(space.value(), "lch")) return &ColorSpace2::lch;
+    if (StringUtils::equalsIgnoreCase(space.value(), "oklab")) return &ColorSpace2::oklab;
+    if (StringUtils::equalsIgnoreCase(space.value(), "oklch")) return &ColorSpace2::oklch;
 
-    CallStackFrame csf(logger, name.pstate());
-    throw Exception::SassScriptException(
-      sass::string("Unknown color space"),
-      logger, name.pstate());
+    throw Exception::UnknownColorSpace(logger, space, name);
 
   }
 
@@ -1413,7 +1405,7 @@ namespace Sass {
         name);
     }
 
-    const ColorSpace& space = ColorSpace::fromValueRef(logger, list[0]);
+    const ColorSpace& space = ColorSpace::fromValueRef(logger, list[0], name);
 
     if (list.size() == 1) return InterpolationMethod(space);
 
@@ -1421,7 +1413,7 @@ namespace Sass {
 
     if (list.size() == 2) {
       throw Exception::SassScriptException(logger, value->pstate(),
-        "Expected unquoted string \"hue\" after " + value->toCss() + ".",
+        "Expected unquoted string \"hue\" after " + value->toString() + ".",
         name);
     }
     else {
@@ -1430,12 +1422,12 @@ namespace Sass {
       if (!StringUtils::equalsIgnoreCase(str->value(), "hue", 3)) {
         throw Exception::SassScriptException(logger, value->pstate(),
           "Expected unquoted string \"hue\" at the end of "
-          + value->toCss() + ", was " + list[2]->toCss() + ".",
+          + value->toString() + ", was " + list[2]->toString() + ".",
           name);
       }
       if (list.size() > 3) {
         throw Exception::SassScriptException(logger, value->pstate(),
-          "Expected nothing after \"hue\" in " + value->toCss() + ".",
+          "Expected nothing after \"hue\" in " + value->toString() + ".",
           name);
       }
       if (!space.isPolar()) {

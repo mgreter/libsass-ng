@@ -29,7 +29,8 @@ namespace sass {
     return std::max(a, b);
   }
 
-  const double epsilon = std::pow(10.0, -10 - 1);
+  const double epsilon = std::pow(10.0, -11);
+  const double iepsilon = std::pow(10.0, 11);
 
 }
 

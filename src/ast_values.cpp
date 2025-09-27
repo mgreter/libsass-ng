@@ -27,7 +27,7 @@ namespace Sass {
   AstNode* Value::simplify(Logger& logger) {
     CallStackFrame frame(logger, pstate());
     throw Exception::SassScriptException(logger, pstate(),
-      "Value " + inspect() + " can't be used in a calculation.");
+      "Value " + toString() + " can't be used in a calculation.");
   }
 
   // Only used for nth sass function
@@ -1088,7 +1088,7 @@ namespace Sass {
     }
     CallStackFrame csf(logger, pstate());
     throw Exception::RuntimeException(logger, "$" + vname +
-      ": Expected " + inspect() + " to be an angle.");
+      ": Expected " + inspect() + " to have an angle unit (deg, grad, rad, turn).");
   }
 
   double Number::factorToUnits(const Units& units) const
@@ -1224,7 +1224,7 @@ namespace Sass {
     if (hasQuotes_ == false) return this;
     CallStackFrame csf(logger, pstate_);
     throw Exception::SassScriptException(logger, pstate_,
-      "Quoted string " + inspect() + " can't be used in a calculation.");
+      "Quoted string " + toString() + " can't be used in a calculation.");
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -1293,8 +1293,8 @@ namespace Sass {
   {
     if (hasQuotes_ == true) return this;
     logger.callStack.push_back(pstate());
-    throw Exception::SassScriptException(logger, pstate_,
-      "Expected " + inspect() + " to be a quoted string.");
+    throw Exception::SassScriptException(logger, name,
+      "Expected " + toString() + " to be a quoted string.");
   }
 
   Value* String::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const

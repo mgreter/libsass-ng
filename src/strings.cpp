@@ -451,6 +451,7 @@ namespace Sass
     const sass::string lch("lch");
 
     const sass::string base("base");
+    const sass::string space("space");
     const sass::string channel("channel");
     const sass::string channels("channels");
     const sass::string exponent("exponent");

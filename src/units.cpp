@@ -458,10 +458,12 @@ namespace Sass {
       }
       else {
         if (nL != 0) stringified += '/';
+        if (nL > 1) stringified += '(';
         for (size_t n = 0; n < nL; n += 1) {
           if (n) stringified += '*';
           stringified += denominators[n];
         }
+        if (nL > 1) stringified += ')';
       }
     }
     return stringified;

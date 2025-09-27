@@ -658,7 +658,7 @@ namespace Sass {
       if (chnInfo.isLinear) {
         // std::cerr << " Channel is linear\n";
         if (chnInfo.requiresPercent && !percent && !chnValue->hasUnit("%")) {
-          throw Exception::UnitMissing(logger, *chnValue, "%");
+          throw Exception::UnitMissing(logger, *chnValue, "%", chnInfo.name);
         }
         else if (chnInfo.lowerClamped == false && chnInfo.upperClamped == false) {
           if (percent) return chnInfo.max * chnValue->value() / 100;
@@ -834,7 +834,7 @@ namespace Sass {
     )
     {
       // Get the list from the channels input variable (or throw)
-      ValueVector list = input->assertCommonListStyle(compiler, Strings::channels, true);
+      ValueVector list = input->assertCommonListStyle(compiler, fname, true);
 
       if (list.empty()) return { input, nullptr };
 
@@ -849,7 +849,7 @@ namespace Sass {
           SourceSpan span(input->pstate());
           CallStackFrame csf(compiler, span);
           throw Exception::TooManyColorSlashes(
-            compiler, *input, "channels");
+            compiler, *input, fname);
         }
       }
 
@@ -910,7 +910,7 @@ namespace Sass {
       }
 
       // If last can look like "1/none", which is passed as string
-      auto sp = _parseSlashChannels2(compiler, pstate, input, fname);
+      auto sp = _parseSlashChannels2(compiler, pstate, input, name);
 
       // debug_ast(sp.first);
       // debug_ast(sp.second);
@@ -958,10 +958,10 @@ namespace Sass {
         if (space == nullptr) {
           Value* first = list.front();
           list.erase(list.begin());
-          spaceName = first->assertString(compiler, fname);
-          spaceName->assertUnquoted(compiler, fname);
+          spaceName = first->assertString(compiler, name);
+          spaceName->assertUnquoted(compiler, name);
           if (isVar(spaceName) == false) {
-            space = ColorSpace::fromName(compiler, *spaceName);
+            space = ColorSpace::fromName(compiler, *spaceName, name);
           }
           // Move list to channels
           channels = std::move(list);
@@ -991,7 +991,7 @@ namespace Sass {
         for (int i = 0; i < channels.size(); i++) {
 
           channels[i]->assertColorChannel(compiler,
-            space->_channels[i].name, Strings::channels);
+            space->_channels[i].name, name);
 
           // auto channel = channels[i];
           // 
@@ -1096,8 +1096,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       if (channels.size() != 3) {
         SourceSpan span(components->pstate());
         CallStackFrame csf(compiler, span);
-        throw Exception::TooManyColorChannels(
-          compiler, *space, *input, "channels");
+        throw Exception::TooManyColorChannels(compiler,
+          *space, *input, channels.size(), name);
       }
 
       auto rv = _colorFromChannels(
@@ -1564,12 +1564,12 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       /*******************************************************************/
 
       
-      ColorSpaced* _colorInSpace(ColorSpaced* colorUntyped, const String* spaceUntyped, Compiler& compiler, bool legacyMissing = true)
+      ColorSpaced* _colorInSpace(ColorSpaced* colorUntyped, const String* spaceUntyped, Compiler& compiler, const sass::string fname, bool legacyMissing = true)
       {
         ColorSpaced* color = colorUntyped->assertColorSpaced2(compiler, "color");
         if (spaceUntyped == nullptr) return color;
         if (spaceUntyped->isNull()) return color;
-        const ColorSpace* space = ColorSpace::fromName(compiler, *spaceUntyped);
+        const ColorSpace* space = ColorSpace::fromName(compiler, *spaceUntyped, fname);
         ColorSpaced* rv = color->toSpace(*space, colorUntyped->pstate(), legacyMissing);
         return rv;
       }
@@ -1583,15 +1583,15 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       /// Throws a [SassScriptException] if either argument isn't the expected type or
       /// if [spaceUntyped] isn't the name of a color space. If [spaceUntyped] is
       /// `sassNull`, it defaults to the color's existing space.
-      ColorSpaced* _colorInSpace(Compiler& compiler, Value* col, Value* spc, bool legacyMissing = true)
+      ColorSpaced* _colorInSpace(Compiler& compiler, Value* col, Value* spc, const sass::string fname, bool legacyMissing = true)
       {
         ColorSpaced* color = col->assertColorSpaced2(compiler, Strings::color);
         // std::cerr << "Called color in space " << color->getChannel0() << ", "
         //   << color->getChannel1() << ", " << color->getChannel2() << "\n";
         if (spc == nullptr || spc->isNull()) return color;
-        String* space = spc->assertString(compiler, "space");
-        space->assertUnquoted(compiler, "space");
-        const ColorSpace& cpsc = ColorSpace::fromNameRef(compiler, *space);
+        String* space = spc->assertString(compiler, fname);
+        space->assertUnquoted(compiler, fname);
+        const ColorSpace& cpsc = ColorSpace::fromNameRef(compiler, *space, fname);
         ColorSpaced* rv = color->toSpace(cpsc, col->pstate(), legacyMissing);
         return rv;
       }
@@ -1599,7 +1599,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(isInGamut)
       {
 
-        const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[1]);
+        const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[1], Strings::space);
         // const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         return SASS_MEMORY_NEW(Boolean, pstate, color->isInGamut());
       }
@@ -1615,7 +1615,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(isPowerless)
       {
 
-        const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[2]);
+        const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[2], Strings::space);
         // const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         String* channel = arguments[1]->assertString(compiler, "channel");
         channel->assertQuoted(compiler, "channel");
@@ -1627,7 +1627,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(channel)
       {
 
-        const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[2]);
+        const ColorSpaced* color = _colorInSpace(compiler, arguments[0], arguments[2], Strings::space);
           // arguments[0]->assertColorSpaced(compiler, Strings::color);
         const String* channel = arguments[1]->assertString(compiler, "channel");
         channel->assertQuoted(compiler, "channel");
@@ -1651,7 +1651,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
         String* channel = arguments[1]->assertString(compiler, "channel");
         channel->assertQuoted(compiler, "channel");
-        bool missing = color->isChannelMissing(compiler, channel);
+        bool missing = color->isChannelMissing(compiler, channel, "channel");
         return SASS_MEMORY_NEW(Boolean, pstate, missing);
       }
 
@@ -1667,7 +1667,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(toSpace)
       {
-        auto rv = _colorInSpace(compiler, arguments[0], arguments[1], false);
+        auto rv = _colorInSpace(compiler, arguments[0], arguments[1], Strings::space, false);
         // std::cerr << "########## => " << rv->debug() << "\n";
         return rv;
         // return _parseChannels(str_color, arguments[0], "description", pstate, compiler);
@@ -1822,9 +1822,9 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           return rv;
         }
 
-        String* spname = arguments[2]->assertString(compiler, "space");
-        spname->assertUnquoted(compiler, "space");
-        const ColorSpace& space = ColorSpace::fromNameRef(compiler, *spname);
+        String* spname = arguments[2]->assertString(compiler, Strings::space);
+        spname->assertUnquoted(compiler, Strings::space);
+        const ColorSpace& space = ColorSpace::fromNameRef(compiler, *spname, Strings::space);
 
         double w = weight->valueInRangeWithUnit(compiler,
           0, 100, "weight", unit_percent) / 100.0;
@@ -2207,7 +2207,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, Strings::color);
 
         const ColorSpace& space = color->isLegacy() && isNull(arguments[1]) ?
-          ColorSpace2::hsl : ColorSpace::fromValueRef(compiler, arguments[1]);
+          ColorSpace2::hsl : ColorSpace::fromValueRef(compiler, arguments[1], Strings::space);
 
         if (!space.isPolar()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2398,7 +2398,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "darken() is only supported for legacy colors. Please use "
+            "fade-in() is only supported for legacy colors. Please use "
             "color.adjust() instead with an explicit $space argument.");
         }
 
@@ -2419,7 +2419,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "darken() is only supported for legacy colors. Please use "
+            "fade-out() is only supported for legacy colors. Please use "
             "color.adjust() instead with an explicit $space argument.");
         }
 
@@ -2516,7 +2516,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
         else if (String* str = sname->assertString(logger, vname)) {
           str->assertUnquoted(logger, vname);
-          return ColorSpace::fromNameRef(logger, *str);
+          return ColorSpace::fromNameRef(logger, *str, Strings::space);
         }
         else {
           return color->space();
@@ -3095,7 +3095,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           }
         }
         else {
-          throw Exception::SassScriptException(compiler, pstate, "is not a number or unquoted \"none\".", "alpha");
+          throw Exception::SassScriptException(compiler, pstate,
+            alpha->toString() + " is not a number or unquoted \"none\".", "alpha");
         }
 
 
@@ -3142,7 +3143,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           space = _sniffLegacyColorSpace(input, keywords);
           legacy = true;
         }
-        else space = &ColorSpace::fromValueRef(compiler, space_val);
+        else space = &ColorSpace::fromValueRef(compiler, space_val, Strings::space);
         if (space == nullptr) space = &input->space();
 
         // Convert input color to color optional space
@@ -3221,7 +3222,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         if (!global) {
           throw Exception::SassScriptException(compiler, pstate,
-            "The function darken() isn't in the sass:color module.");
+            "The function adjust-hue() isn't in the sass:color module.");
         }
 
         const ColorSpaced* color = arguments[0]->assertColorSpaced(compiler, "color");

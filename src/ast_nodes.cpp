@@ -499,7 +499,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a color.",
+      toString() + " is not a color.",
       logger, pstate(), name);
   }
 
@@ -507,7 +507,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a color.",
+      toString() + " is not a color.",
       logger, pstate(), name);
   }
 
@@ -516,7 +516,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a color.",
+      toString() + " is not a color.",
       logger, pstate(), name);
   }
   // Assert and return a color or throws if incompatible
@@ -524,7 +524,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a color.",
+      toString() + " is not a color.",
       logger, pstate(), name);
   }
 
@@ -533,7 +533,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a function reference.",
+      toString() + " is not a function reference.",
       logger, pstate(), name);
   }
 
@@ -542,7 +542,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a map.",
+      toString() + " is not a map.",
       logger, pstate(), name);
   }
 
@@ -551,7 +551,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a number.",
+      toString() + " is not a number.",
       logger, pstate(), name);
   }
 
@@ -567,7 +567,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a string.",
+      toString() + " is not a string.",
       logger, pstate(), name);
   }
 
@@ -591,7 +591,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not an argument list.",
+      toString() + " is not an argument list.",
       logger, pstate(), name);
   }
 
@@ -600,7 +600,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a calculation.",
+      toString() + " is not a calculation.",
       logger, pstate(), name);
   }
 
@@ -610,7 +610,7 @@ namespace Sass {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(logger, name,
       "Expected " + channel + " channel to be "
-      "a number, was " + inspect() + ".");
+      "a number, was " + toString() + ".");
   }
 
   // Assert and return a mixin value or throws if incompatible
@@ -618,7 +618,7 @@ namespace Sass {
   {
     CallStackFrame csf(logger, pstate());
     throw Exception::SassScriptException(
-      inspect() + " is not a mixin reference.",
+      toString() + " is not a mixin reference.",
       logger, pstate(), name);
   }
 
@@ -785,7 +785,7 @@ namespace Sass {
       return str;
     }
     throw Exception::SassScriptException(
-      inspect() + " is not a valid selector: it must be a string,\n"
+      toString() + " is not a valid selector: it must be a string,\n"
       "a list of strings, or a list of lists of strings.",
       logger, pstate(), name);
   }
@@ -877,8 +877,18 @@ namespace Sass {
     if (const Interpolation* itpl = dynamic_cast<const Interpolation*>(this)) {
       return itpl->toString();
     }
+    else if (const String* str = dynamic_cast<const String*>(this)) {
+      return str->toCss();
+    }
     else if (const ItplString* itps = dynamic_cast<const ItplString*>(this)) {
       return itps->toString();
+    }
+    else if (const List* list = dynamic_cast<const List*>(this)) {
+      if (list->hasBrackets() || list->lengthAsList() == 0 ||
+        list->lengthAsList() == 1 && list->separator() == SASS_COMMA) {
+        return list->inspect();
+      }
+      return "(" + list->inspect() + ")";
     }
     else if (const Value* value = dynamic_cast<const Value*>(this)) {
       return value->inspect();

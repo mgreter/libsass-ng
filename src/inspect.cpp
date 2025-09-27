@@ -1065,16 +1065,33 @@ namespace Sass {
 
     if (opaque) {
       if (ColorSpaced* rgba = color->toSpace(ColorSpace2::rgb, color->pstate())) {
-        int numval = fuzzyRound(rgba->getChannel0(), sass::epsilon) * 0x10000
-          + fuzzyRound(rgba->getChannel1(), sass::epsilon) * 0x100
-          + fuzzyRound(rgba->getChannel2(), sass::epsilon);
-        
-        if (const char* disp = color_to_name(numval)) {
-          // Fix something that is actually correct to pass tests
-          // Adjust the spec tests once we figure out how to proceed
+        // double a = std::round(std::round(rgba->getChannel0() * sass::iepsilon) * sass::epsilon);
+        // double b = std::round(std::round(rgba->getChannel1() * sass::iepsilon) * sass::epsilon);
+        // double c = std::round(std::round(rgba->getChannel2() * sass::iepsilon) * sass::epsilon);
+        double x1 = fuzzyRound(0.499, 10e-5);
+        double x2 = fuzzyRound(0.4999, 10e-5);
+        double x3 = fuzzyRound(0.49999, 10e-5);
 
-          if (!(color->space() == ColorSpace2::hwb && strcmp("gray", disp) == 0) &&
-              !(color->space() == ColorSpace2::rgb && strcmp("gray", disp) == 0)) {
+        double y1 = fuzzyRound(0.499, 10e+5);
+        double y2 = fuzzyRound(0.4999, 10e+5);
+        double y3 = fuzzyRound(0.49999, 10e+5);
+
+        double a1 = rgba->getChannel0();
+
+        // cannot round, we need to check if it is either within fuzzy range of ceil or floor
+
+        if (fuzzyIsInt(rgba->getChannel0(), 10e-11) &&
+          fuzzyIsInt(rgba->getChannel1(), 10e-11) &&
+          fuzzyIsInt(rgba->getChannel2(), 10e-11)) {
+
+          double a = fuzzyRound(rgba->getChannel0(), 10e-11);
+          double b = fuzzyRound(rgba->getChannel1(), 10e-11);
+          double c = fuzzyRound(rgba->getChannel2(), 10e-11);
+          int numval = a * 0x10000 + b * 0x100 + c;
+          if (const char* disp = color_to_name(numval)) {
+
+            // Fix something that is actually correct to pass tests
+            // Adjust the spec tests once we figure out how to proceed
             append_string(disp);
             return;
           }
