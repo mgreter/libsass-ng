@@ -1242,7 +1242,8 @@ namespace Sass {
       append_comma_separator();
       // The XYZ space has no gamut restrictions, so we use it to represent
       // the out-of-gamut color before converting into the target space.
-      _writeColorFunction(spaced->toSpace(ColorSpace::xyzd65, spaced->pstate()));
+      ColorObj converted = spaced->toSpace(ColorSpace::xyzd65, spaced->pstate());
+      _writeColorFunction(converted);
       append_optional_space();
       append_string("100%");
       append_comma_separator();

@@ -369,7 +369,8 @@ namespace Sass {
   Color* Color::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
   {
     if (space == this->space_) {
-      return SASS_MEMORY_NEW(Color, this);
+      ColorObj copy = SASS_MEMORY_NEW(Color, this);
+      return copy.detach();
     }
 
     ColorObj converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
