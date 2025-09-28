@@ -12,18 +12,9 @@ ifeq ($(OS),SunOS)
 INSTALL  ?= ginstall
 endif
 INSTALL  ?= install
-CFLAGS   ?= -Wall
-CXXFLAGS ?= -Wall
-LDFLAGS  ?= -Wall
-ifndef COVERAGE
-  CFLAGS   += -O3 -pipe -DNDEBUG -fomit-frame-pointer
-  CXXFLAGS += -O3 -pipe -DNDEBUG -fomit-frame-pointer
-  LDFLAGS  += -O3 -pipe -DNDEBUG -fomit-frame-pointer
-else
-  CFLAGS   += -O1 -fno-omit-frame-pointer
-  CXXFLAGS += -O1 -fno-omit-frame-pointer
-  LDFLAGS  += -O1 -fno-omit-frame-pointer
-endif
+CFLAGS   ?= -Wall -g -O0
+CXXFLAGS ?= -Wall -g -O0
+LDFLAGS  ?= -Wall -g -O0
 ifeq "$(LIBSASS_GPO)" "generate"
   CFLAGS   += -fprofile-generate
   CXXFLAGS += -fprofile-generate

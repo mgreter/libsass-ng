@@ -502,7 +502,7 @@ namespace Sass
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  static const auto* const colors_to_names = new std::unordered_map<int, const char*>{
+  static const auto const colors_to_names = std::unordered_map<int, const char*>{
 		{240 * 0x10000 + 248 * 0x100 + 255, ColorNames::aliceblue},
 		{250 * 0x10000 + 235 * 0x100 + 215, ColorNames::antiquewhite},
 		{0 * 0x10000 + 255 * 0x100 + 255, ColorNames::cyan},
@@ -823,22 +823,23 @@ namespace Sass
 
 	const char* color_to_name(const int key)
 	{
-		auto p = colors_to_names->find(key);
-		if(p != colors_to_names->end())
-		{
-			sass::string rv = p->second;
-			// Match dart-sass output
-			if(rv == "magenta")
-			{
-				return "fuchsia";
-			}
-			if(rv == "cyan")
-			{
-				return "aqua";
-			}
-			return p->second;
-		}
-		return nullptr;
+    return nullptr;
+		// auto p = colors_to_names->find(key);
+		// if(p != colors_to_names->end())
+		// {
+		// 	sass::string rv = p->second;
+		// 	// Match dart-sass output
+		// 	if(rv == "magenta")
+		// 	{
+		// 		return "fuchsia";
+		// 	}
+		// 	if(rv == "cyan")
+		// 	{
+		// 		return "aqua";
+		// 	}
+		// 	return p->second;
+		// }
+		// return nullptr;
 	}
 
   /////////////////////////////////////////////////////////////////////////
