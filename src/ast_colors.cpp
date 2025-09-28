@@ -1249,7 +1249,7 @@ namespace Sass {
 
 
     // Algorithm from https://www.w3.org/TR/2022/CRD-css-color-4-20221101/#css-gamut-mapping-algorithm
-    auto originOklch = color->toSpace(ColorSpace::oklch, color->pstate());
+    ColorObj originOklch = color->toSpace(ColorSpace::oklch, color->pstate());
 
     // The channel equivalents to `current` in the Color 4 algorithm.
     tl::optional<double> lightness = originOklch->getChannel0OrNull();
@@ -1275,20 +1275,22 @@ return rv.detach();
       return rv.detach();
     }
 
-    Color* clipped = color->toGamut(GamutMapMethod::clip);
+    ColorObj clipped = color->toGamut(GamutMapMethod::clip);
 
-    if (_deltaEOK(clipped, color) < _jnd) return clipped;
+    if (_deltaEOK(clipped, color) < _jnd) return clipped.detach();
 
     double min = 0.0;
     double max = originOklch->getChannel1();
     bool minInGamut = true;
+
     while (max - min > _epsilon) {
+
       double chroma = (min + max) / 2.0;
 
       // In the Color 4 algorithm `current` is in Oklch, but all its actual uses
       // other than modifying chroma convert it to `color.space` first so we
       // just store it in that space to begin with.
-      Color* current = ColorSpace::oklch.convert(
+      ColorObj current = ColorSpace::oklch.convert(
         color->space(),
         color->pstate(),
         lightness,
@@ -1311,7 +1313,7 @@ return rv.detach();
       clipped = current->toGamut(GamutMapMethod::clip);
       double e = _deltaEOK(clipped, current);
       if (e < _jnd) {
-        if (_jnd - e < _epsilon) return clipped;
+        if (_jnd - e < _epsilon) return clipped.detach();
         minInGamut = false;
         min = chroma;
       }
@@ -1319,7 +1321,7 @@ return rv.detach();
         max = chroma;
       }
     }
-    return clipped;
+    return clipped.detach();
 
   }
 
