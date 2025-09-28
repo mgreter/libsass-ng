@@ -59,6 +59,24 @@ namespace Sass {
     const ExtSmplSelSet& originalSelectors,
     ExtSet& unsatisfiedExtensions)
   {
+
+    auto beg = extensionsBySimpleSelector.begin();
+    auto end = extensionsBySimpleSelector.end();
+    while (beg != end) {
+      beg->first;
+      beg++;
+      if (originalSelectors.count(beg->first)) continue;
+      for (const auto& extension : beg->second) {
+        // ToDo: check why we have this here!?
+        if (extension.second->isOptional) continue;
+        if (extension.second->target.isNull()) {
+          continue;
+        }
+        extension.second->AddAllTo(unsatisfiedExtensions);
+      }
+
+    }
+/*
     for (const auto& entry : extensionsBySimpleSelector) {
       // Skip if entry is known in original selectors (by ptr)
       if (originalSelectors.count(entry.first)) continue;
@@ -71,6 +89,7 @@ namespace Sass {
         extension.second->AddAllTo(unsatisfiedExtensions);
       }
     }
+*/
   }
 
   // extensionsWhereTarget((target) = > !originalSelectors.contains(target))
