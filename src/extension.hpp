@@ -120,7 +120,7 @@ namespace Sass {
     Extension();
 
     // Copy assignment operator
-    Extension& operator=(const Extension& other);
+    // Extension& operator=(const Extension& other);
 
     // Asserts that the [mediaContext] for a selector is 
     // compatible with the query context for this extender.

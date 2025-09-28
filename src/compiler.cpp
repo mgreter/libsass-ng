@@ -1003,10 +1003,10 @@ namespace Sass {
   // EO loadImport
 
   // Update precision and epsilon etc.
-  void Compiler::setPrecision(int precision)
-  {
-    // Logger::setPrecision(precision);
-    OutputOptions::setPrecision(precision);
-  }
+  //void Compiler::setPrecision(int precision)
+  //{
+  //  // Logger::setPrecision(precision);
+  //  OutputOptions::setPrecision(precision);
+  //}
 
 }

@@ -329,7 +329,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  const bool name_to_color(const sass::string& key, int& r, int& g, int& b, int& a);
+  bool name_to_color(const sass::string& key, int& r, int& g, int& b, int& a);
 
   const char* color_to_name(const int);
 

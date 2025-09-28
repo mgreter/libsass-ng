@@ -642,7 +642,7 @@ namespace Sass
   //   return name_to_color(sass::string(key));
   // }
 
-  const bool name_to_color(const sass::string& key, int& r, int& g, int& b, int& a)
+  bool name_to_color(const sass::string& key, int& r, int& g, int& b, int& a)
   {
     sass::string lcKey = key;
     StringUtils::makeLowerCase(lcKey);

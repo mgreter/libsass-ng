@@ -629,7 +629,7 @@ namespace Sass {
     // Implement equality comparators for base value class
     bool operator==(const Value& rhs) const override;
     // Implement same class compare operator
-    bool operator==(const List& rhs) const;
+    virtual bool operator==(const List& rhs) const;
 
     // Implement type fetcher for base value class (throws in base implementation)
     Map* assertMap(Logger& logger, const sass::string& name) final;

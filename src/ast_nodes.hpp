@@ -55,12 +55,12 @@ namespace Sass {
 
     // Delete compare operators to make implementation more clear
     // Helps us spot cases where we use undefined implementations
-    virtual bool operator==(const AstNode& rhs) const = delete;
-    virtual bool operator!=(const AstNode& rhs) const = delete;
-    virtual bool operator>=(const AstNode& rhs) const = delete;
-    virtual bool operator<=(const AstNode& rhs) const = delete;
-    virtual bool operator>(const AstNode& rhs) const = delete;
-    virtual bool operator<(const AstNode& rhs) const = delete;
+    // virtual bool operator==(const AstNode& rhs) const = delete;
+    // virtual bool operator!=(const AstNode& rhs) const = delete;
+    // virtual bool operator>=(const AstNode& rhs) const = delete;
+    // virtual bool operator<=(const AstNode& rhs) const = delete;
+    // virtual bool operator>(const AstNode& rhs) const = delete;
+    // virtual bool operator<(const AstNode& rhs) const = delete;
 
     // Simplify nodes to be used in calculations
     // May produce a new copy, so catch the return

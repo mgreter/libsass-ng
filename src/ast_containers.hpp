@@ -276,7 +276,7 @@ namespace Sass {
       hash_ = 0; // reset hash
       elements_.back() = value;
     }
-
+    /*
     // Check underlying containers for equality
     bool operator==(const Vectorized<V>& rhs) const
     {
@@ -293,6 +293,7 @@ namespace Sass {
     {
       return !(*this == rhs);
     }
+    */
 
     // Implicitly get the sass::vector from our object
     // Makes the Vector directly assignable to sass::vector

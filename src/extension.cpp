@@ -91,19 +91,19 @@ namespace Sass {
     // std::cerr << "CREATED NEW " << this << "\n";
   }
 
-  Extension& Extension::operator=(const Extension& other)
-  {
-    pstate = other.pstate;
-    extender = other.extender;
-    target = other.target;
-    specificity = other.specificity;
-    isOptional = other.isOptional;
-    isOriginal = other.isOriginal;
-    isConsumed = other.isConsumed;
-    mediaContext = other.mediaContext;
-    merged = other.merged;
-    return *this;
-  }
+  //Extension& Extension::operator=(const Extension& other)
+  //{
+  //  pstate = other.pstate;
+  //  extender = other.extender;
+  //  target = other.target;
+  //  specificity = other.specificity;
+  //  isOptional = other.isOptional;
+  //  isOriginal = other.isOriginal;
+  //  isConsumed = other.isConsumed;
+  //  mediaContext = other.mediaContext;
+  //  merged = other.merged;
+  //  return *this;
+  //}
 
   /////////////////////////////////////////////////////////////////////////
   // Asserts that the [mediaContext] for a selector is
