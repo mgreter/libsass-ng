@@ -672,7 +672,6 @@ namespace Sass
 
   const char* color_to_name(const int key)
   {
-    return nullptr;
     auto p = colors_to_names.find(key);
     if (p != colors_to_names.end())
     {
