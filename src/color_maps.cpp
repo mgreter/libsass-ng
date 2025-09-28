@@ -645,7 +645,7 @@ namespace Sass
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-
+    /*
 	static const auto* const names_to_colors =
 		new std::unordered_map<sass::string, const Color*>{
 			{ColorNames::aliceblue, &Colors::aliceblue},
@@ -797,7 +797,7 @@ namespace Sass
 			{ColorNames::yellowgreen, &Colors::yellowgreen},
 			{ColorNames::rebeccapurple, &Colors::rebeccapurple},
 			{ColorNames::transparent, &Colors::transparent}};
-
+*/
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -811,14 +811,14 @@ namespace Sass
 		// case insensitive lookup. See #2462
 		sass::string lcKey = key;
     StringUtils::makeLowerCase(lcKey);
-
-		auto p = names_to_colors->find(lcKey);
-		if(p != names_to_colors->end())
-		{
-			return p->second;
-		}
-
-		return nullptr;
+    return nullptr;
+		// auto p = names_to_colors->find(lcKey);
+		// if(p != names_to_colors->end())
+		// {
+		// 	return p->second;
+		// }
+    // 
+		// return nullptr;
 	}
 
 	const char* color_to_name(const int key)
