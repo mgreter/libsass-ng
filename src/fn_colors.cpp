@@ -2272,11 +2272,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (color->isLegacy())
         {
           ColorObj hsl = color->toSpace(ColorSpace::hsl, pstate);
-          hsl->c1(0.0); return hsl->toSpace(color->space(), pstate, false);
+          hsl->c1(0.0); hsl = hsl->toSpace(color->space(), pstate, false);
+          return hsl.detach();
         }
         else {
           ColorObj oklch = color->toSpace(ColorSpace::oklch, pstate);
-          oklch->c1(0.0); return oklch->toSpace(color->space(), pstate);
+          oklch->c1(0.0); oklch = oklch->toSpace(color->space(), pstate);
+          return oklch.detach();
         }
       }
       // 
@@ -3074,9 +3076,9 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const Color* color, const ValueVector& args, Value* alpha)
       {
 
-        Number* c0 = _channelForChange(compiler, pstate, args[0], color, 0);
-        Number* c1 = _channelForChange(compiler, pstate, args[1], color, 1);
-        Number* c2 = _channelForChange(compiler, pstate, args[2], color, 2);
+        NumberObj c0 = _channelForChange(compiler, pstate, args[0], color, 0);
+        NumberObj c1 = _channelForChange(compiler, pstate, args[1], color, 1);
+        NumberObj c2 = _channelForChange(compiler, pstate, args[2], color, 2);
 
         tl::optional<double> a;
         if (alpha == nullptr) {
@@ -3145,11 +3147,18 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           legacy = true;
         }
         else space = &ColorSpace::fromValueRef(compiler, space_val, Strings::space);
-        if (space == nullptr) space = &input->space();
+
+        ColorConstObj color = input;
+        if (space == nullptr) {
+          space = &input->space();
+        }
+        else {
+          color = input->toSpace(*space, pstate, !legacy);
+        }
 
         // Convert input color to color optional space
-        const Color* color = space == nullptr
-          ? input : input->toSpace(*space, pstate, !legacy);
+        // color = space == nullptr
+        //   ? input : input->toSpace(*space, pstate, !legacy);
 
         // std::cerr << "COLOR IN " << color->debug() << "\n";
 
@@ -3170,9 +3179,10 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         if (change) {
-          auto rv = _changeColor(compiler,
+          ColorObj rv = _changeColor(compiler,
             pstate, color, args, alpha_val);
-          return rv->toSpace(input->space(), pstate, false);
+          rv = rv->toSpace(input->space(), pstate, false);
+          return rv.detach();
         }
         else {
 
@@ -3194,15 +3204,17 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           }
 
           if (scale) {
-            auto rv = _scaleColor(compiler,
+            ColorObj rv = _scaleColor(compiler,
               pstate, color, numbers, alpha_nr);
-            return rv->toSpace(input->space(), pstate, false);
+            rv = rv->toSpace(input->space(), pstate, false);
+            return rv.detach();
           }
           else if (adjust)
           {
-            auto rv = _adjustColor(compiler,
+            ColorObj rv = _adjustColor(compiler,
               pstate, color, numbers, alpha_nr);
-            return rv->toSpace(input->space(), pstate, false);
+            rv = rv->toSpace(input->space(), pstate, false);
+            return rv.detach();
           }
 
         }

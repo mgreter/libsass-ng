@@ -354,10 +354,13 @@ namespace Sass {
   }
 
 
-  Color* Color::toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing)
+  Color* Color::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing)
   {
     // Can return without creating a copy
-    if (space == this->space_) return this;
+    if (space == this->space_) {
+      // dbg = true;
+      return this;
+    }
     // If const, we must always create a copy
     const Color* color = this;
     return color->toSpace(space, pstate, legacyMissing);

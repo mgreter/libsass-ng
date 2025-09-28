@@ -164,8 +164,8 @@ namespace Sass {
   public:
     size_t objId;
   public:
-    bool dbg = false;
-    bool erased = false;
+    mutable bool dbg = false;
+    mutable bool erased = false;
     static size_t objCount;
     static sass::vector<RefCounted*> all;
     static std::unordered_set<size_t> deleted;
