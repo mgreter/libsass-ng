@@ -54,6 +54,7 @@ namespace Sass {
 
     // Returns whether [value] is an unquoted string
     // that start with `var(` and contains `/`.
+    /*
     static bool isVarSlash(Value* value)
     {
       if (value == nullptr) return false;
@@ -63,6 +64,7 @@ namespace Sass {
       return startsWith(str->value(), "var(", 4) &&
         str->value().find('/') != NPOS;
     }
+    */
     // EO isVarSlash
 
     // Returns whether [value] is an unquoted
@@ -131,6 +133,7 @@ namespace Sass {
 
     // Helper function for debugging
     // ToDo return EnvKey?
+    /*
     static const sass::string& getColorArgName(
       size_t idx, const sass::string& name)
     {
@@ -141,6 +144,7 @@ namespace Sass {
       default: throw std::runtime_error("Invalid input argument");
       }
     }
+    */
     // EO getColorArgName
 
     // Return value that will render as-is in css
