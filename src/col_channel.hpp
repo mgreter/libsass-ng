@@ -53,14 +53,14 @@ namespace Sass {
   public:
 
     ClipGamutMap() : GamutMapMethod("clip") {}
-    Color* map(Color* color) const override final;
+    Color* map(Color* color) const final;
 
   };
 
   class LocalMindeGamutMap : public GamutMapMethod {
   public:
     LocalMindeGamutMap() : GamutMapMethod("local-minde") {}
-    Color* map(Color* color) const override final;
+    Color* map(Color* color) const final;
 
   };
 

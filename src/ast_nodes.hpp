@@ -130,7 +130,7 @@ namespace Sass {
 
     ItplString(const SourceSpan& pstate, sass::string&& text);
     ItplString(const SourceSpan& pstate, const sass::string& text);
-    Type getType() const override final { return LiteralInterpolant; }
+    Type getType() const final { return LiteralInterpolant; }
 
     // virtual ~ItplString() {}
 
@@ -210,7 +210,7 @@ namespace Sass {
     // virtual Value* accept(ExpressionVisitor<Value*>* visitor) override = 0;
 
     // Implementation for parent Interpolant interface
-    Type getType() const override final { return ExpressionInterpolant; }
+    Type getType() const final { return ExpressionInterpolant; }
 
     // operator sass::string() const { return toString(); }
 
@@ -408,7 +408,7 @@ namespace Sass {
     sass::string inspect(int precision = SassDefaultPrecision, bool quotes = true) const;
 
     // Getters to avoid need for dynamic cast (slightly faster)
-    Type getType() const override final { return ValueInterpolant; }
+    Type getType() const final { return ValueInterpolant; }
 
     virtual AstNode* simplify(Logger& logger) override;
 

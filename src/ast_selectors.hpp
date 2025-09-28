@@ -217,7 +217,7 @@ namespace Sass {
     CssParentSelector(const CssParentSelector* ptr);
 
     // Implement hash functionality
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // This is a very interesting line, as it seems pointless, since the base class
 // already marks this as an unimplemented interface methods, but by defining this
@@ -233,7 +233,7 @@ namespace Sass {
     // CompoundSelector* unifyWith(CompoundSelector*);
     virtual SimpleSelectors unify(
       const SimpleSelectors& other)
-      override final;
+      final;
 
     IMPLEMENT_SEL_COPY_IGNORE(CssParentSelector);
     IMPLEMENT_ACCEPT(void, Selector, CssParentSelector);
@@ -303,7 +303,7 @@ namespace Sass {
     }
 
     // Up-casts the right hand side first to find specialization
-    bool nsMatch(const SimpleSelector& rhs) const override final;
+    bool nsMatch(const SimpleSelector& rhs) const final;
 
     // This is a very interesting line, as it seems pointless, since the base class
     // already marks this as an unimplemented interface methods, but by defining this
@@ -342,11 +342,11 @@ namespace Sass {
       const PlaceholderSelector* ptr);
 
     // Implement specialized specificity function
-    unsigned long specificity() const override final {
+    unsigned long specificity() const final {
       return Constants::Specificity::Base;
     }
 
-    virtual bool hasPlaceholder() const override final { return true; }
+    virtual bool hasPlaceholder() const final { return true; }
 
 
     // Returns whether this is a private selector.
@@ -365,7 +365,7 @@ namespace Sass {
     IMPLEMENT_BASE_CMP_OPERATOR(Selector, PlaceholderSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, PlaceholderSelector);
 
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(PlaceholderSelector);
@@ -394,7 +394,7 @@ namespace Sass {
     TypeSelector(
       const TypeSelector* ptr);
 
-    bool isSuperselectorAF(SimpleSelector* other) const override final;
+    bool isSuperselectorAF(SimpleSelector* other) const final;
 
     // Implement specialized specificity function
     virtual unsigned long specificity() const override {
@@ -407,12 +407,12 @@ namespace Sass {
     // CompoundSelector* unifyWith(CompoundSelector*);
     virtual SimpleSelectors unify(
       const SimpleSelectors& other)
-        override final;
+        final;
 
     // Unify two simple selectors with each other
     // SimpleSelector* unifyWith(const SimpleSelector*);
 
-    size_t hash() const override final;
+    size_t hash() const final;
 
     IMPLEMENT_SEL_COPY_IGNORE(TypeSelector);
     IMPLEMENT_ACCEPT(void, Selector, TypeSelector);
@@ -455,7 +455,7 @@ namespace Sass {
       return Constants::Specificity::Class;
     }
 
-    size_t hash() const override final;
+    size_t hash() const final;
 
     IMPLEMENT_SEL_COPY_IGNORE(ClassSelector);
     IMPLEMENT_ACCEPT(void, Selector, ClassSelector);
@@ -499,9 +499,9 @@ namespace Sass {
     // CompoundSelector* unifyWith(CompoundSelector*);
     virtual SimpleSelectors unify(
       const SimpleSelectors& other)
-        override final;
+        final;
 
-    size_t hash() const override final;
+    size_t hash() const final;
 
     IMPLEMENT_SEL_COPY_IGNORE(IDSelector);
     IMPLEMENT_ACCEPT(void, Selector, IDSelector);
@@ -552,7 +552,7 @@ namespace Sass {
   public:
 
     // Implement hash functionality
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // By value constructor
     AttributeSelector(
@@ -640,23 +640,23 @@ namespace Sass {
 
     bool isSuperSelector(PseudoSelector* other) const;
 
-    bool isSuperselectorAF(SimpleSelector* other) const override final;
+    bool isSuperselectorAF(SimpleSelector* other) const final;
 
     // Returns true if there is a wrapped selector with an
     // explicit `&` parent selector. Certainly questionable
     // since the selector list may have compound selectors
     // with and some without explicit parent selector!?
-    const Selector* hasAnyExplicitParent() const override final;
+    const Selector* hasAnyExplicitParent() const final;
 
-    bool hasInvisible() const override final;
+    bool hasInvisible() const final;
 
     // Implement hash functionality
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // Implement for cleanup phase
     // Only considered empty if selector is
     // available but has no items in it.
-    bool empty() const override final;
+    bool empty() const final;
 
     // Whether this is a pseudo-element selector.
     // This is `true` if and only if [isClass] is `false`.
@@ -668,7 +668,7 @@ namespace Sass {
     // in CSS levels 1 and 2 (namely, :first-line, :first-letter, :before and
     // :after). This compatibility is not allowed for the new pseudo-elements
     // introduced in this specification.
-    bool isPseudoElement() const override final { return !isClass(); }
+    bool isPseudoElement() const final { return !isClass(); }
 
     // Whether this is syntactically a pseudo-element selector.
     // This is `true` if and only if [isSyntacticClass] is `false`.
@@ -693,7 +693,7 @@ namespace Sass {
     // CompoundSelector* unifyWith(CompoundSelector*);
     virtual SimpleSelectors unify(
       const SimpleSelectors& other)
-        override final;
+        final;
 
     IMPLEMENT_SEL_COPY_IGNORE(PseudoSelector);
     IMPLEMENT_ACCEPT(void, Selector, PseudoSelector);
@@ -786,13 +786,13 @@ namespace Sass {
     bool hasInvisible() const;
 
     // Check if any of the selectors is/has a placeholder
-    bool hasPlaceholder() const override final;
+    bool hasPlaceholder() const final;
 
     // Wrap inside another selector type
     SelectorList* wrapInList();
 
     // Implement hash functionality
-    size_t hash() const override final;
+    size_t hash() const final;
 
     const Selector* getExplicitParent() const;
 
@@ -814,16 +814,16 @@ namespace Sass {
     bool isSuperselectorOf(const ComplexSelector* sub) const;
 
     // Specialize all specificity functions
-    unsigned long specificity() const override final;
-    unsigned long maxSpecificity() const override final;
-    unsigned long minSpecificity() const override final;
+    unsigned long specificity() const final;
+    unsigned long maxSpecificity() const final;
+    unsigned long minSpecificity() const final;
 
     ComplexSelector* produce();
 
     IMPLEMENT_SEL_COPY_CHILDREN(ComplexSelector);
     IMPLEMENT_ACCEPT(void, Selector, ComplexSelector);
     IMPLEMENT_ACCEPT(bool, Selector, ComplexSelector);
-    IMPLEMENT_EQ_OPERATOR(Selector, ComplexSelector)
+    IMPLEMENT_EQ_OPERATOR2(Selector, ComplexSelector, override)
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ComplexSelector);
@@ -948,9 +948,9 @@ namespace Sass {
     bool isFollowingSibling() const { return combinator_ == FOLLOWING; }
 
     // Simple equality operators
-    bool operator==(const SelectorCombinator& rhs) const override final;
-    bool operator<(const SelectorCombinator& rhs) const override final;
-    size_t hash() const override final;
+    bool operator==(const SelectorCombinator& rhs) const final;
+    bool operator<(const SelectorCombinator& rhs) const final;
+    size_t hash() const final;
 
     sass::string toString() const {
       switch (combinator_) {
@@ -1006,12 +1006,12 @@ namespace Sass {
     bool isAdjacentCombinator() const { return combinator_ == ADJACENT; } // +
 
     // The combinators do not add anything to the specificity
-    unsigned long specificity() const override final { return 0; }
+    unsigned long specificity() const final { return 0; }
 
     // Implement hash functionality
-    size_t hash() const override final;
+    size_t hash() const final;
 
-    CplxSelComponent* produce() override final {
+    CplxSelComponent* produce() final {
       return this;
     }
 
@@ -1085,14 +1085,14 @@ namespace Sass {
     }
 
     // Implement hash functionality
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // Unify two lists of simple selectors (not in dart)
     // CompoundSelector* unifyWith(CompoundSelector* rhs);
 
-    const Selector* hasAnyExplicitParent() const override final;
+    const Selector* hasAnyExplicitParent() const final;
 
-    bool hasPlaceholder() const override final;
+    bool hasPlaceholder() const final;
 
     // Resolve parents and form the final selector
     ComplexSelectors
@@ -1107,9 +1107,9 @@ namespace Sass {
     bool isSuperselectorOf(const CompoundSelector* sub) const;
 
     // Specialize all specificity functions
-    unsigned long specificity() const override final;
-    unsigned long maxSpecificity() const override final;
-    unsigned long minSpecificity() const override final;
+    unsigned long specificity() const final;
+    unsigned long maxSpecificity() const final;
+    unsigned long minSpecificity() const final;
 
     CompoundSelector* produce();
 
@@ -1155,7 +1155,7 @@ namespace Sass {
       bool childless = false);
 
     // Implement hash functionality
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // Unify two selector lists with each other
     SelectorList* unifyWith(SelectorList*);
@@ -1172,19 +1172,19 @@ namespace Sass {
       bool preserve_parent = false);
 
     // Check if any of the selectors is/has a placeholder
-    bool hasPlaceholder() const override final;
+    bool hasPlaceholder() const final;
 
     // Determine if given `this` is a sub-selector of `sub`
     bool isSuperselectorOf(const SelectorList* sub) const;
 
     // This implementation is not available, don't call
-    unsigned long specificity() const override final {
+    unsigned long specificity() const final {
       throw std::runtime_error("specificity not implemented");
     }
 
     // Specialize min and max specificity functions
-    unsigned long maxSpecificity() const override final;
-    unsigned long minSpecificity() const override final;
+    unsigned long maxSpecificity() const final;
+    unsigned long minSpecificity() const final;
 
     SelectorList* produce() {
       ComplexSelectors copy;

@@ -38,21 +38,21 @@ namespace Sass {
     CustomError(const CustomError* ptr);
 
     // Implement interface for base Value class
-    size_t hash() const override final { return 0; }
-    SassValueType getTag() const override final { return SASS_ERROR; }
-    const sass::string& type() const override final { return Strings::error; }
+    size_t hash() const final { return 0; }
+    SassValueType getTag() const final { return SASS_ERROR; }
+    const sass::string& type() const final { return Strings::error; }
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     // Implement same class compare operator
     bool operator==(const CustomError& rhs) const;
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final;
-    Value* accept(ValueVisitor<Value*>* visitor) override final;
+    void accept(ValueVisitor<void>* visitor) final;
+    Value* accept(ValueVisitor<Value*>* visitor) final;
 
     // Copy operations for childless items
-    CustomError* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    CustomError* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CustomError, this);
     }
 
@@ -80,21 +80,21 @@ namespace Sass {
     CustomWarning(const CustomWarning* ptr);
 
     // Implement interface for base Value class
-    size_t hash() const override final { return 0; }
-    SassValueType getTag() const override final { return SASS_WARNING; }
-    const sass::string& type() const override final { return Strings::warning; }
+    size_t hash() const final { return 0; }
+    SassValueType getTag() const final { return SASS_WARNING; }
+    const sass::string& type() const final { return Strings::warning; }
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     // Implement same class compare operator
     bool operator==(const CustomWarning& rhs) const;
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final;
-    Value* accept(ValueVisitor<Value*>* visitor) override final;
+    void accept(ValueVisitor<void>* visitor) final;
+    Value* accept(ValueVisitor<Value*>* visitor) final;
 
     // Copy operations for childless items
-    CustomWarning* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    CustomWarning* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CustomWarning, this);
     }
 
@@ -115,29 +115,29 @@ namespace Sass {
     Null(const Null* ptr);
 
     // Implement simple checkers for base value class
-    bool isNull() const override final { return true; }
-    bool isBlank() const override final { return true; }
-    bool isTruthy() const override final { return false; }
+    bool isNull() const final { return true; }
+    bool isBlank() const final { return true; }
+    bool isTruthy() const final { return false; }
 
     // Implement interface for base Value class
-    size_t hash() const override final;
+    size_t hash() const final;
 
-    SassValueType getTag() const override final { return SASS_NULL; }
-    const sass::string& type() const override final { return Strings::null; }
+    SassValueType getTag() const final { return SASS_NULL; }
+    const sass::string& type() const final { return Strings::null; }
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitNull(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitNull(this);
     }
 
     // Copy operations for childless items
-    Null* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    Null* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(Null, this);
     }
 
@@ -165,7 +165,7 @@ namespace Sass {
 
   public:
 
-    SassSeparator separator() const override final {
+    SassSeparator separator() const final {
       return lhsAsSlash_ && rhsAsSlash_ ? SASS_DIV : SASS_UNDEF;
     }
 
@@ -185,7 +185,7 @@ namespace Sass {
       bool childless = false);
 
 		// Numbers can't be simplified further
-		AstNode* simplify(Logger& logger) override final { return this; }
+		AstNode* simplify(Logger& logger) final { return this; }
 
     // Check if we have delayed value info
     inline bool hasAsSlash() const {
@@ -253,37 +253,37 @@ namespace Sass {
     double factorToUnits(const Units& units) const;
 
     // Implement delayed value fetcher
-    Value* withoutSlash() override final;
+    Value* withoutSlash() final;
 
     Number* withoutSlash5();
 
     sass::string recommendation() const;
 
     // Implement interface for base Value class
-    size_t hash() const override final;
-    SassValueType getTag() const override final { return SASS_NUMBER; }
-    const sass::string& type() const override final { return Strings::number; }
+    size_t hash() const final;
+    SassValueType getTag() const final { return SASS_NUMBER; }
+    const sass::string& type() const final { return Strings::number; }
 
     // Implement some comparators for base value class
-    bool greaterThan(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    bool greaterThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    bool lessThan(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    bool lessThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    bool greaterThan(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    bool greaterThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    bool lessThan(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    bool lessThanOrEquals(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
 
     // Implement some operations for base value class (some of them may return a string)
-    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Number* times(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Number* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Number* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Number* times(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Number* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Number* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
 
     // Implement unary operations for base value class
-    Number* unaryPlus(Logger& logger, const SourceSpan& pstate) const override final;
-    Number* unaryMinus(Logger& logger, const SourceSpan& pstate) const override final;
+    Number* unaryPlus(Logger& logger, const SourceSpan& pstate) const final;
+    Number* unaryMinus(Logger& logger, const SourceSpan& pstate) const final;
 
     // Implement type fetcher for base value class (throws in base implementation)
-    Number* assertNumber(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
+    Number* assertNumber(Logger& logger, const sass::string& name = Strings::empty) final { return this; }
 
     // Assert that this number has no unit and throws if any unit is present
     Number* assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name = Strings::empty);
@@ -299,7 +299,7 @@ namespace Sass {
     double assertPercentageOrUnitless(Logger& logger, double max, const sass::string& name) const;
 
     // Sin
-    const Value* assertColorChannel(Logger& logger, const sass::string& channel, const sass::string& name = Strings::empty) const override final { return this; }
+    const Value* assertColorChannel(Logger& logger, const sass::string& channel, const sass::string& name = Strings::empty) const final { return this; }
 
     const Number* assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name = Strings::empty) const;
 		Number* assertHasUnits(Logger& logger, const sass::string& unit, const sass::string& name = Strings::empty);
@@ -312,20 +312,20 @@ namespace Sass {
     const Number* checkPercent(Logger& logger, const sass::string& name) const;
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     // Implement same class compare operator
     bool operator==(const Number& rhs) const;
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitNumber(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitNumber(this);
     }
 
     // Copy operations for childless items
-    Number* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    Number* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(Number, this, true);
     }
 
@@ -358,28 +358,28 @@ namespace Sass {
     Boolean(const Boolean* ptr);
 
     // Implement simple checkers for base value class
-    bool isTruthy() const override final { return value_; }
+    bool isTruthy() const final { return value_; }
 
     // Implement interface for base Value class
-    size_t hash() const override final;
-    SassValueType getTag() const override final { return SASS_BOOLEAN; }
-    const sass::string& type() const override final { return Strings::boolean; }
+    size_t hash() const final;
+    SassValueType getTag() const final { return SASS_BOOLEAN; }
+    const sass::string& type() const final { return Strings::boolean; }
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     // Implement same class compare operator
     bool operator==(const Boolean& rhs) const;
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitBoolean(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitBoolean(this);
     }
 
     // Copy operations for childless items
-    Boolean* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    Boolean* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(Boolean, this);
     }
 
@@ -418,10 +418,10 @@ namespace Sass {
     // Copy constructor
     String(const String* ptr);
 
-		AstNode* simplify(Logger& logger) override final;
+		AstNode* simplify(Logger& logger) final;
 
     // Check if value would render empty
-    bool isBlank() const override final {
+    bool isBlank() const final {
       if (hasQuotes_) return false;
       return value_.empty();
     }
@@ -429,21 +429,21 @@ namespace Sass {
     bool isVar() const;
 
     // Implement interface for base Value class
-    size_t hash() const override final;
-    SassValueType getTag() const override final { return SASS_STRING; }
+    size_t hash() const final;
+    SassValueType getTag() const final { return SASS_STRING; }
     const sass::string& type() const override { return Strings::string; }
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     // Implement same class compare operator
     bool operator==(const String& rhs) const;
 
-    bool isSpecialNumber(bool withNoneKwd = false) const override final;
+    bool isSpecialNumber(bool withNoneKwd = false) const final;
 
     // Implement type fetcher for base value class (throws in base implementation)
-    String* assertString(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
+    String* assertString(Logger& logger, const sass::string& name = Strings::empty) final { return this; }
 
-    const Value* assertColorChannel(Logger& logger, const sass::string& channel, const sass::string& name = Strings::empty) const override final;
+    const Value* assertColorChannel(Logger& logger, const sass::string& channel, const sass::string& name = Strings::empty) const final;
 
     // Implement type fetcher for base value class (throws in base implementation)
     const String* assertQuoted(Logger& logger, const sass::string& name = Strings::empty) const;
@@ -451,19 +451,19 @@ namespace Sass {
 
 
     // Implement some operations for base value class
-    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
 
     // Main entry point for Value Visitor pattern
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitString(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitString(this);
     }
 
     // Copy operations for childless items
-    String* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    String* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(String, this);
     }
 
@@ -493,7 +493,7 @@ namespace Sass {
     Map(const Map* ptr);
 
     // Return the list separator
-    SassSeparator separator() const override final {
+    SassSeparator separator() const final {
       return empty() ? SASS_UNDEF : SASS_COMMA;
     }
 
@@ -503,7 +503,7 @@ namespace Sass {
     }
 
     // Search the position of the given value
-    size_t indexOf(Value* value) override final;
+    size_t indexOf(Value* value) final;
 
     // Return list with two items (key and value)
     Value* getPairAsList(size_t idx);
@@ -511,15 +511,15 @@ namespace Sass {
     // Only used for nth sass function
     // Doesn't allow overflow of index (throw error)
     // Allows negative index but no overflow either
-    Value* getValueAt(Value* index, Logger& logger) override final;
+    Value* getValueAt(Value* index, Logger& logger) final;
 
     // Implement interface for base Value class
-    size_t hash() const override final;
-    SassValueType getTag() const override final { return SASS_MAP; }
-    const sass::string& type() const override final { return Strings::map; }
+    size_t hash() const final;
+    SassValueType getTag() const final { return SASS_MAP; }
+    const sass::string& type() const final { return Strings::map; }
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     // Implement same class compare operator
     bool operator==(const Map& rhs) const;
 
@@ -527,21 +527,21 @@ namespace Sass {
     Map* assertMap(Logger& logger, const sass::string& name) override { return this; }
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitMap(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitMap(this);
     }
     // Copy operations for childless items
-    Map* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    Map* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(Map, this);
     }
 
   protected:
 
     // Clone all items in-place
-    Map* cloneChildren(SASS_MEMORY_ARGS_VOID) override final {
+    Map* cloneChildren(SASS_MEMORY_ARGS_VOID) final {
       for (auto it = Hashed::begin(); it != Hashed::end(); ++it) {
         it.value() = it.value()->copy(SASS_MEMORY_PARAMS_VOID);
         it.value()->cloneChildren(SASS_MEMORY_PARAMS_VOID);
@@ -583,7 +583,7 @@ namespace Sass {
     List(const List* ptr);
 
     // Return the list separator
-    SassSeparator separator() const override final {
+    SassSeparator separator() const final {
       return separator_;
     }
 
@@ -592,20 +592,20 @@ namespace Sass {
       separator_ = separator;
     }
 
-    ValueVector asList() override final;
+    ValueVector asList() final;
 
     // Return the length of this item as a list
-    size_t lengthAsList() const override final {
+    size_t lengthAsList() const final {
       return size();
     }
 
     // Check if list has surrounding brackets
-    bool hasBrackets() override final {
+    bool hasBrackets() final {
       return hasBrackets_;
     }
 
     // Check if value would render empty
-    bool isBlank() const override final {
+    bool isBlank() const final {
       if (hasBrackets_) return false;
       for (const Value* value : elements()) {
         if (!value->isBlank()) return false;
@@ -614,16 +614,16 @@ namespace Sass {
     }
 
     // Search the position of the given value
-    size_t indexOf(Value* value) override final;
+    size_t indexOf(Value* value) final;
 
     // Only used for nth sass function
     // Allows negative index but no overflow either
     // Doesn't allow overflow of index (throw error)
-    Value* getValueAt(Value* index, Logger& logger) override final;
+    Value* getValueAt(Value* index, Logger& logger) final;
 
     // Implement interface for base Value class
     virtual size_t hash() const override;
-    SassValueType getTag() const override final { return SASS_LIST; }
+    SassValueType getTag() const final { return SASS_LIST; }
     virtual const sass::string& type() const override { return Strings::list; }
 
     // Implement equality comparators for base value class
@@ -632,13 +632,13 @@ namespace Sass {
     bool operator==(const List& rhs) const;
 
     // Implement type fetcher for base value class (throws in base implementation)
-    Map* assertMap(Logger& logger, const sass::string& name) override final;
+    Map* assertMap(Logger& logger, const sass::string& name) final;
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitList(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitList(this);
     }
     // Copy operations for childless items
@@ -706,28 +706,28 @@ namespace Sass {
     Map* keywordsAsSassMap() const;
 
     // Implement interface for base Value class
-    size_t hash() const override final;
-    const sass::string& type() const override final { return Strings::arglist; }
+    size_t hash() const final;
+    const sass::string& type() const final { return Strings::arglist; }
 
-    ArgumentList* assertArgumentList(Logger& logger, const sass::string& name = Strings::empty) override final {
+    ArgumentList* assertArgumentList(Logger& logger, const sass::string& name = Strings::empty) final {
       return this;
     }
 
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     // Implement same class compare operator
     bool operator==(const ArgumentList& rhs) const;
 
     // Copy operations for childless items
-    ArgumentList* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    ArgumentList* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(ArgumentList, this);
     }
 
   protected:
 
     // Clone all items in-place
-    ArgumentList* cloneChildren(SASS_MEMORY_ARGS_VOID) override final {
+    ArgumentList* cloneChildren(SASS_MEMORY_ARGS_VOID) final {
       if (_keywords) for (std::pair<EnvKey, ValueObj> it : *_keywords) {
         it.second = it.second->copy(SASS_MEMORY_PARAMS_VOID);
         it.second->cloneChildren(SASS_MEMORY_PARAMS_VOID);
@@ -765,26 +765,26 @@ namespace Sass {
     Function(const Function* ptr);
 
     // Implement interface for base Value class
-    size_t hash() const override final { return 0; }
-    SassValueType getTag() const override final { return SASS_FUNCTION; }
-    const sass::string& type() const override final { return Strings::function; }
+    size_t hash() const final { return 0; }
+    SassValueType getTag() const final { return SASS_FUNCTION; }
+    const sass::string& type() const final { return Strings::function; }
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     // Implement same class compare operator
     bool operator==(const Function& rhs) const;
 
-    Function* assertFunction(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
+    Function* assertFunction(Logger& logger, const sass::string& name = Strings::empty) final { return this; }
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitFunction(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitFunction(this);
     }
     // Copy operations for childless items
-    Function* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    Function* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(Function, this);
     }
 
@@ -817,46 +817,46 @@ namespace Sass {
     Calculation(const Calculation* ptr);
 
     // CalcOperation can't be simplified further
-    AstNode* simplify(Logger& logger) override final;
+    AstNode* simplify(Logger& logger) final;
 
     // Implement simple checkers for base value class
-    bool isNull() const override final { return false; }
-    bool isBlank() const override final { return false; }
-    bool isTruthy() const override final { return true; }
+    bool isNull() const final { return false; }
+    bool isBlank() const final { return false; }
+    bool isTruthy() const final { return true; }
 
-    bool isSpecialNumber(bool withNoneKwd = false) const override final { return true; }
+    bool isSpecialNumber(bool withNoneKwd = false) const final { return true; }
 
-    const Value* assertColorChannel(Logger& logger, const sass::string& channel, const sass::string& name = Strings::empty) const override final { return this; }
+    const Value* assertColorChannel(Logger& logger, const sass::string& channel, const sass::string& name = Strings::empty) const final { return this; }
 
     // Implement interface for base Value class
-    size_t hash() const override final;
+    size_t hash() const final;
 
-    SassValueType getTag() const override final { return SASS_CALCULATION; }
-    const sass::string& type() const override final { return Strings::calculation; }
+    SassValueType getTag() const final { return SASS_CALCULATION; }
+    const sass::string& type() const final { return Strings::calculation; }
 
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
 
-    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* unaryPlus(Logger& logger, const SourceSpan& pstate) const override final;
-    Value* unaryMinus(Logger& logger, const SourceSpan& pstate) const override final;
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* unaryPlus(Logger& logger, const SourceSpan& pstate) const final;
+    Value* unaryMinus(Logger& logger, const SourceSpan& pstate) const final;
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitCalculation(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitCalculation(this);
     }
 
     // Copy operations for items with children
-    Calculation* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    Calculation* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(Calculation, this);
     }
 
-    Calculation* assertCalculation(Logger& logger, const sass::string& name = Strings::empty) override final {
+    Calculation* assertCalculation(Logger& logger, const sass::string& name = Strings::empty) final {
       return this;
     }
 
@@ -886,38 +886,38 @@ namespace Sass {
     Mixin(const Mixin* ptr);
 
     // CalcOperation can't be simplified further
-    // AstNode* simplify(Logger& logger) override final { return this; }
+    // AstNode* simplify(Logger& logger) final { return this; }
 
   // Assert and return a mixin value or throws if incompatible
-    Mixin* assertMixin(Logger& logger, const sass::string& name = Strings::empty) override final {
+    Mixin* assertMixin(Logger& logger, const sass::string& name = Strings::empty) final {
       return this;
     }
 
     // Implement simple checkers for base value class
-    bool isNull() const override final { return false; }
-    bool isBlank() const override final { return false; }
-    bool isTruthy() const override final { return true; }
+    bool isNull() const final { return false; }
+    bool isBlank() const final { return false; }
+    bool isTruthy() const final { return true; }
 
     // Implement interface for base Value class
-    size_t hash() const override final;
+    size_t hash() const final;
 
-    SassValueType getTag() const override final { return SASS_MIXIN; }
-    const sass::string& type() const override final { return Strings::mixin; }
+    SassValueType getTag() const final { return SASS_MIXIN; }
+    const sass::string& type() const final { return Strings::mixin; }
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     bool operator==(const Mixin& rhs) const;
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitMixin(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitMixin(this);
     }
 
     // Copy operations for childless items
-    Mixin* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    Mixin* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(Mixin, this);
     }
 
@@ -951,32 +951,32 @@ namespace Sass {
     CalcOperation(const CalcOperation* ptr);
 
     // CalcOperation can't be simplified further
-    AstNode* simplify(Logger& logger) override final { return this; }
+    AstNode* simplify(Logger& logger) final { return this; }
 
     // Implement simple checkers for base value class
-    bool isNull() const override final { return false; }
-    bool isBlank() const override final { return false; }
-    bool isTruthy() const override final { return true; }
+    bool isNull() const final { return false; }
+    bool isBlank() const final { return false; }
+    bool isTruthy() const final { return true; }
 
     // Implement interface for base Value class
-    size_t hash() const override final;
+    size_t hash() const final;
 
-    SassValueType getTag() const override final { return SASS_CALC_OPERATION; }
-    const sass::string& type() const override final { return Strings::calcoperation; }
+    SassValueType getTag() const final { return SASS_CALC_OPERATION; }
+    const sass::string& type() const final { return Strings::calcoperation; }
 
     // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitCalcOperation(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitCalcOperation(this);
     }
 
     // Copy operations for childless items
-    CalcOperation* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    CalcOperation* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CalcOperation, this);
     }
 

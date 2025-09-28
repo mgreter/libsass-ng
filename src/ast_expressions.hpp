@@ -34,18 +34,18 @@ namespace Sass {
       SourceSpan&& pstate);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitSelectorExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitSelectorExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final;
+    bool isCalcSafe() final;
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final
+    sass::string toString() const final
     {
       return "&";
     }
@@ -74,18 +74,18 @@ namespace Sass {
       ValueObj value);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitValueExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitValueExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return false; }
+    bool isCalcSafe() final { return false; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ValueExpression);
@@ -110,18 +110,18 @@ namespace Sass {
       Null* value);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitNullExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitNullExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return false; }
+    bool isCalcSafe() final { return false; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(NullExpression);
@@ -151,18 +151,18 @@ namespace Sass {
       Number* value);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitNumberExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitNumberExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return true; }
+    bool isCalcSafe() final { return true; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(NumberExpression);
@@ -187,18 +187,18 @@ namespace Sass {
       Boolean* value);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitBooleanExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitBooleanExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return false; }
+    bool isCalcSafe() final { return false; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(BooleanExpression);
@@ -243,18 +243,18 @@ namespace Sass {
       uint8_t quote = 0) const;
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitStringExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitStringExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final;
+    bool isCalcSafe() final;
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
   private:
 
@@ -285,18 +285,18 @@ namespace Sass {
       SupportsCondition* condition);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitSupportsExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitSupportsExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return false; }
+    bool isCalcSafe() final { return false; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(SupportsExpression);
@@ -330,18 +330,18 @@ namespace Sass {
     }
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitMapExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitMapExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return false; }
+    bool isCalcSafe() final { return false; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(MapExpression);
@@ -394,18 +394,18 @@ namespace Sass {
     }
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitListExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitListExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final;
+    bool isCalcSafe() final;
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ListExpression);
@@ -440,18 +440,18 @@ namespace Sass {
       ExpressionObj operand);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitUnaryOpExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitUnaryOpExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return false; }
+    bool isCalcSafe() final { return false; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(UnaryOpExpression);
@@ -516,20 +516,20 @@ namespace Sass {
       bool isCalcSafe = true);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitBinaryOpExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitBinaryOpExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final;
+    bool isCalcSafe() final;
 
-    sass::string recommendation() const override final;
+    sass::string recommendation() const final;
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(BinaryOpExpression);
@@ -569,18 +569,18 @@ namespace Sass {
     }
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitVariableExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitVariableExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return true; }
+    bool isCalcSafe() final { return true; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(VariableExpression);
@@ -610,20 +610,20 @@ namespace Sass {
       Expression* expression);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitParenthesizedExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitParenthesizedExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final;
+    bool isCalcSafe() final;
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
-    sass::string recommendation() const override final;
+    sass::string recommendation() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ParenthesizedExpression);
@@ -684,15 +684,15 @@ namespace Sass {
       const sass::string& ns);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitItplFnExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitItplFnExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return true; }
+    bool isCalcSafe() final { return true; }
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ItplFnExpression);
@@ -713,18 +713,18 @@ namespace Sass {
     {}
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitIfExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitIfExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return true; }
+    bool isCalcSafe() final { return true; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(IfExpression);
@@ -766,15 +766,15 @@ namespace Sass {
       const sass::string& ns = "");
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitFunctionExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitFunctionExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return true; }
+    bool isCalcSafe() final { return true; }
 
     // Imports are transparent for variables, functions and mixins
     // We always need to create entities inside the parent scope
@@ -793,7 +793,7 @@ namespace Sass {
     bool isCompiled() const { return fidx_.isCompiled(); }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(FunctionExpression);

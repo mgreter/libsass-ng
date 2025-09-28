@@ -29,7 +29,7 @@ namespace Sass {
   protected:
 
     // Whether this is a plain CSS stylesheet.
-    bool parsingCss() const override final { return true; }
+    bool parsingCss() const final { return true; }
 
     // Consumes a plain-CSS `@import` rule that disallows
     // interpolation. [start] should point before the `@`.
@@ -38,20 +38,20 @@ namespace Sass {
     // Expression* namespacedExpression(sass::string ns, Offset start);
 
     // Consumes an expression that starts like an identifier.
-    Expression* readIdentifierLike() override final;
+    Expression* readIdentifierLike() final;
 
     // Consume a silent comment and throws error
-    SilentComment* readSilentComment() override final;
+    SilentComment* readSilentComment() final;
 
     // Consume a silent comment and throws error
-    bool scanSilentComment() override final;
+    bool scanSilentComment() final;
 
     // Parse allowed at-rule statement and parse children via [child_parser] parser function
-    Statement* readAtRule(Statement* (StylesheetParser::* child_parser)(), bool root = false) override final;
+    Statement* readAtRule(Statement* (StylesheetParser::* child_parser)(), bool root = false) final;
 
-    Expression* readNamespacedExpression(const sass::string& ns, Offset start) override final;
+    Expression* readNamespacedExpression(const sass::string& ns, Offset start) final;
 
-    Expression* readParenthesizedExpression() override final;
+    Expression* readParenthesizedExpression() final;
 
   };
 

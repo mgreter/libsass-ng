@@ -62,19 +62,19 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    virtual void visitCssImport(CssImport*) override;
-    virtual void visitCssComment(CssComment*) override;
-    virtual void visitCssMediaRule(CssMediaRule*) override;
+    void visitCssImport(CssImport*) override;
+    void visitCssComment(CssComment*) override;
+    void visitCssMediaRule(CssMediaRule*) override;
 
-    virtual void visitCssAtRule(CssAtRule*) override;
-    virtual void visitCssStyleRule(CssStyleRule*) override;
-    virtual void visitCssSupportsRule(CssSupportsRule*) override;
+    void visitCssAtRule(CssAtRule*) override;
+    void visitCssStyleRule(CssStyleRule*) override;
+    void visitCssSupportsRule(CssSupportsRule*) override;
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    virtual void visitMap(Map* value) override;
-    virtual void visitString(String* value) override;
+    void visitMap(Map* value) override;
+    void visitString(String* value) override;
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

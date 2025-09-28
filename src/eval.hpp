@@ -392,69 +392,69 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    Value* visitBinaryOpExpression(BinaryOpExpression*);
-    Value* visitBooleanExpression(BooleanExpression*);
-    Value* visitColorExpression(ColorExpression*);
-    Value* visitFunctionExpression(FunctionExpression*);
+    Value* visitBinaryOpExpression(BinaryOpExpression*) override;
+    Value* visitBooleanExpression(BooleanExpression*) override;
+    Value* visitColorExpression(ColorExpression*) override;
+    Value* visitFunctionExpression(FunctionExpression*) override;
     void _checkAdjacentCalculationValues(const ValueVector& elements, const ListExpression* node);
-    Value* visitIfExpression(IfExpression*);
-    Value* visitListExpression(ListExpression*);
-    Value* visitMapExpression(MapExpression*);
-    Value* visitNullExpression(NullExpression*);
-    Value* visitNumberExpression(NumberExpression*);
-    Value* visitItplFnExpression(ItplFnExpression*);
-    Value* visitParenthesizedExpression(ParenthesizedExpression*);
-    Value* visitSelectorExpression(SelectorExpression*);
-    Value* visitStringExpression(StringExpression*);
-    Value* visitSupportsExpression(SupportsExpression*);
-    Value* visitUnaryOpExpression(UnaryOpExpression*);
-    Value* visitValueExpression(ValueExpression*);
-    Value* visitVariableExpression(VariableExpression*);
+    Value* visitIfExpression(IfExpression*) override;
+    Value* visitListExpression(ListExpression*) override;
+    Value* visitMapExpression(MapExpression*) override;
+    Value* visitNullExpression(NullExpression*) override;
+    Value* visitNumberExpression(NumberExpression*) override;
+    Value* visitItplFnExpression(ItplFnExpression*) override;
+    Value* visitParenthesizedExpression(ParenthesizedExpression*) override;
+    Value* visitSelectorExpression(SelectorExpression*) override;
+    Value* visitStringExpression(StringExpression*) override;
+    Value* visitSupportsExpression(SupportsExpression*) override;
+    Value* visitUnaryOpExpression(UnaryOpExpression*) override;
+    Value* visitValueExpression(ValueExpression*) override;
+    Value* visitVariableExpression(VariableExpression*) override;
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    Value* visitAtRootRule(AtRootRule* rule);
-    Value* visitAtRule(AtRule* rule);
+    Value* visitAtRootRule(AtRootRule* rule) override;
+    Value* visitAtRule(AtRule* rule) override;
     bool BubbleMediaQuery(CssParentNode* node, CssMediaQueryVector& uses, bool chroot);
-    Value* visitContentBlock(ContentBlock* rule);
-    Value* visitContentRule(ContentRule* rule);
-    Value* visitDebugRule(DebugRule* rule);
-    Value* visitDeclaration(Declaration* rule);
-    Value* visitEachRule(EachRule* rule);
-    Value* visitErrorRule(ErrorRule* rule);
-    Value* visitExtendRule(ExtendRule* rule);
-    Value* visitForRule(ForRule* rule);
-    Value* visitForwardRule(ForwardRule* rule);
-    Value* visitFunctionRule(FunctionRule* rule);
-    Value* visitIfRule(IfRule* rule);
-    Value* visitImportRule(ImportRule* rule);
-    Value* visitIncludeRule(IncludeRule* rule);
-    Value* visitLoudComment(LoudComment* rule);
-    Value* visitMediaRule(MediaRule* rule);
-    Value* visitMixinRule(MixinRule* rule);
-    Value* visitReturnRule(ReturnRule* rule);
-    Value* visitSilentComment(SilentComment* rule);
-    Value* visitStyleRule(StyleRule* rule);
+    Value* visitContentBlock(ContentBlock* rule) override;
+    Value* visitContentRule(ContentRule* rule) override;
+    Value* visitDebugRule(DebugRule* rule) override;
+    Value* visitDeclaration(Declaration* rule) override;
+    Value* visitEachRule(EachRule* rule) override;
+    Value* visitErrorRule(ErrorRule* rule) override;
+    Value* visitExtendRule(ExtendRule* rule) override;
+    Value* visitForRule(ForRule* rule) override;
+    Value* visitForwardRule(ForwardRule* rule) override;
+    Value* visitFunctionRule(FunctionRule* rule) override;
+    Value* visitIfRule(IfRule* rule) override;
+    Value* visitImportRule(ImportRule* rule) override;
+    Value* visitIncludeRule(IncludeRule* rule) override;
+    Value* visitLoudComment(LoudComment* rule) override;
+    Value* visitMediaRule(MediaRule* rule) override;
+    Value* visitMixinRule(MixinRule* rule) override;
+    Value* visitReturnRule(ReturnRule* rule) override;
+    Value* visitSilentComment(SilentComment* rule) override;
+    Value* visitStyleRule(StyleRule* rule) override;
     // visitStylesheet
-    Value* visitSupportsRule(SupportsRule* rule);
-    Value* visitUseRule(UseRule* rule);
-    Value* visitAssignRule(AssignRule* rule);
-    Value* visitWarnRule(WarnRule* rule);
-    Value* visitWhileRule(WhileRule* rule);
+    Value* visitSupportsRule(SupportsRule* rule) override;
+    Value* visitUseRule(UseRule* rule) override;
+    Value* visitAssignRule(AssignRule* rule) override;
+    Value* visitWarnRule(WarnRule* rule) override;
+    Value* visitWhileRule(WhileRule* rule) override;
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    void visitCssAtRule(CssAtRule* css);
-    void visitCssComment(CssComment* css);
-    void visitCssDeclaration(CssDeclaration* css);
-    void visitCssImport(CssImport* css);
-    void visitCssKeyframeBlock(CssKeyframeBlock* css);
-    void visitCssMediaRule(CssMediaRule* css);
-    void visitCssRoot(CssRoot* css);
-    void visitCssStyleRule(CssStyleRule* css);
-    void visitCssSupportsRule(CssSupportsRule* css);
+    void visitCssAtRule(CssAtRule* css) override;
+    void visitCssComment(CssComment* css) override;
+    void visitCssDeclaration(CssDeclaration* css) override;
+    void visitCssImport(CssImport* css) override;
+    void visitCssKeyframeBlock(CssKeyframeBlock* css) override;
+    void visitCssMediaRule(CssMediaRule* css) override;
+    void visitCssRoot(CssRoot* css) override;
+    void visitCssStyleRule(CssStyleRule* css) override;
+    void visitCssSupportsRule(CssSupportsRule* css) override;
 
   public:
     Stylesheet* resolveIncludeImport(IncludeImport* rule);

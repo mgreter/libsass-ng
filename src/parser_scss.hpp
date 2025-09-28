@@ -35,7 +35,7 @@ namespace Sass {
     }
 
     // We are sure scss is not indented syntax
-    bool isIndented() const override final {
+    bool isIndented() const final {
       return false;
     };
 

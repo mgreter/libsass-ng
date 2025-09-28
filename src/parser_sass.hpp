@@ -62,45 +62,45 @@ namespace Sass {
     bool useSpaceIndentation() const { return indentType == SassIndentType::SPACES; }
 
     // Whether this is a plain CSS stylesheet.
-    bool parsingCss() const override final { return false; }
+    bool parsingCss() const final { return false; }
 
     // Whether this is parsing the indented syntax.
-    bool isIndented() const override final { return true; };
+    bool isIndented() const final { return true; };
 
     // Parses and returns a selector used in a style rule.
-    Interpolation* styleRuleSelector() override final;
+    Interpolation* styleRuleSelector() final;
 
     // Asserts that the scanner is positioned before a statement separator,
     // or at the end of a list of statements. If the [name] of the parent
     // rule is passed, it's used for error reporting. This consumes
     // whitespace, but nothing else, including comments.
-    void expectStatementSeparator(sass::string name) override final;
+    void expectStatementSeparator(sass::string name) final;
 
     // Whether the scanner is positioned at the end of a statement.
-    bool atEndOfStatement() override final;
+    bool atEndOfStatement() final;
 
     // Whether the scanner is positioned before a block of
     // children that can be parsed with [children].
-    bool lookingAtChildren() override final;
+    bool lookingAtChildren() final;
 
     // Consumes an argument to an `@import` rule.
     // If anything is found it will be added to [rule].
-    void scanImportArgument(ImportRule* rule) override final;
+    void scanImportArgument(ImportRule* rule) final;
 
     // Tries to scan an `@else` rule after an `@if` block. Returns whether
     // that succeeded. This should just scan the rule name, not anything 
     // afterwards. [ifIndentation] is the result of [currentIndentation]
     // from before the corresponding `@if` was parsed.
-    bool scanElse(size_t ifIndentation) override final;
+    bool scanElse(size_t ifIndentation) final;
 
     // Consumes a block of child statements. Unlike most production consumers,
     // this does *not* consume trailing whitespace. This is necessary to ensure
     // that the source span for the parent rule doesn't cover whitespace after the rule.
-    StatementVector readChildren(Statement* (StylesheetParser::* child)()) override final;
+    StatementVector readChildren(Statement* (StylesheetParser::* child)()) final;
 
     // Consumes top-level statements. The [statement] callback may return `nullptr`,
     // indicating that a statement was consumed that shouldn't be added to the AST.
-    StatementVector readStatements(Statement* (StylesheetParser::* statement)()) override final;
+    StatementVector readStatements(Statement* (StylesheetParser::* statement)()) final;
 
     // Consumes a child of the current statement. This consumes
     // children that are allowed at all levels of the document;
@@ -119,9 +119,9 @@ namespace Sass {
     // Consumes and ignores a loud (CSS-style) comment.
     // This overrides loud comment consumption so that
     // it doesn't consume multi-line comments.
-    void scanLoudComment() override final;
+    void scanLoudComment() final;
 
-    void scanWhitespaceWithoutComments() override final;
+    void scanWhitespaceWithoutComments() final;
 
     // Expect and consume a single newline character.
     void expectNewline();

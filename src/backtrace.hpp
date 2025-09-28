@@ -63,15 +63,15 @@ namespace Sass {
       fn(fn)
     {}
 
-    const SourceSpan& getPstate() const override final {
+    const SourceSpan& getPstate() const final {
       return pstate;
     }
 
-    const sass::string& getName() const override final {
+    const sass::string& getName() const final {
       return name;
     }
 
-    bool isFn() const override final {
+    bool isFn() const final {
       return fn;
     }
 
@@ -99,15 +99,15 @@ namespace Sass {
       fn(fn)
     {}
 
-    const SourceSpan& getPstate() const override final {
+    const SourceSpan& getPstate() const final {
       return pstate;
     }
 
-    const sass::string& getName() const override final {
+    const sass::string& getName() const final {
       return name;
     }
 
-    bool isFn() const override final {
+    bool isFn() const final {
       return fn;
     }
 

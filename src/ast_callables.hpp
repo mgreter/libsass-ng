@@ -59,18 +59,18 @@ namespace Sass {
       const ArgumentResults& evaluated);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) override final;
+    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) final;
 
     // Return the function name
-    const sass::string& name() const override final { return envkey_.norm(); }
+    const sass::string& name() const final { return envkey_.norm(); }
 
     // Equality comparator (needed for `get-function` value)
-    bool operator==(const Callable& rhs) const override final;
+    bool operator==(const Callable& rhs) const final;
 
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // Check if call is considered internal
-    bool isInternal() const override final {
+    bool isInternal() const final {
       return isInternalFn_;
     }
 
@@ -108,15 +108,15 @@ namespace Sass {
       const ArgumentResults& evaluated);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) override final;
+    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) final;
 
     // Return the function name
-    const sass::string& name() const override final { return envkey_.norm(); }
+    const sass::string& name() const final { return envkey_.norm(); }
 
     // Equality comparator (needed for `get-function` value)
-    bool operator==(const Callable& rhs) const override final;
+    bool operator==(const Callable& rhs) const final;
 
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // Define isaBuiltInCallables up-cast function
     IMPLEMENT_ISA_CASTER(BuiltInCallables);
@@ -150,15 +150,15 @@ namespace Sass {
       UserDefinedCallable* content = nullptr);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) override final;
+    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) final;
 
     // Return the function name
-    const sass::string& name() const override final { return envkey_.norm(); }
+    const sass::string& name() const final { return envkey_.norm(); }
 
     // Equality comparator (needed for `get-function` value)
-    bool operator==(const Callable& rhs) const override final;
+    bool operator==(const Callable& rhs) const final;
 
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // Define isaUserDefinedCallable up-cast function
     IMPLEMENT_ISA_CASTER(UserDefinedCallable);
@@ -193,15 +193,15 @@ namespace Sass {
       SassFunctionLambda function);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) override final;
+    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) final;
 
     // Return the function name
-    const sass::string& name() const override final { return envkey_.norm(); }
+    const sass::string& name() const final { return envkey_.norm(); }
 
     // Equality comparator (needed for `get-function` value)
-    bool operator==(const Callable& rhs) const override final;
+    bool operator==(const Callable& rhs) const final;
 
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // Define isaExternalCallable up-cast function
     IMPLEMENT_ISA_CASTER(ExternalCallable);
@@ -224,15 +224,15 @@ namespace Sass {
       const EnvKey& fname);
 
     // The main entry point to execute the function (implemented in each specialization)
-    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) override final;
+    Value* execute(Eval& eval, CallableArguments* arguments, const SourceSpan& pstate, bool global = false) final;
 
     // Return the function name
-    const sass::string& name() const override final { return envkey_.norm(); }
+    const sass::string& name() const final { return envkey_.norm(); }
 
     // Equality comparator (needed for `get-function` value)
-    bool operator==(const Callable& rhs) const override final;
+    bool operator==(const Callable& rhs) const final;
 
-    size_t hash() const override final;
+    size_t hash() const final;
 
     // Define isaExternalCallable up-cast function
     IMPLEMENT_ISA_CASTER(PlainCssCallable);

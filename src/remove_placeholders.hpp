@@ -43,25 +43,25 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
 
     // Do not implement anything for these visitors
-    void visitCssComment(CssComment* css) override final {};
-    void visitCssDeclaration(CssDeclaration* css) override final {};
-    void visitCssImport(CssImport* css) override final {};
+    void visitCssComment(CssComment* css) final {};
+    void visitCssDeclaration(CssDeclaration* css) final {};
+    void visitCssImport(CssImport* css) final {};
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
     // Move further down into children to remove recursively
-    void visitCssAtRule(CssAtRule* css) override final { acceptCssParentNode(css); };
-    void visitCssKeyframeBlock(CssKeyframeBlock* css) override final { acceptCssParentNode(css); };
-    void visitCssMediaRule(CssMediaRule* css) override final { acceptCssParentNode(css); };
-    void visitCssSupportsRule(CssSupportsRule* css) override final { acceptCssParentNode(css); };
+    void visitCssAtRule(CssAtRule* css) final { acceptCssParentNode(css); };
+    void visitCssKeyframeBlock(CssKeyframeBlock* css) final { acceptCssParentNode(css); };
+    void visitCssMediaRule(CssMediaRule* css) final { acceptCssParentNode(css); };
+    void visitCssSupportsRule(CssSupportsRule* css) final { acceptCssParentNode(css); };
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
     // Cleaning only makes sense on those nodes
-    void visitCssRoot(CssRoot*) override final;
-    void visitCssStyleRule(CssStyleRule*) override final;
+    void visitCssRoot(CssRoot*) final;
+    void visitCssStyleRule(CssStyleRule*) final;
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

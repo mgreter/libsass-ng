@@ -15,8 +15,8 @@ namespace Sass {
 
   protected:
 
-    virtual Expression* visitBinaryOpExpression(BinaryOpExpression* rule) override final;
-    virtual Expression* visitUnaryOpExpression(UnaryOpExpression* rule) override final;
+    virtual Expression* visitBinaryOpExpression(BinaryOpExpression* rule) final;
+    virtual Expression* visitUnaryOpExpression(UnaryOpExpression* rule) final;
 
   };
 

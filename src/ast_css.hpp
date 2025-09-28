@@ -230,10 +230,10 @@ namespace Sass {
     CssComment(const CssComment* ptr);
 
     // Css visitor and rendering entry function
-    void accept(CssVisitor<void>* visitor) override final {
+    void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssComment(this);
     }
-    bool accept(CssVisitor<bool>* visitor) override final {
+    bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssComment(this);
     }
     IMPLEMENT_ISA_CASTER(CssComment);
@@ -265,10 +265,10 @@ namespace Sass {
     }
 
     // Css visitor and rendering entry function
-    void accept(CssVisitor<void>* visitor) override final {
+    void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssDeclaration(this);
     }
-    bool accept(CssVisitor<bool>* visitor) override final {
+    bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssDeclaration(this);
     }
 
@@ -312,10 +312,10 @@ namespace Sass {
     CssImport(const CssImport* ptr);
 
     // Css visitor and rendering entry function
-    void accept(CssVisitor<void>* visitor) override final {
+    void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssImport(this);
     }
-    bool accept(CssVisitor<bool>* visitor) override final {
+    bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssImport(this);
     }
 
@@ -342,14 +342,14 @@ namespace Sass {
       bool childless = false);
 
     // Css visitor and rendering entry function
-    void accept(CssVisitor<void>* visitor) override final {
+    void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssRoot(this);
     }
-    bool accept(CssVisitor<bool>* visitor) override final {
+    bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssRoot(this);
     }
 
-    CssNode* produce() override final {
+    CssNode* produce() final {
       CssNodeVector copy;
       for (CssNode* child : elements_) {
           copy.emplace_back(child->produce());
@@ -358,11 +358,11 @@ namespace Sass {
         pstate_, std::move(copy));
     }
 
-    CssRoot* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    CssRoot* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssRoot, this, childless);
     }
 
-    bool equalsIgnoringChildren(CssNode* other) const override final;
+    bool equalsIgnoringChildren(CssNode* other) const final;
 
     IMPLEMENT_ISA_CASTER(CssRoot);
     FINALIZE_AST_NODE(CssRoot);
@@ -403,30 +403,30 @@ namespace Sass {
       const CssAtRule* ptr,
       bool childless = false);
 
-    bool isInvisibleCss() const override final {
+    bool isInvisibleCss() const final {
       return false;
     }
 
     // Returns the at-rule name for [node], or `null` if it's not an at-rule.
-    const sass::string& getAtRuleName() const override final {
+    const sass::string& getAtRuleName() const final {
       return name_;
     }
 
     // Css visitor and rendering entry function
-    void accept(CssVisitor<void>* visitor) override final {
+    void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssAtRule(this);
     }
-    bool accept(CssVisitor<bool>* visitor) override final {
+    bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssAtRule(this);
     }
 
-    CssAtRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    CssAtRule* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssAtRule, this, childless);
     }
 
-    bool equalsIgnoringChildren(CssNode* other) const override final;
+    bool equalsIgnoringChildren(CssNode* other) const final;
 
-    CssAtRule* produce() override final {
+    CssAtRule* produce() final {
       CssAtRuleObj copy = SASS_MEMORY_NEW(CssAtRule, this, false);
       for (CssNode* child : elements_) {
         copy->append(child->produce());
@@ -469,18 +469,18 @@ namespace Sass {
     // CssKeyframeBlock* copyWithoutChildren();
 
     // Css visitor and rendering entry function
-    void accept(CssVisitor<void>* visitor) override final {
+    void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssKeyframeBlock(this);
     }
-    bool accept(CssVisitor<bool>* visitor) override final {
+    bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssKeyframeBlock(this);
     }
 
-    CssKeyframeBlock* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    CssKeyframeBlock* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssKeyframeBlock, this, childless);
     }
 
-    bool equalsIgnoringChildren(CssNode* other) const override final;
+    bool equalsIgnoringChildren(CssNode* other) const final;
 
     IMPLEMENT_ISA_CASTER(CssKeyframeBlock);
     FINALIZE_AST_NODE(CssKeyframeBlock);
@@ -513,20 +513,20 @@ namespace Sass {
       bool childless = false);
 
     // Selector and one child must be visible
-    bool isInvisibleCss() const override final;
+    bool isInvisibleCss() const final;
 
     // Media rules are sometimes transparent, sometimes not
-    bool bubbles(bool stopAtMediaRule) const override final { return true; }
+    bool bubbles(bool stopAtMediaRule) const final { return true; }
 
     // Css visitor and rendering entry function
-    void accept(CssVisitor<void>* visitor) override final {
+    void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssStyleRule(this);
     }
-    bool accept(CssVisitor<bool>* visitor) override final {
+    bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssStyleRule(this);
     }
 
-    CssStyleRule* produce() override final {
+    CssStyleRule* produce() final {
       CssNodeVector copy;
       for (CssNode* child : elements_) {
         copy.emplace_back(child->produce());
@@ -538,11 +538,11 @@ namespace Sass {
     }
 
     // Declare via macro to allow line/col debugging
-    CssStyleRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    CssStyleRule* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssStyleRule, this, childless);
     }
 
-    bool equalsIgnoringChildren(CssNode* other) const override final;
+    bool equalsIgnoringChildren(CssNode* other) const final;
 
     // Define isaCssStyleRule up-cast function
     IMPLEMENT_ISA_CASTER(CssStyleRule);
@@ -574,22 +574,22 @@ namespace Sass {
       bool childless = false);
 
     // Returns the at-rule name for [node], or `null` if it's not an at-rule.
-    const sass::string& getAtRuleName() const override final { return Strings::supports; }
+    const sass::string& getAtRuleName() const final { return Strings::supports; }
 
     // Css visitor and rendering entry function
-    void accept(CssVisitor<void>* visitor) override final {
+    void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssSupportsRule(this);
     }
-    bool accept(CssVisitor<bool>* visitor) override final {
+    bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssSupportsRule(this);
     }
 
     // Declare via macro to allow line/col debugging
-    CssSupportsRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    CssSupportsRule* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssSupportsRule, this, childless);
     }
 
-    bool equalsIgnoringChildren(CssNode* other) const override final;
+    bool equalsIgnoringChildren(CssNode* other) const final;
 
     // Define isaCssSupportsRule up-cast function
     IMPLEMENT_ISA_CASTER(CssSupportsRule);
@@ -621,24 +621,24 @@ namespace Sass {
       bool childless = false);
 
     // Check if we or any children are invisible
-    bool isInvisibleCss() const override final {
+    bool isInvisibleCss() const final {
       return queries_.isNull() || queries_->empty() ||
         CssParentNode::isInvisibleCss();
     }
 
     // Media rules are sometimes transparent, sometimes not
-    bool bubbles(bool stopAtMediaRule) const override final {
+    bool bubbles(bool stopAtMediaRule) const final {
       return stopAtMediaRule == false;
     }
 
     // Returns the at-rule name for [node], or `null` if it's not an at-rule.
-    const sass::string& getAtRuleName() const override final { return Strings::media; }
+    const sass::string& getAtRuleName() const final { return Strings::media; }
 
     // Css visitor and rendering entry function
-    void accept(CssVisitor<void>* visitor) override final {
+    void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssMediaRule(this);
     }
-    bool accept(CssVisitor<bool>* visitor) override final {
+    bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssMediaRule(this);
     }
 
@@ -647,11 +647,11 @@ namespace Sass {
     bool operator==(const CssMediaRule& rhs) const;
 
     // Declare via macro to allow line/col debugging
-    CssMediaRule* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    CssMediaRule* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssMediaRule, this, childless);
     }
 
-    bool equalsIgnoringChildren(CssNode* other) const override final;
+    bool equalsIgnoringChildren(CssNode* other) const final;
 
     // Define isaCssMediaRule up-cast function
     IMPLEMENT_ISA_CASTER(CssMediaRule);

@@ -65,37 +65,37 @@ namespace Sass {
     virtual sass::string getLine(size_t line) override;
 
     // Return path as it was given for import
-    const char* getImpPath() const override final
+    const char* getImpPath() const final
     {
       return imp_path.empty() ?
         nullptr : imp_path.c_str();
     }
 
     // Return path after it was resolved
-    const char* getAbsPath() const override final
+    const char* getAbsPath() const final
     {
       return abs_path.empty() ?
         nullptr : abs_path.c_str();
     }
 
     // The source id is uniquely assigned
-    void setSrcIdx(size_t idx) override final
+    void setSrcIdx(size_t idx) final
     {
       srcidx = idx;
     }
 
     // The source id is uniquely assigned
-    size_t getSrcIdx() const override final
+    size_t getSrcIdx() const final
     {
       return srcidx;
     }
 
-    size_t contentSize() const override final
+    size_t contentSize() const final
     {
       return len_content;
     }
 
-    size_t srcmapsSize() const override final
+    size_t srcmapsSize() const final
     {
       return len_srcmaps;
     }
@@ -130,15 +130,15 @@ namespace Sass {
       size_t srcidx = sass::string::npos);
 
     // Destructor
-    ~SourceFile() override final;
+    ~SourceFile() final;
 
     // Get raw iterator for actual source
-    const char* content() const override final {
+    const char* content() const final {
       return _content;
     }
 
     // Get raw iterator for actual source
-    const char* srcmaps() const override final {
+    const char* srcmaps() const final {
       return _srcmaps;
     }
 
@@ -182,12 +182,12 @@ namespace Sass {
       size_t srcidx = sass::string::npos);
 
     // Get raw iterator for actual source
-    const char* content() const override final {
+    const char* content() const final {
       return _content.c_str();
     }
 
     // Get raw iterator for actual source
-    const char* srcmaps() const override final {
+    const char* srcmaps() const final {
       return _srcmaps.c_str();
     }
 
@@ -209,7 +209,7 @@ namespace Sass {
   protected:
 
     // Account additional lines if needed.
-    size_t countLines() override final;
+    size_t countLines() final;
 
   private:
 
@@ -226,13 +226,13 @@ namespace Sass {
     SourceItpl(SourceSpan pstate, sass::string&& data);
 
     // Returns source with this interpolation inserted.
-    sass::string getLine(size_t line) override final;
+    sass::string getLine(size_t line) final;
 
     // Returns adjusted source span with interpolation in mind.
     // The input `pstate` is relative to the interpolation, will
     // return a source span with absolute position in regard of
     // the original document with the interpolation inserted.
-    SourceSpan adjustSourceSpan(SourceSpan& pstate) const override final;
+    SourceSpan adjustSourceSpan(SourceSpan& pstate) const final;
 
   };
 

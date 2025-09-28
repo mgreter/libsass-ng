@@ -124,10 +124,10 @@ namespace Sass {
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitStyleRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitStyleRule(this);
     }
 
@@ -154,10 +154,10 @@ namespace Sass {
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitDeclaration(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitDeclaration(this);
     }
 
@@ -194,10 +194,10 @@ namespace Sass {
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitForRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitForRule(this);
     }
 
@@ -227,10 +227,10 @@ namespace Sass {
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitEachRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitEachRule(this);
     }
 
@@ -256,10 +256,10 @@ namespace Sass {
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitWhileRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitWhileRule(this);
     }
 
@@ -286,10 +286,10 @@ namespace Sass {
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitMediaRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitMediaRule(this);
     }
 
@@ -322,10 +322,10 @@ namespace Sass {
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitAtRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitAtRule(this);
     }
 
@@ -351,10 +351,10 @@ namespace Sass {
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitAtRootRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitAtRootRule(this);
     }
 
@@ -382,13 +382,13 @@ namespace Sass {
       IfRule* alternative = {});
 
     // Also check alternative for content block
-    bool hasContent() const override final;
+    bool hasContent() const final;
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitIfRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitIfRule(this);
     }
 
@@ -413,10 +413,10 @@ namespace Sass {
       StatementVector&& children = {});
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitSupportsRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitSupportsRule(this);
     }
 
@@ -485,10 +485,10 @@ namespace Sass {
       SilentComment* comment = nullptr);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitContentBlock(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitContentBlock(this);
     }
 
@@ -517,10 +517,10 @@ namespace Sass {
       SilentComment* comment = nullptr);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitFunctionRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitFunctionRule(this);
     }
 
@@ -549,10 +549,10 @@ namespace Sass {
       SilentComment* comment = nullptr);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitMixinRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitMixinRule(this);
     }
 
@@ -577,10 +577,10 @@ namespace Sass {
       Expression* expression);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitWarnRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitWarnRule(this);
     }
 
@@ -602,10 +602,10 @@ namespace Sass {
       Expression* expression);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitErrorRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitErrorRule(this);
     }
 
@@ -628,10 +628,10 @@ namespace Sass {
       Expression* expression);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitDebugRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitDebugRule(this);
     }
 
@@ -654,10 +654,10 @@ namespace Sass {
       Expression* value = nullptr);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitReturnRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitReturnRule(this);
     }
 
@@ -680,13 +680,13 @@ namespace Sass {
       CallableArguments* arguments);
 
     // Specialize method to indicate we have content
-    bool hasContent() const override final { return true; }
+    bool hasContent() const final { return true; }
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitContentRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitContentRule(this);
     }
 
@@ -714,10 +714,10 @@ namespace Sass {
       bool is_optional = false);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitExtendRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitExtendRule(this);
     }
 
@@ -743,10 +743,10 @@ namespace Sass {
       bool newline = false);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitLoudComment(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitLoudComment(this);
     }
 
@@ -770,10 +770,10 @@ namespace Sass {
       sass::string&& text);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitSilentComment(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitSilentComment(this);
     }
 
@@ -793,10 +793,10 @@ namespace Sass {
     ImportRule(const SourceSpan& pstate);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitImportRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitImportRule(this);
     }
 
@@ -868,10 +868,10 @@ namespace Sass {
       bool hasLocalWith);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitUseRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitUseRule(this);
     }
   };
@@ -898,10 +898,10 @@ namespace Sass {
       bool isShown, bool isHidden, bool hasWith);
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitForwardRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitForwardRule(this);
     }
 
@@ -935,10 +935,10 @@ namespace Sass {
       bool is_default = false,
       bool is_global = false);
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitAssignRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitAssignRule(this);
     }
   };
@@ -984,13 +984,13 @@ namespace Sass {
       ContentBlock* content = nullptr);
 
     // Check if we have a valid content block
-    bool hasContent() const override final;
+    bool hasContent() const final;
 
     // Statement visitor to sass values entry function
-    Value* accept(StatementVisitor<Value*>* visitor) override final {
+    Value* accept(StatementVisitor<Value*>* visitor) final {
       return visitor->visitIncludeRule(this);
     }
-    void accept(StatementVisitor<void>* visitor) override final {
+    void accept(StatementVisitor<void>* visitor) final {
       return visitor->visitIncludeRule(this);
     }
   };

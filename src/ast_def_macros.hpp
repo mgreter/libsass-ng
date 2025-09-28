@@ -123,16 +123,16 @@ private:
     public: const klass* isa##klass() const final override { return this; } \
 
   #define IMPLEMENT_ACCEPT(type, visitor, klass) \
-    public: type accept(visitor##Visitor<type>* visitor) override final { \
+    public: type accept(visitor##Visitor<type>* visitor) final { \
       return visitor->visit##klass(this); \
     } \
 
   #define IMPLEMENT_BASE_CMP_OPERATOR(subklass, klass) \
-    public: bool operator==(const subklass& rhs) const override final { \
+    public: bool operator==(const subklass& rhs) const final { \
       auto sel = rhs.isa##klass(); \
       return sel ? *this == *sel : false; \
     } \
-    public: bool operator<(const subklass& rhs) const override final { \
+    public: bool operator<(const subklass& rhs) const final { \
       auto sel = rhs.isa##klass(); \
       return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
     }
@@ -142,11 +142,23 @@ private:
     public: bool operator<(const klass& rhs) const; \
 
   #define IMPLEMENT_EQ_OPERATOR(subklass, klass) \
-    public: bool operator==(const subklass& rhs) const override final { \
+    public: bool operator==(const subklass& rhs) const final { \
       auto sel = rhs.isa##klass(); \
       return sel ? *this == *sel : false; \
     } \
-    public: bool operator<(const subklass& rhs) const override final { \
+    public: bool operator<(const subklass& rhs) const final { \
+      auto sel = rhs.isa##klass(); \
+      return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
+    } \
+    public: bool operator==(const klass& rhs) const; \
+    public: bool operator<(const klass& rhs) const; \
+
+  #define IMPLEMENT_EQ_OPERATOR2(subklass, klass, kwd) \
+    public: bool operator==(const subklass& rhs) const kwd { \
+      auto sel = rhs.isa##klass(); \
+      return sel ? *this == *sel : false; \
+    } \
+    public: bool operator<(const subklass& rhs) const kwd { \
       auto sel = rhs.isa##klass(); \
       return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
     } \
@@ -160,13 +172,13 @@ private:
 
   // Childless argument is passed to ctor
   #define IMPLEMENT_SEL_COPY_CHILDREN(klass) \
-    public: klass* copy(SASS_MEMORY_ARGS bool childless) const override final { \
+    public: klass* copy(SASS_MEMORY_ARGS bool childless) const final { \
       return SASS_MEMORY_NEW_DBG(klass, this, childless); \
     } \
 
   // Childless argument is ignored on ctor
   #define IMPLEMENT_SEL_COPY_IGNORE(klass) \
-    public: klass* copy(SASS_MEMORY_ARGS bool childless) const override final { \
+    public: klass* copy(SASS_MEMORY_ARGS bool childless) const final { \
       return SASS_MEMORY_NEW_DBG(klass, this); \
     } \
 

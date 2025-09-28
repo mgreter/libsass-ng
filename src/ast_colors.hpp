@@ -563,16 +563,16 @@ namespace Sass {
       rgb_channels, 3)
     {}
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       return (std::signbit(channel) ? -1 : +1) *
         std::pow(std::abs(channel), 563.0 / 256.0);
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       return (std::signbit(channel) ? -1 : +1) *
         std::pow(std::abs(channel), 256.0 / 563.0);
     }
 
-    const double* transformationMatrix(ColorSpace dest) const override final {
+    const double* transformationMatrix(ColorSpace dest) const final {
       if (dest.name() == str_rgb) return ColorSpaces::linearA98RgbToLinearSrgb;
       if (dest.name() == str_srgb) return ColorSpaces::linearA98RgbToLinearSrgb;
       if (dest.name() == str_srgb_linear) return ColorSpaces::linearA98RgbToLinearSrgb;
@@ -608,14 +608,14 @@ namespace Sass {
       rgb_channels, 3)
     {}
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       return srgbAndDisplayP3ToLinear(channel);
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       return srgbAndDisplayP3FromLinear(channel);
     }
 
-    const double* transformationMatrix(ColorSpace dest) const override final {
+    const double* transformationMatrix(ColorSpace dest) const final {
       if (dest.name() == str_rgb) return ColorSpaces::linearDisplayP3ToLinearSrgb;
       if (dest.name() == str_srgb) return ColorSpaces::linearDisplayP3ToLinearSrgb;
       if (dest.name() == str_srgb_linear) return ColorSpaces::linearDisplayP3ToLinearSrgb;
@@ -637,8 +637,8 @@ namespace Sass {
       hsl_channels, 3)
     {}
 
-    bool isLegacy() const override final { return true; }
-    bool isPolar() const override final { return true; }
+    bool isLegacy() const final { return true; }
+    bool isPolar() const final { return true; }
 
     Color* convert(
       const ColorSpace& dest,
@@ -647,7 +647,7 @@ namespace Sass {
       tl::optional<double> saturation,
       tl::optional<double> lightness,
       tl::optional<double> alpha)
-        const override final;
+        const final;
 
   };
 
@@ -659,8 +659,8 @@ namespace Sass {
       hwb_channels, 3)
     {}
 
-    bool isLegacy() const override final { return true; }
-    bool isPolar() const override final { return true; }
+    bool isLegacy() const final { return true; }
+    bool isPolar() const final { return true; }
 
     Color* convert(
       const ColorSpace& dest,
@@ -668,7 +668,7 @@ namespace Sass {
       tl::optional<double> hue,
       tl::optional<double> whiteness,
       tl::optional<double> blackness,
-      tl::optional<double> alpha) const override final;
+      tl::optional<double> alpha) const final;
 
   };
 
@@ -680,7 +680,7 @@ namespace Sass {
       lab_channels, 3)
     {}
 
-    bool isBounded() const override final { return false; }
+    bool isBounded() const final { return false; }
 
     Color* translate(
       const ColorSpace& dest,
@@ -699,7 +699,7 @@ namespace Sass {
       tl::optional<double> whiteness,
       tl::optional<double> blackness,
       tl::optional<double> alpha)
-      const override final
+      const final
     {
       return translate(dest, pstate,
         hue, whiteness, blackness, alpha);
@@ -715,8 +715,8 @@ namespace Sass {
       lch_channels, 3)
     {}
 
-    bool isPolar() const override final { return true; }
-    bool isBounded() const override final { return false; }
+    bool isPolar() const final { return true; }
+    bool isBounded() const final { return false; }
 
     Color* convert(
       const ColorSpace& dest,
@@ -725,7 +725,7 @@ namespace Sass {
       tl::optional<double> whiteness,
       tl::optional<double> blackness,
       tl::optional<double> alpha)
-        const override final;
+        const final;
 
   };
 
@@ -737,16 +737,16 @@ namespace Sass {
       lms_channels, 3)
     {}
 
-    bool isBounded() const override final { return false; }
+    bool isBounded() const final { return false; }
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       return channel;
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       return channel;
     }
 
-    const double* transformationMatrix(ColorSpace dest) const override final {
+    const double* transformationMatrix(ColorSpace dest) const final {
       if (dest.name() == str_rgb) return ColorSpaces::lmsToLinearSrgb;
       if (dest.name() == str_srgb) return ColorSpaces::lmsToLinearSrgb;
       if (dest.name() == str_srgb_linear) return ColorSpaces::lmsToLinearSrgb;
@@ -779,7 +779,7 @@ namespace Sass {
       tl::optional<double> green,
       tl::optional<double> blue,
       tl::optional<double> alpha)
-      const override final
+      const final
     {
       return translate(dest, pstate,
         red, green, blue, alpha);
@@ -795,7 +795,7 @@ namespace Sass {
       oklab_channels, 3)
     {}
 
-    bool isBounded() const override final { return false; }
+    bool isBounded() const final { return false; }
 
     Color* translate(
       const ColorSpace& dest,
@@ -814,7 +814,7 @@ namespace Sass {
       tl::optional<double> chroma,
       tl::optional<double> hue,
       tl::optional<double> alpha)
-      const override final
+      const final
     {
       return translate(dest, pstate,
         lightness, chroma, hue, alpha);
@@ -830,8 +830,8 @@ namespace Sass {
       oklch_channels, 3)
     {}
 
-    bool isPolar() const override final { return true; }
-    bool isBounded() const override final { return false; }
+    bool isPolar() const final { return true; }
+    bool isBounded() const final { return false; }
 
     Color* convert(
       const ColorSpace& dest,
@@ -839,7 +839,7 @@ namespace Sass {
       tl::optional<double> lightness,
       tl::optional<double> chroma,
       tl::optional<double> hue,
-      tl::optional<double> alpha) const override final;
+      tl::optional<double> alpha) const final;
 
   };
 
@@ -851,21 +851,21 @@ namespace Sass {
       rgb_channels, 3)
     {}
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       double abs = std::abs(channel);
       if (abs <= 16.0 / 512) return channel / 16.0;
       return (std::signbit(channel) ? -1 : +1) *
         std::pow(abs, 1.8 / 1.0);
 
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       double abs = std::abs(channel);
       if (abs < 1.0 / 512) return 16.0 * channel;
       return (std::signbit(channel) ? -1 : +1) *
         std::pow(abs, 1.0 / 1.8);
     }
 
-    const double* transformationMatrix(ColorSpace dest) const override final {
+    const double* transformationMatrix(ColorSpace dest) const final {
       if (dest.name() == str_rgb) return ColorSpaces::linearProphotoRgbToLinearSrgb;
       if (dest.name() == str_srgb) return ColorSpaces::linearProphotoRgbToLinearSrgb;
       if (dest.name() == str_srgb_linear) return ColorSpaces::linearProphotoRgbToLinearSrgb;
@@ -895,21 +895,21 @@ namespace Sass {
       rgb_channels, 3)
     {}
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       double abs = std::abs(channel);
       if (abs < _beta * 4.5) return channel / 4.5;
       return (std::signbit(channel) ? -1 : +1) *
         std::pow((abs + _alpha -1.0) / _alpha, 1.0 / 0.45);
 
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       double abs = std::abs(channel);
       if (abs < _beta) return 4.5 * channel;
       return (std::signbit(channel) ? -1 : +1) *
         (_alpha * std::pow(abs, 0.45) - (_alpha - 1.0));
     }
 
-    const double* transformationMatrix(ColorSpace dest) const override final {
+    const double* transformationMatrix(ColorSpace dest) const final {
       if (dest.name() == str_rgb) return ColorSpaces::linearRec2020ToLinearSrgb;
       if (dest.name() == str_srgb) return ColorSpaces::linearRec2020ToLinearSrgb;
       if (dest.name() == str_srgb_linear) return ColorSpaces::linearRec2020ToLinearSrgb;
@@ -932,7 +932,7 @@ namespace Sass {
       rgb255_channels, 3)
     {}
 
-    bool isLegacy() const override final { return true; }
+    bool isLegacy() const final { return true; }
 
     Color* convert(
       const ColorSpace& dest,
@@ -940,12 +940,12 @@ namespace Sass {
       tl::optional<double> channel0,
       tl::optional<double> channel1,
       tl::optional<double> channel2,
-      tl::optional<double> alpha) const override final;
+      tl::optional<double> alpha) const final;
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       return srgbAndDisplayP3ToLinear(channel / 255.0);
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       double rv = srgbAndDisplayP3FromLinear(channel) * 255.0;
       // std::cerr << " from rgb linear " << channel << " => " << rv << "\n";
       return rv;
@@ -960,14 +960,14 @@ namespace Sass {
       rgb_channels, 3)
     {}
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       return channel;
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       return channel;
     }
 
-    const double* transformationMatrix(ColorSpace dest) const override final {
+    const double* transformationMatrix(ColorSpace dest) const final {
       if (dest.name() == str_display_p3) return ColorSpaces::linearSrgbToLinearDisplayP3;
       if (dest.name() == str_a98_rgb) return ColorSpaces::linearSrgbToLinearA98Rgb;
       if (dest.name() == str_prophoto_rgb) return ColorSpaces::linearSrgbToLinearProphotoRgb;
@@ -984,7 +984,7 @@ namespace Sass {
       tl::optional<double> hue,
       tl::optional<double> whiteness,
       tl::optional<double> blackness,
-      tl::optional<double> alpha) const override final;
+      tl::optional<double> alpha) const final;
 
   };
 
@@ -996,14 +996,14 @@ namespace Sass {
       rgb_channels, 3)
     {}
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       return srgbAndDisplayP3ToLinear(channel);
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       return srgbAndDisplayP3FromLinear(channel);
     }
 
-    const double* transformationMatrix(ColorSpace dest) const override final {
+    const double* transformationMatrix(ColorSpace dest) const final {
       if (dest.name() == str_display_p3) return ColorSpaces::linearSrgbToLinearDisplayP3;
       if (dest.name() == str_a98_rgb) return ColorSpaces::linearSrgbToLinearA98Rgb;
       if (dest.name() == str_prophoto_rgb) return ColorSpaces::linearSrgbToLinearProphotoRgb;
@@ -1032,7 +1032,7 @@ namespace Sass {
       tl::optional<double> green,
       tl::optional<double> blue,
       tl::optional<double> alpha)
-      const override final
+      const final
     {
       return translate(dest, pstate,
         red, green, blue, alpha);
@@ -1048,16 +1048,16 @@ namespace Sass {
       xyz_channels, 3)
     {}
 
-    bool isBounded() const override final { return false; }
+    bool isBounded() const final { return false; }
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       return channel;
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       return channel;
     }
 
-    const double* transformationMatrix(ColorSpace dest) const override final {
+    const double* transformationMatrix(ColorSpace dest) const final {
       if (dest.name() == str_rgb) return ColorSpaces::xyzD50ToLinearSrgb;
       if (dest.name() == str_srgb) return ColorSpaces::xyzD50ToLinearSrgb;
       if (dest.name() == str_srgb_linear) return ColorSpaces::xyzD50ToLinearSrgb;
@@ -1090,7 +1090,7 @@ namespace Sass {
       tl::optional<double> green,
       tl::optional<double> blue,
       tl::optional<double> alpha)
-      const override final
+      const final
     {
       return translate(dest, pstate,
         red, green, blue, alpha);
@@ -1106,16 +1106,16 @@ namespace Sass {
       xyz_channels, 3)
     {}
 
-    double toLinear(double channel) const override final {
+    double toLinear(double channel) const final {
       return channel;
     }
-    double fromLinear(double channel) const override final {
+    double fromLinear(double channel) const final {
       return channel;
     }
 
-    bool isBounded() const override final { return false; }
+    bool isBounded() const final { return false; }
 
-    const double* transformationMatrix(ColorSpace dest) const override final {
+    const double* transformationMatrix(ColorSpace dest) const final {
       if (dest.name() == str_rgb) return ColorSpaces::xyzD65ToLinearSrgb;
       if (dest.name() == str_srgb) return ColorSpaces::xyzD65ToLinearSrgb;
       if (dest.name() == str_srgb_linear) return ColorSpaces::xyzD65ToLinearSrgb;
@@ -1469,35 +1469,35 @@ namespace Sass {
     double channel(const sass::string& channel) const;
 
     // Implement interface for base value class
-    size_t hash() const override final;
-    SassValueType getTag() const override final { return SASS_COLOR; }
-    const sass::string& type() const override final { return Strings::color; }
+    size_t hash() const final;
+    SassValueType getTag() const final { return SASS_COLOR; }
+    const sass::string& type() const final { return Strings::color; }
 
     // Main entry point for Value Visitor pattern
-    void accept(ValueVisitor<void>* visitor) override final {
+    void accept(ValueVisitor<void>* visitor) final {
       return visitor->visitColor(this);
     }
-    Value* accept(ValueVisitor<Value*>* visitor) override final {
+    Value* accept(ValueVisitor<Value*>* visitor) final {
       return visitor->visitColor(this);
     }
 
     // Implement some operations for base value class
-    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
-    Value* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const override final;
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* modulo(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* remainder(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
 
     // Im ement equality comparators for base value class
-    bool operator==(const Value& rhs) const override final;
+    bool operator==(const Value& rhs) const final;
     // Implement same class compare operator
     bool operator==(const Color& rhs) const;
 
-    const Color* assertColor(Logger& logger, const sass::string& name = Strings::empty) const override final { return this; }
-    Color* assertColor2(Logger& logger, const sass::string& name = Strings::empty) override final { return this; }
+    const Color* assertColor(Logger& logger, const sass::string& name = Strings::empty) const final { return this; }
+    Color* assertColor2(Logger& logger, const sass::string& name = Strings::empty) final { return this; }
 
     // Copy operations for childless items
-    Color* copy(SASS_MEMORY_ARGS bool childless) const override final {
+    Color* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(Color, this);
     }
 
@@ -1533,18 +1533,18 @@ namespace Sass {
       Color* color);
 
     // Expression visitor to sass values entry function
-    Value* accept(ExpressionVisitor<Value*>* visitor) override final {
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
       return visitor->visitColorExpression(this);
     }
-    Expression* accept(ExpressionVisitor<Expression*>* visitor) override final {
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
       return visitor->visitColorExpression(this);
     }
 
     // Return if expression can be used in calculations
-    bool isCalcSafe() override final { return false; }
+    bool isCalcSafe() final { return false; }
 
     // Convert to string (only for debugging)
-    sass::string toString() const override final;
+    sass::string toString() const final;
 
     // Implement specialized up-casting method
     IMPLEMENT_ISA_CASTER(ColorExpression);

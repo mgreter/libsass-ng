@@ -23,15 +23,15 @@ namespace Sass {
 
     ImportedCssVisitor(Eval& eval);
 
-    virtual void visitCssAtRule(CssAtRule* css);
-    virtual void visitCssComment(CssComment* css);
-    virtual void visitCssDeclaration(CssDeclaration* css);
-    virtual void visitCssImport(CssImport* css);
-    virtual void visitCssKeyframeBlock(CssKeyframeBlock* css);
-    virtual void visitCssMediaRule(CssMediaRule* css);
-    virtual void visitCssRoot(CssRoot* css);
-    virtual void visitCssStyleRule(CssStyleRule* css);
-    virtual void visitCssSupportsRule(CssSupportsRule* css);
+    void visitCssAtRule(CssAtRule* css) override;
+    void visitCssComment(CssComment* css) override;
+    void visitCssDeclaration(CssDeclaration* css) override;
+    void visitCssImport(CssImport* css) override;
+    void visitCssKeyframeBlock(CssKeyframeBlock* css) override;
+    void visitCssMediaRule(CssMediaRule* css) override;
+    void visitCssRoot(CssRoot* css) override;
+    void visitCssStyleRule(CssStyleRule* css) override;
+    void visitCssSupportsRule(CssSupportsRule* css) override;
 
   };
 
