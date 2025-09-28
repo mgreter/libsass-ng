@@ -96,8 +96,8 @@ namespace Sass {
     if (fuzzyEquals(weight, 0.0, logger.epsilon)) return other;
     if (fuzzyEquals(weight, 1.0, logger.epsilon)) return this;
 
-    Color* color1 = this->toSpace(method.space, pstate);
-    Color* color2 = other->toSpace(method.space, pstate);
+    ColorObj color1 = this->toSpace(method.space, pstate);
+    ColorObj color2 = other->toSpace(method.space, pstate);
 
     if (weight < 0 || weight > 1) {
       throw Exception::SassScriptException(logger,
@@ -372,7 +372,7 @@ namespace Sass {
       return SASS_MEMORY_NEW(Color, this);
     }
 
-    Color* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
+    ColorObj converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
 
     if (!legacyMissing &&
       converted->isLegacy() &&
@@ -389,10 +389,10 @@ namespace Sass {
         converted->getAlpha());
     }
     else {
-      return converted;
+      return converted.detach();
     }
 
-    return converted;
+    return converted.detach();
   }
 
   Color::Color(const SourceSpan& pstate, const ColorSpace& space, double c0, double c1, double c2, double alpha, const sass::string& disp, bool parsed)
@@ -450,8 +450,8 @@ namespace Sass {
           &&   fuzzyEquals(c1_, rhs.c1_, sass::epsilon)
           &&   fuzzyEquals(c2_, rhs.c2_, sass::epsilon);
       }
-      Color* rgb1 = toSpace(ColorSpace::rgb, pstate());
-      Color* rgb2 = rhs.toSpace(ColorSpace::rgb, rhs.pstate());
+      ColorObj rgb1 = toSpace(ColorSpace::rgb, pstate());
+      ColorObj rgb2 = rhs.toSpace(ColorSpace::rgb, rhs.pstate());
       // std::cerr << "rgb1 " << rgb1->debug() << "\n";
       // std::cerr << "rgb2 " << rgb2->debug() << "\n";
       auto rv = fuzzyEquals(rgb1->c0_, rgb2->c0_, sass::epsilon)
@@ -1249,12 +1249,12 @@ namespace Sass {
 
 
     // Algorithm from https://www.w3.org/TR/2022/CRD-css-color-4-20221101/#css-gamut-mapping-algorithm
-    auto originOklch = color->toSpace(ColorSpace::oklch, color->pstate());
+    ColorObj originOklch = color->toSpace(ColorSpace::oklch, color->pstate());
 
     // The channel equivalents to `current` in the Color 4 algorithm.
-    auto lightness = originOklch->getChannel0OrNull();
-    auto hue = originOklch->getChannel2OrNull();
-    auto alpha = originOklch->getAlphaOrNull();
+    tl::optional<double> lightness = originOklch->getChannel0OrNull();
+    tl::optional<double> hue = originOklch->getChannel2OrNull();
+    tl::optional<double> alpha = originOklch->getAlphaOrNull();
 
     if (fuzzyGreaterThanOrEquals(lightness.value_or(0), 1.0, sass::epsilon)) {
       if (color->isLegacy()) return Color::rgb(
@@ -1265,13 +1265,14 @@ namespace Sass {
         1, 1, 1, color->getAlphaOrNull());
     }
     else if (fuzzyLessThanOrEquals(lightness.value_or(0), 0.0, sass::epsilon)) {
-      return Color::rgb(
+      ColorObj rv = Color::rgb(
         color->pstate(),
-        0, 0, 0, color->getAlphaOrNull())
-        ->toSpace(color->space(), color->pstate());
+        0, 0, 0, color->getAlphaOrNull());
+      rv = rv->toSpace(color->space(), color->pstate());
+      return rv.detach();
     }
 
-    Color* clipped = color->toGamut(GamutMapMethod::clip);
+    ColorObj clipped = color->toGamut(GamutMapMethod::clip);
 
     if (_deltaEOK(clipped, color) < _jnd) return clipped;
 
@@ -1284,7 +1285,7 @@ namespace Sass {
       // In the Color 4 algorithm `current` is in Oklch, but all its actual uses
       // other than modifying chroma convert it to `color.space` first so we
       // just store it in that space to begin with.
-      Color* current = ColorSpace::oklch.convert(
+      ColorObj current = ColorSpace::oklch.convert(
         color->space(),
         color->pstate(),
         lightness,
@@ -1315,7 +1316,7 @@ namespace Sass {
         max = chroma;
       }
     }
-    return clipped;
+    return clipped.detach();
 
   }
 

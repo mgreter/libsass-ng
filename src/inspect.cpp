@@ -916,7 +916,7 @@ namespace Sass {
   void Inspect::_writeHsl(Color* color)
   {
 
-    Color* hsl = color->toSpace(ColorSpace::hsl, color->pstate());
+    ColorObj hsl = color->toSpace(ColorSpace::hsl, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -946,7 +946,7 @@ namespace Sass {
   void Inspect::_writeHwb(Color* color)
   {
 
-    Color* hwb = color->toSpace(ColorSpace::hwb, color->pstate());
+    ColorObj hwb = color->toSpace(ColorSpace::hwb, color->pstate());
 
     // write space/lf
     flush_schedules();
@@ -976,7 +976,7 @@ namespace Sass {
   void Inspect::_writeRgb(Color* color)
   {
     sass::string ss;
-    Color* rgb = color->toSpace(ColorSpace::rgb, color->pstate());
+    ColorObj rgb = color->toSpace(ColorSpace::rgb, color->pstate());
     // std::cerr << "write rgb " << rgb->debug() << "\n";
 
     if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {

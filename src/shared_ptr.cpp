@@ -18,7 +18,7 @@ namespace Sass {
 
   #ifdef DEBUG_SHARED_PTR
   void RefCounted::dumpMemLeaks() {
-    if (false && !all.empty()) {
+    if (!all.empty()) {
       std::cerr << "###################################\n";
       std::cerr << "# REPORTING MISSING DEALLOCATIONS #\n";
       std::cerr << "###################################\n";
