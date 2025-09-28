@@ -30,8 +30,6 @@
 #include "plugins.hpp"
 #include "file.hpp"
 
-#include "debugger.hpp"
-
 #include <cstring>
 #include <csignal>
 #ifdef _MSC_VER
@@ -65,7 +63,6 @@ namespace Sass {
     srcmap(nullptr),
     error()
   {
-    // std::cerr << "GOT compiler and dir is " << PWD << "\n";
     #ifdef DEBUG_MSVC_CRT_MEM
     _CrtMemCheckpoint(&memState);
     #endif
@@ -161,16 +158,13 @@ namespace Sass {
 
     Eval eval(*this, *this, plainCss);
 
+    //debug_ast(root);
     CssRootObj compiled;
     {
       ImportStackFrame iframe(eval.compiler, root->import);
-      // debug_ast(root);
       eval.visitStylesheet(root);
-      // debug_ast(root);
       compiled = eval._combineCss(root);
     }
-
-    // debug_ast(compiled);
 
     // clean up by removing empty placeholders
     // ToDo: maybe we can do this somewhere else?
