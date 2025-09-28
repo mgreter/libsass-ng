@@ -502,7 +502,7 @@ namespace Sass
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  static const auto const colors_to_names = std::unordered_map<int, const char*>{
+  static const auto colors_to_names = std::unordered_map<int, const char*>{
 		{240 * 0x10000 + 248 * 0x100 + 255, ColorNames::aliceblue},
 		{250 * 0x10000 + 235 * 0x100 + 215, ColorNames::antiquewhite},
 		{0 * 0x10000 + 255 * 0x100 + 255, ColorNames::cyan},
