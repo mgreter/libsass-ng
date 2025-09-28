@@ -542,6 +542,7 @@ namespace Sass
     {ColorNames::gold, 255 * 0x10000 + 215 * 0x100 + 0},
     {ColorNames::goldenrod, 218 * 0x10000 + 165 * 0x100 + 32},
     {ColorNames::gray, 128 * 0x10000 + 128 * 0x100 + 128},
+    {ColorNames::grey, 128 * 0x10000 + 128 * 0x100 + 128},
     {ColorNames::green, 0 * 0x10000 + 128 * 0x100 + 0},
     {ColorNames::greenyellow, 173 * 0x10000 + 255 * 0x100 + 47},
     {ColorNames::honeydew, 240 * 0x10000 + 255 * 0x100 + 240},
@@ -641,14 +642,21 @@ namespace Sass
   //   return name_to_color(sass::string(key));
   // }
 
-  const bool name_to_color(const sass::string& key, int& r, int& g, int& b)
+  const bool name_to_color(const sass::string& key, int& r, int& g, int& b, int& a)
   {
-    auto p = names_to_colors.find(key);
+    sass::string lcKey = key;
+    StringUtils::makeLowerCase(lcKey);
+    if (lcKey == "transparent") {
+      r = g = b = a = 0;
+      return true;
+    }
+    auto p = names_to_colors.find(lcKey);
     if (p == names_to_colors.end()) return false;
     int composed = p->second;
     r = (composed & 0xFF0000) >> 16;
     g = (composed & 0x00FF00) >> 8;
     b = (composed & 0x0000FF) >> 0;
+    a = 1; // always opaque
     return true;
   }
   /*

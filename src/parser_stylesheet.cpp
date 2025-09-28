@@ -3197,11 +3197,11 @@ namespace Sass {
           return SASS_MEMORY_NEW(NullExpression, pstate,
             SASS_MEMORY_NEW(Null, pstate));
         }
-        int red = 0, green = 0, blue = 0;
-        if (name_to_color(plain, red, green, blue)) {
+        int red = 0, green = 0, blue = 0, alpha = 0;
+        if (name_to_color(plain, red, green, blue, alpha)) {
           return SASS_MEMORY_NEW(ColorExpression, identifier->pstate(),
             SASS_MEMORY_NEW(Color, identifier->pstate(), ColorSpace::rgb,
-              red, green, blue, 1.0, plain, false));
+              red, green, blue, alpha, plain, false));
         }
         // if (const Color* color = name_to_color(plain)) {
         //   // ToDo: can we avoid this copy here?

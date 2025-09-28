@@ -2339,7 +2339,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        //double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
+        double adjust = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2348,7 +2348,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         ColorObj hsl = color->toSpace(ColorSpace::hsl, pstate);
-        double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
+        // double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
         double lightness = clampLikeCss(hsl->getChannel2() + adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), hsl->c1(), lightness, hsl->alpha());
@@ -2365,7 +2365,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        //double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
+        double adjust = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2374,7 +2374,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         ColorObj hsl = color->toSpace(ColorSpace::hsl, pstate);
-        double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
+        // double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
         double saturation = clampLikeCss(hsl->getChannel1() + adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), saturation, hsl->c2(), hsl->alpha());
@@ -2391,7 +2391,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        //double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
+        double adjust = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2400,7 +2400,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         ColorObj hsl = color->toSpace(ColorSpace::hsl, pstate);
-        double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
+        // double adjust = amount->valueInRange(compiler, 0.0, 100.0, "amount");
         double saturation = clampLikeCss(hsl->getChannel1() - adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), saturation, hsl->c2(), hsl->alpha());
