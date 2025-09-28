@@ -354,62 +354,23 @@ namespace Sass {
   }
 
 
-  Color* Color::toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
+  Color* Color::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing)
   {
-    if (space == this->space_) {
-      return SASS_MEMORY_NEW(Color, this);
-    }
-
-    // std::cerr << "Do toSpace from " << debug() << " to " << space.name() << "\n";
-
-    // return SASS_MEMORY_NEW(Color, this);
-    // std::cerr << "Convert from " << space_.name() << " to " << space.name() << "\n";
-    Color* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
-
-    // std::cerr << "  result " << converted->debug() << "\n";
-
-    if (!legacyMissing &&
-      converted->isLegacy() &&
-      (converted->isChannel0Missing() ||
-        converted->isChannel1Missing() ||
-        converted->isChannel2Missing() ||
-        converted->isAlphaMissing()))
-    {
-      // std::cerr << "XXX Special case\n";
-      return Color::forSpaceInternal(
-        pstate, converted->space(),
-        converted->getChannel0(),
-        converted->getChannel1(),
-        converted->getChannel2(),
-        converted->getAlpha());
-    }
-    else {
-      return converted;
-    }
-
-    //return !legacyMissing &&
-    //  converted->space().isLegacy() &&
-    //  (converted->isChannel0Missing() ||
-    //    converted->isChannel1Missing() ||
-    //    converted->isChannel2Missing() ||
-    //    converted.isAlphaMissing)
-    //  ? SassColor.forSpaceInternal(converted.space, converted.channel0,
-    //    converted.channel1, converted.channel2, converted.alpha)
-    //  : converted;
-    return converted;
+    // Can return without creating a copy
+    if (space == space_) return this;
+    // If const, we must always create a copy
+    return ((const Color*)this)->toSpace(
+      space, pstate, legacyMissing);
   }
 
   Color* Color::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
   {
     if (space == this->space_) {
+      // std::cerr << "copy into same space\n";
       return SASS_MEMORY_NEW(Color, this);
     }
 
-    // std::cerr << "Do toSpace from " << debug() << " to " << space.name() << " (" << legacyMissing << ")\n";
-
     Color* converted = this->space_.convert(space, pstate, c0_, c1_, c2_, alpha_);
-
-    // std::cerr << "  result " << converted->debug() << "\n";
 
     if (!legacyMissing &&
       converted->isLegacy() &&
@@ -418,7 +379,6 @@ namespace Sass {
         converted->isChannel2Missing() ||
         converted->isAlphaMissing()))
     {
-      // std::cerr << "XXX Special case\n";
       return Color::forSpaceInternal(
         pstate, converted->space(),
         converted->getChannel0(),
@@ -430,15 +390,6 @@ namespace Sass {
       return converted;
     }
 
-      //return !legacyMissing &&
-    //  converted->space().isLegacy() &&
-    //  (converted->isChannel0Missing() ||
-    //    converted->isChannel1Missing() ||
-    //    converted->isChannel2Missing() ||
-    //    converted.isAlphaMissing)
-    //  ? SassColor.forSpaceInternal(converted.space, converted.channel0,
-    //    converted.channel1, converted.channel2, converted.alpha)
-    //  : converted;
     return converted;
   }
 

@@ -580,7 +580,7 @@ namespace Sass {
 
       // color->assertLegacy(logger, "color");
 
-      ColorObj rgb = color->toSpace2(ColorSpace::rgb, pstate);
+      ColorObj rgb = color->toSpace(ColorSpace::rgb, pstate);
 
       if (isSpecialNumber(second)) {
         // dart-sass is using color?
@@ -1800,7 +1800,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
           // std::cerr << "Before legacy invert color " << color->debug() << "\n";
 
-          auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
+          auto rgb = color->toSpace(ColorSpace::rgb, pstate);
 
           // std::cerr << "Before legacy invert as rgb " << rgb->debug() << "\n";
 
@@ -1834,7 +1834,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         // std::cerr << "Before invert color " << color->debug() << "\n";
 
-        auto inSpace = color->toSpace2(space, pstate);
+        auto inSpace = color->toSpace(space, pstate);
 
         // std::cerr << "After invert to space " << inSpace->debug() << "\n";
 
@@ -1868,7 +1868,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (inverted == nullptr) return arguments[0];
 
         if (fuzzyEquals(w, 1.0, compiler.epsilon)) {
-          Color* rv = inverted->toSpace2(color->space(), pstate, false);
+          Color* rv = inverted->toSpace(color->space(), pstate, false);
           return rv;
         }
         else {
