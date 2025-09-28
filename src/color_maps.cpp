@@ -13,157 +13,157 @@ namespace Sass
   /////////////////////////////////////////////////////////////////////////
 
   namespace ColorNames
-	{
-		const char aliceblue[] = "aliceblue";
-		const char antiquewhite[] = "antiquewhite";
-		const char cyan[] = "cyan";
-		const char aqua[] = "aqua";
-		const char aquamarine[] = "aquamarine";
-		const char azure[] = "azure";
-		const char beige[] = "beige";
-		const char bisque[] = "bisque";
-		const char black[] = "black";
-		const char blanchedalmond[] = "blanchedalmond";
-		const char blue[] = "blue";
-		const char blueviolet[] = "blueviolet";
-		const char brown[] = "brown";
-		const char burlywood[] = "burlywood";
-		const char cadetblue[] = "cadetblue";
-		const char chartreuse[] = "chartreuse";
-		const char chocolate[] = "chocolate";
-		const char coral[] = "coral";
-		const char cornflowerblue[] = "cornflowerblue";
-		const char cornsilk[] = "cornsilk";
-		const char crimson[] = "crimson";
-		const char darkblue[] = "darkblue";
-		const char darkcyan[] = "darkcyan";
-		const char darkgoldenrod[] = "darkgoldenrod";
-		const char darkgray[] = "darkgray";
-		const char darkgrey[] = "darkgrey";
-		const char darkgreen[] = "darkgreen";
-		const char darkkhaki[] = "darkkhaki";
-		const char darkmagenta[] = "darkmagenta";
-		const char darkolivegreen[] = "darkolivegreen";
-		const char darkorange[] = "darkorange";
-		const char darkorchid[] = "darkorchid";
-		const char darkred[] = "darkred";
-		const char darksalmon[] = "darksalmon";
-		const char darkseagreen[] = "darkseagreen";
-		const char darkslateblue[] = "darkslateblue";
-		const char darkslategray[] = "darkslategray";
-		const char darkslategrey[] = "darkslategrey";
-		const char darkturquoise[] = "darkturquoise";
-		const char darkviolet[] = "darkviolet";
-		const char deeppink[] = "deeppink";
-		const char deepskyblue[] = "deepskyblue";
-		const char dimgray[] = "dimgray";
-		const char dimgrey[] = "dimgrey";
-		const char dodgerblue[] = "dodgerblue";
-		const char firebrick[] = "firebrick";
-		const char floralwhite[] = "floralwhite";
-		const char forestgreen[] = "forestgreen";
-		const char magenta[] = "magenta";
-		const char fuchsia[] = "fuchsia";
-		const char gainsboro[] = "gainsboro";
-		const char ghostwhite[] = "ghostwhite";
-		const char gold[] = "gold";
-		const char goldenrod[] = "goldenrod";
-		const char gray[] = "gray";
-		const char grey[] = "grey";
-		const char green[] = "green";
-		const char greenyellow[] = "greenyellow";
-		const char honeydew[] = "honeydew";
-		const char hotpink[] = "hotpink";
-		const char indianred[] = "indianred";
-		const char indigo[] = "indigo";
-		const char ivory[] = "ivory";
-		const char khaki[] = "khaki";
-		const char lavender[] = "lavender";
-		const char lavenderblush[] = "lavenderblush";
-		const char lawngreen[] = "lawngreen";
-		const char lemonchiffon[] = "lemonchiffon";
-		const char lightblue[] = "lightblue";
-		const char lightcoral[] = "lightcoral";
-		const char lightcyan[] = "lightcyan";
-		const char lightgoldenrodyellow[] = "lightgoldenrodyellow";
-		const char lightgray[] = "lightgray";
-		const char lightgrey[] = "lightgrey";
-		const char lightgreen[] = "lightgreen";
-		const char lightpink[] = "lightpink";
-		const char lightsalmon[] = "lightsalmon";
-		const char lightseagreen[] = "lightseagreen";
-		const char lightskyblue[] = "lightskyblue";
-		const char lightslategray[] = "lightslategray";
-		const char lightslategrey[] = "lightslategrey";
-		const char lightsteelblue[] = "lightsteelblue";
-		const char lightyellow[] = "lightyellow";
-		const char lime[] = "lime";
-		const char limegreen[] = "limegreen";
-		const char linen[] = "linen";
-		const char maroon[] = "maroon";
-		const char mediumaquamarine[] = "mediumaquamarine";
-		const char mediumblue[] = "mediumblue";
-		const char mediumorchid[] = "mediumorchid";
-		const char mediumpurple[] = "mediumpurple";
-		const char mediumseagreen[] = "mediumseagreen";
-		const char mediumslateblue[] = "mediumslateblue";
-		const char mediumspringgreen[] = "mediumspringgreen";
-		const char mediumturquoise[] = "mediumturquoise";
-		const char mediumvioletred[] = "mediumvioletred";
-		const char midnightblue[] = "midnightblue";
-		const char mintcream[] = "mintcream";
-		const char mistyrose[] = "mistyrose";
-		const char moccasin[] = "moccasin";
-		const char navajowhite[] = "navajowhite";
-		const char navy[] = "navy";
-		const char oldlace[] = "oldlace";
-		const char olive[] = "olive";
-		const char olivedrab[] = "olivedrab";
-		const char orange[] = "orange";
-		const char orangered[] = "orangered";
-		const char orchid[] = "orchid";
-		const char palegoldenrod[] = "palegoldenrod";
-		const char palegreen[] = "palegreen";
-		const char paleturquoise[] = "paleturquoise";
-		const char palevioletred[] = "palevioletred";
-		const char papayawhip[] = "papayawhip";
-		const char peachpuff[] = "peachpuff";
-		const char peru[] = "peru";
-		const char pink[] = "pink";
-		const char plum[] = "plum";
-		const char powderblue[] = "powderblue";
-		const char purple[] = "purple";
-		const char red[] = "red";
-		const char rosybrown[] = "rosybrown";
-		const char royalblue[] = "royalblue";
-		const char saddlebrown[] = "saddlebrown";
-		const char salmon[] = "salmon";
-		const char sandybrown[] = "sandybrown";
-		const char seagreen[] = "seagreen";
-		const char seashell[] = "seashell";
-		const char sienna[] = "sienna";
-		const char silver[] = "silver";
-		const char skyblue[] = "skyblue";
-		const char slateblue[] = "slateblue";
-		const char slategray[] = "slategray";
-		const char slategrey[] = "slategrey";
-		const char snow[] = "snow";
-		const char springgreen[] = "springgreen";
-		const char steelblue[] = "steelblue";
-		const char tan[] = "tan";
-		const char teal[] = "teal";
-		const char thistle[] = "thistle";
-		const char tomato[] = "tomato";
-		const char turquoise[] = "turquoise";
-		const char violet[] = "violet";
-		const char wheat[] = "wheat";
-		const char white[] = "white";
-		const char whitesmoke[] = "whitesmoke";
-		const char yellow[] = "yellow";
-		const char yellowgreen[] = "yellowgreen";
-		const char rebeccapurple[] = "rebeccapurple";
-		const char transparent[] = "transparent";
-	} // namespace ColorNames
+  {
+    const char aliceblue[] = "aliceblue";
+    const char antiquewhite[] = "antiquewhite";
+    const char cyan[] = "cyan";
+    const char aqua[] = "aqua";
+    const char aquamarine[] = "aquamarine";
+    const char azure[] = "azure";
+    const char beige[] = "beige";
+    const char bisque[] = "bisque";
+    const char black[] = "black";
+    const char blanchedalmond[] = "blanchedalmond";
+    const char blue[] = "blue";
+    const char blueviolet[] = "blueviolet";
+    const char brown[] = "brown";
+    const char burlywood[] = "burlywood";
+    const char cadetblue[] = "cadetblue";
+    const char chartreuse[] = "chartreuse";
+    const char chocolate[] = "chocolate";
+    const char coral[] = "coral";
+    const char cornflowerblue[] = "cornflowerblue";
+    const char cornsilk[] = "cornsilk";
+    const char crimson[] = "crimson";
+    const char darkblue[] = "darkblue";
+    const char darkcyan[] = "darkcyan";
+    const char darkgoldenrod[] = "darkgoldenrod";
+    const char darkgray[] = "darkgray";
+    const char darkgrey[] = "darkgrey";
+    const char darkgreen[] = "darkgreen";
+    const char darkkhaki[] = "darkkhaki";
+    const char darkmagenta[] = "darkmagenta";
+    const char darkolivegreen[] = "darkolivegreen";
+    const char darkorange[] = "darkorange";
+    const char darkorchid[] = "darkorchid";
+    const char darkred[] = "darkred";
+    const char darksalmon[] = "darksalmon";
+    const char darkseagreen[] = "darkseagreen";
+    const char darkslateblue[] = "darkslateblue";
+    const char darkslategray[] = "darkslategray";
+    const char darkslategrey[] = "darkslategrey";
+    const char darkturquoise[] = "darkturquoise";
+    const char darkviolet[] = "darkviolet";
+    const char deeppink[] = "deeppink";
+    const char deepskyblue[] = "deepskyblue";
+    const char dimgray[] = "dimgray";
+    const char dimgrey[] = "dimgrey";
+    const char dodgerblue[] = "dodgerblue";
+    const char firebrick[] = "firebrick";
+    const char floralwhite[] = "floralwhite";
+    const char forestgreen[] = "forestgreen";
+    const char magenta[] = "magenta";
+    const char fuchsia[] = "fuchsia";
+    const char gainsboro[] = "gainsboro";
+    const char ghostwhite[] = "ghostwhite";
+    const char gold[] = "gold";
+    const char goldenrod[] = "goldenrod";
+    const char gray[] = "gray";
+    const char grey[] = "grey";
+    const char green[] = "green";
+    const char greenyellow[] = "greenyellow";
+    const char honeydew[] = "honeydew";
+    const char hotpink[] = "hotpink";
+    const char indianred[] = "indianred";
+    const char indigo[] = "indigo";
+    const char ivory[] = "ivory";
+    const char khaki[] = "khaki";
+    const char lavender[] = "lavender";
+    const char lavenderblush[] = "lavenderblush";
+    const char lawngreen[] = "lawngreen";
+    const char lemonchiffon[] = "lemonchiffon";
+    const char lightblue[] = "lightblue";
+    const char lightcoral[] = "lightcoral";
+    const char lightcyan[] = "lightcyan";
+    const char lightgoldenrodyellow[] = "lightgoldenrodyellow";
+    const char lightgray[] = "lightgray";
+    const char lightgrey[] = "lightgrey";
+    const char lightgreen[] = "lightgreen";
+    const char lightpink[] = "lightpink";
+    const char lightsalmon[] = "lightsalmon";
+    const char lightseagreen[] = "lightseagreen";
+    const char lightskyblue[] = "lightskyblue";
+    const char lightslategray[] = "lightslategray";
+    const char lightslategrey[] = "lightslategrey";
+    const char lightsteelblue[] = "lightsteelblue";
+    const char lightyellow[] = "lightyellow";
+    const char lime[] = "lime";
+    const char limegreen[] = "limegreen";
+    const char linen[] = "linen";
+    const char maroon[] = "maroon";
+    const char mediumaquamarine[] = "mediumaquamarine";
+    const char mediumblue[] = "mediumblue";
+    const char mediumorchid[] = "mediumorchid";
+    const char mediumpurple[] = "mediumpurple";
+    const char mediumseagreen[] = "mediumseagreen";
+    const char mediumslateblue[] = "mediumslateblue";
+    const char mediumspringgreen[] = "mediumspringgreen";
+    const char mediumturquoise[] = "mediumturquoise";
+    const char mediumvioletred[] = "mediumvioletred";
+    const char midnightblue[] = "midnightblue";
+    const char mintcream[] = "mintcream";
+    const char mistyrose[] = "mistyrose";
+    const char moccasin[] = "moccasin";
+    const char navajowhite[] = "navajowhite";
+    const char navy[] = "navy";
+    const char oldlace[] = "oldlace";
+    const char olive[] = "olive";
+    const char olivedrab[] = "olivedrab";
+    const char orange[] = "orange";
+    const char orangered[] = "orangered";
+    const char orchid[] = "orchid";
+    const char palegoldenrod[] = "palegoldenrod";
+    const char palegreen[] = "palegreen";
+    const char paleturquoise[] = "paleturquoise";
+    const char palevioletred[] = "palevioletred";
+    const char papayawhip[] = "papayawhip";
+    const char peachpuff[] = "peachpuff";
+    const char peru[] = "peru";
+    const char pink[] = "pink";
+    const char plum[] = "plum";
+    const char powderblue[] = "powderblue";
+    const char purple[] = "purple";
+    const char red[] = "red";
+    const char rosybrown[] = "rosybrown";
+    const char royalblue[] = "royalblue";
+    const char saddlebrown[] = "saddlebrown";
+    const char salmon[] = "salmon";
+    const char sandybrown[] = "sandybrown";
+    const char seagreen[] = "seagreen";
+    const char seashell[] = "seashell";
+    const char sienna[] = "sienna";
+    const char silver[] = "silver";
+    const char skyblue[] = "skyblue";
+    const char slateblue[] = "slateblue";
+    const char slategray[] = "slategray";
+    const char slategrey[] = "slategrey";
+    const char snow[] = "snow";
+    const char springgreen[] = "springgreen";
+    const char steelblue[] = "steelblue";
+    const char tan[] = "tan";
+    const char teal[] = "teal";
+    const char thistle[] = "thistle";
+    const char tomato[] = "tomato";
+    const char turquoise[] = "turquoise";
+    const char violet[] = "violet";
+    const char wheat[] = "wheat";
+    const char white[] = "white";
+    const char whitesmoke[] = "whitesmoke";
+    const char yellow[] = "yellow";
+    const char yellowgreen[] = "yellowgreen";
+    const char rebeccapurple[] = "rebeccapurple";
+    const char transparent[] = "transparent";
+  } // namespace ColorNames
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -189,10 +189,10 @@ namespace Sass
   const ProphotoRgbColorSpace ColorSpace::protophotoRgb = ProphotoRgbColorSpace();
 
   namespace Colors
-	{
+  {
 
     const SourceSpan color_table(SourceSpan::internal32("[COLOR TABLE]"));
-		const Color aliceblue(color_table, ColorSpace::rgb, 240, 248, 255, 1);
+    const Color aliceblue(color_table, ColorSpace::rgb, 240, 248, 255, 1);
     const Color antiquewhite(color_table, ColorSpace::rgb, 250, 235, 215, 1);
     const Color cyan(color_table, ColorSpace::rgb, 0, 255, 255, 1);
     const Color aqua(color_table, ColorSpace::rgb, 0, 255, 255, 1);
@@ -346,501 +346,350 @@ namespace Sass
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+
+  static const auto colors_to_names = std::unordered_map<int, const char*> {
+    {240 * 0x10000 + 248 * 0x100 + 255, ColorNames::aliceblue},
+    {250 * 0x10000 + 235 * 0x100 + 215, ColorNames::antiquewhite},
+    {0 * 0x10000 + 255 * 0x100 + 255, ColorNames::cyan},
+    {127 * 0x10000 + 255 * 0x100 + 212, ColorNames::aquamarine},
+    {240 * 0x10000 + 255 * 0x100 + 255, ColorNames::azure},
+    {245 * 0x10000 + 245 * 0x100 + 220, ColorNames::beige},
+    {255 * 0x10000 + 228 * 0x100 + 196, ColorNames::bisque},
+    {0 * 0x10000 + 0 * 0x100 + 0, ColorNames::black},
+    {255 * 0x10000 + 235 * 0x100 + 205, ColorNames::blanchedalmond},
+    {0 * 0x10000 + 0 * 0x100 + 255, ColorNames::blue},
+    {138 * 0x10000 + 43 * 0x100 + 226, ColorNames::blueviolet},
+    {165 * 0x10000 + 42 * 0x100 + 42, ColorNames::brown},
+    {222 * 0x10000 + 184 * 0x100 + 135, ColorNames::burlywood},
+    {95 * 0x10000 + 158 * 0x100 + 160, ColorNames::cadetblue},
+    {127 * 0x10000 + 255 * 0x100 + 0, ColorNames::chartreuse},
+    {210 * 0x10000 + 105 * 0x100 + 30, ColorNames::chocolate},
+    {255 * 0x10000 + 127 * 0x100 + 80, ColorNames::coral},
+    {100 * 0x10000 + 149 * 0x100 + 237, ColorNames::cornflowerblue},
+    {255 * 0x10000 + 248 * 0x100 + 220, ColorNames::cornsilk},
+    {220 * 0x10000 + 20 * 0x100 + 60, ColorNames::crimson},
+    {0 * 0x10000 + 0 * 0x100 + 139, ColorNames::darkblue},
+    {0 * 0x10000 + 139 * 0x100 + 139, ColorNames::darkcyan},
+    {184 * 0x10000 + 134 * 0x100 + 11, ColorNames::darkgoldenrod},
+    {169 * 0x10000 + 169 * 0x100 + 169, ColorNames::darkgray},
+    {0 * 0x10000 + 100 * 0x100 + 0, ColorNames::darkgreen},
+    {189 * 0x10000 + 183 * 0x100 + 107, ColorNames::darkkhaki},
+    {139 * 0x10000 + 0 * 0x100 + 139, ColorNames::darkmagenta},
+    {85 * 0x10000 + 107 * 0x100 + 47, ColorNames::darkolivegreen},
+    {255 * 0x10000 + 140 * 0x100 + 0, ColorNames::darkorange},
+    {153 * 0x10000 + 50 * 0x100 + 204, ColorNames::darkorchid},
+    {139 * 0x10000 + 0 * 0x100 + 0, ColorNames::darkred},
+    {233 * 0x10000 + 150 * 0x100 + 122, ColorNames::darksalmon},
+    {143 * 0x10000 + 188 * 0x100 + 143, ColorNames::darkseagreen},
+    {72 * 0x10000 + 61 * 0x100 + 139, ColorNames::darkslateblue},
+    {47 * 0x10000 + 79 * 0x100 + 79, ColorNames::darkslategray},
+    {0 * 0x10000 + 206 * 0x100 + 209, ColorNames::darkturquoise},
+    {148 * 0x10000 + 0 * 0x100 + 211, ColorNames::darkviolet},
+    {255 * 0x10000 + 20 * 0x100 + 147, ColorNames::deeppink},
+    {0 * 0x10000 + 191 * 0x100 + 255, ColorNames::deepskyblue},
+    {105 * 0x10000 + 105 * 0x100 + 105, ColorNames::dimgray},
+    {30 * 0x10000 + 144 * 0x100 + 255, ColorNames::dodgerblue},
+    {178 * 0x10000 + 34 * 0x100 + 34, ColorNames::firebrick},
+    {255 * 0x10000 + 250 * 0x100 + 240, ColorNames::floralwhite},
+    {34 * 0x10000 + 139 * 0x100 + 34, ColorNames::forestgreen},
+    {255 * 0x10000 + 0 * 0x100 + 255, ColorNames::magenta},
+    {220 * 0x10000 + 220 * 0x100 + 220, ColorNames::gainsboro},
+    {248 * 0x10000 + 248 * 0x100 + 255, ColorNames::ghostwhite},
+    {255 * 0x10000 + 215 * 0x100 + 0, ColorNames::gold},
+    {218 * 0x10000 + 165 * 0x100 + 32, ColorNames::goldenrod},
+    {128 * 0x10000 + 128 * 0x100 + 128, ColorNames::gray},
+    {0 * 0x10000 + 128 * 0x100 + 0, ColorNames::green},
+    {173 * 0x10000 + 255 * 0x100 + 47, ColorNames::greenyellow},
+    {240 * 0x10000 + 255 * 0x100 + 240, ColorNames::honeydew},
+    {255 * 0x10000 + 105 * 0x100 + 180, ColorNames::hotpink},
+    {205 * 0x10000 + 92 * 0x100 + 92, ColorNames::indianred},
+    {75 * 0x10000 + 0 * 0x100 + 130, ColorNames::indigo},
+    {255 * 0x10000 + 255 * 0x100 + 240, ColorNames::ivory},
+    {240 * 0x10000 + 230 * 0x100 + 140, ColorNames::khaki},
+    {230 * 0x10000 + 230 * 0x100 + 250, ColorNames::lavender},
+    {255 * 0x10000 + 240 * 0x100 + 245, ColorNames::lavenderblush},
+    {124 * 0x10000 + 252 * 0x100 + 0, ColorNames::lawngreen},
+    {255 * 0x10000 + 250 * 0x100 + 205, ColorNames::lemonchiffon},
+    {173 * 0x10000 + 216 * 0x100 + 230, ColorNames::lightblue},
+    {240 * 0x10000 + 128 * 0x100 + 128, ColorNames::lightcoral},
+    {224 * 0x10000 + 255 * 0x100 + 255, ColorNames::lightcyan},
+    {250 * 0x10000 + 250 * 0x100 + 210, ColorNames::lightgoldenrodyellow},
+    {211 * 0x10000 + 211 * 0x100 + 211, ColorNames::lightgray},
+    {144 * 0x10000 + 238 * 0x100 + 144, ColorNames::lightgreen},
+    {255 * 0x10000 + 182 * 0x100 + 193, ColorNames::lightpink},
+    {255 * 0x10000 + 160 * 0x100 + 122, ColorNames::lightsalmon},
+    {32 * 0x10000 + 178 * 0x100 + 170, ColorNames::lightseagreen},
+    {135 * 0x10000 + 206 * 0x100 + 250, ColorNames::lightskyblue},
+    {119 * 0x10000 + 136 * 0x100 + 153, ColorNames::lightslategray},
+    {176 * 0x10000 + 196 * 0x100 + 222, ColorNames::lightsteelblue},
+    {255 * 0x10000 + 255 * 0x100 + 224, ColorNames::lightyellow},
+    {0 * 0x10000 + 255 * 0x100 + 0, ColorNames::lime},
+    {50 * 0x10000 + 205 * 0x100 + 50, ColorNames::limegreen},
+    {250 * 0x10000 + 240 * 0x100 + 230, ColorNames::linen},
+    {128 * 0x10000 + 0 * 0x100 + 0, ColorNames::maroon},
+    {102 * 0x10000 + 205 * 0x100 + 170, ColorNames::mediumaquamarine},
+    {0 * 0x10000 + 0 * 0x100 + 205, ColorNames::mediumblue},
+    {186 * 0x10000 + 85 * 0x100 + 211, ColorNames::mediumorchid},
+    {147 * 0x10000 + 112 * 0x100 + 219, ColorNames::mediumpurple},
+    {60 * 0x10000 + 179 * 0x100 + 113, ColorNames::mediumseagreen},
+    {123 * 0x10000 + 104 * 0x100 + 238, ColorNames::mediumslateblue},
+    {0 * 0x10000 + 250 * 0x100 + 154, ColorNames::mediumspringgreen},
+    {72 * 0x10000 + 209 * 0x100 + 204, ColorNames::mediumturquoise},
+    {199 * 0x10000 + 21 * 0x100 + 133, ColorNames::mediumvioletred},
+    {25 * 0x10000 + 25 * 0x100 + 112, ColorNames::midnightblue},
+    {245 * 0x10000 + 255 * 0x100 + 250, ColorNames::mintcream},
+    {255 * 0x10000 + 228 * 0x100 + 225, ColorNames::mistyrose},
+    {255 * 0x10000 + 228 * 0x100 + 181, ColorNames::moccasin},
+    {255 * 0x10000 + 222 * 0x100 + 173, ColorNames::navajowhite},
+    {0 * 0x10000 + 0 * 0x100 + 128, ColorNames::navy},
+    {253 * 0x10000 + 245 * 0x100 + 230, ColorNames::oldlace},
+    {128 * 0x10000 + 128 * 0x100 + 0, ColorNames::olive},
+    {107 * 0x10000 + 142 * 0x100 + 35, ColorNames::olivedrab},
+    {255 * 0x10000 + 165 * 0x100 + 0, ColorNames::orange},
+    {255 * 0x10000 + 69 * 0x100 + 0, ColorNames::orangered},
+    {218 * 0x10000 + 112 * 0x100 + 214, ColorNames::orchid},
+    {238 * 0x10000 + 232 * 0x100 + 170, ColorNames::palegoldenrod},
+    {152 * 0x10000 + 251 * 0x100 + 152, ColorNames::palegreen},
+    {175 * 0x10000 + 238 * 0x100 + 238, ColorNames::paleturquoise},
+    {219 * 0x10000 + 112 * 0x100 + 147, ColorNames::palevioletred},
+    {255 * 0x10000 + 239 * 0x100 + 213, ColorNames::papayawhip},
+    {255 * 0x10000 + 218 * 0x100 + 185, ColorNames::peachpuff},
+    {205 * 0x10000 + 133 * 0x100 + 63, ColorNames::peru},
+    {255 * 0x10000 + 192 * 0x100 + 203, ColorNames::pink},
+    {221 * 0x10000 + 160 * 0x100 + 221, ColorNames::plum},
+    {176 * 0x10000 + 224 * 0x100 + 230, ColorNames::powderblue},
+    {128 * 0x10000 + 0 * 0x100 + 128, ColorNames::purple},
+    {255 * 0x10000 + 0 * 0x100 + 0, ColorNames::red},
+    {188 * 0x10000 + 143 * 0x100 + 143, ColorNames::rosybrown},
+    {65 * 0x10000 + 105 * 0x100 + 225, ColorNames::royalblue},
+    {139 * 0x10000 + 69 * 0x100 + 19, ColorNames::saddlebrown},
+    {250 * 0x10000 + 128 * 0x100 + 114, ColorNames::salmon},
+    {244 * 0x10000 + 164 * 0x100 + 96, ColorNames::sandybrown},
+    {46 * 0x10000 + 139 * 0x100 + 87, ColorNames::seagreen},
+    {255 * 0x10000 + 245 * 0x100 + 238, ColorNames::seashell},
+    {160 * 0x10000 + 82 * 0x100 + 45, ColorNames::sienna},
+    {192 * 0x10000 + 192 * 0x100 + 192, ColorNames::silver},
+    {135 * 0x10000 + 206 * 0x100 + 235, ColorNames::skyblue},
+    {106 * 0x10000 + 90 * 0x100 + 205, ColorNames::slateblue},
+    {112 * 0x10000 + 128 * 0x100 + 144, ColorNames::slategray},
+    {255 * 0x10000 + 250 * 0x100 + 250, ColorNames::snow},
+    {0 * 0x10000 + 255 * 0x100 + 127, ColorNames::springgreen},
+    {70 * 0x10000 + 130 * 0x100 + 180, ColorNames::steelblue},
+    {210 * 0x10000 + 180 * 0x100 + 140, ColorNames::tan},
+    {0 * 0x10000 + 128 * 0x100 + 128, ColorNames::teal},
+    {216 * 0x10000 + 191 * 0x100 + 216, ColorNames::thistle},
+    {255 * 0x10000 + 99 * 0x100 + 71, ColorNames::tomato},
+    {64 * 0x10000 + 224 * 0x100 + 208, ColorNames::turquoise},
+    {238 * 0x10000 + 130 * 0x100 + 238, ColorNames::violet},
+    {245 * 0x10000 + 222 * 0x100 + 179, ColorNames::wheat},
+    {255 * 0x10000 + 255 * 0x100 + 255, ColorNames::white},
+    {245 * 0x10000 + 245 * 0x100 + 245, ColorNames::whitesmoke},
+    {255 * 0x10000 + 255 * 0x100 + 0, ColorNames::yellow},
+    {154 * 0x10000 + 205 * 0x100 + 50, ColorNames::yellowgreen},
+    {102 * 0x10000 + 51 * 0x100 + 153, ColorNames::rebeccapurple} };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  static const auto names_to_colors = std::unordered_map<sass::string, int>{
+    {ColorNames::aliceblue, 240 * 0x10000 + 248 * 0x100 + 255},
+    {ColorNames::antiquewhite, 250 * 0x10000 + 235 * 0x100 + 215},
+    {ColorNames::cyan, 0 * 0x10000 + 255 * 0x100 + 255},
+    {ColorNames::aquamarine, 127 * 0x10000 + 255 * 0x100 + 212},
+    {ColorNames::azure, 240 * 0x10000 + 255 * 0x100 + 255},
+    {ColorNames::beige, 245 * 0x10000 + 245 * 0x100 + 220},
+    {ColorNames::bisque, 255 * 0x10000 + 228 * 0x100 + 196},
+    {ColorNames::black, 0 * 0x10000 + 0 * 0x100 + 0},
+    {ColorNames::blanchedalmond, 255 * 0x10000 + 235 * 0x100 + 205},
+    {ColorNames::blue, 0 * 0x10000 + 0 * 0x100 + 255},
+    {ColorNames::blueviolet, 138 * 0x10000 + 43 * 0x100 + 226},
+    {ColorNames::brown, 165 * 0x10000 + 42 * 0x100 + 42},
+    {ColorNames::burlywood, 222 * 0x10000 + 184 * 0x100 + 135},
+    {ColorNames::cadetblue, 95 * 0x10000 + 158 * 0x100 + 160},
+    {ColorNames::chartreuse, 127 * 0x10000 + 255 * 0x100 + 0},
+    {ColorNames::chocolate, 210 * 0x10000 + 105 * 0x100 + 30},
+    {ColorNames::coral, 255 * 0x10000 + 127 * 0x100 + 80},
+    {ColorNames::cornflowerblue, 100 * 0x10000 + 149 * 0x100 + 237},
+    {ColorNames::cornsilk, 255 * 0x10000 + 248 * 0x100 + 220},
+    {ColorNames::crimson, 220 * 0x10000 + 20 * 0x100 + 60},
+    {ColorNames::darkblue, 0 * 0x10000 + 0 * 0x100 + 139},
+    {ColorNames::darkcyan, 0 * 0x10000 + 139 * 0x100 + 139},
+    {ColorNames::darkgoldenrod, 184 * 0x10000 + 134 * 0x100 + 11},
+    {ColorNames::darkgray, 169 * 0x10000 + 169 * 0x100 + 169},
+    {ColorNames::darkgreen, 0 * 0x10000 + 100 * 0x100 + 0},
+    {ColorNames::darkkhaki, 189 * 0x10000 + 183 * 0x100 + 107},
+    {ColorNames::darkmagenta, 139 * 0x10000 + 0 * 0x100 + 139},
+    {ColorNames::darkolivegreen, 85 * 0x10000 + 107 * 0x100 + 47},
+    {ColorNames::darkorange, 255 * 0x10000 + 140 * 0x100 + 0},
+    {ColorNames::darkorchid, 153 * 0x10000 + 50 * 0x100 + 204},
+    {ColorNames::darkred, 139 * 0x10000 + 0 * 0x100 + 0},
+    {ColorNames::darksalmon, 233 * 0x10000 + 150 * 0x100 + 122},
+    {ColorNames::darkseagreen, 143 * 0x10000 + 188 * 0x100 + 143},
+    {ColorNames::darkslateblue, 72 * 0x10000 + 61 * 0x100 + 139},
+    {ColorNames::darkslategray, 47 * 0x10000 + 79 * 0x100 + 79},
+    {ColorNames::darkturquoise, 0 * 0x10000 + 206 * 0x100 + 209},
+    {ColorNames::darkviolet, 148 * 0x10000 + 0 * 0x100 + 211},
+    {ColorNames::deeppink, 255 * 0x10000 + 20 * 0x100 + 147},
+    {ColorNames::deepskyblue, 0 * 0x10000 + 191 * 0x100 + 255},
+    {ColorNames::dimgray, 105 * 0x10000 + 105 * 0x100 + 105},
+    {ColorNames::dodgerblue, 30 * 0x10000 + 144 * 0x100 + 255},
+    {ColorNames::firebrick, 178 * 0x10000 + 34 * 0x100 + 34},
+    {ColorNames::floralwhite, 255 * 0x10000 + 250 * 0x100 + 240},
+    {ColorNames::forestgreen, 34 * 0x10000 + 139 * 0x100 + 34},
+    {ColorNames::magenta, 255 * 0x10000 + 0 * 0x100 + 255},
+    {ColorNames::gainsboro, 220 * 0x10000 + 220 * 0x100 + 220},
+    {ColorNames::ghostwhite, 248 * 0x10000 + 248 * 0x100 + 255},
+    {ColorNames::gold, 255 * 0x10000 + 215 * 0x100 + 0},
+    {ColorNames::goldenrod, 218 * 0x10000 + 165 * 0x100 + 32},
+    {ColorNames::gray, 128 * 0x10000 + 128 * 0x100 + 128},
+    {ColorNames::green, 0 * 0x10000 + 128 * 0x100 + 0},
+    {ColorNames::greenyellow, 173 * 0x10000 + 255 * 0x100 + 47},
+    {ColorNames::honeydew, 240 * 0x10000 + 255 * 0x100 + 240},
+    {ColorNames::hotpink, 255 * 0x10000 + 105 * 0x100 + 180},
+    {ColorNames::indianred, 205 * 0x10000 + 92 * 0x100 + 92},
+    {ColorNames::indigo, 75 * 0x10000 + 0 * 0x100 + 130},
+    {ColorNames::ivory, 255 * 0x10000 + 255 * 0x100 + 240},
+    {ColorNames::khaki, 240 * 0x10000 + 230 * 0x100 + 140},
+    {ColorNames::lavender, 230 * 0x10000 + 230 * 0x100 + 250},
+    {ColorNames::lavenderblush, 255 * 0x10000 + 240 * 0x100 + 245},
+    {ColorNames::lawngreen, 124 * 0x10000 + 252 * 0x100 + 0},
+    {ColorNames::lemonchiffon, 255 * 0x10000 + 250 * 0x100 + 205},
+    {ColorNames::lightblue, 173 * 0x10000 + 216 * 0x100 + 230},
+    {ColorNames::lightcoral, 240 * 0x10000 + 128 * 0x100 + 128},
+    {ColorNames::lightcyan, 224 * 0x10000 + 255 * 0x100 + 255},
+    {ColorNames::lightgoldenrodyellow, 250 * 0x10000 + 250 * 0x100 + 210},
+    {ColorNames::lightgray, 211 * 0x10000 + 211 * 0x100 + 211},
+    {ColorNames::lightgreen, 144 * 0x10000 + 238 * 0x100 + 144},
+    {ColorNames::lightpink, 255 * 0x10000 + 182 * 0x100 + 193},
+    {ColorNames::lightsalmon, 255 * 0x10000 + 160 * 0x100 + 122},
+    {ColorNames::lightseagreen, 32 * 0x10000 + 178 * 0x100 + 170},
+    {ColorNames::lightskyblue, 135 * 0x10000 + 206 * 0x100 + 250},
+    {ColorNames::lightslategray, 119 * 0x10000 + 136 * 0x100 + 153},
+    {ColorNames::lightsteelblue, 176 * 0x10000 + 196 * 0x100 + 222},
+    {ColorNames::lightyellow, 255 * 0x10000 + 255 * 0x100 + 224},
+    {ColorNames::lime, 0 * 0x10000 + 255 * 0x100 + 0},
+    {ColorNames::limegreen, 50 * 0x10000 + 205 * 0x100 + 50},
+    {ColorNames::linen, 250 * 0x10000 + 240 * 0x100 + 230},
+    {ColorNames::maroon, 128 * 0x10000 + 0 * 0x100 + 0},
+    {ColorNames::mediumaquamarine, 102 * 0x10000 + 205 * 0x100 + 170},
+    {ColorNames::mediumblue, 0 * 0x10000 + 0 * 0x100 + 205},
+    {ColorNames::mediumorchid, 186 * 0x10000 + 85 * 0x100 + 211},
+    {ColorNames::mediumpurple, 147 * 0x10000 + 112 * 0x100 + 219},
+    {ColorNames::mediumseagreen, 60 * 0x10000 + 179 * 0x100 + 113},
+    {ColorNames::mediumslateblue, 123 * 0x10000 + 104 * 0x100 + 238},
+    {ColorNames::mediumspringgreen, 0 * 0x10000 + 250 * 0x100 + 154},
+    {ColorNames::mediumturquoise, 72 * 0x10000 + 209 * 0x100 + 204},
+    {ColorNames::mediumvioletred, 199 * 0x10000 + 21 * 0x100 + 133},
+    {ColorNames::midnightblue, 25 * 0x10000 + 25 * 0x100 + 112},
+    {ColorNames::mintcream, 245 * 0x10000 + 255 * 0x100 + 250},
+    {ColorNames::mistyrose, 255 * 0x10000 + 228 * 0x100 + 225},
+    {ColorNames::moccasin, 255 * 0x10000 + 228 * 0x100 + 181},
+    {ColorNames::navajowhite, 255 * 0x10000 + 222 * 0x100 + 173},
+    {ColorNames::navy, 0 * 0x10000 + 0 * 0x100 + 128},
+    {ColorNames::oldlace, 253 * 0x10000 + 245 * 0x100 + 230},
+    {ColorNames::olive, 128 * 0x10000 + 128 * 0x100 + 0},
+    {ColorNames::olivedrab, 107 * 0x10000 + 142 * 0x100 + 35},
+    {ColorNames::orange, 255 * 0x10000 + 165 * 0x100 + 0},
+    {ColorNames::orangered, 255 * 0x10000 + 69 * 0x100 + 0},
+    {ColorNames::orchid, 218 * 0x10000 + 112 * 0x100 + 214},
+    {ColorNames::palegoldenrod, 238 * 0x10000 + 232 * 0x100 + 170},
+    {ColorNames::palegreen, 152 * 0x10000 + 251 * 0x100 + 152},
+    {ColorNames::paleturquoise, 175 * 0x10000 + 238 * 0x100 + 238},
+    {ColorNames::palevioletred, 219 * 0x10000 + 112 * 0x100 + 147},
+    {ColorNames::papayawhip, 255 * 0x10000 + 239 * 0x100 + 213},
+    {ColorNames::peachpuff, 255 * 0x10000 + 218 * 0x100 + 185},
+    {ColorNames::peru, 205 * 0x10000 + 133 * 0x100 + 63},
+    {ColorNames::pink, 255 * 0x10000 + 192 * 0x100 + 203},
+    {ColorNames::plum, 221 * 0x10000 + 160 * 0x100 + 221},
+    {ColorNames::powderblue, 176 * 0x10000 + 224 * 0x100 + 230},
+    {ColorNames::purple, 128 * 0x10000 + 0 * 0x100 + 128},
+    {ColorNames::red, 255 * 0x10000 + 0 * 0x100 + 0},
+    {ColorNames::rosybrown, 188 * 0x10000 + 143 * 0x100 + 143},
+    {ColorNames::royalblue, 65 * 0x10000 + 105 * 0x100 + 225},
+    {ColorNames::saddlebrown, 139 * 0x10000 + 69 * 0x100 + 19},
+    {ColorNames::salmon, 250 * 0x10000 + 128 * 0x100 + 114},
+    {ColorNames::sandybrown, 244 * 0x10000 + 164 * 0x100 + 96},
+    {ColorNames::seagreen, 46 * 0x10000 + 139 * 0x100 + 87},
+    {ColorNames::seashell, 255 * 0x10000 + 245 * 0x100 + 238},
+    {ColorNames::sienna, 160 * 0x10000 + 82 * 0x100 + 45},
+    {ColorNames::silver, 192 * 0x10000 + 192 * 0x100 + 192},
+    {ColorNames::skyblue, 135 * 0x10000 + 206 * 0x100 + 235},
+    {ColorNames::slateblue, 106 * 0x10000 + 90 * 0x100 + 205},
+    {ColorNames::slategray, 112 * 0x10000 + 128 * 0x100 + 144},
+    {ColorNames::snow, 255 * 0x10000 + 250 * 0x100 + 250},
+    {ColorNames::springgreen, 0 * 0x10000 + 255 * 0x100 + 127},
+    {ColorNames::steelblue, 70 * 0x10000 + 130 * 0x100 + 180},
+    {ColorNames::tan, 210 * 0x10000 + 180 * 0x100 + 140},
+    {ColorNames::teal, 0 * 0x10000 + 128 * 0x100 + 128},
+    {ColorNames::thistle, 216 * 0x10000 + 191 * 0x100 + 216},
+    {ColorNames::tomato, 255 * 0x10000 + 99 * 0x100 + 71},
+    {ColorNames::turquoise, 64 * 0x10000 + 224 * 0x100 + 208},
+    {ColorNames::violet, 238 * 0x10000 + 130 * 0x100 + 238},
+    {ColorNames::wheat, 245 * 0x10000 + 222 * 0x100 + 179},
+    {ColorNames::white, 255 * 0x10000 + 255 * 0x100 + 255},
+    {ColorNames::whitesmoke, 245 * 0x10000 + 245 * 0x100 + 245},
+    {ColorNames::yellow, 255 * 0x10000 + 255 * 0x100 + 0},
+    {ColorNames::yellowgreen, 154 * 0x10000 + 205 * 0x100 + 50},
+    {ColorNames::rebeccapurple, 102 * 0x10000 + 51 * 0x100 + 153}
+ };
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+  // const Color* name_to_color(const char* key)
+  // {
+  //   return name_to_color(sass::string(key));
+  // }
+
+  const bool name_to_color(const sass::string& key, int& r, int& g, int& b)
+  {
+    auto p = names_to_colors.find(key);
+    if (p == names_to_colors.end()) return false;
+    int composed = p->second;
+    r = (composed & 0xFF0000) >> 16;
+    g = (composed & 0x00FF00) >> 8;
+    b = (composed & 0x0000FF) >> 0;
+    return true;
+  }
   /*
-  static const auto* const colors_to_names2 = new std::unordered_set<const Color, Color::HashFunction>{
-    Colors::aliceblue,
-    Colors::antiquewhite,
-    Colors::cyan,
-    Colors::aqua,
-    Colors::aquamarine,
-    Colors::azure,
-    Colors::beige,
-    Colors::bisque,
-    Colors::black,
-    Colors::blanchedalmond,
-    Colors::blue,
-    Colors::blueviolet,
-    Colors::brown,
-    Colors::burlywood,
-    Colors::cadetblue,
-    Colors::chartreuse,
-    Colors::chocolate,
-    Colors::coral,
-    Colors::cornflowerblue,
-    Colors::cornsilk,
-    Colors::crimson,
-    Colors::darkblue,
-    Colors::darkcyan,
-    Colors::darkgoldenrod,
-    Colors::darkgray,
-    Colors::darkgrey,
-    Colors::darkgreen,
-    Colors::darkkhaki,
-    Colors::darkmagenta,
-    Colors::darkolivegreen,
-    Colors::darkorange,
-    Colors::darkorchid,
-    Colors::darkred,
-    Colors::darksalmon,
-    Colors::darkseagreen,
-    Colors::darkslateblue,
-    Colors::darkslategray,
-    Colors::darkslategrey,
-    Colors::darkturquoise,
-    Colors::darkviolet,
-    Colors::deeppink,
-    Colors::deepskyblue,
-    Colors::dimgray,
-    Colors::dimgrey,
-    Colors::dodgerblue,
-    Colors::firebrick,
-    Colors::floralwhite,
-    Colors::forestgreen,
-    Colors::magenta,
-    Colors::fuchsia,
-    Colors::gainsboro,
-    Colors::ghostwhite,
-    Colors::gold,
-    Colors::goldenrod,
-    Colors::gray,
-    Colors::grey,
-    Colors::green,
-    Colors::greenyellow,
-    Colors::honeydew,
-    Colors::hotpink,
-    Colors::indianred,
-    Colors::indigo,
-    Colors::ivory,
-    Colors::khaki,
-    Colors::lavender,
-    Colors::lavenderblush,
-    Colors::lawngreen,
-    Colors::lemonchiffon,
-    Colors::lightblue,
-    Colors::lightcoral,
-    Colors::lightcyan,
-    Colors::lightgoldenrodyellow,
-    Colors::lightgray,
-    Colors::lightgrey,
-    Colors::lightgreen,
-    Colors::lightpink,
-    Colors::lightsalmon,
-    Colors::lightseagreen,
-    Colors::lightskyblue,
-    Colors::lightslategray,
-    Colors::lightslategrey,
-    Colors::lightsteelblue,
-    Colors::lightyellow,
-    Colors::lime,
-    Colors::limegreen,
-    Colors::linen,
-    Colors::maroon,
-    Colors::mediumaquamarine,
-    Colors::mediumblue,
-    Colors::mediumorchid,
-    Colors::mediumpurple,
-    Colors::mediumseagreen,
-    Colors::mediumslateblue,
-    Colors::mediumspringgreen,
-    Colors::mediumturquoise,
-    Colors::mediumvioletred,
-    Colors::midnightblue,
-    Colors::mintcream,
-    Colors::mistyrose,
-    Colors::moccasin,
-    Colors::navajowhite,
-    Colors::navy,
-    Colors::oldlace,
-    Colors::olive,
-    Colors::olivedrab,
-    Colors::orange,
-    Colors::orangered,
-    Colors::orchid,
-    Colors::palegoldenrod,
-    Colors::palegreen,
-    Colors::paleturquoise,
-    Colors::palevioletred,
-    Colors::papayawhip,
-    Colors::peachpuff,
-    Colors::peru,
-    Colors::pink,
-    Colors::plum,
-    Colors::powderblue,
-    Colors::purple,
-    Colors::red,
-    Colors::rosybrown,
-    Colors::royalblue,
-    Colors::saddlebrown,
-    Colors::salmon,
-    Colors::sandybrown,
-    Colors::seagreen,
-    Colors::seashell,
-    Colors::sienna,
-    Colors::silver,
-    Colors::skyblue,
-    Colors::slateblue,
-    Colors::slategray,
-    Colors::slategrey,
-    Colors::snow,
-    Colors::springgreen,
-    Colors::steelblue,
-    Colors::tan,
-    Colors::teal,
-    Colors::thistle,
-    Colors::tomato,
-    Colors::turquoise,
-    Colors::violet,
-    Colors::wheat,
-    Colors::white,
-    Colors::whitesmoke,
-    Colors::yellow,
-    Colors::yellowgreen,
-    Colors::rebeccapurple,
-    Colors::transparent
-  };
-  */
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-  static const auto colors_to_names = std::unordered_map<int, const char*>{
-		{240 * 0x10000 + 248 * 0x100 + 255, ColorNames::aliceblue},
-		{250 * 0x10000 + 235 * 0x100 + 215, ColorNames::antiquewhite},
-		{0 * 0x10000 + 255 * 0x100 + 255, ColorNames::cyan},
-		{127 * 0x10000 + 255 * 0x100 + 212, ColorNames::aquamarine},
-		{240 * 0x10000 + 255 * 0x100 + 255, ColorNames::azure},
-		{245 * 0x10000 + 245 * 0x100 + 220, ColorNames::beige},
-		{255 * 0x10000 + 228 * 0x100 + 196, ColorNames::bisque},
-		{0 * 0x10000 + 0 * 0x100 + 0, ColorNames::black},
-		{255 * 0x10000 + 235 * 0x100 + 205, ColorNames::blanchedalmond},
-		{0 * 0x10000 + 0 * 0x100 + 255, ColorNames::blue},
-		{138 * 0x10000 + 43 * 0x100 + 226, ColorNames::blueviolet},
-		{165 * 0x10000 + 42 * 0x100 + 42, ColorNames::brown},
-		{222 * 0x10000 + 184 * 0x100 + 135, ColorNames::burlywood},
-		{95 * 0x10000 + 158 * 0x100 + 160, ColorNames::cadetblue},
-		{127 * 0x10000 + 255 * 0x100 + 0, ColorNames::chartreuse},
-		{210 * 0x10000 + 105 * 0x100 + 30, ColorNames::chocolate},
-		{255 * 0x10000 + 127 * 0x100 + 80, ColorNames::coral},
-		{100 * 0x10000 + 149 * 0x100 + 237, ColorNames::cornflowerblue},
-		{255 * 0x10000 + 248 * 0x100 + 220, ColorNames::cornsilk},
-		{220 * 0x10000 + 20 * 0x100 + 60, ColorNames::crimson},
-		{0 * 0x10000 + 0 * 0x100 + 139, ColorNames::darkblue},
-		{0 * 0x10000 + 139 * 0x100 + 139, ColorNames::darkcyan},
-		{184 * 0x10000 + 134 * 0x100 + 11, ColorNames::darkgoldenrod},
-		{169 * 0x10000 + 169 * 0x100 + 169, ColorNames::darkgray},
-		{0 * 0x10000 + 100 * 0x100 + 0, ColorNames::darkgreen},
-		{189 * 0x10000 + 183 * 0x100 + 107, ColorNames::darkkhaki},
-		{139 * 0x10000 + 0 * 0x100 + 139, ColorNames::darkmagenta},
-		{85 * 0x10000 + 107 * 0x100 + 47, ColorNames::darkolivegreen},
-		{255 * 0x10000 + 140 * 0x100 + 0, ColorNames::darkorange},
-		{153 * 0x10000 + 50 * 0x100 + 204, ColorNames::darkorchid},
-		{139 * 0x10000 + 0 * 0x100 + 0, ColorNames::darkred},
-		{233 * 0x10000 + 150 * 0x100 + 122, ColorNames::darksalmon},
-		{143 * 0x10000 + 188 * 0x100 + 143, ColorNames::darkseagreen},
-		{72 * 0x10000 + 61 * 0x100 + 139, ColorNames::darkslateblue},
-		{47 * 0x10000 + 79 * 0x100 + 79, ColorNames::darkslategray},
-		{0 * 0x10000 + 206 * 0x100 + 209, ColorNames::darkturquoise},
-		{148 * 0x10000 + 0 * 0x100 + 211, ColorNames::darkviolet},
-		{255 * 0x10000 + 20 * 0x100 + 147, ColorNames::deeppink},
-		{0 * 0x10000 + 191 * 0x100 + 255, ColorNames::deepskyblue},
-		{105 * 0x10000 + 105 * 0x100 + 105, ColorNames::dimgray},
-		{30 * 0x10000 + 144 * 0x100 + 255, ColorNames::dodgerblue},
-		{178 * 0x10000 + 34 * 0x100 + 34, ColorNames::firebrick},
-		{255 * 0x10000 + 250 * 0x100 + 240, ColorNames::floralwhite},
-		{34 * 0x10000 + 139 * 0x100 + 34, ColorNames::forestgreen},
-		{255 * 0x10000 + 0 * 0x100 + 255, ColorNames::magenta},
-		{220 * 0x10000 + 220 * 0x100 + 220, ColorNames::gainsboro},
-		{248 * 0x10000 + 248 * 0x100 + 255, ColorNames::ghostwhite},
-		{255 * 0x10000 + 215 * 0x100 + 0, ColorNames::gold},
-		{218 * 0x10000 + 165 * 0x100 + 32, ColorNames::goldenrod},
-		{128 * 0x10000 + 128 * 0x100 + 128, ColorNames::gray},
-		{0 * 0x10000 + 128 * 0x100 + 0, ColorNames::green},
-		{173 * 0x10000 + 255 * 0x100 + 47, ColorNames::greenyellow},
-		{240 * 0x10000 + 255 * 0x100 + 240, ColorNames::honeydew},
-		{255 * 0x10000 + 105 * 0x100 + 180, ColorNames::hotpink},
-		{205 * 0x10000 + 92 * 0x100 + 92, ColorNames::indianred},
-		{75 * 0x10000 + 0 * 0x100 + 130, ColorNames::indigo},
-		{255 * 0x10000 + 255 * 0x100 + 240, ColorNames::ivory},
-		{240 * 0x10000 + 230 * 0x100 + 140, ColorNames::khaki},
-		{230 * 0x10000 + 230 * 0x100 + 250, ColorNames::lavender},
-		{255 * 0x10000 + 240 * 0x100 + 245, ColorNames::lavenderblush},
-		{124 * 0x10000 + 252 * 0x100 + 0, ColorNames::lawngreen},
-		{255 * 0x10000 + 250 * 0x100 + 205, ColorNames::lemonchiffon},
-		{173 * 0x10000 + 216 * 0x100 + 230, ColorNames::lightblue},
-		{240 * 0x10000 + 128 * 0x100 + 128, ColorNames::lightcoral},
-		{224 * 0x10000 + 255 * 0x100 + 255, ColorNames::lightcyan},
-		{250 * 0x10000 + 250 * 0x100 + 210, ColorNames::lightgoldenrodyellow},
-		{211 * 0x10000 + 211 * 0x100 + 211, ColorNames::lightgray},
-		{144 * 0x10000 + 238 * 0x100 + 144, ColorNames::lightgreen},
-		{255 * 0x10000 + 182 * 0x100 + 193, ColorNames::lightpink},
-		{255 * 0x10000 + 160 * 0x100 + 122, ColorNames::lightsalmon},
-		{32 * 0x10000 + 178 * 0x100 + 170, ColorNames::lightseagreen},
-		{135 * 0x10000 + 206 * 0x100 + 250, ColorNames::lightskyblue},
-		{119 * 0x10000 + 136 * 0x100 + 153, ColorNames::lightslategray},
-		{176 * 0x10000 + 196 * 0x100 + 222, ColorNames::lightsteelblue},
-		{255 * 0x10000 + 255 * 0x100 + 224, ColorNames::lightyellow},
-		{0 * 0x10000 + 255 * 0x100 + 0, ColorNames::lime},
-		{50 * 0x10000 + 205 * 0x100 + 50, ColorNames::limegreen},
-		{250 * 0x10000 + 240 * 0x100 + 230, ColorNames::linen},
-		{128 * 0x10000 + 0 * 0x100 + 0, ColorNames::maroon},
-		{102 * 0x10000 + 205 * 0x100 + 170, ColorNames::mediumaquamarine},
-		{0 * 0x10000 + 0 * 0x100 + 205, ColorNames::mediumblue},
-		{186 * 0x10000 + 85 * 0x100 + 211, ColorNames::mediumorchid},
-		{147 * 0x10000 + 112 * 0x100 + 219, ColorNames::mediumpurple},
-		{60 * 0x10000 + 179 * 0x100 + 113, ColorNames::mediumseagreen},
-		{123 * 0x10000 + 104 * 0x100 + 238, ColorNames::mediumslateblue},
-		{0 * 0x10000 + 250 * 0x100 + 154, ColorNames::mediumspringgreen},
-		{72 * 0x10000 + 209 * 0x100 + 204, ColorNames::mediumturquoise},
-		{199 * 0x10000 + 21 * 0x100 + 133, ColorNames::mediumvioletred},
-		{25 * 0x10000 + 25 * 0x100 + 112, ColorNames::midnightblue},
-		{245 * 0x10000 + 255 * 0x100 + 250, ColorNames::mintcream},
-		{255 * 0x10000 + 228 * 0x100 + 225, ColorNames::mistyrose},
-		{255 * 0x10000 + 228 * 0x100 + 181, ColorNames::moccasin},
-		{255 * 0x10000 + 222 * 0x100 + 173, ColorNames::navajowhite},
-		{0 * 0x10000 + 0 * 0x100 + 128, ColorNames::navy},
-		{253 * 0x10000 + 245 * 0x100 + 230, ColorNames::oldlace},
-		{128 * 0x10000 + 128 * 0x100 + 0, ColorNames::olive},
-		{107 * 0x10000 + 142 * 0x100 + 35, ColorNames::olivedrab},
-		{255 * 0x10000 + 165 * 0x100 + 0, ColorNames::orange},
-		{255 * 0x10000 + 69 * 0x100 + 0, ColorNames::orangered},
-		{218 * 0x10000 + 112 * 0x100 + 214, ColorNames::orchid},
-		{238 * 0x10000 + 232 * 0x100 + 170, ColorNames::palegoldenrod},
-		{152 * 0x10000 + 251 * 0x100 + 152, ColorNames::palegreen},
-		{175 * 0x10000 + 238 * 0x100 + 238, ColorNames::paleturquoise},
-		{219 * 0x10000 + 112 * 0x100 + 147, ColorNames::palevioletred},
-		{255 * 0x10000 + 239 * 0x100 + 213, ColorNames::papayawhip},
-		{255 * 0x10000 + 218 * 0x100 + 185, ColorNames::peachpuff},
-		{205 * 0x10000 + 133 * 0x100 + 63, ColorNames::peru},
-		{255 * 0x10000 + 192 * 0x100 + 203, ColorNames::pink},
-		{221 * 0x10000 + 160 * 0x100 + 221, ColorNames::plum},
-		{176 * 0x10000 + 224 * 0x100 + 230, ColorNames::powderblue},
-		{128 * 0x10000 + 0 * 0x100 + 128, ColorNames::purple},
-		{255 * 0x10000 + 0 * 0x100 + 0, ColorNames::red},
-		{188 * 0x10000 + 143 * 0x100 + 143, ColorNames::rosybrown},
-		{65 * 0x10000 + 105 * 0x100 + 225, ColorNames::royalblue},
-		{139 * 0x10000 + 69 * 0x100 + 19, ColorNames::saddlebrown},
-		{250 * 0x10000 + 128 * 0x100 + 114, ColorNames::salmon},
-		{244 * 0x10000 + 164 * 0x100 + 96, ColorNames::sandybrown},
-		{46 * 0x10000 + 139 * 0x100 + 87, ColorNames::seagreen},
-		{255 * 0x10000 + 245 * 0x100 + 238, ColorNames::seashell},
-		{160 * 0x10000 + 82 * 0x100 + 45, ColorNames::sienna},
-		{192 * 0x10000 + 192 * 0x100 + 192, ColorNames::silver},
-		{135 * 0x10000 + 206 * 0x100 + 235, ColorNames::skyblue},
-		{106 * 0x10000 + 90 * 0x100 + 205, ColorNames::slateblue},
-		{112 * 0x10000 + 128 * 0x100 + 144, ColorNames::slategray},
-		{255 * 0x10000 + 250 * 0x100 + 250, ColorNames::snow},
-		{0 * 0x10000 + 255 * 0x100 + 127, ColorNames::springgreen},
-		{70 * 0x10000 + 130 * 0x100 + 180, ColorNames::steelblue},
-		{210 * 0x10000 + 180 * 0x100 + 140, ColorNames::tan},
-		{0 * 0x10000 + 128 * 0x100 + 128, ColorNames::teal},
-		{216 * 0x10000 + 191 * 0x100 + 216, ColorNames::thistle},
-		{255 * 0x10000 + 99 * 0x100 + 71, ColorNames::tomato},
-		{64 * 0x10000 + 224 * 0x100 + 208, ColorNames::turquoise},
-		{238 * 0x10000 + 130 * 0x100 + 238, ColorNames::violet},
-		{245 * 0x10000 + 222 * 0x100 + 179, ColorNames::wheat},
-		{255 * 0x10000 + 255 * 0x100 + 255, ColorNames::white},
-		{245 * 0x10000 + 245 * 0x100 + 245, ColorNames::whitesmoke},
-		{255 * 0x10000 + 255 * 0x100 + 0, ColorNames::yellow},
-		{154 * 0x10000 + 205 * 0x100 + 50, ColorNames::yellowgreen},
-		{102 * 0x10000 + 51 * 0x100 + 153, ColorNames::rebeccapurple}};
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-    /*
-	static const auto* const names_to_colors =
-		new std::unordered_map<sass::string, const Color*>{
-			{ColorNames::aliceblue, &Colors::aliceblue},
-			{ColorNames::antiquewhite, &Colors::antiquewhite},
-			{ColorNames::cyan, &Colors::cyan},
-			{ColorNames::aqua, &Colors::aqua},
-			{ColorNames::aquamarine, &Colors::aquamarine},
-			{ColorNames::azure, &Colors::azure},
-			{ColorNames::beige, &Colors::beige},
-			{ColorNames::bisque, &Colors::bisque},
-			{ColorNames::black, &Colors::black},
-			{ColorNames::blanchedalmond, &Colors::blanchedalmond},
-			{ColorNames::blue, &Colors::blue},
-			{ColorNames::blueviolet, &Colors::blueviolet},
-			{ColorNames::brown, &Colors::brown},
-			{ColorNames::burlywood, &Colors::burlywood},
-			{ColorNames::cadetblue, &Colors::cadetblue},
-			{ColorNames::chartreuse, &Colors::chartreuse},
-			{ColorNames::chocolate, &Colors::chocolate},
-			{ColorNames::coral, &Colors::coral},
-			{ColorNames::cornflowerblue, &Colors::cornflowerblue},
-			{ColorNames::cornsilk, &Colors::cornsilk},
-			{ColorNames::crimson, &Colors::crimson},
-			{ColorNames::darkblue, &Colors::darkblue},
-			{ColorNames::darkcyan, &Colors::darkcyan},
-			{ColorNames::darkgoldenrod, &Colors::darkgoldenrod},
-			{ColorNames::darkgray, &Colors::darkgray},
-			{ColorNames::darkgrey, &Colors::darkgrey},
-			{ColorNames::darkgreen, &Colors::darkgreen},
-			{ColorNames::darkkhaki, &Colors::darkkhaki},
-			{ColorNames::darkmagenta, &Colors::darkmagenta},
-			{ColorNames::darkolivegreen, &Colors::darkolivegreen},
-			{ColorNames::darkorange, &Colors::darkorange},
-			{ColorNames::darkorchid, &Colors::darkorchid},
-			{ColorNames::darkred, &Colors::darkred},
-			{ColorNames::darksalmon, &Colors::darksalmon},
-			{ColorNames::darkseagreen, &Colors::darkseagreen},
-			{ColorNames::darkslateblue, &Colors::darkslateblue},
-			{ColorNames::darkslategray, &Colors::darkslategray},
-			{ColorNames::darkslategrey, &Colors::darkslategrey},
-			{ColorNames::darkturquoise, &Colors::darkturquoise},
-			{ColorNames::darkviolet, &Colors::darkviolet},
-			{ColorNames::deeppink, &Colors::deeppink},
-			{ColorNames::deepskyblue, &Colors::deepskyblue},
-			{ColorNames::dimgray, &Colors::dimgray},
-			{ColorNames::dimgrey, &Colors::dimgrey},
-			{ColorNames::dodgerblue, &Colors::dodgerblue},
-			{ColorNames::firebrick, &Colors::firebrick},
-			{ColorNames::floralwhite, &Colors::floralwhite},
-			{ColorNames::forestgreen, &Colors::forestgreen},
-			{ColorNames::magenta, &Colors::magenta},
-			{ColorNames::fuchsia, &Colors::fuchsia},
-			{ColorNames::gainsboro, &Colors::gainsboro},
-			{ColorNames::ghostwhite, &Colors::ghostwhite},
-			{ColorNames::gold, &Colors::gold},
-			{ColorNames::goldenrod, &Colors::goldenrod},
-			{ColorNames::gray, &Colors::gray},
-			{ColorNames::grey, &Colors::grey},
-			{ColorNames::green, &Colors::green},
-			{ColorNames::greenyellow, &Colors::greenyellow},
-			{ColorNames::honeydew, &Colors::honeydew},
-			{ColorNames::hotpink, &Colors::hotpink},
-			{ColorNames::indianred, &Colors::indianred},
-			{ColorNames::indigo, &Colors::indigo},
-			{ColorNames::ivory, &Colors::ivory},
-			{ColorNames::khaki, &Colors::khaki},
-			{ColorNames::lavender, &Colors::lavender},
-			{ColorNames::lavenderblush, &Colors::lavenderblush},
-			{ColorNames::lawngreen, &Colors::lawngreen},
-			{ColorNames::lemonchiffon, &Colors::lemonchiffon},
-			{ColorNames::lightblue, &Colors::lightblue},
-			{ColorNames::lightcoral, &Colors::lightcoral},
-			{ColorNames::lightcyan, &Colors::lightcyan},
-			{ColorNames::lightgoldenrodyellow, &Colors::lightgoldenrodyellow},
-			{ColorNames::lightgray, &Colors::lightgray},
-			{ColorNames::lightgrey, &Colors::lightgrey},
-			{ColorNames::lightgreen, &Colors::lightgreen},
-			{ColorNames::lightpink, &Colors::lightpink},
-			{ColorNames::lightsalmon, &Colors::lightsalmon},
-			{ColorNames::lightseagreen, &Colors::lightseagreen},
-			{ColorNames::lightskyblue, &Colors::lightskyblue},
-			{ColorNames::lightslategray, &Colors::lightslategray},
-			{ColorNames::lightslategrey, &Colors::lightslategrey},
-			{ColorNames::lightsteelblue, &Colors::lightsteelblue},
-			{ColorNames::lightyellow, &Colors::lightyellow},
-			{ColorNames::lime, &Colors::lime},
-			{ColorNames::limegreen, &Colors::limegreen},
-			{ColorNames::linen, &Colors::linen},
-			{ColorNames::maroon, &Colors::maroon},
-			{ColorNames::mediumaquamarine, &Colors::mediumaquamarine},
-			{ColorNames::mediumblue, &Colors::mediumblue},
-			{ColorNames::mediumorchid, &Colors::mediumorchid},
-			{ColorNames::mediumpurple, &Colors::mediumpurple},
-			{ColorNames::mediumseagreen, &Colors::mediumseagreen},
-			{ColorNames::mediumslateblue, &Colors::mediumslateblue},
-			{ColorNames::mediumspringgreen, &Colors::mediumspringgreen},
-			{ColorNames::mediumturquoise, &Colors::mediumturquoise},
-			{ColorNames::mediumvioletred, &Colors::mediumvioletred},
-			{ColorNames::midnightblue, &Colors::midnightblue},
-			{ColorNames::mintcream, &Colors::mintcream},
-			{ColorNames::mistyrose, &Colors::mistyrose},
-			{ColorNames::moccasin, &Colors::moccasin},
-			{ColorNames::navajowhite, &Colors::navajowhite},
-			{ColorNames::navy, &Colors::navy},
-			{ColorNames::oldlace, &Colors::oldlace},
-			{ColorNames::olive, &Colors::olive},
-			{ColorNames::olivedrab, &Colors::olivedrab},
-			{ColorNames::orange, &Colors::orange},
-			{ColorNames::orangered, &Colors::orangered},
-			{ColorNames::orchid, &Colors::orchid},
-			{ColorNames::palegoldenrod, &Colors::palegoldenrod},
-			{ColorNames::palegreen, &Colors::palegreen},
-			{ColorNames::paleturquoise, &Colors::paleturquoise},
-			{ColorNames::palevioletred, &Colors::palevioletred},
-			{ColorNames::papayawhip, &Colors::papayawhip},
-			{ColorNames::peachpuff, &Colors::peachpuff},
-			{ColorNames::peru, &Colors::peru},
-			{ColorNames::pink, &Colors::pink},
-			{ColorNames::plum, &Colors::plum},
-			{ColorNames::powderblue, &Colors::powderblue},
-			{ColorNames::purple, &Colors::purple},
-			{ColorNames::red, &Colors::red},
-			{ColorNames::rosybrown, &Colors::rosybrown},
-			{ColorNames::royalblue, &Colors::royalblue},
-			{ColorNames::saddlebrown, &Colors::saddlebrown},
-			{ColorNames::salmon, &Colors::salmon},
-			{ColorNames::sandybrown, &Colors::sandybrown},
-			{ColorNames::seagreen, &Colors::seagreen},
-			{ColorNames::seashell, &Colors::seashell},
-			{ColorNames::sienna, &Colors::sienna},
-			{ColorNames::silver, &Colors::silver},
-			{ColorNames::skyblue, &Colors::skyblue},
-			{ColorNames::slateblue, &Colors::slateblue},
-			{ColorNames::slategray, &Colors::slategray},
-			{ColorNames::slategrey, &Colors::slategrey},
-			{ColorNames::snow, &Colors::snow},
-			{ColorNames::springgreen, &Colors::springgreen},
-			{ColorNames::steelblue, &Colors::steelblue},
-			{ColorNames::tan, &Colors::tan},
-			{ColorNames::teal, &Colors::teal},
-			{ColorNames::thistle, &Colors::thistle},
-			{ColorNames::tomato, &Colors::tomato},
-			{ColorNames::turquoise, &Colors::turquoise},
-			{ColorNames::violet, &Colors::violet},
-			{ColorNames::wheat, &Colors::wheat},
-			{ColorNames::white, &Colors::white},
-			{ColorNames::whitesmoke, &Colors::whitesmoke},
-			{ColorNames::yellow, &Colors::yellow},
-			{ColorNames::yellowgreen, &Colors::yellowgreen},
-			{ColorNames::rebeccapurple, &Colors::rebeccapurple},
-			{ColorNames::transparent, &Colors::transparent}};
-*/
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-	const Color* name_to_color(const char* key)
-	{
-		return name_to_color(sass::string(key));
-	}
-
-	const Color* name_to_color(const sass::string& key)
-	{
-		// case insensitive lookup. See #2462
-		sass::string lcKey = key;
+  const Color* name_to_color(const sass::string& key)
+  {
+    // case insensitive lookup. See #2462
+    sass::string lcKey = key;
     StringUtils::makeLowerCase(lcKey);
-    return nullptr;
-		// auto p = names_to_colors->find(lcKey);
-		// if(p != names_to_colors->end())
-		// {
-		// 	return p->second;
-		// }
-    // 
-		// return nullptr;
-	}
+    auto p = names_to_colors.find(lcKey);
+    if (p != names_to_colors.end())
+    {
+      return nullptr;
+    }
 
-	const char* color_to_name(const int key)
-	{
+    if (lcKey == "red") {
+      return nullptr;
+    }
     return nullptr;
-		// auto p = colors_to_names->find(key);
-		// if(p != colors_to_names->end())
-		// {
-		// 	sass::string rv = p->second;
-		// 	// Match dart-sass output
-		// 	if(rv == "magenta")
-		// 	{
-		// 		return "fuchsia";
-		// 	}
-		// 	if(rv == "cyan")
-		// 	{
-		// 		return "aqua";
-		// 	}
-		// 	return p->second;
-		// }
-		// return nullptr;
-	}
+  }
+  */
+
+  const char* color_to_name(const int key)
+  {
+    return nullptr;
+    auto p = colors_to_names.find(key);
+    if (p != colors_to_names.end())
+    {
+      sass::string rv = p->second;
+      // Match dart-sass output
+      if (rv == "magenta")
+      {
+        return "fuchsia";
+      }
+      if (rv == "cyan")
+      {
+        return "aqua";
+      }
+      return p->second;
+    }
+    return nullptr;
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
