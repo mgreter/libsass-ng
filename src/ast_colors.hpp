@@ -1245,8 +1245,10 @@ namespace Sass {
     bool isChannelPowerless(Logger& logger, const String* channel,
       const char* colorName, const char* channelName) const;
 
-    virtual Color* toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true);
     virtual Color* toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
+
+    virtual Color* toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true);
+    // virtual Color* toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing = true) const;
 
   public:
 

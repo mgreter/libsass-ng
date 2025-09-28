@@ -354,19 +354,18 @@ namespace Sass {
   }
 
 
-  Color* Color::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing)
+  Color* Color::toSpace2(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing)
   {
     // Can return without creating a copy
-    if (space == space_) return this;
+    if (space == this->space_) return this;
     // If const, we must always create a copy
-    return ((const Color*)this)->toSpace(
-      space, pstate, legacyMissing);
+    const Color* color = this;
+    return color->toSpace(space, pstate, legacyMissing);
   }
 
   Color* Color::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const
   {
     if (space == this->space_) {
-      // std::cerr << "copy into same space\n";
       return SASS_MEMORY_NEW(Color, this);
     }
 
