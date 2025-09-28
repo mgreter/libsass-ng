@@ -2255,7 +2255,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // std::cerr << "adjusted space " << col->debug() << "\n";
         // std::cerr << "--------------------------------------\n";
 
-        return col->toSpace(color->space(), pstate, false);
+        col = col->toSpace(color->space(), pstate, false);
+        return col.detach();
       }
 
       /*******************************************************************/
@@ -2317,7 +2318,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         double lightness = clampLikeCss(hsl->getChannel2() - adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), hsl->c1(), lightness, hsl->alpha());
-        return rv->toSpace(color->space(), pstate);
+        rv = rv->toSpace(color->space(), pstate);
+        return rv.detach();
       }
 
       static BUILT_IN_FN(lighten)
@@ -2342,7 +2344,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         double lightness = clampLikeCss(hsl->getChannel2() + adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), hsl->c1(), lightness, hsl->alpha());
-        return rv->toSpace(color->space(), pstate);
+        rv = rv->toSpace(color->space(), pstate);
+        return rv.detach();
       }
 
       static BUILT_IN_FN(saturate2)
@@ -2367,7 +2370,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         double saturation = clampLikeCss(hsl->getChannel1() + adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), saturation, hsl->c2(), hsl->alpha());
-        return rv->toSpace(color->space(), pstate);
+        rv = rv->toSpace(color->space(), pstate);
+        return rv.detach();
       }
 
       static BUILT_IN_FN(desaturate)
@@ -2392,7 +2396,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         double saturation = clampLikeCss(hsl->getChannel1() - adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), saturation, hsl->c2(), hsl->alpha());
-        return rv->toSpace(color->space(), pstate);
+        rv = rv->toSpace(color->space(), pstate);
+        return rv.detach();
       }
 
       static BUILT_IN_FN(opacify)
@@ -3268,7 +3273,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           hsl->c2(),
           hsl->alpha());
 
-        return rv->toSpace(color->space(), pstate);
+        rv = rv->toSpace(color->space(), pstate);
+        return rv.detach();
 
       }
 

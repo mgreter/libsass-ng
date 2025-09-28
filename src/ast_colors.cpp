@@ -1249,7 +1249,7 @@ namespace Sass {
 
 
     // Algorithm from https://www.w3.org/TR/2022/CRD-css-color-4-20221101/#css-gamut-mapping-algorithm
-    ColorObj originOklch = color->toSpace(ColorSpace::oklch, color->pstate());
+    auto originOklch = color->toSpace(ColorSpace::oklch, color->pstate());
 
     // The channel equivalents to `current` in the Color 4 algorithm.
     tl::optional<double> lightness = originOklch->getChannel0OrNull();
@@ -1257,9 +1257,12 @@ namespace Sass {
     tl::optional<double> alpha = originOklch->getAlphaOrNull();
 
     if (fuzzyGreaterThanOrEquals(lightness.value_or(0), 1.0, sass::epsilon)) {
-      if (color->isLegacy()) return Color::rgb(
-        color->pstate(), 255, 255, 255, color->getAlphaOrNull())
-        ->toSpace(color->space(), color->pstate());
+      if (color->isLegacy()) {
+ColorObj rv = Color::rgb(
+        color->pstate(), 255, 255, 255, color->getAlphaOrNull());
+        rv = rv->toSpace(color->space(), color->pstate());
+return rv.detach();
+}
       return Color::forSpaceInternal(
         color->pstate(), color->space(),
         1, 1, 1, color->getAlphaOrNull());
@@ -1272,7 +1275,7 @@ namespace Sass {
       return rv.detach();
     }
 
-    ColorObj clipped = color->toGamut(GamutMapMethod::clip);
+    Color* clipped = color->toGamut(GamutMapMethod::clip);
 
     if (_deltaEOK(clipped, color) < _jnd) return clipped;
 
@@ -1285,7 +1288,7 @@ namespace Sass {
       // In the Color 4 algorithm `current` is in Oklch, but all its actual uses
       // other than modifying chroma convert it to `color.space` first so we
       // just store it in that space to begin with.
-      ColorObj current = ColorSpace::oklch.convert(
+      Color* current = ColorSpace::oklch.convert(
         color->space(),
         color->pstate(),
         lightness,
@@ -1316,7 +1319,7 @@ namespace Sass {
         max = chroma;
       }
     }
-    return clipped.detach();
+    return clipped;
 
   }
 
