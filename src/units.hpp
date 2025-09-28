@@ -74,6 +74,8 @@ namespace Sass {
 
   public:
 
+    virtual ~Units() {}
+
     // The units in the numerator
     sass::vector<sass::string> numerators;
     // The units in the denominator
@@ -145,7 +147,7 @@ namespace Sass {
     // Cancel out all compatible unit classes
     // E.g. `1000ms/s` will be reduced to `1`
     // Returns factor to be applied to scalar
-    double reduce();
+    virtual double reduce();
 
     // Normalize all units to the standard unit class
     // Additionally sorts all units in ascending order
@@ -153,10 +155,10 @@ namespace Sass {
     // to be compared for equality independent of units
     // E.g. '1000ms' will be normalized to '1s'
     // Returns factor to be applied to scalar
-    double normalize();
+    virtual double normalize();
 
     // Compare units (without any normalizing)
-    bool operator==(const Units& rhs) const;
+    virtual bool operator==(const Units& rhs) const;
     bool operator!=(const Units& rhs) const {
       return !(*this == rhs);
     }

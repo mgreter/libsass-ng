@@ -234,18 +234,18 @@ namespace Sass {
 
     // cancel out unnecessary units
     // result will be in input units
-    void reduce()
+    double reduce() override
     {
       // apply conversion factor
-      value_ *= this->Units::reduce();
+      return value_ *= this->Units::reduce();
     }
 
     // normalize units to defaults
     // needed to compare two numbers
-    void normalize()
+    double normalize() override
     {
       // apply conversion factor
-      value_ *= this->Units::normalize();
+      return value_ *= this->Units::normalize();
     }
 
     Number* coerce(Logger& logger, Number& rhs);
