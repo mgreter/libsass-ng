@@ -304,7 +304,7 @@ namespace Sass {
     const Number* assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name = Strings::empty) const;
 		Number* assertHasUnits(Logger& logger, const sass::string& unit, const sass::string& name = Strings::empty);
     void assertNoUnits(Logger& logger, const sass::string& name = Strings::empty) const;
-    double assertRange(double min, double max, const Units& units, Logger& logger, const sass::string& name = Strings::empty) const;
+    double assertRange(Logger& logger, double min, double max, const Units& units, const sass::string& name = Strings::empty) const;
 
     double valueInRange(Logger& logger, double min, double max, const sass::string& name) const;
     double valueInRangeWithUnit(Logger& logger, double min, double max, const sass::string& name, const Units& units) const;

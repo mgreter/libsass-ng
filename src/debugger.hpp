@@ -30,6 +30,7 @@
 #include "ast_statements.hpp"
 #include "ast_supports.hpp"
 #include "ast_values.hpp"
+#include "ast_colors.hpp"
 
 #include "source_span.hpp"
 #include "ast_fwd_decl.hpp"

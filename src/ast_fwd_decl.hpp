@@ -198,7 +198,8 @@ namespace Sass {
 
   // declare classes that are instances of memory nodes
   #define IMPL_MEM_OBJ(type) \
-    typedef SharedPtr<type> type##Obj;
+    typedef SharedPtr<type> type##Obj; \
+    typedef SharedPtr<const type> type##ConstObj;
 
   IMPL_MEM_OBJ(Extension);
   IMPL_MEM_OBJ(ExtensionStore);

@@ -947,7 +947,7 @@ namespace Sass {
   }
 
 
-  double Number::assertRange(double min, double max, const Units& units, Logger& logger, const sass::string& name) const
+  double Number::assertRange(Logger& logger, double min, double max, const Units& units, const sass::string& name) const
   {
     if (!fuzzyCheckRange(value_, min, max, logger.epsilon)) {
       sass::sstream msg;

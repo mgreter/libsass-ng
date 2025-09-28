@@ -61,6 +61,9 @@ namespace Sass {
     // The current callstack
     BackTraces callStack;
 
+    // Current executed function
+    FunctionExpression* fn;
+
     // Available columns on tty
     size_t columns;
 

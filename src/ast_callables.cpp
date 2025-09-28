@@ -13,6 +13,28 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Create object and add frame to stack
+  FnStackFrame::FnStackFrame(Logger& logger, FunctionExpression* fn) :
+    logger(logger),
+    frame(frame)
+  {
+    previous = logger.fn;
+    logger.fn = fn;
+    // Append frame to stack
+    // if (!viaCall) backTraces.push_back(frame);
+  }
+
+  // Remove frame from stack on destruction
+  FnStackFrame::~FnStackFrame()
+  {
+    logger.fn = previous;
+    // Pop frame from stack
+    // logger.pop_back();
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   Callable::Callable(
     const SourceSpan& pstate) :
     AstNode(pstate),

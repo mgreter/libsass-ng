@@ -515,7 +515,7 @@ namespace Sass {
       // Finally, the weight of color1 is renormalized to be within [0, 1] and the
       // weight of color2 is given by 1 minus the weight of color1.
       double weightScale = weight->assertRange(
-        0.0, 100.0, unit_percent, logger, "weight") / 100.0;
+        logger, 0.0, 100.0, unit_percent, "weight") / 100.0;
       double normalizedWeight = weightScale * 2.0 - 1.0;
       double alphaDistance = rgb1->getAlpha() - rgb2->getAlpha();
       double combinedWeight1 = normalizedWeight * alphaDistance == -1
@@ -570,7 +570,7 @@ namespace Sass {
           name, pstate, arguments);
       }
 
-      const Color* color = arguments[0]->assertColor(logger, Strings::color);
+      ColorConstObj color = arguments[0]->assertColor(logger, Strings::color);
 
       if (color->isLegacy() == false) {
         throw Exception::SassScriptException(logger, pstate,
@@ -580,7 +580,7 @@ namespace Sass {
 
       // color->assertLegacy(logger, "color");
 
-      auto rgb = color->toSpace2(ColorSpace::rgb, pstate);
+      ColorObj rgb = color->toSpace2(ColorSpace::rgb, pstate);
 
       if (isSpecialNumber(second)) {
         // dart-sass is using color?
@@ -2300,7 +2300,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double adjust = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+        double adjust = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2325,7 +2325,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+        double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2350,7 +2350,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+        double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2375,7 +2375,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(0.0, 100.0, amount, compiler, Strings::amount);
+        double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2395,7 +2395,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* nr = arguments[1]->assertNumber(compiler, Strings::amount);
-        double amount = nr->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
+        double amount = nr->assertRange(compiler, 0.0, 1.0, unit_none, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2416,7 +2416,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* nr = arguments[1]->assertNumber(compiler, Strings::amount);
-        double amount = nr->assertRange(0.0, 1.0, unit_none, compiler, Strings::amount);
+        double amount = nr->assertRange(compiler, 0.0, 1.0, unit_none, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,

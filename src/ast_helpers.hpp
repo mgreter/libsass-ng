@@ -18,7 +18,7 @@ namespace Sass {
   const double NUMBER_EPSILON = 1e-12;
 
   // macro to test if numbers are equal within a small error margin
-  #define NEAR_EQUAL(lhs, rhs) ((lhs == rhs) || std::fabs(lhs - rhs) < NUMBER_EPSILON)
+  // #define NEAR_EQUAL(lhs, rhs) ((lhs == rhs) || std::fabs(lhs - rhs) < NUMBER_EPSILON)
 
   // macro to test if numbers are equal within a small error margin
   // will also check for the case when both numbers are infinite
@@ -26,7 +26,7 @@ namespace Sass {
 
   // macro to test if numbers are equal within a small error margin
   // will also check for the case when both numbers are infinite
-  #define FUZZY_EQUAL_INF(lhs, rhs, eps) ((lhs == rhs) || (std::fabs(lhs - rhs) < eps))
+  // #define FUZZY_EQUAL_INF(lhs, rhs, eps) ((lhs == rhs) || (std::fabs(lhs - rhs) < eps))
 
   /////////////////////////////////////////////////////////////////////////#
   // We define various functions and functors here.
@@ -40,6 +40,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////#
 
   // Check if all elements are equal
+  // Currently only used in extend(lcs)
   template <class X, class Y,
     typename XT = typename X::value_type,
     typename YT = typename Y::value_type>
@@ -58,11 +59,11 @@ namespace Sass {
   }
 
   // Erase items from vector that match predicate
-  template<class T, class UnaryPredicate>
-  inline void listEraseItemIf(T& vec, UnaryPredicate* predicate)
-  {
-    vec.erase(std::remove_if(vec.begin(), vec.end(), predicate), vec.end());
-  }
+  // template<class T, class UnaryPredicate>
+  // inline void listEraseItemIf(T& vec, UnaryPredicate* predicate)
+  // {
+  //   vec.erase(std::remove_if(vec.begin(), vec.end(), predicate), vec.end());
+  // }
 
   // Check that every item in `lhs` is also in `rhs`
   // Note: this works by comparing the raw pointers

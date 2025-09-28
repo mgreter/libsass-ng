@@ -154,7 +154,7 @@ namespace Sass {
     friend class MemoryPool;
   public:
   public:
-    uint32_t refcount;
+    mutable uint32_t refcount;
   public:
     static bool taint;
 #ifdef DEBUG_SHARED_PTR

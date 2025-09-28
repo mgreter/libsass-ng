@@ -59,6 +59,33 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  class FnStackFrame {
+
+  private:
+
+    // The shared callStack
+    Logger& logger;
+
+    // The current stack frame
+    BackTrace frame;
+
+    // Previous function expression
+    FunctionExpression* previous;
+
+  public:
+
+    // Create object and add frame to stack
+    FnStackFrame(Logger& logger,
+      FunctionExpression* fn);
+
+    // Remove frame from stack on destruction
+    ~FnStackFrame();
+
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
 }
 
 #endif

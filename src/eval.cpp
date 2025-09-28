@@ -1561,6 +1561,7 @@ namespace Sass {
     if (callable)
     {
       RAII_FLAG(inFunction, true);
+      FnStackFrame fnfrm(logger, function);
       CallStackFrame frame(logger, function->pstate(), true);
       return callable->execute(*this,
         args, function->pstate(),
