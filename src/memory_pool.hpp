@@ -98,15 +98,15 @@ namespace Sass {
 
     // Destructor
     ~MemoryPool() {
-      std::cerr << "destructr arenas " << arenas.size() << "\n";
+      // std::cerr << "destructr arenas " << arenas.size() << "\n";
       // Delete full arenas
       for (auto area : arenas) {
         /*if (&area)*/ free(area);
       }
-      std::cerr << "destructr pool\n";
+      // std::cerr << "destructr pool\n";
       // Delete current arena
       /*if (&arena)*/ free(arena);
-      std::cerr << "finish\n";
+      // std::cerr << "finish\n";
     }
 
     // Allocate a slice of the memory pool
