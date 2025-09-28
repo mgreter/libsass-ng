@@ -646,13 +646,12 @@ namespace Sass {
         alpha, missingLightness, missingChroma, missingHue);
     }
 
-    auto rv = Color::forSpaceInternal(
+    return Color::forSpaceInternal(
       pstate, dest,
       red.has_value() ? transformedRed : red,
       green.has_value() ? transformedGreen : green,
       blue.has_value() ? transformedBlue : blue,
       alpha);
-    return rv;
     // auto rv = Color::_forSpace(pstate, dest, 1, 1, 1, 1, )
 
     // return Color::forSpaceInternal(;
@@ -1228,8 +1227,8 @@ namespace Sass {
   /// Returns the ΔEOK measure between [color1] and [color2].
   double _deltaEOK(Color* color1, Color* color2) {
     // Algorithm from https://www.w3.org/TR/css-color-4/#color-difference-OK
-    auto lab1 = color1->toSpace(ColorSpace::oklab, color1->pstate());
-    auto lab2 = color2->toSpace(ColorSpace::oklab, color2->pstate());
+    ColorObj lab1 = color1->toSpace(ColorSpace::oklab, color1->pstate());
+    ColorObj lab2 = color2->toSpace(ColorSpace::oklab, color2->pstate());
 
     return std::sqrt(
       std::pow(lab1->getChannel0() - lab2->getChannel0(), 2) +

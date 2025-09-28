@@ -21,7 +21,7 @@ namespace Sass {
 
     SelectorCombinatorObj leadingCombinator;
     SelectorCombinatorObj trailingCombinator;
-    CompoundSelector* unifiedBase = nullptr;
+    CompoundSelectorObj unifiedBase = nullptr;
 
     for (const ComplexSelector* complex : complexes)
     {

@@ -952,7 +952,7 @@ namespace Sass {
     bool operator<(const SelectorCombinator& rhs) const override final;
     size_t hash() const override final;
 
-    const sass::string toString() const {
+    sass::string toString() const {
       switch (combinator_) {
         case CHILD: return ">";
         case SIBLING: return "+";

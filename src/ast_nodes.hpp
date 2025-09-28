@@ -67,7 +67,7 @@ namespace Sass {
 		virtual AstNode* simplify(Logger& logger);
 
     // Convert to string (only for debugging)
-    sass::string toString() const;
+    virtual sass::string toString() const;
 
     DECLARE_ISA_CASTER(Value);
     DECLARE_ISA_CASTER(String);
@@ -131,6 +131,12 @@ namespace Sass {
     ItplString(const SourceSpan& pstate, sass::string&& text);
     ItplString(const SourceSpan& pstate, const sass::string& text);
     Type getType() const override final { return LiteralInterpolant; }
+
+    // virtual ~ItplString() {}
+
+    sass::string toString() const override {
+      return "itpl: " + text_;
+    }
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ItplString);

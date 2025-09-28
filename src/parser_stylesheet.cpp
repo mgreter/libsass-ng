@@ -904,13 +904,13 @@ namespace Sass {
 
   // Adds [expression] to [buffer], or if it's an unquoted
   // string adds the interpolation it contains instead.
-  static void addOrInject(InterpolationBuffer& buffer, Expression* expression)
+  static void addOrInject(InterpolationBuffer& buffer, ExpressionObj expression)
   {
     auto strex = expression->isaStringExpression();
     if (strex && strex->hasQuotes()) {
       buffer.addInterpolation(strex->text());
     } else {
-      buffer.add(expression);
+      buffer.add(expression.ptr());
     }
   }
 
@@ -3152,7 +3152,9 @@ namespace Sass {
 
     SourceSpan pstate(scanner.relevantSpanFrom(start));
     Interpolation* itpl(buffer.getInterpolation(pstate));
-    return SASS_MEMORY_NEW(StringExpression, pstate, itpl, true);
+    auto rv = SASS_MEMORY_NEW(StringExpression, pstate, itpl, true);
+    // rv->dbg = true;
+    return rv;
   }
   // EO readInterpolatedString
 
