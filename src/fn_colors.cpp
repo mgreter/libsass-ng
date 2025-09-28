@@ -822,7 +822,7 @@ namespace Sass {
       try {
         return parser.readSingleNumber();
       }
-      catch (const std::runtime_error _)
+      catch (const std::runtime_error& _)
       {
         return SASS_MEMORY_NEW(String, pstate, data);
       }
@@ -989,7 +989,7 @@ namespace Sass {
           channels = std::move(list);
         }
 
-        for (int i = 0; i < channels.size(); i++) {
+        for (size_t i = 0; i < channels.size(); i++) {
 
           channels[i]->assertColorChannel(compiler,
             space->_channels[i].name, name);
@@ -1015,7 +1015,7 @@ namespace Sass {
             sass::sstream args;
             // If size is 3, we must comma separate them
             // Otherwise we keep it space separated!?
-            for (int n = 0; n < channels.size(); n++) {
+            for (size_t n = 0; n < channels.size(); n++) {
               args << channels[n]->inspect();
               if (n == channels.size() - 1) break;
               args << ", ";
@@ -1057,13 +1057,13 @@ namespace Sass {
           input->inspect() + ")");
       }
 
-      for (int i = 0; i < channels.size(); i++) {
+      for (size_t i = 0; i < channels.size(); i++) {
         if (isSpecialNumber(channels[i])) {
           if (channels.size() == 3 && (space->name() == "rgb" || space->name() == "hsl")) {
             sass::sstream args;
             // If size is 3, we must comma separate them
             // Otherwise we keep it space separated!?
-            for (int n = 0; n < channels.size(); n++) {
+            for (size_t n = 0; n < channels.size(); n++) {
               args << channels[n]->inspect();
               if (n == channels.size() - 1) break;
               args << ", ";
@@ -1427,16 +1427,16 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           arguments, pstate, compiler, false);
       }
 
-      static BUILT_IN_FN(fnHwb3arg)
-      {
-        return hwbFn(Strings::hwb,
-          arguments, pstate, compiler, true);
-      }
+      // static BUILT_IN_FN(fnHwb3arg)
+      // {
+      //   return hwbFn(Strings::hwb,
+      //     arguments, pstate, compiler, true);
+      // }
 
-      static BUILT_IN_FN(hwb2arg)
-      {
-        return getFunctionString(Strings::hwb, pstate, arguments);
-      }
+      // static BUILT_IN_FN(hwb2arg)
+      // {
+      //   return getFunctionString(Strings::hwb, pstate, arguments);
+      // }
 
       static BUILT_IN_FN(fnHwb2arg)
       {
@@ -1696,7 +1696,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         if (!value.has_value()) {
           Value* qwe = (color);
-          Color* asd = qwe->isaColor();
+//          Color* asd = qwe->isaColor();
           // std::cerr << "Has no value " << qwe->inspect() << "\n";
           // throw Exception::SassScriptException(logger, color->pstate(), "color, channel");
           throw Exception::MissingColorChannel(logger, color, channel);
@@ -1990,7 +1990,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(red)
       {
-        bool deprecate = global;
+        //bool deprecate = global;
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2088,17 +2088,17 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return SASS_MEMORY_NEW(Number, pstate, hwb->getChannel2(), unit_percent);
       }
 
-      static BUILT_IN_FN(noLighten)
-      {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "lighten", "$lightness: ");
-      }
+      // static BUILT_IN_FN(noLighten)
+      // {
+      //   throw Exception::DeprecatedColorAdjustFn(compiler,
+      //     arguments, "lighten", "$lightness: ");
+      // }
 
-      static BUILT_IN_FN(noDarken)
-      {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "darken", "$lightness: -");
-      }
+      // static BUILT_IN_FN(noDarken)
+      // {
+      //   throw Exception::DeprecatedColorAdjustFn(compiler,
+      //     arguments, "darken", "$lightness: -");
+      // }
 
       // static BUILT_IN_FN(whiteness)
       // {
@@ -2331,7 +2331,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
+        //double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2357,7 +2357,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
+        //double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2383,7 +2383,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
-        double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
+        //double nr = amount->assertRange(compiler, 0.0, 100.0, amount, Strings::amount);
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -2502,17 +2502,17 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       }
 
      
-      static BUILT_IN_FN(noSaturate)
-      {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "saturate", "$saturation: ");
-      }
+      // static BUILT_IN_FN(noSaturate)
+      // {
+      //   throw Exception::DeprecatedColorAdjustFn(compiler,
+      //     arguments, "saturate", "$saturation: ");
+      // }
         
-      static BUILT_IN_FN(noDesaturate)
-      {
-        throw Exception::DeprecatedColorAdjustFn(compiler,
-          arguments, "desaturate", "$saturation: -");
-      }
+      // static BUILT_IN_FN(noDesaturate)
+      // {
+      //   throw Exception::DeprecatedColorAdjustFn(compiler,
+      //     arguments, "desaturate", "$saturation: -");
+      // }
 
       /*******************************************************************/
 

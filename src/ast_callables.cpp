@@ -15,8 +15,7 @@ namespace Sass {
 
   // Create object and add frame to stack
   FnStackFrame::FnStackFrame(Logger& logger, FunctionExpression* fn) :
-    logger(logger),
-    frame(frame)
+    logger(logger)
   {
     previous = logger.fn;
     logger.fn = fn;

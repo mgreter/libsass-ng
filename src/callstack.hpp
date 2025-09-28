@@ -66,9 +66,6 @@ namespace Sass {
     // The shared callStack
     Logger& logger;
 
-    // The current stack frame
-    BackTrace frame;
-
     // Previous function expression
     FunctionExpression* previous;
 

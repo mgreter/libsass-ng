@@ -605,9 +605,17 @@ namespace Sass {
       // below because of a simple selector added by another (sibling)
       // extension.
       ExtSmplSelSet originalSelectors; // getSimpleSelectors
-      for (auto& sel : module->extender52->selectors54) {
-        originalSelectors.insert(sel.first);
+
+      auto beg = module->extender52->selectors54.begin();
+      auto end = module->extender52->selectors54.end();
+      while (beg != end) {
+        originalSelectors.insert(beg.key());
+        beg++;
       }
+
+      // for (const std::pair<SimpleSelectorObj, ExtListSelSet> sel : module->extender52->selectors54) {
+      //   originalSelectors.insert(sel.first);
+      // }
 
       module->extender52->addNonOriginalSelectors(
         originalSelectors, unsatisfiedExtensions);
