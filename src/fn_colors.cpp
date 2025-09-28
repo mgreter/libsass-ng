@@ -113,6 +113,7 @@ namespace Sass {
     }
     // EO isMsFilterStart
 
+    /*
 /// Prints a deprecation warning if [hue] has a unit other than `deg`.
     static void checkAngle(Logger& logger, const Number* angle, const sass::string& name)
     {
@@ -126,6 +127,7 @@ namespace Sass {
         return text;
         });
     }
+    */
 
     // Helper function for debugging
     // ToDo return EnvKey?
@@ -165,7 +167,7 @@ namespace Sass {
     // EO getFunctionString
 
 
-
+    /*
     static Value* parseChannels(
       const sass::string& name,
       Value* channels,
@@ -296,8 +298,8 @@ namespace Sass {
 
     }
     // EO parseChannels
-
-
+    */
+    /*
     static Value* parseColorChannels(
       const sass::string& name,
       Value* channels,
@@ -424,7 +426,7 @@ namespace Sass {
       return list.detach();
     }
     // EO parseColorChannels
-
+    */
     // Handle one argument function invocation
     // Used by color functions rgb, hsl and hwb
     /*
@@ -1697,7 +1699,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
 
         if (!value.has_value()) {
-          Value* qwe = (color);
+          //Value* qwe = (color);
 //          Color* asd = qwe->isaColor();
           // std::cerr << "Has no value " << qwe->inspect() << "\n";
           // throw Exception::SassScriptException(logger, color->pstate(), "color, channel");
