@@ -59,17 +59,17 @@ namespace Sass {
     // Implement Selector Visitors
     /////////////////////////////////////////////////////////////////////////
 
-    virtual void visitCssParentSelector(CssParentSelector* parent) override;
-    virtual void visitAttributeSelector(AttributeSelector* sel) override;
-    virtual void visitClassSelector(ClassSelector* sel) override;
-    virtual void visitComplexSelector(ComplexSelector* sel) override;
-    virtual void visitCompoundSelector(CompoundSelector* sel) override;
-    virtual void visitIDSelector(IDSelector* sel) override;
-    virtual void visitPlaceholderSelector(PlaceholderSelector* sel) override;
-    virtual void visitPseudoSelector(PseudoSelector* sel) override;
-    // virtual void visitSelectorCombinator(SelectorCombinator* sel) override; // LibSass only
-    virtual void visitSelectorList(SelectorList* sel) override;
-    virtual void visitTypeSelector(TypeSelector* sel) override;
+    void visitCssParentSelector(CssParentSelector* parent) override;
+    void visitAttributeSelector(AttributeSelector* sel) override;
+    void visitClassSelector(ClassSelector* sel) override;
+    void visitComplexSelector(ComplexSelector* sel) override;
+    void visitCompoundSelector(CompoundSelector* sel) override;
+    void visitIDSelector(IDSelector* sel) override;
+    void visitPlaceholderSelector(PlaceholderSelector* sel) override;
+    void visitPseudoSelector(PseudoSelector* sel) override;
+    // void visitSelectorCombinator(SelectorCombinator* sel) override; // LibSass only
+    void visitSelectorList(SelectorList* sel) override;
+    void visitTypeSelector(TypeSelector* sel) override;
 
     virtual void visitSelectorComponent(CplxSelComponent* sel); // LibSass only
     virtual void visitSelectorCombinator(SelectorCombinator* sel); // LibSass only
@@ -87,17 +87,17 @@ namespace Sass {
 
     void _writeColorFunction(const Color* color);
 
-    virtual void visitBoolean(Boolean* value) override;
-    virtual void visitColor(Color* value) override;
-    virtual void visitFunction(Function* value) override;
-    virtual void visitCalculation(Calculation* value) override;
-    virtual void visitCalcOperation(CalcOperation* value) override;
-    virtual void visitMixin(Mixin* value) override;
-    virtual void visitList(List* value) override;
-    virtual void visitMap(Map* value) override;
-    virtual void visitNull(Null* value) override;
-    virtual void visitNumber(Number* value) override;
-    virtual void visitString(String* value) override;
+    void visitBoolean(Boolean* value) override;
+    void visitColor(Color* value) override;
+    void visitFunction(Function* value) override;
+    void visitCalculation(Calculation* value) override;
+    void visitCalcOperation(CalcOperation* value) override;
+    void visitMixin(Mixin* value) override;
+    void visitList(List* value) override;
+    void visitMap(Map* value) override;
+    void visitNull(Null* value) override;
+    void visitNumber(Number* value) override;
+    void visitString(String* value) override;
     // Private helper for "messy" calc values
     void _writeCalculationValue(AstNode* node, bool wrap = true);
     void _writeCalculationUnits(Units* units);

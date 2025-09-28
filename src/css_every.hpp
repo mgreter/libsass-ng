@@ -15,15 +15,15 @@ namespace Sass {
 
   public:
 
-    virtual bool visitCssAtRule(CssAtRule* css);
-    virtual bool visitCssComment(CssComment* css);
-    virtual bool visitCssDeclaration(CssDeclaration* css);
-    virtual bool visitCssImport(CssImport* css);
-    virtual bool visitCssKeyframeBlock(CssKeyframeBlock* css);
-    virtual bool visitCssMediaRule(CssMediaRule* css);
-    virtual bool visitCssRoot(CssRoot* css);
-    virtual bool visitCssStyleRule(CssStyleRule* css);
-    virtual bool visitCssSupportsRule(CssSupportsRule* css);
+    bool visitCssAtRule(CssAtRule* css) override;
+    bool visitCssComment(CssComment* css) override;
+    bool visitCssDeclaration(CssDeclaration* css) override;
+    bool visitCssImport(CssImport* css) override;
+    bool visitCssKeyframeBlock(CssKeyframeBlock* css) override;
+    bool visitCssMediaRule(CssMediaRule* css) override;
+    bool visitCssRoot(CssRoot* css) override;
+    bool visitCssStyleRule(CssStyleRule* css) override;
+    bool visitCssSupportsRule(CssSupportsRule* css) override;
 
   };
 

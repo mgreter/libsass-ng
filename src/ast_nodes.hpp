@@ -172,7 +172,7 @@ namespace Sass {
     StringExpression* wrapInStringExpression();
 
     // Convert to string (only for debugging)
-    sass::string toString() const;
+    sass::string toString() const override;
 
     FINALIZE_AST_NODE(Interpolation);
   };
@@ -214,7 +214,7 @@ namespace Sass {
 
     // operator sass::string() const { return toString(); }
 
-    virtual sass::string toString() const = 0;
+    sass::string toString() const override = 0;
 
     // Declare up-casting methods
     DECLARE_ISA_CASTER(UnaryOpExpression);
@@ -278,8 +278,8 @@ namespace Sass {
 
     // Needed here to avoid ambiguity from base-classes!??
     // virtual void accept(ExpressionVisitor<void>* visitor) override = 0;
-    virtual Value* accept(StatementVisitor<Value*>* visitor) override = 0;
-    virtual void accept(StatementVisitor<void>* visitor) override = 0;
+    Value* accept(StatementVisitor<Value*>* visitor) override = 0;
+    void accept(StatementVisitor<void>* visitor) override = 0;
 
     // Declare up-casting methods
     DECLARE_ISA_CASTER(StyleRule);
@@ -403,14 +403,14 @@ namespace Sass {
   public:
 
     // Needed here to avoid ambiguity from base-classes!??
-    virtual void accept(ValueVisitor<void>* visitor) override = 0;
-    virtual Value* accept(ValueVisitor<Value*>* visitor) override = 0;
+    void accept(ValueVisitor<void>* visitor) override = 0;
+    Value* accept(ValueVisitor<Value*>* visitor) override = 0;
     sass::string inspect(int precision = SassDefaultPrecision, bool quotes = true) const;
 
     // Getters to avoid need for dynamic cast (slightly faster)
     Type getType() const final { return ValueInterpolant; }
 
-    virtual AstNode* simplify(Logger& logger) override;
+    AstNode* simplify(Logger& logger) override;
 
   protected:
 

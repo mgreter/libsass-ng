@@ -100,13 +100,13 @@ namespace Sass {
 
     // Calls the appropriate visit method on [visitor].
     // Needed here to avoid ambiguity from base-classes!??
-    virtual void accept(SelectorVisitor<void>* visitor) override = 0;
-    virtual bool accept(SelectorVisitor<bool>* visitor) override = 0;
+    void accept(SelectorVisitor<void>* visitor) override = 0;
+    bool accept(SelectorVisitor<bool>* visitor) override = 0;
 
     // Make these explicitly unambigous to the compiler (even if fully abstract)
     // Compiler may not know if it should use `Equatable<Selector>` of parent
-    virtual bool operator==(const Selector& rhs) const override = 0;
-    virtual bool operator<(const Selector& rhs) const override = 0;
+    bool operator==(const Selector& rhs) const override = 0;
+    bool operator<(const Selector& rhs) const override = 0;
 
     // Base copy method with [childless] being void most of the times
     virtual Selector* copy(SASS_MEMORY_ARGS bool childless = false) const = 0;
@@ -191,12 +191,12 @@ namespace Sass {
     // This is a very interesting line, as it seems pointless, since the base class
     // already marks this as an unimplemented interface methods, but by defining this
     // line here, we make sure that callers know the return is a bit more specific.
-    virtual SimpleSelector* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
+    SimpleSelector* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
 
     // Make these explicitly unambigous to the compiler (even if fully abstract)
     // Compiler may not know if it should use `Equatable<Selector>` of parent
-    virtual bool operator==(const SimpleSelector& rhs) const override = 0;
-    virtual bool operator<(const SimpleSelector& rhs) const override = 0;
+    bool operator==(const SimpleSelector& rhs) const override = 0;
+    bool operator<(const SimpleSelector& rhs) const override = 0;
 
     //IMPLEMENT_BASE_CMP_OPERATOR(Selector, SimpleSelector);
 
@@ -225,7 +225,7 @@ namespace Sass {
     // virtual SelectorNS* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
 
     // Implement specialized specificity function
-    virtual unsigned long specificity() const override {
+    unsigned long specificity() const override {
       return Constants::Specificity::ID;
     }
 
@@ -239,7 +239,7 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, CssParentSelector);
     IMPLEMENT_ACCEPT(bool, Selector, CssParentSelector);
 
-    DECLARE_CMP_OPERATOR(CssParentSelector);
+    OVERRIDE_CMP_OPERATOR(CssParentSelector, override);
     IMPLEMENT_BASE_CMP_OPERATOR(Selector, CssParentSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, CssParentSelector);
 
@@ -280,10 +280,10 @@ namespace Sass {
       const SelectorNS* ptr);
 
     // Implement hash functionality
-    virtual size_t hash() const override = 0;
+    size_t hash() const override = 0;
 
     // Implement for cleanup phase
-    virtual bool empty() const override {
+    bool empty() const override {
       return ns().empty() && SimpleSelector::empty();
     }
 
@@ -308,12 +308,12 @@ namespace Sass {
     // This is a very interesting line, as it seems pointless, since the base class
     // already marks this as an unimplemented interface methods, but by defining this
     // line here, we make sure that callers know the return is a bit more specific.
-    virtual SelectorNS* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
+    SelectorNS* copy(SASS_MEMORY_ARGS bool childless = false) const override = 0;
 
     // Make these explicitly unambigous to the compiler (even if fully abstract)
     // Compiler may not know if it should use `Equatable<Selector>` of parent
-    virtual bool operator==(const SelectorNS& rhs) const override = 0;
-    virtual bool operator<(const SelectorNS& rhs) const override = 0;
+    bool operator==(const SelectorNS& rhs) const override = 0;
+    bool operator<(const SelectorNS& rhs) const override = 0;
 
     IMPLEMENT_ISA_CASTER(SelectorNS);
     FINALIZE_AST_NODE(SelectorNS);
@@ -361,7 +361,7 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, PlaceholderSelector);
     IMPLEMENT_ACCEPT(bool, Selector, PlaceholderSelector);
 
-    DECLARE_CMP_OPERATOR(PlaceholderSelector);
+    OVERRIDE_CMP_OPERATOR(PlaceholderSelector, override);
     IMPLEMENT_BASE_CMP_OPERATOR(Selector, PlaceholderSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, PlaceholderSelector);
 
@@ -397,7 +397,7 @@ namespace Sass {
     bool isSuperselectorAF(SimpleSelector* other) const final;
 
     // Implement specialized specificity function
-    virtual unsigned long specificity() const override {
+    unsigned long specificity() const override {
       return isUniversal() ? 0 : Constants::Specificity::Element;
     }
 
@@ -405,7 +405,7 @@ namespace Sass {
 
     // Unify Type selector with multiple simple selectors
     // CompoundSelector* unifyWith(CompoundSelector*);
-    virtual SimpleSelectors unify(
+    SimpleSelectors unify(
       const SimpleSelectors& other)
         final;
 
@@ -418,7 +418,7 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, TypeSelector);
     IMPLEMENT_ACCEPT(bool, Selector, TypeSelector);
 
-    DECLARE_CMP_OPERATOR(TypeSelector);
+    OVERRIDE_CMP_OPERATOR(TypeSelector, override);
     IMPLEMENT_BASE_CMP_OPERATOR(Selector, TypeSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SelectorNS, TypeSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, TypeSelector);
@@ -451,7 +451,7 @@ namespace Sass {
       const ClassSelector* ptr);
 
     // Implement specialized specificity function
-    virtual unsigned long specificity() const override {
+    unsigned long specificity() const override {
       return Constants::Specificity::Class;
     }
 
@@ -461,7 +461,7 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, ClassSelector);
     IMPLEMENT_ACCEPT(bool, Selector, ClassSelector);
 
-    DECLARE_CMP_OPERATOR(ClassSelector);
+    OVERRIDE_CMP_OPERATOR(ClassSelector, override);
     IMPLEMENT_BASE_CMP_OPERATOR(Selector, ClassSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, ClassSelector);
 
@@ -507,7 +507,7 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, IDSelector);
     IMPLEMENT_ACCEPT(bool, Selector, IDSelector);
 
-    DECLARE_CMP_OPERATOR(IDSelector);
+    OVERRIDE_CMP_OPERATOR(IDSelector, override);
     IMPLEMENT_BASE_CMP_OPERATOR(Selector, IDSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, IDSelector);
 
@@ -576,7 +576,7 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, AttributeSelector);
     IMPLEMENT_ACCEPT(bool, Selector, AttributeSelector);
 
-    DECLARE_CMP_OPERATOR(AttributeSelector);
+    OVERRIDE_CMP_OPERATOR(AttributeSelector, override);
     IMPLEMENT_BASE_CMP_OPERATOR(Selector, AttributeSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SelectorNS, AttributeSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, AttributeSelector);

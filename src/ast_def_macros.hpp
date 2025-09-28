@@ -115,12 +115,12 @@ private:
     public: virtual const klass* isa##klass() const { return nullptr; } \
 
   #define OVERRIDE_ISA_CASTER(klass) \
-    public: virtual klass* isa##klass() override { return nullptr; } \
-    public: virtual const klass* isa##klass() const override { return nullptr; } \
+    public: klass* isa##klass() override { return nullptr; } \
+    public: const klass* isa##klass() const override { return nullptr; } \
 
   #define IMPLEMENT_ISA_CASTER(klass) \
-    public: klass* isa##klass() final override { return this; } \
-    public: const klass* isa##klass() const final override { return this; } \
+    public: klass* isa##klass() final { return this; } \
+    public: const klass* isa##klass() const final { return this; } \
 
   #define IMPLEMENT_ACCEPT(type, visitor, klass) \
     public: type accept(visitor##Visitor<type>* visitor) final { \
@@ -140,6 +140,10 @@ private:
   #define DECLARE_CMP_OPERATOR(klass) \
     public: bool operator==(const klass& rhs) const; \
     public: bool operator<(const klass& rhs) const; \
+
+  #define OVERRIDE_CMP_OPERATOR(klass, kwd) \
+    public: bool operator==(const klass& rhs) const kwd; \
+    public: bool operator<(const klass& rhs) const kwd; \
 
   #define IMPLEMENT_EQ_OPERATOR(subklass, klass) \
     public: bool operator==(const subklass& rhs) const final { \
@@ -187,7 +191,8 @@ private:
   #define SASS_CAST(type, ptr) (ptr ? ptr->isa##type() : nullptr)
 
   #define FINALIZE_AST_NODE(name) \
-    protected: friend class SharedPtr<name>; ~name() {}
+    public: virtual ~name() {}
+    // protected: friend class SharedPtr<name>; virtual ~name() {}
 
 
   /////////////////////////////////////////////////////////////////////////

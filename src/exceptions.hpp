@@ -52,7 +52,7 @@ namespace Sass {
       public:
         Base(sass::string msg, BackTraces traces);
         Base(sass::string msg, BackTraces traces, SourceSpan pstate);
-        virtual const char* what() const throw() { return msg.c_str(); }
+        const char* what() const throw() override { return msg.c_str(); }
         // virtual ~Base() noexcept {};
     };
 
@@ -66,7 +66,7 @@ namespace Sass {
       RuntimeException(BackTraces traces, sass::string msg);
       // RuntimeException(sass::string msg, BackTraces traces);
       RuntimeException(sass::string msg, BackTraces traces, SourceSpan pstate);
-      virtual const char* what() const throw() { return msg.c_str(); }
+      const char* what() const throw() override { return msg.c_str(); }
     };
 
     class ModuleUnknown : public RuntimeException
@@ -369,7 +369,7 @@ namespace Sass {
         : std::runtime_error(msg.c_str()), msg(msg)
         {};
       public:
-        virtual const char* what() const throw() { return msg.c_str(); }
+        const char* what() const throw() override { return msg.c_str(); }
     };
 
     class TopLevelParent : public Base {
