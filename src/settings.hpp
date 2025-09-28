@@ -91,7 +91,7 @@
 // With intense workloads this can double the performance
 // Max memory usage mostly only grows by a slight amount
 // Brings up to 50% improvement with minor memory overhead.
-// #define SASS_CUSTOM_ALLOCATOR
+#define SASS_CUSTOM_ALLOCATOR
 
 // Elide unnecessary value copies in eval, as we don't need to
 // make copies already in the eval stage (I think). All further

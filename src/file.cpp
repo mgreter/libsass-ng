@@ -521,6 +521,7 @@ namespace Sass {
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
+        std::cerr << "slurp " << abspath << "\n";
         // Use std::unique_ptr to avoid the bug stack allocations
         // Also serves as a first test-balloon to see compiler support
         std::unique_ptr<wchar_t[]> resolved{ new wchar_t[32768] };

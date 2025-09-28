@@ -67,7 +67,7 @@ extern "C" {
 #endif
 
   // Change the virtual current working directory
-  ADDAPI void ADDCALL sass_chdir(const char* path);
+  // ADDAPI void ADDCALL sass_chdir(const char* path);
 
   // Prints message to stderr with color for windows
   ADDAPI void ADDCALL sass_print_stdout(const char* message);
