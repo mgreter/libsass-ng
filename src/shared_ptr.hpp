@@ -103,6 +103,7 @@ namespace Sass {
    public:
     RefCounted() : refcount(0) {
       #ifdef DEBUG_SHARED_PTR
+      this->line = 0;
       this->objId = ++objCount;
       if (taint) {
         all.emplace_back(this);

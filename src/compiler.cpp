@@ -200,6 +200,11 @@ namespace Sass {
 
   OutputBuffer Compiler::renderCss()
   {
+    #ifdef DEBUG_SHARED_PTR
+    // Enable reference tracking
+    RefCounted::taint = true;
+    #endif
+
     // Create the emitter object
     Output emitter(*this);
     emitter.reserve(262144); // 256K
@@ -212,6 +217,12 @@ namespace Sass {
     emitter.finalize();
     // Update the compiler state
     state = SASS_COMPILER_RENDERED;
+
+    #ifdef DEBUG_SHARED_PTR
+    // Enable reference tracking
+    RefCounted::taint = false;
+    #endif
+
     // Move buffer from stream
     return emitter.getBuffer();
   }

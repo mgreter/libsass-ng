@@ -363,7 +363,8 @@ namespace Sass {
     }
     // If const, we must always create a copy
     const Color* color = this;
-    return color->toSpace(space, pstate, legacyMissing);
+    ColorObj converted = color->toSpace(space, pstate, legacyMissing);
+    return converted.detach();;
   }
 
   Color* Color::toSpace(const ColorSpace& space, const SourceSpan& pstate, bool legacyMissing) const

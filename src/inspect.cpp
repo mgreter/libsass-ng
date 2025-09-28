@@ -1067,7 +1067,7 @@ namespace Sass {
     }
 
     if (opaque) {
-      if (Color* rgba = color->toSpace(ColorSpace::rgb, color->pstate())) {
+      if (ColorObj rgba = color->toSpace(ColorSpace::rgb, color->pstate())) {
         // double a = std::round(std::round(rgba->getChannel0() * sass::iepsilon) * sass::epsilon);
         // double b = std::round(std::round(rgba->getChannel1() * sass::iepsilon) * sass::epsilon);
         // double c = std::round(std::round(rgba->getChannel2() * sass::iepsilon) * sass::epsilon);
