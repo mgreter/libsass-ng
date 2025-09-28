@@ -427,6 +427,7 @@ namespace Sass {
 
     // Handle one argument function invocation
     // Used by color functions rgb, hsl and hwb
+    /*
     static Value* handleOneArgColorFn2(
       const sass::string& name,
       Value* argument,
@@ -484,7 +485,7 @@ namespace Sass {
       //   pstate, argument->inspect());
     }
     // EO handleOneArgColorFn
-
+    */
     /// Returns [color1] and [color2], mixed
     // together and weighted by [weight].
 
@@ -532,7 +533,7 @@ namespace Sass {
     }
 
     // EO mixColor
-
+    /*
     static double scaleValue(
       double current,
       double scale,
@@ -540,6 +541,7 @@ namespace Sass {
     {
       return current + (scale > 0.0 ? max - current : current) * scale;
     }
+    */
 
 
     static String* _functionRgbString(sass::string name, const Color* color, Value* alpha, const SourceSpan& pstate)
@@ -822,7 +824,7 @@ namespace Sass {
       try {
         return parser.readSingleNumber();
       }
-      catch (const std::runtime_error& _)
+      catch (const std::runtime_error&)
       {
         return SASS_MEMORY_NEW(String, pstate, data);
       }
@@ -2675,6 +2677,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         return SASS_MEMORY_NEW(String, pstate, ss.str());
       }
 
+      /*
       static Number* getKwdNumber(ValueFlatMap* keywords, const EnvKey& name, Logger& logger)
       {
         if (keywords == nullptr) return nullptr;
@@ -2702,7 +2705,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         // Return the number
         return num;
       }
-
+      */
       /*
       Sass::Value* _updateComponents(const Sass::ValueVector& arguments,
         bool adjust = false, bool scale = false, bool change = false)
