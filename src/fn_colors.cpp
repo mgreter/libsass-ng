@@ -503,8 +503,8 @@ namespace Sass {
       Logger& logger)
     {
 
-      ColorObj rgb1 = color1->toSpace(ColorSpace::rgb, pstate);
-      ColorObj rgb2 = color2->toSpace(ColorSpace::rgb, pstate);
+      Color* rgb1 = color1->toSpace(ColorSpace::rgb, pstate);
+      Color* rgb2 = color2->toSpace(ColorSpace::rgb, pstate);
 
       // This algorithm factors in both the user-provided weight (w) and the
       // difference between the alpha values of the two colors (a) to decide how
