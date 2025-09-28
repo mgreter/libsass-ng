@@ -21,6 +21,10 @@ namespace Sass {
 
   public:
 
+    virtual ~ImportedCssVisitor() {}
+
+  public:
+
     ImportedCssVisitor(Eval& eval);
 
     void visitCssAtRule(CssAtRule* css) override;

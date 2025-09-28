@@ -27,6 +27,8 @@ namespace Sass {
 
   public:
 
+    virtual ~Inspect() {}
+
     bool isCompressed() {
       return output_style() == SASS_STYLE_COMPRESSED;
     }
@@ -110,16 +112,16 @@ namespace Sass {
     // Implement CSS Visitors
     /////////////////////////////////////////////////////////////////////////
 
-    virtual void visitCssAtRule(CssAtRule* css) override;
-    virtual void visitCssComment(CssComment* css) override;
-    virtual void visitCssDeclaration(CssDeclaration* css) override;
+    void visitCssAtRule(CssAtRule* css) override;
+    void visitCssComment(CssComment* css) override;
+    void visitCssDeclaration(CssDeclaration* css) override;
     bool _IsInvisible(CssNode* node);
-    virtual void visitCssImport(CssImport* css) override;
-    virtual void visitCssKeyframeBlock(CssKeyframeBlock* css) override;
-    virtual void visitCssMediaRule(CssMediaRule* css) override;
-    virtual void visitCssRoot(CssRoot* css) override; // LibSass only
-    virtual void visitCssStyleRule(CssStyleRule* css) override;
-    virtual void visitCssSupportsRule(CssSupportsRule* css) override;
+    void visitCssImport(CssImport* css) override;
+    void visitCssKeyframeBlock(CssKeyframeBlock* css) override;
+    void visitCssMediaRule(CssMediaRule* css) override;
+    void visitCssRoot(CssRoot* css) override; // LibSass only
+    void visitCssStyleRule(CssStyleRule* css) override;
+    void visitCssSupportsRule(CssSupportsRule* css) override;
 
     /////////////////////////////////////////////////////////////////////////
     // Not part of visitors (used internally as entry points)

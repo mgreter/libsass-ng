@@ -650,7 +650,7 @@ namespace Sass {
     {}
 
     // Convert to string (only for debugging)
-    virtual sass::string toString() const override;
+    sass::string toString() const override;
 
     // Declare up-casting methods
     OVERRIDE_ISA_CASTER(IfExpression);

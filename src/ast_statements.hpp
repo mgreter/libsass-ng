@@ -101,7 +101,7 @@ namespace Sass {
       StatementVector&& children,
       EnvRefs* idxs = nullptr);
     // Returns whether we have a child content block
-    virtual bool hasContent() const override;
+    bool hasContent() const override;
   };
 
   /////////////////////////////////////////////////////////////////////////

@@ -24,11 +24,14 @@ namespace Sass {
 
   protected:
 
+
     // Current parsing recursion depth
     // Just a counter for nesting guard
     size_t recursion = 0;
 
   public:
+
+    virtual ~StylesheetParser() {}
 
     // Whether we've consumed a rule other than `@charset`, `@forward`, or `@use`.
     bool isUseAllowed = true;
@@ -287,7 +290,7 @@ namespace Sass {
 
     // Consumes an `@import` rule.
     // [start] should point before the `@`.
-    ImportRule* readImportRule(Offset start);
+    virtual ImportRule* readImportRule(Offset start);
 
     // Consumes an argument to an `@import` rule.
     // If anything is found it will be added to [rule].

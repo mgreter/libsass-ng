@@ -157,6 +157,19 @@ private:
     public: bool operator==(const klass& rhs) const; \
     public: bool operator<(const klass& rhs) const; \
 
+  #define OVERRIDE_EQ_OPERATOR(subklass, klass) \
+    public: bool operator==(const subklass& rhs) const override { \
+      auto sel = rhs.isa##klass(); \
+      return sel ? *this == *sel : false; \
+    } \
+    public: bool operator<(const subklass& rhs) const override { \
+      auto sel = rhs.isa##klass(); \
+      return sel ? *this < *sel : typeid(*this).before(typeid(rhs)); \
+    } \
+    public: bool operator==(const klass& rhs) const override; \
+    public: bool operator<(const klass& rhs) const override; \
+
+
   #define IMPLEMENT_EQ_OPERATOR2(subklass, klass, kwd) \
     public: bool operator==(const subklass& rhs) const kwd { \
       auto sel = rhs.isa##klass(); \

@@ -622,12 +622,12 @@ namespace Sass {
     Value* getValueAt(Value* index, Logger& logger) final;
 
     // Implement interface for base Value class
-    virtual size_t hash() const override;
+    size_t hash() const override;
     SassValueType getTag() const final { return SASS_LIST; }
-    virtual const sass::string& type() const override { return Strings::list; }
+    const sass::string& type() const override { return Strings::list; }
 
     // Implement equality comparators for base value class
-    virtual bool operator==(const Value& rhs) const override;
+    bool operator==(const Value& rhs) const override;
     // Implement same class compare operator
     bool operator==(const List& rhs) const;
 

@@ -13,10 +13,14 @@ namespace Sass {
 
   class ExpressionToCalc : public ReplaceExpressionVisitor {
 
+  public:
+
+    virtual ~ExpressionToCalc() {}
+
   protected:
 
-    virtual Expression* visitBinaryOpExpression(BinaryOpExpression* rule) final;
-    virtual Expression* visitUnaryOpExpression(UnaryOpExpression* rule) final;
+    Expression* visitBinaryOpExpression(BinaryOpExpression* rule) final;
+    Expression* visitUnaryOpExpression(UnaryOpExpression* rule) final;
 
   };
 

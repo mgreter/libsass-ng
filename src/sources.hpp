@@ -41,7 +41,7 @@ namespace Sass {
 
     // Returns the number of lines. On first call
     // it will calculate the linefeed lookup table.
-    virtual size_t countLines() override;
+    size_t countLines() override;
 
   public:
 
@@ -62,7 +62,7 @@ namespace Sass {
     // Returns the requested line. Will take interpolations into
     // account to show more accurate debug messages. Calling this
     // can be rather expensive, so only use it for debugging.
-    virtual sass::string getLine(size_t line) override;
+    sass::string getLine(size_t line) override;
 
     // Return path as it was given for import
     const char* getImpPath() const final

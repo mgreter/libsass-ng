@@ -11,6 +11,11 @@
 namespace Sass {
 
   class Cssize : public Inspect {
+
+  public:
+
+    virtual ~Cssize() {}
+
   public:
 
     /////////////////////////////////////////////////////////////////////////
@@ -24,10 +29,10 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    virtual void visitFunction(Function*) override;
-    virtual void visitNumber(Number*) override;
-    virtual void visitList(List*) override;
-    virtual void visitMap(Map*) override;
+    void visitFunction(Function*) override;
+    void visitNumber(Number*) override;
+    void visitList(List*) override;
+    void visitMap(Map*) override;
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

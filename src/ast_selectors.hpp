@@ -161,7 +161,7 @@ namespace Sass {
     CompoundSelector* wrapInCompound();
 
     // Implement hash functionality
-    virtual size_t hash() const override = 0;
+    size_t hash() const override = 0;
 
     // Implement for cleanup phase
     virtual bool empty() const {
@@ -231,7 +231,7 @@ namespace Sass {
 
     // Unify ID selector with multiple simple selectors
     // CompoundSelector* unifyWith(CompoundSelector*);
-    virtual SimpleSelectors unify(
+    SimpleSelectors unify(
       const SimpleSelectors& other)
       final;
 
@@ -346,7 +346,7 @@ namespace Sass {
       return Constants::Specificity::Base;
     }
 
-    virtual bool hasPlaceholder() const final { return true; }
+    bool hasPlaceholder() const final { return true; }
 
 
     // Returns whether this is a private selector.
@@ -491,13 +491,13 @@ namespace Sass {
       const IDSelector* ptr);
 
     // Implement specialized specificity function
-    virtual unsigned long specificity() const override {
+    unsigned long specificity() const override {
       return Constants::Specificity::ID;
     }
 
     // Unify ID selector with multiple simple selectors
     // CompoundSelector* unifyWith(CompoundSelector*);
-    virtual SimpleSelectors unify(
+    SimpleSelectors unify(
       const SimpleSelectors& other)
         final;
 
@@ -568,7 +568,7 @@ namespace Sass {
       const AttributeSelector* ptr);
 
     // Implement specialized specificity function
-    virtual unsigned long specificity() const override {
+    unsigned long specificity() const override {
       return Constants::Specificity::Attr;
     }
 
@@ -683,7 +683,7 @@ namespace Sass {
     PseudoSelector* withSelector(SelectorList* selector) const;
 
     // Implement specialized specificity function
-    virtual unsigned long specificity() const override {
+    unsigned long specificity() const override {
       return isPseudoElement()
         ? Constants::Specificity::Element
         : Constants::Specificity::Pseudo;
@@ -691,7 +691,7 @@ namespace Sass {
 
     // Unify Pseudo selector with multiple simple selectors
     // CompoundSelector* unifyWith(CompoundSelector*);
-    virtual SimpleSelectors unify(
+    SimpleSelectors unify(
       const SimpleSelectors& other)
         final;
 
@@ -699,7 +699,7 @@ namespace Sass {
     IMPLEMENT_ACCEPT(void, Selector, PseudoSelector);
     IMPLEMENT_ACCEPT(bool, Selector, PseudoSelector);
 
-    DECLARE_CMP_OPERATOR(PseudoSelector);
+    OVERRIDE_CMP_OPERATOR(PseudoSelector, override);
     IMPLEMENT_BASE_CMP_OPERATOR(Selector, PseudoSelector);
     IMPLEMENT_BASE_CMP_OPERATOR(SimpleSelector, PseudoSelector);
 
@@ -823,7 +823,7 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_CHILDREN(ComplexSelector);
     IMPLEMENT_ACCEPT(void, Selector, ComplexSelector);
     IMPLEMENT_ACCEPT(bool, Selector, ComplexSelector);
-    IMPLEMENT_EQ_OPERATOR2(Selector, ComplexSelector, override)
+    OVERRIDE_EQ_OPERATOR(Selector, ComplexSelector)
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(ComplexSelector);
@@ -880,7 +880,7 @@ namespace Sass {
       const CplxSelComponent* ptr);
 
     // Implement hash functionality
-    virtual size_t hash() const;
+    size_t hash() const override;
     //void cloneChildren(const Selector*) override;
 
     // By default we consider instances not empty
@@ -898,8 +898,8 @@ namespace Sass {
     // virtual CplxSelComponent* produce() = 0;
 
     // To be implemented by specialization
-    bool operator==(const CplxSelComponent& rhs) const;
-    bool operator<(const CplxSelComponent& rhs) const;
+    bool operator==(const CplxSelComponent& rhs) const override;
+    bool operator<(const CplxSelComponent& rhs) const override;
 
     const Selector* hasAnyExplicitParent() const;
 
@@ -952,7 +952,7 @@ namespace Sass {
     bool operator<(const SelectorCombinator& rhs) const final;
     size_t hash() const final;
 
-    sass::string toString() const {
+    sass::string toString() const override {
       switch (combinator_) {
         case CHILD: return ">";
         case SIBLING: return "+";
@@ -1080,9 +1080,9 @@ namespace Sass {
 
     // Implement for cleanup phase
     // Dispatch to underlying list
-    bool empty() const {
-      return Vectorized::empty();
-    }
+    // bool empty() const {
+    //   return Vectorized::empty();
+    // }
 
     // Implement hash functionality
     size_t hash() const final;
@@ -1122,7 +1122,7 @@ namespace Sass {
     IMPLEMENT_SEL_COPY_CHILDREN(CompoundSelector);
     IMPLEMENT_ACCEPT(void, Selector, CompoundSelector);
     IMPLEMENT_ACCEPT(bool, Selector, CompoundSelector);
-    IMPLEMENT_EQ_OPERATOR(Selector, CompoundSelector);
+    OVERRIDE_EQ_OPERATOR(Selector, CompoundSelector);
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(CompoundSelector);
@@ -1195,14 +1195,14 @@ namespace Sass {
         pstate_, std::move(copy));
     }
 
-    sass::string toString() const {
+    sass::string toString() const override {
       return toValue()->toCss();
     }
 
     IMPLEMENT_SEL_COPY_CHILDREN(SelectorList);
     IMPLEMENT_ACCEPT(void, Selector, SelectorList);
     IMPLEMENT_ACCEPT(bool, Selector, SelectorList);
-    IMPLEMENT_EQ_OPERATOR(Selector, SelectorList);
+    OVERRIDE_EQ_OPERATOR(Selector, SelectorList);
 
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(SelectorList);

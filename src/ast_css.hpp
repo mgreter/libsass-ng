@@ -38,8 +38,8 @@ namespace Sass {
     CssNode(const CssNode* ptr);
 
     // Needed here to avoid ambiguity from base-classes!??
-    virtual void accept(CssVisitor<void>* visitor) override = 0;
-    virtual bool accept(CssVisitor<bool>* visitor) override = 0;
+    void accept(CssVisitor<void>* visitor) override = 0;
+    bool accept(CssVisitor<bool>* visitor) override = 0;
 
     bool isInvisibleOtherThanBogusCombinators() const;
 

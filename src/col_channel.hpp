@@ -53,6 +53,7 @@ namespace Sass {
   public:
 
     ClipGamutMap() : GamutMapMethod("clip") {}
+    virtual ~ClipGamutMap() {}
     Color* map(Color* color) const final;
 
   };
@@ -60,6 +61,7 @@ namespace Sass {
   class LocalMindeGamutMap : public GamutMapMethod {
   public:
     LocalMindeGamutMap() : GamutMapMethod("local-minde") {}
+    virtual ~LocalMindeGamutMap() {}
     Color* map(Color* color) const final;
 
   };
@@ -68,8 +70,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   class ColorChannel {
-
+    
   public:
+
     double min = -9999999;
     double max = +9999999;
     bool requiresPercent = false;
@@ -154,6 +157,8 @@ namespace Sass {
 
     int _channelSize;
     const ColorChannel* _channels;
+
+    virtual ~ColorSpace() {}
 
     virtual bool isLegacy() const {
       return false;

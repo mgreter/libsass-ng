@@ -13,7 +13,11 @@ namespace Sass {
 
   class AnySelectorVisitor : public SelectorVisitor<bool> {
 
+  protected:
+    ~AnySelectorVisitor() {}
+
   public:
+
 
     bool visitAttributeSelector(AttributeSelector* attribute) final;
     bool visitClassSelector(ClassSelector* klass) final;

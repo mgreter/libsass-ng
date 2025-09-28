@@ -23,6 +23,8 @@ namespace Sass {
 
     IsCssInvisibleVisitor(bool includeBogus, bool includeComments);
 
+    virtual ~IsCssInvisibleVisitor() {}
+
     bool visitCssAtRule(CssAtRule* rule) final;
     bool visitCssComment(CssComment* rule) final;
     bool visitCssStyleRule(CssStyleRule* rule) final;

@@ -25,6 +25,8 @@ namespace Sass {
 
   public:
 
+    virtual ~IsInvisibleVisitor() {}
+
     IsInvisibleVisitor(bool includeBogus);
 
   };

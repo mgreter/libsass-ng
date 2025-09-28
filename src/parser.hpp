@@ -27,6 +27,8 @@ namespace Sass {
   {
   public:
 
+    virtual ~Parser() {}
+
     // Compiler context
     Compiler& compiler;
 

@@ -13,6 +13,10 @@ namespace Sass {
 
   class EveryCssVisitor : public CssVisitor<bool> {
 
+  protected:
+
+    ~EveryCssVisitor() {}
+
   public:
 
     bool visitCssAtRule(CssAtRule* css) override;

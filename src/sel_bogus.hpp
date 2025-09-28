@@ -23,13 +23,18 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    virtual bool visitComplexSelector(ComplexSelector* complex) final;
-    virtual bool visitPseudoSelector(PseudoSelector* pseudo) final;
+    bool visitComplexSelector(ComplexSelector* complex) final;
+    bool visitPseudoSelector(PseudoSelector* pseudo) final;
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
   public:
+
+    virtual ~IsBogusVisitor() {}
+
+  public:
+
 
     IsBogusVisitor(bool includeLeadingCombinator) :
       includeLeadingCombinator(includeLeadingCombinator)

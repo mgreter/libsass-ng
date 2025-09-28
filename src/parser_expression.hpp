@@ -23,6 +23,8 @@ namespace Sass {
 
   public:
 
+    virtual ~ExpressionParser() {}
+
     // Value constructor
     ExpressionParser(
       StylesheetParser& parser);

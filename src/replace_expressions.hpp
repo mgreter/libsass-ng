@@ -19,6 +19,8 @@ namespace Sass {
 
   public:
 
+    virtual ~ReplaceExpressionVisitor() {}
+
     Expression* visitBinaryOpExpression(BinaryOpExpression*) override;
     Expression* visitBooleanExpression(BooleanExpression*) override;
     Expression* visitColorExpression(ColorExpression*) override;

@@ -556,6 +556,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   class A98RgbColorSpace : public ColorSpace {
+  public: virtual ~A98RgbColorSpace() {}
   public:
     A98RgbColorSpace() : ColorSpace(
       "a98-rgb",
@@ -601,6 +602,7 @@ namespace Sass {
   }
 
   class DisplayP3ColorSpace : public ColorSpace {
+  public: virtual ~DisplayP3ColorSpace() {}
   public:
     DisplayP3ColorSpace() : ColorSpace(
       "display-p3",
@@ -630,6 +632,8 @@ namespace Sass {
   };
 
   class HslColorSpace : public ColorSpace {
+  public: virtual ~HslColorSpace() {}
+
   public:
     HslColorSpace() : ColorSpace(
       "hsl",
@@ -652,6 +656,8 @@ namespace Sass {
   };
 
   class HwbColorSpace : public ColorSpace {
+  public: virtual ~HwbColorSpace() {}
+
   public:
     HwbColorSpace() : ColorSpace(
       "hwb",
@@ -673,6 +679,8 @@ namespace Sass {
   };
 
   class LabColorSpace : public ColorSpace {
+  public: virtual ~LabColorSpace() {}
+
   public:
     LabColorSpace() : ColorSpace(
       "lab",
@@ -708,6 +716,7 @@ namespace Sass {
   };
 
   class LchColorSpace : public ColorSpace {
+  public: virtual ~LchColorSpace() {}
   public:
     LchColorSpace() : ColorSpace(
       "lch",
@@ -730,6 +739,7 @@ namespace Sass {
   };
 
   class LmsColorSpace : public ColorSpace {
+  public: virtual ~LmsColorSpace() {}
   public:
     LmsColorSpace() : ColorSpace(
       "lms",
@@ -788,6 +798,7 @@ namespace Sass {
   };
 
   class OkLabColorSpace : public ColorSpace {
+  public: virtual ~OkLabColorSpace() {}
   public:
     OkLabColorSpace() : ColorSpace(
       "oklab",
@@ -823,6 +834,7 @@ namespace Sass {
   };
 
   class OkLchColorSpace : public ColorSpace {
+  public: virtual ~OkLchColorSpace() {}
   public:
     OkLchColorSpace() : ColorSpace(
       "oklch",
@@ -888,6 +900,7 @@ namespace Sass {
 
 
   class Rec2020ColorSpace : public ColorSpace {
+  public: virtual ~Rec2020ColorSpace() {}
   public:
     Rec2020ColorSpace() : ColorSpace(
       "rec2020",
@@ -925,6 +938,7 @@ namespace Sass {
   };
 
   class RgbColorSpace : public ColorSpace {
+  public: virtual ~RgbColorSpace() {}
   public:
     RgbColorSpace() : ColorSpace(
       "rgb",
@@ -953,6 +967,7 @@ namespace Sass {
   };
 
   class SrgbLinearColorSpace : public ColorSpace {
+  public: virtual ~SrgbLinearColorSpace() {}
   public:
     SrgbLinearColorSpace() : ColorSpace(
       "srgb-linear",
@@ -989,6 +1004,7 @@ namespace Sass {
   };
 
   class SrgbColorSpace : public ColorSpace {
+  public: virtual ~SrgbColorSpace() {}
   public:
     SrgbColorSpace() : ColorSpace(
       "srgb",
@@ -1041,6 +1057,7 @@ namespace Sass {
   };
 
   class XyzD50ColorSpace : public ColorSpace {
+  public: virtual ~XyzD50ColorSpace() {}
   public:
     XyzD50ColorSpace() : ColorSpace(
       "xyz-d50",
@@ -1099,6 +1116,7 @@ namespace Sass {
   };
 
   class XyzD65ColorSpace : public ColorSpace {
+  public: virtual ~XyzD65ColorSpace() {}
   public:
     XyzD65ColorSpace() : ColorSpace(
       "xyz",

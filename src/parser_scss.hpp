@@ -30,7 +30,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
 
     // So far we are not parsing css
-    virtual bool parsingCss() const override {
+    bool parsingCss() const override {
       return false;
     }
 

@@ -33,7 +33,7 @@ namespace Sass {
 
     // Consumes a plain-CSS `@import` rule that disallows
     // interpolation. [start] should point before the `@`.
-    ImportRule* readImportRule(Offset start);
+    ImportRule* readImportRule(Offset start) override;
 
     // Expression* namespacedExpression(sass::string ns, Offset start);
 

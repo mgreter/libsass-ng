@@ -667,7 +667,7 @@ static constexpr nullopt_t nullopt{nullopt_t::do_not_use{},
 class bad_optional_access : public std::exception {
 public:
   bad_optional_access() = default;
-  const char *what() const noexcept { return "Optional has no value"; }
+  const char *what() const noexcept override { return "Optional has no value"; }
 };
 
 /// An optional object is an object that contains the storage for another

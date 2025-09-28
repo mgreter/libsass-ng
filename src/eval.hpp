@@ -24,7 +24,10 @@ namespace Sass {
     public ExpressionVisitor<Value*>,
     public CssVisitor<void> {
 
+  public: virtual ~Eval() {}
+
   public:
+
 
     // A pointer to the slot where we will assign to
     // Used to optimize self-assignments in functions
