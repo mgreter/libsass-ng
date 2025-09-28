@@ -511,17 +511,16 @@ namespace Sass {
 
     // try to load the given filename
     // returned memory must be freed
-    char* slurp_file(const sass::string& path)
+    char* slurp_file(const sass::string& path, const sass::string& CWD)
     {
       #ifdef _WIN32
         char* contents;
         DWORD dwBytes;
         // windows unicode file-paths are encoded in utf16
-        sass::string abspath(path); // (join_paths(CWD, path));
+        sass::string abspath(join_paths(CWD, path)); // (join_paths(CWD, path));
         if (!(abspath[0] == '/' && abspath[1] == '/')) {
           abspath = "//?/" + abspath;
         }
-        std::cerr << "slurp " << abspath << "\n";
         // Use std::unique_ptr to avoid the bug stack allocations
         // Also serves as a first test-balloon to see compiler support
         std::unique_ptr<wchar_t[]> resolved{ new wchar_t[32768] };
@@ -570,11 +569,11 @@ namespace Sass {
     // EO slurp_file
 
     // Read and return resolved import
-    Import* read_import(const ResolvedImport& import)
+    Import* read_import(const ResolvedImport& import, const sass::string& CWD)
     {
       // try to read the content of the resolved file entry
       // the memory buffer returned to us must be freed by us!
-      if (char* contents = slurp_file(import.abs_path)) {
+      if (char* contents = slurp_file(import.abs_path, CWD)) {
         // Return LoadedImport object
         // ToDo: Add sourcemap parsing
         return SASS_MEMORY_NEW(Import,

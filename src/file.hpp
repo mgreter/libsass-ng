@@ -77,10 +77,10 @@ namespace Sass {
 
     // try to load the given filename
     // returned memory must be freed
-    char* slurp_file(const sass::string& path);
+    char* slurp_file(const sass::string& path, const sass::string& CWD);
 
     // Read and return resolved import
-    Import* read_import(const ResolvedImport& import);
+    Import* read_import(const ResolvedImport& import, const sass::string& CWD);
 
     sass::vector<ResolvedImport> resolve_includes(const sass::string& root, const sass::string& file, const sass::string& CWD, bool forImport,
       sass::cachemap::str<sass::string, bool>& cache, const std::vector<sass::string>& exts = { ".sass", ".scss", ".css" });

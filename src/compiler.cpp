@@ -991,7 +991,7 @@ namespace Sass {
     auto cached = sources19.find(import.abs_path);
     if (cached != sources19.end()) return cached->second;
     // Try to read source and (ToDo) optional mappings
-    if (ImportObj loaded = File::read_import(import)) {
+    if (ImportObj loaded = File::read_import(import, PWD)) {
       sources19.insert({ import.abs_path, loaded });
       return loaded.ptr();
     }

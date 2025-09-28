@@ -31,7 +31,7 @@ namespace Sass {
     }
     // try to read the content of the resolved file entry
     // the memory buffer returned to us must be freed by us!
-    if (char* contents = File::slurp_file(getAbsPath())) {
+    if (char* contents = File::slurp_file(getAbsPath(), pwd)) {
       // Upgrade to a source file
       // ToDo: Add sourcemap parsing
       source = SASS_MEMORY_NEW(SourceFile,
