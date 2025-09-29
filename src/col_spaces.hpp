@@ -19,32 +19,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Forward declarations
-  // class HwbColorSpace;
-  // class HslColorSpace;
-  // class LabColorSpace;
-  // class LchColorSpace;
-  // class OkLabColorSpace;
-  // class OkLchColorSpace;
-  // class RgbColorSpace;
-  // class SrgbColorSpace;
-  // class SrgbLinearColorSpace;
-  // class XyzD50ColorSpace;
-  // class XyzD65ColorSpace;
-  // class Rec2020ColorSpace;
-  // class DisplayP3ColorSpace;
-  // class ProphotoRgbColorSpace;
-  // class A98RgbColorSpace;
-  // class LmsColorSpace;
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
+  /// A constant used in the rec2020 gamma encoding/decoding functions.
+  constexpr double rec2020_alpha = 1.09929682680944;
 
   /// A constant used in the rec2020 gamma encoding/decoding functions.
-  const double _alpha = 1.09929682680944;
-
-  /// A constant used in the rec2020 gamma encoding/decoding functions.
-  const double _beta = 0.018053968510807;
+  constexpr double rec2020_beta = 0.018053968510807;
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -125,11 +104,11 @@ namespace Sass {
     }
 
     bool operator==(const ColorSpace& rhs) const {
-      return rhs.space_ == space_;
+      return rhs.space_ == space_; // compare ints
     }
 
     bool operator!=(const ColorSpace& rhs) const {
-      return rhs.space_ == space_;
+      return rhs.space_ == space_; // compare ints
     }
 
   };
@@ -142,7 +121,7 @@ namespace Sass {
 
   public:
 
-    A98RgbColorSpace() : ColorSpace(str_a98_rgb,
+    A98RgbColorSpace() : ColorSpace("a98-rgb",
       SassColorSpace::A98RGB, RgbColorChannels)
     {}
 
@@ -197,7 +176,7 @@ namespace Sass {
 
   public:
 
-    DisplayP3ColorSpace() : ColorSpace(str_display_p3,
+    DisplayP3ColorSpace() : ColorSpace("display-p3",
       SassColorSpace::DISPLAY_P3, RgbColorChannels)
     {}
 
@@ -237,7 +216,7 @@ namespace Sass {
 
   public:
 
-    HslColorSpace() : ColorSpace(str_hsl,
+    HslColorSpace() : ColorSpace("hsl",
       SassColorSpace::HSL, HslColorChannels)
     {}
 
@@ -263,7 +242,7 @@ namespace Sass {
   {
 
   public:
-    HwbColorSpace() : ColorSpace(str_hwb,
+    HwbColorSpace() : ColorSpace("hwb",
       SassColorSpace::HWB, HwbColorChannels)
     {}
 
@@ -289,7 +268,7 @@ namespace Sass {
   {
 
   public:
-    LabColorSpace() : ColorSpace(str_lab,
+    LabColorSpace() : ColorSpace("lab",
       SassColorSpace::LAB, LabColorChannels)
     {}
 
@@ -331,7 +310,7 @@ namespace Sass {
   {
 
   public:
-    LchColorSpace() : ColorSpace(str_lch,
+    LchColorSpace() : ColorSpace("lch",
       SassColorSpace::LCH, LchColorChannels)
     {}
 
@@ -358,7 +337,7 @@ namespace Sass {
 
   public:
 
-    LmsColorSpace() : ColorSpace(str_lms,
+    LmsColorSpace() : ColorSpace("lms",
       SassColorSpace::LMS, LmsColorChannels)
     {
     }
@@ -430,7 +409,7 @@ namespace Sass {
 
   public:
 
-    OkLabColorSpace() : ColorSpace(str_oklab,
+    OkLabColorSpace() : ColorSpace("oklab",
       SassColorSpace::OKLAB, OkLabColorChannels)
     {}
 
@@ -472,7 +451,7 @@ namespace Sass {
 
   public:
 
-    OkLchColorSpace() : ColorSpace(str_oklch,
+    OkLchColorSpace() : ColorSpace("oklch",
       SassColorSpace::OKLCH, OkLchColorChannels)
     {}
 
@@ -499,7 +478,7 @@ namespace Sass {
 
   public:
 
-    ProphotoRgbColorSpace() : ColorSpace(str_prophoto_rgb,
+    ProphotoRgbColorSpace() : ColorSpace("prophoto-rgb",
       SassColorSpace::PROPHOTO_RGB, RgbColorChannels)
     {}
 
@@ -545,25 +524,28 @@ namespace Sass {
   {
 
   public:
-    Rec2020ColorSpace() : ColorSpace(str_rec2020,
+
+    Rec2020ColorSpace() : ColorSpace("rec2020",
       SassColorSpace::REC2020, RgbColorChannels)
     {}
 
     inline double toLinear(double channel) const final
     {
       double abs = std::abs(channel);
-      if (abs < _beta * 4.5) return channel / 4.5;
+      if (abs < rec2020_beta * 4.5) return channel / 4.5;
       return (std::signbit(channel) ? -1 : +1) *
-        std::pow((abs + _alpha - 1.0) / _alpha, 1.0 / 0.45);
+        std::pow((abs + rec2020_alpha - 1.0)
+          / rec2020_alpha, 1.0 / 0.45);
 
     }
 
     inline double fromLinear(double channel) const final
     {
       double abs = std::abs(channel);
-      if (abs < _beta) return 4.5 * channel;
+      if (abs < rec2020_beta) return 4.5 * channel;
       return (std::signbit(channel) ? -1 : +1) *
-        (_alpha * std::pow(abs, 0.45) - (_alpha - 1.0));
+        (rec2020_alpha * std::pow(abs, 0.45)
+          - (rec2020_alpha - 1.0));
     }
 
     inline const double* transformationMatrix(ColorSpace dest) const final
@@ -592,7 +574,7 @@ namespace Sass {
 
   public:
 
-    RgbColorSpace() : ColorSpace(str_rgb,
+    RgbColorSpace() : ColorSpace("rgb",
       SassColorSpace::RGB, Rgb255ColorChannels)
     {
     }
@@ -628,7 +610,7 @@ namespace Sass {
 
   public:
 
-    SrgbLinearColorSpace() : ColorSpace(str_srgb_linear,
+    SrgbLinearColorSpace() : ColorSpace("srgb-linear",
       SassColorSpace::SRGB_LINEAR, RgbColorChannels)
     {}
 
@@ -674,7 +656,7 @@ namespace Sass {
 
   public:
 
-    SrgbColorSpace() : ColorSpace(str_srgb,
+    SrgbColorSpace() : ColorSpace("srgb",
       SassColorSpace::SRGB, RgbColorChannels)
     {}
 
@@ -738,7 +720,7 @@ namespace Sass {
 
   public:
 
-    XyzD50ColorSpace() : ColorSpace(str_xyz_d50,
+    XyzD50ColorSpace() : ColorSpace("xyz-d50",
       SassColorSpace::XYZ_D50, XyzColorChannels)
     {}
 
@@ -805,7 +787,7 @@ namespace Sass {
 
   public:
 
-    XyzD65ColorSpace() : ColorSpace(str_xyz_d65,
+    XyzD65ColorSpace() : ColorSpace("xyz",
       SassColorSpace::XYZ_D65, XyzColorChannels)
     {}
 

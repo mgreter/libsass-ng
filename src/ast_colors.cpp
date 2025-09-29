@@ -230,9 +230,10 @@ namespace Sass {
 
   bool Color::isLegacy() const
   {
-    return space_ == ColorSpaces::rgb
-      || space_ == ColorSpaces::hwb
-      || space_ == ColorSpaces::hsl;
+    return space().isLegacy();
+    // return space_ == ColorSpaces::rgb
+    //   || space_ == ColorSpaces::hwb
+    //   || space_ == ColorSpaces::hsl;
   }
 
   tl::optional<double> Color::getChannelOrNull(int idx) const

@@ -107,7 +107,7 @@ namespace Sass {
 
     static ColorChannel polar(sass::string name, bool isPolarAngle, sass::string unit)
     {
-      ColorChannel channel(name, false, unit);
+      ColorChannel channel(name, true, unit);
       return channel;
     }
 
