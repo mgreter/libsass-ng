@@ -93,22 +93,26 @@ namespace Sass {
       denominators()
     {
       unit(u);
+      // unit();
     }
 
     // copy constructor
     Units(const Units* ptr) :
+      // stringified(ptr->stringified),
       numerators(ptr->numerators),
       denominators(ptr->denominators)
     { }
 
     // copy constructor
     Units(const Units& ptr) :
+      // stringified(ptr.stringified),
       numerators(ptr.numerators),
       denominators(ptr.denominators)
     { }
 
     // move constructor
     Units(Units&& other) noexcept :
+      // stringified(std::move(other.stringified)),
       numerators(std::move(other.numerators)),
       denominators(std::move(other.denominators))
     { }

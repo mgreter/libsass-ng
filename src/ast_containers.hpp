@@ -527,8 +527,17 @@ namespace Sass {
     bool erase(const K& key)
     {
       // Would be faster by quite a bit (2% for bolt)
+      // Note: but it wouldn't preserve order (it swaps)
       // return elements_.unordered_erase(key) != 0;
       return elements_.erase(key) != 0;
+    }
+
+    bool erase(const K& key, size_t hash)
+    {
+      // Would be faster by quite a bit (2% for bolt)
+      // Note: but it wouldn't preserve order (it swaps)
+      // return elements_.unordered_erase(key, hash) != 0;
+      return elements_.erase(key, hash) != 0;
     }
 
     typename ordered_map_type::const_iterator find(const K& key) const
@@ -561,7 +570,7 @@ namespace Sass {
       insert(std::make_pair(key, val));
     }
 
-    void insertOrSet(const std::pair<K, T>& kv)
+    inline void insertOrSet(const std::pair<K, T>& kv)
     {
       auto exists = elements_.find(kv.first);
       if (exists == elements_.end()) {
@@ -574,12 +583,12 @@ namespace Sass {
       }
     }
 
-    void insertOrSet(const K& key, const T& val)
+    inline void insertOrSet(const K& key, const T& val)
     {
       elements_[key] = val;
     }
 
-    void insertOrSet(const K& key, T&& val)
+    inline void insertOrSet(const K& key, T&& val)
     {
       elements_[key] = std::move(val);
     }

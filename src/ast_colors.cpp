@@ -24,14 +24,15 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   
-  bool _isAnalogousChannelMissing(
-    Logger& logger,
-    Color* original,
-    Color* output,
-    int outputChannelIndex)
+  static bool _isAnalogousChannelMissing(
+    Logger& logger, Color* original,
+    Color* output, int outputChannelIndex)
   {
+
     if (output->isChannelMissing(outputChannelIndex)) return true;
+
     if (*original == *output) return false;
+
     const ColorChannel& outputChannel = output->space()._channels[outputChannelIndex];
     tl::optional<const ColorChannel&> originalChannel;
     for (int i = 0; i < original->space()._channelSize; i++) {

@@ -130,137 +130,76 @@ namespace Sass {
 
   };
 
-  class HwbColorSpace;
-  class HslColorSpace;
-  class LabColorSpace;
-  class LchColorSpace;
-  class OkLabColorSpace;
-  class OkLchColorSpace;
-  class RgbColorSpace;
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
-  class SrgbColorSpace;
-  class SrgbLinearColorSpace;
-  class XyzD50ColorSpace;
-  class XyzD65ColorSpace;
-  class Rec2020ColorSpace;
-  class DisplayP3ColorSpace;
-  class ProphotoRgbColorSpace;
-  class A98RgbColorSpace;
-  class LmsColorSpace;
-
-  class ColorSpace {
-
-    ADD_CONSTREF(sass::string, name);
-    ADD_CONSTREF(SassColorSpace, space);
-
-  public:
-
-    int _channelSize;
-    const ColorChannel* _channels;
-
-    virtual ~ColorSpace() {}
-
-    virtual bool isLegacy() const {
-      return false;
-    }
-
-    virtual bool isPolar() const {
-      return false;
-    }
-
-    virtual bool isBounded() const {
-      return true;
-    }
-
-    static const ColorSpace& fromValueRef(Logger& logger, Value* value, const sass::string& name);
-    static const ColorSpace& fromNameRef(Logger& logger, const String& space, const sass::string& name);
-
-    static const ColorSpace* fromName(Logger& logger, const String& space, const sass::string& name);
-
-    ColorSpace(const sass::string name, SassColorSpace space, const ColorChannel* channels, int channelSize)
-      : name_(name), space_(space), _channelSize(channelSize), _channels(channels)
-    {
-      // std::cerr << "init colorspace " << name << " " << this << "\n";
-    }
-
-    int getChannelIndex(const sass::string& name) const
-    {
-      for (int i = 0; i < _channelSize; i++) {
-        if (_channels[i].name == name) return i;
-      }
-      return -1;
-    }
-
-    virtual double toLinear(double channel) const;
-    virtual double fromLinear(double channel) const;
-    virtual const double* transformationMatrix(ColorSpace dest) const;
-
-    virtual Color* convertLinear(
-      const ColorSpace& dest,
-      const SourceSpan& pstate,
-      tl::optional<double> red,
-      tl::optional<double> green,
-      tl::optional<double> blue,
-      tl::optional<double> alpha,
-      bool missingLightness = false,
-      bool missingChroma = false,
-      bool missingHue = false,
-      bool missingA = false,
-      bool missingB = false) const;
-
-
-    virtual Color* convert(
-      const ColorSpace& dest,
-      const SourceSpan& pstate,
-      tl::optional<double> channel0,
-      tl::optional<double> channel1,
-      tl::optional<double> channel2,
-      tl::optional<double> alpha) const
-    {
-      // std::cerr << "CALL CONVERT LINEAR\n";
-      return convertLinear(dest, pstate, channel0, channel1, channel2, alpha);
-    }
-
-    bool operator==(const ColorSpace& rhs) const {
-      return rhs.space_ == space_;
-    }
-
-    bool operator!=(const ColorSpace& rhs) const {
-      return rhs.space_ == space_;
-    }
-
-    static const HwbColorSpace hwb;
-    static const HslColorSpace hsl;
-    static const LabColorSpace lab;
-    static const LchColorSpace lch;
-    static const OkLabColorSpace oklab;
-    static const OkLchColorSpace oklch;
-    static const RgbColorSpace rgb;
-    static const SrgbColorSpace srgb;
-    static const SrgbLinearColorSpace srgb_linear;
-    static const XyzD50ColorSpace xyzd50;
-    static const XyzD65ColorSpace xyzd65;
-    static const Rec2020ColorSpace rec2020;
-    static const DisplayP3ColorSpace displayP3;
-    static const A98RgbColorSpace a98rgb;
-    static const ProphotoRgbColorSpace protophotoRgb;
-    static const LmsColorSpace lms;
-
+  const ColorChannel HslColorChannels[3]{
+    ColorChannel("hue", true, "deg"),
+    LinearChannel("saturation", 0, 100, false, true, false, false, "%"), // conf1
+    LinearChannel("lightness", 0, 100, true, false, false, false, "%") // conf2
   };
 
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
+  const ColorChannel HwbColorChannels[3]{
+    ColorChannel("hue", true, "deg"),
+    LinearChannel("whiteness", 0, 100, true, false, false, false, "%"), // conf2
+    LinearChannel("blackness", 0, 100, true, false, false, false, "%") // conf2
+  };
 
-  // extern const ColorChannel hsl_channel0;
-  // extern const LinearChannel hsl_channel1;
-  // extern const LinearChannel hsl_channel2;
+  const ColorChannel LabColorChannels[3]{
+    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
+    LinearChannel("a", -125, 125, false, false, false),
+    LinearChannel("b", -125, 125, false, false, false)
+  };
 
-  // const ColorChannel hsl_channels[3]{
-  //   ColorChannel("hue", true, "deg"),
-  //   LinearChannel("saturation", 0, 100, false, true, false),
-  //   LinearChannel("lightness", 0, 100, true, false, false)
+  const ColorChannel LchColorChannels[3]{
+    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
+    LinearChannel("chroma", 0, 150, false, true, false),
+    ColorChannel("hue", true, "deg"),
+  };
+
+  const ColorChannel LmsColorChannels[3]{
+    LinearChannel("long", 0, 1, false, false, false),
+    LinearChannel("medium", 0, 1, false, false, false),
+    LinearChannel("short", 0, 1, false, false, false)
+  };
+
+  const ColorChannel OkLabColorChannels[3]{
+    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
+    LinearChannel("a", -0.4, 0.4, false, false, false),
+    LinearChannel("b", -0.4, 0.4, false, false, false)
+  };
+
+  const ColorChannel OkLchColorChannels[3]{
+    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
+    LinearChannel("chroma", 0, 0.4, false, true, false),
+    ColorChannel("hue", true, "deg"),
+  };
+
+  const ColorChannel RgbColorChannels[3]{
+    LinearChannel("red", 0, 1, false, false, false),
+    LinearChannel("green", 0, 1, false, false, false),
+    LinearChannel("blue", 0, 1, false, false, false)
+  };
+
+  const ColorChannel Rgb255ColorChannels[3]{
+    LinearChannel("red", 0, 255, false, true, true),
+    LinearChannel("green", 0, 255, false, true, true),
+    LinearChannel("blue", 0, 255, false, true, true)
+  };
+
+  const ColorChannel XyzColorChannels[3]{
+    LinearChannel("x", 0, 1, false, false, false),
+    LinearChannel("y", 0, 1, false, false, false),
+    LinearChannel("z", 0, 1, false, false, false)
+  };
+
+  // const ColorChannel Xyz255ColorChannels[3]{
+  //   LinearChannel("x", 0, 255, false, true, true),
+  //   LinearChannel("y", 0, 255, false, true, true),
+  //   LinearChannel("z", 0, 255, false, true, true)
   // };
 
+  const LinearChannel AlphaChannel("alpha", 0, 1, false, false, false);
 }
 
 #endif

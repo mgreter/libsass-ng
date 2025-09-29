@@ -341,18 +341,18 @@ namespace Sass {
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
         if (eval.assigne && eval.assigne->ptr() == map.ptr() && map->refcount < SassAssignableRefCount + 1) {
-          map->erase(arguments[1]);
+          map->erase(arguments[1], arguments[1]->hash());
           for (const auto& key : arguments[2]->start()) {
-            map->erase(key);
+            map->erase(key, key->hash());
           }
           return map.detach();
         }
         #endif
 
         MapObj copy = SASS_MEMORY_COPY(map);
-        copy->erase(arguments[1]);
-        for (Value* key : arguments[2]->start()) {
-          copy->erase(key);
+        copy->erase(arguments[1], arguments[1]->hash());
+        for (auto* key : arguments[2]->start()) {
+          copy->erase(key, key->hash());
         }
         return copy.detach();
       }

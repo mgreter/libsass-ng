@@ -436,13 +436,15 @@ namespace Sass {
   // Convert units to string
   const sass::string& Units::unit() const
   {
+    size_t iL = numerators.size();
+    size_t nL = denominators.size();
+    if (iL == 0 && nL == 0) return stringified;
+    if (iL == 1 && nL == 0) return numerators[0];
     // Units are expected to be short, so we hopefully
     // can profit from small objects optimization. This
     // is not guaranteed, but still safe to assume that
     // any mature implementation utilizes it.
     if (stringified.empty()) {
-      size_t iL = numerators.size();
-      size_t nL = denominators.size();
       for (size_t i = 0; i < iL; i += 1) {
         if (i) stringified += '*';
         stringified += numerators[i];

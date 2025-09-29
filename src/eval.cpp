@@ -1080,11 +1080,36 @@ namespace Sass {
     // Don't use [performInterpolation] here because we need to get
     // the raw text from strings, rather than the semantic value.
     const Interpolation* itpl = node->text();
+
+    if (itpl->size() == 0) {
+      return SASS_MEMORY_NEW(String,
+        node->pstate(), "",
+        node->hasQuotes());
+    }
+
+    // Optimize the most common cases
+    if (itpl->size() == 1) {
+      if (const ItplString* lit = itpl->at(0)->isaItplString()) {
+        return SASS_MEMORY_NEW(String,
+          node->pstate(), lit->text(),
+          node->hasQuotes());
+      }
+      if (String* lit = itpl->at(0)->isaString()) {
+        // if (node->hasQuotes() == lit->hasQuotes()) return lit;
+        return SASS_MEMORY_NEW(String,
+          node->pstate(), lit->value(),
+          node->hasQuotes());
+      }
+    }
+
     sass::vector<sass::string> strings;
     RAII_FLAG(inSupportsDeclaration, false);
     for (const auto& item : itpl->elements()) {
       if (const ItplString* lit = item->isaItplString()) {
         strings.emplace_back(lit->text());
+      }
+      else if (const String* lit = item->isaString()) {
+        strings.emplace_back(lit->value());
       }
       else {
         ValueObj result;
@@ -1103,8 +1128,20 @@ namespace Sass {
       }
     }
 
-    return SASS_MEMORY_NEW(String, node->pstate(),
-      StringUtils::join(strings, ""), node->hasQuotes());
+    if (strings.size() == 0) {
+      return SASS_MEMORY_NEW(String,
+        node->pstate(), "",
+        node->hasQuotes());
+    }
+    else if (strings.size() == 1) {
+      return SASS_MEMORY_NEW(String, node->pstate(),
+        std::move(strings[0]), node->hasQuotes());
+    }
+    else {
+      return SASS_MEMORY_NEW(String, node->pstate(),
+        StringUtils::join(strings, ""), node->hasQuotes());
+    }
+
   }
   // EO visitStringExpression
 
