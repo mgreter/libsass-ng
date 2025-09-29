@@ -1541,7 +1541,7 @@ namespace Sass {
       CallableObj callable = SASS_MEMORY_NEW(PlainCssCallable,
         function->pstate(), function->name());
       RAII_FLAG(inFunction, true);
-      CallStackFrame frame(logger, function->pstate(), true);
+      // CallStackFrame frame(logger, function->pstate(), true);
       return callable->execute(*this,
         args, function->pstate(),
         function->ns().empty());
@@ -1562,7 +1562,7 @@ namespace Sass {
     {
       RAII_FLAG(inFunction, true);
       FnStackFrame fnfrm(logger, function);
-      CallStackFrame frame(logger, function->pstate(), true);
+      // CallStackFrame frame(logger, function->pstate(), true);
       return callable->execute(*this,
         args, function->pstate(),
         function->ns().empty());

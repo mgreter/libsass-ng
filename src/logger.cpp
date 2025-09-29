@@ -21,7 +21,10 @@ namespace Sass {
     support_unicode(unicode),
     reported({0}),
     suppressed(0)
-  {}
+  {
+    // Only required here (5%)
+    PWD = get_pwd();
+  }
 
   // Auto-detect if colors and unicode is supported
   // Mostly depending if a terminal is connected

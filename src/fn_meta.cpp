@@ -37,6 +37,13 @@ namespace Sass {
           return SASS_MEMORY_NEW(
             String, pstate, "null");
         }
+        // Micro-optimization (2%)
+        // Note: will report different pstate
+        // Note: but not exactly wrong either
+        if (const String* str = arguments[0]->isaString()) {
+          if (!str->hasQuotes()) return arguments[0].ptr();
+        }
+        // Otherwise we must create a copy
         return SASS_MEMORY_NEW(String,
           pstate, arguments[0]->inspect());
       }

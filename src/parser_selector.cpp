@@ -357,7 +357,7 @@ namespace Sass {
     }
     else {
       value = string();
-      isIdent = isIdentifier(value);
+      isIdent = isIdentifier(value); // 1%
     }
 
     scanWhitespace();

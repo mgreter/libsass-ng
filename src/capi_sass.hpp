@@ -213,7 +213,7 @@ namespace Sass {
     // Sourcemap related options
     SrcMapOptions mapopt;
 
-    sass::string PWD = get_pwd();
+    sass::string PWD = ".";
 
     // initialization list (constructor with defaults)
     OutputOptions(const InspectOptions& opt,

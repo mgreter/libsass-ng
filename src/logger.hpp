@@ -25,6 +25,8 @@ namespace Sass {
 
   public:
 
+    // sass::string PWD = get_pwd();
+
     enum WarningType : uint8_t {
       WARN_MATH_DIV,
       WARN_CAPI_FN,

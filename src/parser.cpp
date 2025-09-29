@@ -36,8 +36,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // ToDo: implement without the try clause
-  // ToDo: measure if this brings any speed?
+  // ToDo: implement without the try clause!?
+  // ToDo: may bring up to 1% for bolt-bench
   bool Parser::isIdentifier(sass::string text)
   {
     try {
