@@ -168,26 +168,6 @@ namespace Sass
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-
-  // const HwbColorSpace ColorSpaces::hwb = HwbColorSpace();
-  // const HslColorSpace ColorSpaces::hsl = HslColorSpace();
-  // const LabColorSpace ColorSpaces::lab = LabColorSpace();
-  // const LchColorSpace ColorSpaces::lch = LchColorSpace();
-  // const OkLabColorSpace ColorSpaces::oklab = OkLabColorSpace();
-  // const OkLchColorSpace ColorSpaces::oklch = OkLchColorSpace();
-  // 
-  // const RgbColorSpace ColorSpaces::rgb = RgbColorSpace();
-  // const SrgbColorSpace ColorSpaces::srgb = SrgbColorSpace();
-  // const SrgbLinearColorSpace ColorSpaces::srgb_linear = SrgbLinearColorSpace();
-  // const XyzD50ColorSpace ColorSpaces::xyzd50 = XyzD50ColorSpace();
-  // const XyzD65ColorSpace ColorSpaces::xyzd65 = XyzD65ColorSpace();
-  // const LmsColorSpace ColorSpaces::lms = LmsColorSpace();
-  // 
-  // const Rec2020ColorSpace ColorSpaces::rec2020 = Rec2020ColorSpace();
-  // const DisplayP3ColorSpace ColorSpaces::displayP3 = DisplayP3ColorSpace();
-  // const A98RgbColorSpace ColorSpaces::a98rgb = A98RgbColorSpace();
-  // const ProphotoRgbColorSpace ColorSpaces::protophotoRgb = ProphotoRgbColorSpace();
-
   namespace Colors
   {
 
