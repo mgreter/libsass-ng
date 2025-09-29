@@ -444,6 +444,8 @@ namespace Sass {
     // Hash value when used as key in hash table
     virtual size_t hash() const = 0;
 
+    size_t raw_hash() const { return hash_; }
+
     // Interface to be implemented by our classes
     virtual SassValueType getTag() const = 0;
 

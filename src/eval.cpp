@@ -1067,6 +1067,7 @@ namespace Sass {
         throw Exception::DuplicateKeyError(logger, *map, *key);
       }
       // Second insert the evaluated value for key
+      // ToDo: can we maybe re-use the hash again (no)
       map->insertOrSet(key, kvlist[i + 1]->accept(this));
     }
     return map.detach();
@@ -1102,14 +1103,14 @@ namespace Sass {
       }
     }
 
-    sass::vector<sass::string> strings;
+    sass::string combined;
     RAII_FLAG(inSupportsDeclaration, false);
     for (const auto& item : itpl->elements()) {
       if (const ItplString* lit = item->isaItplString()) {
-        strings.emplace_back(lit->text());
+        combined += lit->text();
       }
       else if (const String* lit = item->isaString()) {
-        strings.emplace_back(lit->value());
+        combined += lit->value();
       }
       else {
         ValueObj result;
@@ -1120,27 +1121,32 @@ namespace Sass {
           result = item->isaValue();
         }
         if (const String* lit = result->isaString()) {
-          strings.emplace_back(lit->value());
+          combined += lit->value();
         }
         else if (!result->isNull()) {
-          strings.emplace_back(result->toCss(false));
+          combined += result->toCss(false);
         }
       }
     }
 
-    if (strings.size() == 0) {
-      return SASS_MEMORY_NEW(String,
-        node->pstate(), "",
-        node->hasQuotes());
-    }
-    else if (strings.size() == 1) {
-      return SASS_MEMORY_NEW(String, node->pstate(),
-        std::move(strings[0]), node->hasQuotes());
-    }
-    else {
-      return SASS_MEMORY_NEW(String, node->pstate(),
-        StringUtils::join(strings, ""), node->hasQuotes());
-    }
+    return SASS_MEMORY_NEW(String,
+      node->pstate(),
+      std::move(combined),
+      node->hasQuotes());
+
+    // if (strings.size() == 0) {
+    //   return SASS_MEMORY_NEW(String,
+    //     node->pstate(), "",
+    //     node->hasQuotes());
+    // }
+    // else if (strings.size() == 1) {
+    //   return SASS_MEMORY_NEW(String, node->pstate(),
+    //     std::move(strings[0]), node->hasQuotes());
+    // }
+    // else {
+    //   return SASS_MEMORY_NEW(String, node->pstate(),
+    //     StringUtils::join(strings, ""), node->hasQuotes());
+    // }
 
   }
   // EO visitStringExpression
