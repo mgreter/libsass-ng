@@ -115,7 +115,9 @@ namespace Sass {
 
     bool isInGamut() const;
 
-    bool isLegacy() const;
+    inline bool isLegacy() const {
+      return space().isLegacy();
+    }
 
     bool isChannel0Missing() const;
     bool isChannel1Missing() const;
