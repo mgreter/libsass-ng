@@ -38,30 +38,30 @@ namespace Sass {
     int _channelSize;
     const ColorChannel* _channels;
 
-    virtual ~ColorSpace() {}
-
-    virtual bool isLegacy() const {
-      return false;
-    }
-
-    virtual bool isPolar() const {
-      return false;
-    }
-
-    virtual bool isBounded() const {
-      return true;
-    }
-
-    static const ColorSpace& fromValueRef(Logger& logger, Value* value, const sass::string& name);
-    static const ColorSpace& fromNameRef(Logger& logger, const String& space, const sass::string& name);
-
-    static const ColorSpace* fromName(Logger& logger, const String& space, const sass::string& name);
+    // virtual ~ColorSpace() {}
 
     ColorSpace(const sass::string name, SassColorSpace space, const ColorChannel* channels, int channelSize = 3)
       : name_(name), space_(space), _channelSize(channelSize), _channels(channels)
     {
       // std::cerr << "init colorspace " << name << " " << this << "\n";
     }
+
+    // Is this a legacy color space (rgb, hwb or hsl)
+    virtual bool isLegacy() const { return false; }
+
+    // Color spaces are either rectangular or polar
+    // https://ericportis.com/posts/2024/okay-color-spaces/
+    virtual bool isPolar() const { return false; }
+
+    // Some color spaces are confined in boundaries
+    virtual bool isBounded() const { return true; }
+
+    // Given a color space name, returns the known color space with that name or
+    // throws a [SassScriptException] if there is none. If this came from a function
+    // argument, [argumentName] is the argument name (without the `$`) for error reporting.
+    static const ColorSpace& fromNameRef(Logger& logger, const String& space, const sass::string& name);
+    static const ColorSpace& fromValueRef(Logger& logger, Value* value, const sass::string& name);
+
 
     int getChannelIndex(const sass::string& name) const
     {
@@ -71,10 +71,41 @@ namespace Sass {
       return -1;
     }
 
-    virtual double toLinear(double channel) const;
-    virtual double fromLinear(double channel) const;
-    virtual const double* transformationMatrix(ColorSpace dest) const;
+    // Converts a channel in this color space into an element of a vector that
+    // can be linearly transformed into other color spaces. The precise semantics
+    // of this vector may vary from color space to color space. The only requirement
+    // is that, for any space `dest` for which `transformationMatrix(dest)` returns
+    // a value, `dest.fromLinear(toLinear(channels) * transformationMatrix(dest))`
+    // converts from this space to `dest`. If a color space explicitly supports
+    // all conversions in [convert], it need not override this at all.
+    virtual double toLinear(double channel) const {
+      throw std::runtime_error("to-linear not implemented");
+    }
 
+    // Converts an element of a 3-element vector that can be linearly transformed into
+    // other color spaces into a channel in this color space. The precise semantics 
+    // of this vector may vary from color space to color space. The only requirement
+    // is that, for any space `dest` for which `transformationMatrix(dest)` returns
+    // a value, `dest.fromLinear(toLinear(channels) * transformationMatrix(dest))`
+    // converts from this space to `dest`. If a color space explicitly supports
+    // all conversions in [convert], it need not override this at all.
+    virtual double fromLinear(double channel) const {
+      throw std::runtime_error("from-linear not implemented");
+    }
+
+    // Returns the matrix for performing a linear transformation from this color
+    // space to [dest]. Specifically, `dest.fromLinear(toLinear(channels) *
+    // transformationMatrix(dest))` must convert from this space to `dest`.
+    // This only needs to return values for color spaces that aren't explicitly
+    // supported in [convert]. If a color space explicitly supports all
+    // conversions in [convert], it need not override this at all.
+    virtual const double* transformationMatrix(ColorSpace dest) const {
+      throw std::runtime_error("transformation-matrix not implemented");
+    }
+
+    // The default implementation of [convert], which always starts with a linear
+    // transformation from RGB or XYZ channels to a linear destination space, and
+    // may then further convert to a polar space.
     virtual Color* convertLinear(
       const ColorSpace& dest,
       const SourceSpan& pstate,
@@ -89,7 +120,10 @@ namespace Sass {
       bool missingB = false)
         const;
 
-
+    // Converts a color with the given channels from this color space to [dest].
+    // By default, this uses this color space's [toLinear] and [transformationMatrix]
+    // as well as [dest]'s [fromLinear], and relies on individual color space
+    // conversions to do more than purely linear conversions.
     virtual Color* convert(
       const ColorSpace& dest,
       const SourceSpan& pstate,
@@ -99,16 +133,18 @@ namespace Sass {
       tl::optional<double> alpha)
         const
     {
-      // std::cerr << "CALL CONVERT LINEAR\n";
-      return convertLinear(dest, pstate, channel0, channel1, channel2, alpha);
+      return convertLinear(dest, pstate,
+        channel0, channel1, channel2, alpha);
     }
 
-    bool operator==(const ColorSpace& rhs) const {
-      return rhs.space_ == space_; // compare ints
+    // Compare if the color spaces are the same
+    inline bool operator==(const ColorSpace& rhs) const {
+      return rhs.space_ == space_; // compare the enum
     }
 
-    bool operator!=(const ColorSpace& rhs) const {
-      return rhs.space_ == space_; // compare ints
+    // Compare if the color spaces are not the same
+    inline bool operator!=(const ColorSpace& rhs) const {
+      return rhs.space_ == space_; // compare the enum
     }
 
   };

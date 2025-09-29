@@ -268,8 +268,7 @@ namespace Sass {
   };
 
   /////////////////////////////////////////////////////////////////////////
-  // Implement hasing and compare for regular strings
-  // Actually anything with norm and hash function
+  // Implement hasing and compare for regular strings (case sensitive)
   /////////////////////////////////////////////////////////////////////////
 
   struct StringHash {
@@ -293,6 +292,51 @@ namespace Sass {
       return lhs < rhs;
     }
   };
+
+  /////////////////////////////////////////////////////////////////////////
+  // Implement hasing and compare for regular strings (case insensitive)
+  /////////////////////////////////////////////////////////////////////////
+
+  struct StringHashInsensitive {
+    template <class T>
+    inline size_t operator()(const T& str) const
+    {
+      return hash_string_insensitive(str);
+    }
+  };
+
+  struct StringEqualityInsensitive {
+    template <class T> // No predicate on std::equal in C++11
+    inline bool operator() (const T& lhs, const T& rhs) const {
+      if (lhs.size() != rhs.size()) return false;
+      for (size_t i = 0; i < lhs.size(); i += 1) {
+        // Optimize to uint32_t to compare 4 bytes at once?
+        if ((lhs[i] | 0x20) != (rhs[i] | 0x20)) return false;
+      }
+      return true;
+    }
+  };
+
+  struct StringLessThanInsensitive {
+    template <class T> // No predicate on std::less in C++11
+    inline bool operator() (const T& lhs, const T& rhs) const {
+      if (lhs.size() != rhs.size()) return false;
+      for (size_t i = 0; i < lhs.size(); i += 1) {
+        // Optimize to uint32_t to compare 4 bytes at once?
+        if ((lhs[i] | 0x20) < (rhs[i] | 0x20)) return true;
+        if ((lhs[i] | 0x20) > (rhs[i] | 0x20)) return false;
+      }
+      return false; // equals
+    }
+  };
+
+  // struct StringLessThanInsensitive {
+  //   template <class T>
+  //   inline bool operator() (const T& lhs, const T& rhs) const {
+  //     return std::less(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(),
+  //       [](char lhs, char rhs) { return (lhs | 0x20) < (rhs | 0x20); });
+  //   }
+  // };
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

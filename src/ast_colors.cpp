@@ -228,11 +228,6 @@ namespace Sass {
       && isChannelInGamut(getChannel2(), space_._channels[2]);
   }
 
-  bool Color::isLegacy() const
-  {
-    return space().isLegacy();
-  }
-
   tl::optional<double> Color::getChannelOrNull(int idx) const
   {
     switch (idx) {

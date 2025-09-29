@@ -33,6 +33,16 @@ namespace Sass {
   }
   // EO hash_string
 
+    // Our base implementation to hash strings
+  inline size_t hash_string_insensitive(const sass::string& str)
+  {
+    return MurmurHash3Insensitive(
+      (void*)str.c_str(),
+      (int)str.size(),
+      getHashSeed());
+  }
+  // EO hash_string
+
   // Implement simple hash for booleans
   inline size_t hash_bool(bool val)
   {

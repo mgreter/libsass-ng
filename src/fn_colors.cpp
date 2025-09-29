@@ -970,7 +970,7 @@ namespace Sass {
           spaceName = first->assertString(compiler, name);
           spaceName->assertUnquoted(compiler, name);
           if (isVar(spaceName) == false) {
-            space = ColorSpace::fromName(compiler, *spaceName, name);
+            space = &ColorSpace::fromNameRef(compiler, *spaceName, name);
           }
           // Move list to channels
           channels = std::move(list);
@@ -1019,7 +1019,7 @@ namespace Sass {
 
       if (alphaValue != nullptr) {
         if (isSpecialNumber(alphaValue)) {
-          if (channels.size() == 3 && (space->name() == "rgb" || space->name() == "hsl")) {
+          if (channels.size() == 3 && (*space == ColorSpaces::rgb || *space == ColorSpaces::hsl)) {
             sass::sstream args;
             // If size is 3, we must comma separate them
             // Otherwise we keep it space separated!?
@@ -1067,7 +1067,7 @@ namespace Sass {
 
       for (size_t i = 0; i < channels.size(); i++) {
         if (isSpecialNumber(channels[i])) {
-          if (channels.size() == 3 && (space->name() == "rgb" || space->name() == "hsl")) {
+          if (channels.size() == 3 && (*space == ColorSpaces::rgb || *space == ColorSpaces::hsl)) {
             sass::sstream args;
             // If size is 3, we must comma separate them
             // Otherwise we keep it space separated!?
@@ -1578,8 +1578,9 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         Color* color = colorUntyped->assertColor2(compiler, "color");
         if (spaceUntyped == nullptr) return color;
         if (spaceUntyped->isNull()) return color;
-        const ColorSpace* space = ColorSpace::fromName(compiler, *spaceUntyped, fname);
-        Color* rv = color->toSpace(*space, colorUntyped->pstate(), legacyMissing);
+        spaceUntyped->assertUnquoted(compiler, fname);
+        const ColorSpace& space = ColorSpace::fromNameRef(compiler, *spaceUntyped, fname);
+        Color* rv = color->toSpace(space, colorUntyped->pstate(), legacyMissing);
         return rv;
       }
 
@@ -1929,7 +1930,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       Color* toXyzNoMissing(Color* color)
       {
-        if (color->space().name() == "xyz") {
+        if (color->space() == ColorSpaces::xyzd65) {
           if (!color->hasMissingChannels()) {
             return color;
           }
@@ -2950,7 +2951,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         if (arg == nullptr) {
           auto before = color->getChannelOrNull(idx);
           if (before.has_value()) {
-            if (idx > 0 && (color->space().name() == "hsl" || color->space().name() == "hwb")) {
+            if (idx > 0 && (color->space() == ColorSpaces::hsl || color->space() == ColorSpaces::hwb)) {
               return SASS_MEMORY_NEW(Number, pstate, before.value(), unit_percent);
             }
             else {

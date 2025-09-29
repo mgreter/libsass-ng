@@ -1171,17 +1171,17 @@ namespace Sass {
   bool Emitter::isRelativeColor(const Color* color) const
   {
     const ColorSpace& space = color->space();
-    if (space.name() == "lab" || space.name() == "lch")
+    if (space == ColorSpaces::lab || space == ColorSpaces::lch)
     {
       return !fuzzyInRange(color->getChannel0(), 0.0, 100.0, outopt.epsilon)
         && !color->isChannel1Missing() && !color->isChannel2Missing();
     }
-    else if (space.name() == "oklab" || space.name() == "oklch")
+    else if (space == ColorSpaces::oklab || space == ColorSpaces::oklch)
     {
       return !fuzzyInRange(color->getChannel0(), 0.0, 1.0, outopt.epsilon)
         && !color->isChannel1Missing() && !color->isChannel2Missing();
     }
-    else if (space.name() == "lch" || space.name() == "oklch")
+    else if (space == ColorSpaces::lch || space == ColorSpaces::oklch)
     {
       return fuzzyLessThan(color->getChannel1(), 0.0, outopt.epsilon)
         && !color->isChannel0Missing() && !color->isChannel2Missing();
