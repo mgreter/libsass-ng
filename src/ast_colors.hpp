@@ -9,8 +9,8 @@
 #include "capi_sass.hpp"
 
 #include "ast_nodes.hpp"
-#include "col_consts.hpp"
-#include "col_channel.hpp"
+// #include "col_consts.hpp"
+//#include "col_channel.hpp"
 #include "col_spaces.hpp"
 #include "ast_values.hpp"
 
@@ -175,7 +175,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = forSpaceInternal(pstate,
-        ColorSpace::hsl,
+        ColorSpaces::hsl,
         red, green, blue, alpha);
       return rv;
     }
@@ -188,7 +188,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = forSpaceInternal(pstate,
-        ColorSpace::hwb,
+        ColorSpaces::hwb,
         red, green, blue, alpha);
       return rv;
     }
@@ -202,7 +202,7 @@ namespace Sass {
       bool forceRgb = false)
     {
       auto rv = _forSpace(pstate,
-        ColorSpace::rgb,
+        ColorSpaces::rgb,
         red, green, blue, alpha);
       if (rv != nullptr) rv->forceRgb = forceRgb;
       return rv;
@@ -216,7 +216,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = _forSpace(pstate,
-        ColorSpace::lab,
+        ColorSpaces::lab,
         lightness, a, b, alpha);
       return rv;
     }
@@ -229,7 +229,7 @@ namespace Sass {
       tl::optional<double> alpha)
     {
       auto rv = _forSpace(pstate,
-        ColorSpace::xyzd65,
+        ColorSpaces::xyzd65,
         x, y, z, alpha);
       return rv;
     }
@@ -253,19 +253,19 @@ namespace Sass {
        // std::cerr << "=> forSpaceInternal " << space.name() << " " << c0.value_or(-32) << ", "
        //   << c1.value_or(-42) << ", " << c2.value_or(-52) << "\n";
 
-      if (space == ColorSpace::hsl) {
+      if (space == ColorSpaces::hsl) {
         return _forSpace(pstate, space,
           _normalizeHue(c0, c1.value_or(0) < 0.0),
           c1.has_value() ? std::abs(c1.value()) : c1,
           c2, alpha);
       }
-      else if (space == ColorSpace::hwb)
+      else if (space == ColorSpaces::hwb)
       {
         return _forSpace(pstate, space,
           _normalizeHue(c0, false),
           c1, c2, alpha);
       }
-      else if (space == ColorSpace::lch || space == ColorSpace::oklch) {
+      else if (space == ColorSpaces::lch || space == ColorSpaces::oklch) {
         auto rv = _forSpace(pstate, space,
           c0,
           c1.has_value() ? std::abs(c1.value()) : c1,

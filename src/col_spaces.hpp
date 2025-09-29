@@ -8,38 +8,46 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-#include "shim/optional.hpp"
 #include "ast_fwd_decl.hpp"
+#include "shim/optional.hpp"
 #include "ast_def_macros.hpp"
+#include "col_consts.hpp"
 #include "col_channel.hpp"
-#include "ast_values.hpp"
 
 namespace Sass {
 
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
-  class HwbColorSpace;
-  class HslColorSpace;
-  class LabColorSpace;
-  class LchColorSpace;
-  class OkLabColorSpace;
-  class OkLchColorSpace;
-  class RgbColorSpace;
+  // Forward declarations
+  // class HwbColorSpace;
+  // class HslColorSpace;
+  // class LabColorSpace;
+  // class LchColorSpace;
+  // class OkLabColorSpace;
+  // class OkLchColorSpace;
+  // class RgbColorSpace;
+  // class SrgbColorSpace;
+  // class SrgbLinearColorSpace;
+  // class XyzD50ColorSpace;
+  // class XyzD65ColorSpace;
+  // class Rec2020ColorSpace;
+  // class DisplayP3ColorSpace;
+  // class ProphotoRgbColorSpace;
+  // class A98RgbColorSpace;
+  // class LmsColorSpace;
 
-  class SrgbColorSpace;
-  class SrgbLinearColorSpace;
-  class XyzD50ColorSpace;
-  class XyzD65ColorSpace;
-  class Rec2020ColorSpace;
-  class DisplayP3ColorSpace;
-  class ProphotoRgbColorSpace;
-  class A98RgbColorSpace;
-  class LmsColorSpace;
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   /// A constant used in the rec2020 gamma encoding/decoding functions.
   const double _alpha = 1.09929682680944;
 
   /// A constant used in the rec2020 gamma encoding/decoding functions.
   const double _beta = 0.018053968510807;
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
 
   class ColorSpace {
 
@@ -123,23 +131,6 @@ namespace Sass {
     bool operator!=(const ColorSpace& rhs) const {
       return rhs.space_ == space_;
     }
-
-    static const HwbColorSpace hwb;
-    static const HslColorSpace hsl;
-    static const LabColorSpace lab;
-    static const LchColorSpace lch;
-    static const OkLabColorSpace oklab;
-    static const OkLchColorSpace oklch;
-    static const RgbColorSpace rgb;
-    static const SrgbColorSpace srgb;
-    static const SrgbLinearColorSpace srgb_linear;
-    static const XyzD50ColorSpace xyzd50;
-    static const XyzD65ColorSpace xyzd65;
-    static const Rec2020ColorSpace rec2020;
-    static const DisplayP3ColorSpace displayP3;
-    static const A98RgbColorSpace a98rgb;
-    static const ProphotoRgbColorSpace protophotoRgb;
-    static const LmsColorSpace lms;
 
   };
 
@@ -848,6 +839,27 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+
+  namespace ColorSpaces {
+
+    static const HwbColorSpace hwb;
+    static const HslColorSpace hsl;
+    static const LabColorSpace lab;
+    static const LchColorSpace lch;
+    static const OkLabColorSpace oklab;
+    static const OkLchColorSpace oklch;
+    static const RgbColorSpace rgb;
+    static const SrgbColorSpace srgb;
+    static const SrgbLinearColorSpace srgb_linear;
+    static const XyzD50ColorSpace xyzd50;
+    static const XyzD65ColorSpace xyzd65;
+    static const Rec2020ColorSpace rec2020;
+    static const DisplayP3ColorSpace displayP3;
+    static const A98RgbColorSpace a98rgb;
+    static const ProphotoRgbColorSpace protophotoRgb;
+    static const LmsColorSpace lms;
+
+  };
 
 }
 

@@ -139,13 +139,13 @@ namespace Sass {
 
     ColorObj rv;
 
-    if (method.space == ColorSpace::hsl || method.space == ColorSpace::hwb) {
+    if (method.space == ColorSpaces::hsl || method.space == ColorSpaces::hwb) {
       rv = Color::forSpaceInternal(pstate, method.space,
         missing1_0 && missing2_0 ? tl::optional<double>() :
           _interpolateHues(channel1_0, channel2_0, method.hue, weight),
         mixed1, mixed2, mixedAlpha);
     }
-    else if (method.space == ColorSpace::lch || method.space == ColorSpace::oklch) {
+    else if (method.space == ColorSpaces::lch || method.space == ColorSpaces::oklch) {
       rv = Color::forSpaceInternal(pstate, method.space, mixed0, mixed1,
         missing1_2 && missing2_2 ? tl::optional<double>() :
           _interpolateHues(channel1_2, channel2_2, method.hue, weight),
@@ -230,9 +230,9 @@ namespace Sass {
 
   bool Color::isLegacy() const
   {
-    return space_ == ColorSpace::rgb
-      || space_ == ColorSpace::hwb
-      || space_ == ColorSpace::hsl;
+    return space_ == ColorSpaces::rgb
+      || space_ == ColorSpaces::hwb
+      || space_ == ColorSpaces::hsl;
   }
 
   tl::optional<double> Color::getChannelOrNull(int idx) const
@@ -338,7 +338,7 @@ namespace Sass {
 
   bool Color::isChannel2Powerless() const
   {
-    if (space_ == ColorSpace::lch || space_.name() == "oklch") {
+    if (space_ == ColorSpaces::lch || space_.name() == "oklch") {
       return fuzzyEquals(getChannel1(), 0, 0.00001);
     }
     return false;
@@ -453,8 +453,8 @@ namespace Sass {
           &&   fuzzyEquals(c1_, rhs.c1_, sass::epsilon)
           &&   fuzzyEquals(c2_, rhs.c2_, sass::epsilon);
       }
-      ColorObj rgb1 = toSpace(ColorSpace::rgb, pstate());
-      ColorObj rgb2 = rhs.toSpace(ColorSpace::rgb, rhs.pstate());
+      ColorObj rgb1 = toSpace(ColorSpaces::rgb, pstate());
+      ColorObj rgb2 = rhs.toSpace(ColorSpaces::rgb, rhs.pstate());
       // std::cerr << "rgb1 " << rgb1->debug() << "\n";
       // std::cerr << "rgb2 " << rgb2->debug() << "\n";
       auto rv = fuzzyEquals(rgb1->c0_, rgb2->c0_, sass::epsilon)
@@ -497,25 +497,25 @@ namespace Sass {
 
   const ColorSpace& ColorSpace::fromNameRef(Logger& logger, const String& space, const sass::string& name)
   {
-    if (StringUtils::equalsIgnoreCase(space.value(), "rgb")) return ColorSpace::rgb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "hwb")) return ColorSpace::hwb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "hsl")) return ColorSpace::hsl;
-    if (StringUtils::equalsIgnoreCase(space.value(), "srgb")) return ColorSpace::srgb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "srgb-linear")) return ColorSpace::srgb_linear;
+    if (StringUtils::equalsIgnoreCase(space.value(), "rgb")) return ColorSpaces::rgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "hwb")) return ColorSpaces::hwb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "hsl")) return ColorSpaces::hsl;
+    if (StringUtils::equalsIgnoreCase(space.value(), "srgb")) return ColorSpaces::srgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "srgb-linear")) return ColorSpaces::srgb_linear;
 
-    if (StringUtils::equalsIgnoreCase(space.value(), "display-p3")) return ColorSpace::displayP3;
-    if (StringUtils::equalsIgnoreCase(space.value(), "a98-rgb")) return ColorSpace::a98rgb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "prophoto-rgb")) return ColorSpace::protophotoRgb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "rec2020")) return ColorSpace::rec2020;
+    if (StringUtils::equalsIgnoreCase(space.value(), "display-p3")) return ColorSpaces::displayP3;
+    if (StringUtils::equalsIgnoreCase(space.value(), "a98-rgb")) return ColorSpaces::a98rgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "prophoto-rgb")) return ColorSpaces::protophotoRgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "rec2020")) return ColorSpaces::rec2020;
 
-    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d65")) return ColorSpace::xyzd65;
-    if (StringUtils::equalsIgnoreCase(space.value(), "xyz")) return ColorSpace::xyzd65;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d65")) return ColorSpaces::xyzd65;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz")) return ColorSpaces::xyzd65;
 
-    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d50")) return ColorSpace::xyzd50;
-    if (StringUtils::equalsIgnoreCase(space.value(), "lab")) return ColorSpace::lab;
-    if (StringUtils::equalsIgnoreCase(space.value(), "lch")) return ColorSpace::lch;
-    if (StringUtils::equalsIgnoreCase(space.value(), "oklab")) return ColorSpace::oklab;
-    if (StringUtils::equalsIgnoreCase(space.value(), "oklch")) return ColorSpace::oklch;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d50")) return ColorSpaces::xyzd50;
+    if (StringUtils::equalsIgnoreCase(space.value(), "lab")) return ColorSpaces::lab;
+    if (StringUtils::equalsIgnoreCase(space.value(), "lch")) return ColorSpaces::lch;
+    if (StringUtils::equalsIgnoreCase(space.value(), "oklab")) return ColorSpaces::oklab;
+    if (StringUtils::equalsIgnoreCase(space.value(), "oklch")) return ColorSpaces::oklch;
 
     throw Exception::UnknownColorSpace(logger, space, name);
 
@@ -523,24 +523,24 @@ namespace Sass {
 
   const ColorSpace* ColorSpace::fromName(Logger& logger, const String& space, const sass::string& name)
   {
-    if (StringUtils::equalsIgnoreCase(space.value(), "rgb")) return &ColorSpace::rgb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "hwb")) return &ColorSpace::hwb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "hsl")) return &ColorSpace::hsl;
-    if (StringUtils::equalsIgnoreCase(space.value(), "srgb")) return &ColorSpace::srgb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "srgb-linear")) return &ColorSpace::srgb_linear;
+    if (StringUtils::equalsIgnoreCase(space.value(), "rgb")) return &ColorSpaces::rgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "hwb")) return &ColorSpaces::hwb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "hsl")) return &ColorSpaces::hsl;
+    if (StringUtils::equalsIgnoreCase(space.value(), "srgb")) return &ColorSpaces::srgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "srgb-linear")) return &ColorSpaces::srgb_linear;
 
-    if (StringUtils::equalsIgnoreCase(space.value(), "display-p3")) return &ColorSpace::displayP3;
-    if (StringUtils::equalsIgnoreCase(space.value(), "a98-rgb")) return &ColorSpace::a98rgb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "prophoto-rgb")) return &ColorSpace::protophotoRgb;
-    if (StringUtils::equalsIgnoreCase(space.value(), "rec2020")) return &ColorSpace::rec2020;
-    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d65")) return &ColorSpace::xyzd65;
-    if (StringUtils::equalsIgnoreCase(space.value(), "xyz")) return &ColorSpace::xyzd65;
+    if (StringUtils::equalsIgnoreCase(space.value(), "display-p3")) return &ColorSpaces::displayP3;
+    if (StringUtils::equalsIgnoreCase(space.value(), "a98-rgb")) return &ColorSpaces::a98rgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "prophoto-rgb")) return &ColorSpaces::protophotoRgb;
+    if (StringUtils::equalsIgnoreCase(space.value(), "rec2020")) return &ColorSpaces::rec2020;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d65")) return &ColorSpaces::xyzd65;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz")) return &ColorSpaces::xyzd65;
 
-    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d50")) return &ColorSpace::xyzd50;
-    if (StringUtils::equalsIgnoreCase(space.value(), "lab")) return &ColorSpace::lab;
-    if (StringUtils::equalsIgnoreCase(space.value(), "lch")) return &ColorSpace::lch;
-    if (StringUtils::equalsIgnoreCase(space.value(), "oklab")) return &ColorSpace::oklab;
-    if (StringUtils::equalsIgnoreCase(space.value(), "oklch")) return &ColorSpace::oklch;
+    if (StringUtils::equalsIgnoreCase(space.value(), "xyz-d50")) return &ColorSpaces::xyzd50;
+    if (StringUtils::equalsIgnoreCase(space.value(), "lab")) return &ColorSpaces::lab;
+    if (StringUtils::equalsIgnoreCase(space.value(), "lch")) return &ColorSpaces::lch;
+    if (StringUtils::equalsIgnoreCase(space.value(), "oklab")) return &ColorSpaces::oklab;
+    if (StringUtils::equalsIgnoreCase(space.value(), "oklch")) return &ColorSpaces::oklch;
 
     throw Exception::UnknownColorSpace(logger, space, name);
 
@@ -564,9 +564,9 @@ namespace Sass {
 
   static const ColorSpace& getLinearDest(const ColorSpace& dest)
   {
-    if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) { return ColorSpace::srgb; }
-    else if (dest == ColorSpace::lab || dest == ColorSpace::lch) { return ColorSpace::xyzd50; }
-    else if (dest == ColorSpace::oklab || dest == ColorSpace::oklch) { return ColorSpace::lms; }
+    if (dest == ColorSpaces::hsl || dest == ColorSpaces::hwb) { return ColorSpaces::srgb; }
+    else if (dest == ColorSpaces::lab || dest == ColorSpaces::lch) { return ColorSpaces::xyzd50; }
+    else if (dest == ColorSpaces::oklab || dest == ColorSpaces::oklch) { return ColorSpaces::lms; }
     return dest;
   }
 
@@ -587,9 +587,9 @@ namespace Sass {
 
     const ColorSpace& linearDest = getLinearDest(dest);
 
-    // if (dest.name_ == "hsl" || dest.name_ == "hwb") { linearDest = ColorSpace::srgb; }
-    // else if (dest.name_ == "lab" || dest.name_ == "lch") { linearDest = ColorSpace::xyzd50; }
-    // else if (dest.name_ == "oklab" || dest.name_ == "oklch") { linearDest = ColorSpace::lms; }
+    // if (dest.name_ == "hsl" || dest.name_ == "hwb") { linearDest = ColorSpaces::srgb; }
+    // else if (dest.name_ == "lab" || dest.name_ == "lch") { linearDest = ColorSpaces::xyzd50; }
+    // else if (dest.name_ == "oklab" || dest.name_ == "oklch") { linearDest = ColorSpaces::lms; }
 
     tl::optional<double> transformedRed;
     tl::optional<double> transformedGreen;
@@ -633,18 +633,18 @@ namespace Sass {
     //  << transformedGreen.value_or(-42) << ", "
     //  << transformedBlue.value_or(-42) << "\n";
 
-    if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
-      return ColorSpace::srgb.translate(dest, pstate,
+    if (dest == ColorSpaces::hsl || dest == ColorSpaces::hwb) {
+      return ColorSpaces::srgb.translate(dest, pstate,
         transformedRed, transformedGreen, transformedBlue,
         alpha, missingLightness, missingChroma, missingHue);
     }
-    else if (dest == ColorSpace::lab || dest == ColorSpace::lch) {
-      return ColorSpace::xyzd50.translate(dest, pstate,
+    else if (dest == ColorSpaces::lab || dest == ColorSpaces::lch) {
+      return ColorSpaces::xyzd50.translate(dest, pstate,
         transformedRed, transformedGreen, transformedBlue,
         alpha, missingLightness, missingChroma, missingHue);
     }
     else if (dest.name() == "oklab" || dest.name() == "oklch") {
-      return ColorSpace::lms.translate(dest, pstate,
+      return ColorSpaces::lms.translate(dest, pstate,
         transformedRed, transformedGreen, transformedBlue,
         alpha, missingLightness, missingChroma, missingHue);
     }
@@ -680,7 +680,7 @@ namespace Sass {
     //   << green.value_or(-42) << ", " << blue.value_or(-42) << ", "
     //   << alpha.value_or(-42) << "\n";
 
-    if (dest == ColorSpace::hsl || dest == ColorSpace::hwb) {
+    if (dest == ColorSpaces::hsl || dest == ColorSpaces::hwb) {
       double nr_red = red.value_or(0);
       double nr_green = green.value_or(0);
       double nr_blue = blue.value_or(0);
@@ -709,7 +709,7 @@ namespace Sass {
         hue = 60 * (nr_red - nr_green) / delta + 240;
       }
 
-      if (dest == ColorSpace::hsl) {
+      if (dest == ColorSpaces::hsl) {
         double lightness = (min + max) / 2;
         double saturation = lightness == 0 || lightness == 1
           ? 0.0
@@ -749,16 +749,16 @@ namespace Sass {
         return rv;
 
       }
-      return SASS_MEMORY_NEW(Color, pstate, ColorSpace::rgb, 1, 1, 1, 1);
+      return SASS_MEMORY_NEW(Color, pstate, ColorSpaces::rgb, 1, 1, 1, 1);
     }
-    else if (dest == ColorSpace::rgb) {
+    else if (dest == ColorSpaces::rgb) {
       return Color::rgb(pstate,
         red.has_value() ? red.value() * 255.0 : red,
         green.has_value() ? green.value() * 255.0 : green,
         blue.has_value() ? blue.value() * 255.0 : blue,
         alpha);
     }
-    else if (dest == ColorSpace::srgb_linear) {
+    else if (dest == ColorSpaces::srgb_linear) {
       auto rv = Color::forSpaceInternal(pstate, dest,
         red.has_value() ? toLinear(red.value()) : red,
         green.has_value() ? toLinear(green.value()) : green,
@@ -784,7 +784,7 @@ namespace Sass {
   {
     // std::cerr << "CALL RGB convert " << channel0.value_or(0) << ", "
     //   << channel1.value_or(0) << ", " << channel2.value_or(0) << ", " << "\n";
-    auto rv = ColorSpace::srgb.translate(dest, pstate,
+    auto rv = ColorSpaces::srgb.translate(dest, pstate,
       channel0.has_value() ? channel0.value() / 255.0 : channel0,
       channel1.has_value() ? channel1.value() / 255.0 : channel1,
       channel2.has_value() ? channel2.value() / 255.0 : channel2,
@@ -829,7 +829,7 @@ namespace Sass {
     //   << y.value_or(-42) << ", " << z.value_or(-42) << ", "
     //   << alpha.value_or(-42) << "\n";
 
-    if (dest == ColorSpace::lab || dest == ColorSpace::lch) {
+    if (dest == ColorSpaces::lab || dest == ColorSpaces::lch) {
       // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
       // and http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
       double f0 = _convertComponentToLabF(x.value_or(0) / d50[0]);
@@ -841,7 +841,7 @@ namespace Sass {
       double b = 200 * (f1 - f2);
       if (!missingLightness) { lightness = (116.0 * f1) - 16.0; }
 
-      if (dest == ColorSpace::lab) {
+      if (dest == ColorSpaces::lab) {
         auto rv = Color::lab(pstate, lightness,
           missingA ? tl::optional<double>() : a,
           missingB ? tl::optional<double>() : b,
@@ -851,7 +851,7 @@ namespace Sass {
       }
       else {
         auto rv = Color::labToLch(pstate,
-          ColorSpace::lch, lightness, a, b, alpha,
+          ColorSpaces::lch, lightness, a, b, alpha,
           missingChroma, missingHue);
         // std::cerr << "==lch== " << rv->debug() << "\n";
         return rv;
@@ -890,7 +890,7 @@ namespace Sass {
     bool missingB) const
   {
 
-    if (dest == ColorSpace::oklab) {
+    if (dest == ColorSpaces::oklab) {
       // Algorithm from https://drafts.csswg.org/css-color-4/#color-conversion-code
       double longScaled = _cubeRootPreservingSign(lng.value_or(0));
       double mediumScaled = _cubeRootPreservingSign(med.value_or(0));
@@ -913,7 +913,7 @@ namespace Sass {
 
       return nullptr;
     }
-    else if (dest == ColorSpace::oklch) {
+    else if (dest == ColorSpaces::oklch) {
       // This is equivalent to converting to OKLab and then to OKLCH, but we
       // do it inline to avoid extra list allocations since we expect
       // conversions to and from OKLCH to be very common.
@@ -951,7 +951,7 @@ namespace Sass {
   {
     // std::cerr << "OKLCH Translate\n";
     double hueRadians = hue.value_or(0) * PI / 180.0;
-    return ColorSpace::oklab.translate(
+    return ColorSpaces::oklab.translate(
       dest, pstate,
       lightness,
       chroma.value_or(0) * std::cos(hueRadians),
@@ -979,7 +979,7 @@ namespace Sass {
     if (!a.has_value()) a = 0;
     if (!b.has_value()) b = 0;
     // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
-    return ColorSpace::lms.translate(
+    return ColorSpaces::lms.translate(
       dest, pstate,
       std::pow(
         ColorSpaces::oklabToLms[0] * lightness.value_or(0) +
@@ -1049,7 +1049,7 @@ namespace Sass {
 
     // Non-null because an in-gamut HSL color is
     // guaranteed to be in-gamut for HWB as well.
-    return ColorSpace::srgb.translate(
+    return ColorSpaces::srgb.translate(
       dest, pstate,
       nnan(hueToRgb(0.0, 1.0, scaledHue + 1.0 / 3.0)* factor + scaledWhiteness),
       nnan(hueToRgb(0.0, 1.0, scaledHue)* factor + scaledWhiteness),
@@ -1068,7 +1068,7 @@ namespace Sass {
     tl::optional<double> alpha) const
   {
     double hueRadians = hue.value_or(0) * PI / 180.0;
-    auto rv = ColorSpace::lab.translate(dest, pstate,
+    auto rv = ColorSpaces::lab.translate(dest, pstate,
       lightness,
       chroma.value_or(0) * std::cos(hueRadians),
       chroma.value_or(0) * std::sin(hueRadians),
@@ -1097,7 +1097,7 @@ namespace Sass {
 
     // std::cerr << "LAB.CONVERT " << lightness.value_or(-42) << "; " << a.value_or(-42) << ", " << b.value_or(-42) << "\n";
 
-    if (dest == ColorSpace::lab)
+    if (dest == ColorSpaces::lab)
     {
       bool powerlessAB = !lightness.has_value() || fuzzyEquals(lightness.value(), 0, sass::epsilon);
       return Color::lab(pstate,
@@ -1106,7 +1106,7 @@ namespace Sass {
         !b.has_value() || powerlessAB ? tl::optional<double>() : b,
         alpha);
     }
-    else if (dest == ColorSpace::lch)
+    else if (dest == ColorSpaces::lch)
     {
       return Color::labToLch(pstate,
         dest, lightness, a, b, alpha,
@@ -1122,7 +1122,7 @@ namespace Sass {
 
       // std::cerr << "=> F1 " << f1 << "\n";
 
-      return ColorSpace::xyzd50.translate(
+      return ColorSpaces::xyzd50.translate(
         dest, pstate,
         _convertFToXorZ((a.value_or(0)) / 500.0 + f1) * d50[0],
         (lightness.value() > labKappa * labEpsilon
@@ -1148,10 +1148,10 @@ namespace Sass {
     tl::optional<double> blue,
     tl::optional<double> alpha) const
   {
-    if (dest == ColorSpace::rgb || dest == ColorSpace::hsl ||
-        dest == ColorSpace::hwb || dest == ColorSpace::srgb)
+    if (dest == ColorSpaces::rgb || dest == ColorSpaces::hsl ||
+        dest == ColorSpaces::hwb || dest == ColorSpaces::srgb)
     {
-      return ColorSpace::srgb.convert(
+      return ColorSpaces::srgb.convert(
         dest, pstate,
         red.transform(srgbAndDisplayP3FromLinear),
         green.transform(srgbAndDisplayP3FromLinear),
@@ -1177,7 +1177,7 @@ namespace Sass {
         scaledLightness * scaledSaturation;
     double m1 = scaledLightness * 2 - m2;
 
-    return ColorSpace::srgb.translate(
+    return ColorSpaces::srgb.translate(
       dest, pstate,
       hueToRgb(m1, m2, scaledHue + 1.0 / 3.0),
       hueToRgb(m1, m2, scaledHue),
@@ -1186,217 +1186,6 @@ namespace Sass {
       !lightness.has_value(),
       !saturation.has_value(),
       !hue.has_value());
-  }
-
-  static double clampLikeCss(double val, double min, double max) {
-    return std::isnan(val) ? min : std::min(std::max(val, min), max);
-  }
-
-  tl::optional<double> _clampChannel(tl::optional<double> value, const ColorChannel& channel)
-  {
-    if (value.has_value() == false) return value;
-    if (channel.isLinear == false) return value;
-    return clampLikeCss(value.value(), channel.min, channel.max);
-  }
-
-  const ClipGamutMap GamutMapMethod::clip = ClipGamutMap();
-  const LocalMindeGamutMap GamutMapMethod::localMinde = LocalMindeGamutMap();
-
-
-  Color* ClipGamutMap::map(Color* color) const
-  {
-    // std::cerr << "clip gammut " << color->debug() << "\n";
-    return Color::forSpaceInternal(
-      color->pstate(), color->space(),
-      _clampChannel(color->getChannel0OrNull(), color->space()._channels[0]),
-      _clampChannel(color->getChannel1OrNull(), color->space()._channels[1]),
-      _clampChannel(color->getChannel2OrNull(), color->space()._channels[2]),
-      color->getAlphaOrNull());
-  }
-
-  const GamutMapMethod& GamutMapMethod::fromName(Logger& logger,
-    Value* value, const sass::string& vname)
-  {
-    if (value == nullptr) return GamutMapMethod::clip;
-    if (value->isNull()) return GamutMapMethod::clip;
-    String* mname = value->assertString(logger, vname);
-    mname->assertUnquoted(logger, vname);
-    if (mname->value() == "local-minde") return localMinde; 
-    else if (mname->value() == "clip") return clip;
-    throw Exception::SassScriptException(logger, value->pstate(),
-      "Unknown gamut map method \"" + mname->value() + "\".", vname);
-  }
-
-  /// Returns the ΔEOK measure between [color1] and [color2].
-  double _deltaEOK(Color* color1, Color* color2) {
-    // Algorithm from https://www.w3.org/TR/css-color-4/#color-difference-OK
-    ColorObj lab1 = color1->toSpace(ColorSpace::oklab, color1->pstate());
-    ColorObj lab2 = color2->toSpace(ColorSpace::oklab, color2->pstate());
-
-    return std::sqrt(
-      std::pow(lab1->getChannel0() - lab2->getChannel0(), 2) +
-      std::pow(lab1->getChannel1() - lab2->getChannel1(), 2) +
-      std::pow(lab1->getChannel2() - lab2->getChannel2(), 2));
-  }
-
-
-  Color* LocalMindeGamutMap::map(Color* color) const
-  {
-
-    /// A constant from the gamut-mapping algorithm.
-    double _jnd = 0.02;
-
-    /// A constant from the gamut-mapping algorithm.
-    double _epsilon = 0.0001;
-
-
-    // Algorithm from https://www.w3.org/TR/2022/CRD-css-color-4-20221101/#css-gamut-mapping-algorithm
-    ColorObj originOklch = color->toSpace(ColorSpace::oklch, color->pstate());
-
-    // The channel equivalents to `current` in the Color 4 algorithm.
-    tl::optional<double> lightness = originOklch->getChannel0OrNull();
-    tl::optional<double> hue = originOklch->getChannel2OrNull();
-    tl::optional<double> alpha = originOklch->getAlphaOrNull();
-
-    if (fuzzyGreaterThanOrEquals(lightness.value_or(0), 1.0, sass::epsilon)) {
-      if (color->isLegacy()) {
-ColorObj rv = Color::rgb(
-        color->pstate(), 255, 255, 255, color->getAlphaOrNull());
-        rv = rv->toSpace(color->space(), color->pstate());
-return rv.detach();
-}
-      return Color::forSpaceInternal(
-        color->pstate(), color->space(),
-        1, 1, 1, color->getAlphaOrNull());
-    }
-    else if (fuzzyLessThanOrEquals(lightness.value_or(0), 0.0, sass::epsilon)) {
-      ColorObj rv = Color::rgb(
-        color->pstate(),
-        0, 0, 0, color->getAlphaOrNull());
-      rv = rv->toSpace(color->space(), color->pstate());
-      return rv.detach();
-    }
-
-    ColorObj clipped = color->toGamut(GamutMapMethod::clip);
-
-    if (_deltaEOK(clipped, color) < _jnd) return clipped.detach();
-
-    double min = 0.0;
-    double max = originOklch->getChannel1();
-    bool minInGamut = true;
-
-    while (max - min > _epsilon) {
-
-      double chroma = (min + max) / 2.0;
-
-      // In the Color 4 algorithm `current` is in Oklch, but all its actual uses
-      // other than modifying chroma convert it to `color.space` first so we
-      // just store it in that space to begin with.
-      ColorObj current = ColorSpace::oklch.convert(
-        color->space(),
-        color->pstate(),
-        lightness,
-        chroma,
-        hue,
-        alpha);
-
-      // Per [this comment], the intention of the algorithm is to fall through
-      // this clause if `minInGamut = false` without checking
-      // `current.isInGamut` at all, even though that's unclear from the
-      // pseudocode. `minInGamut = false` *should* imply `current.isInGamut =
-      // false`.
-      //
-      // [this comment]: https://github.com/w3c/csswg-drafts/issues/10226#issuecomment-2065534713
-      if (minInGamut && current->isInGamut()) {
-        min = chroma;
-        continue;
-      }
-
-      clipped = current->toGamut(GamutMapMethod::clip);
-      double e = _deltaEOK(clipped, current);
-      if (e < _jnd) {
-        if (_jnd - e < _epsilon) return clipped.detach();
-        minInGamut = false;
-        min = chroma;
-      }
-      else {
-        max = chroma;
-      }
-    }
-    return clipped.detach();
-
-  }
-
-  InterpolationMethod InterpolationMethod::fromValue(Logger& logger, Value* value, const sass::string& name)
-  {
-    auto list = value->assertCommonListStyle(logger, name, false);
-
-    if (list.empty()) {
-      throw Exception::SassScriptException(logger, value->pstate(),
-        "Expected a color interpolation method, got an empty list.",
-        name);
-    }
-
-    const ColorSpace& space = ColorSpace::fromValueRef(logger, list[0], name);
-
-    if (list.size() == 1) return InterpolationMethod(space);
-
-    auto hueMethod = InterpolationMethod::hueFromValue(logger, list[1], name);
-
-    if (list.size() == 2) {
-      throw Exception::SassScriptException(logger, value->pstate(),
-        "Expected unquoted string \"hue\" after " + value->toString() + ".",
-        name);
-    }
-    else {
-      auto str = list[2]->assertString(logger, name);
-      str->assertUnquoted(logger, name);
-      if (!StringUtils::equalsIgnoreCase(str->value(), "hue", 3)) {
-        throw Exception::SassScriptException(logger, value->pstate(),
-          "Expected unquoted string \"hue\" at the end of "
-          + value->toString() + ", was " + list[2]->toString() + ".",
-          name);
-      }
-      if (list.size() > 3) {
-        throw Exception::SassScriptException(logger, value->pstate(),
-          "Expected nothing after \"hue\" in " + value->toString() + ".",
-          name);
-      }
-      if (!space.isPolar()) {
-        throw Exception::SassScriptException(logger, value->pstate(),
-          "Hue interpolation method \"" + list[1]->toString() + " hue\" may not be"
-          " set for rectangular color space " + space.name() + ".",
-          name);
-      }
-    }
-
-    return InterpolationMethod(space, hueMethod);
-
-  }
-
-  HueInterpolationMethod InterpolationMethod::hueFromValue(
-    Logger& logger, Value* value, const sass::string& name)
-  {
-
-    const String* string = value->assertString(logger, name);
-    string->assertUnquoted(logger, name);
-
-    if (StringUtils::equalsIgnoreCase(string->value(), "shorter", 7)) {
-      return HueInterpolationMethod::shorter;
-    }
-    if (StringUtils::equalsIgnoreCase(string->value(), "longer", 6)) {
-      return HueInterpolationMethod::longer;
-    }
-    if (StringUtils::equalsIgnoreCase(string->value(), "increasing", 10)) {
-      return HueInterpolationMethod::increasing;
-    }
-    if (StringUtils::equalsIgnoreCase(string->value(), "decreasing", 10)) {
-      return HueInterpolationMethod::decreasing;
-    }
-
-    throw Exception::SassScriptException(logger, value->pstate(),
-      "Unknown hue interpolation method " + value->toCss() + ".",
-      name);
   }
 
   ///////////////////////////////////////////////////////////////////////

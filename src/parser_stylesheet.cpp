@@ -2721,7 +2721,7 @@ namespace Sass {
     // Color* color = SASS_MEMORY_NEW(ColorRgba, pstate,
     //   red, green, blue, alpha, original, false);
     Color* color = SASS_MEMORY_NEW(Color, pstate,
-      ColorSpace::rgb, red, green, blue, alpha, original, false);
+      ColorSpaces::rgb, red, green, blue, alpha, original, false);
     // std::cerr << "Parsed color " << color->debug() << "\n";
     return SASS_MEMORY_NEW(ColorExpression, pstate, color);
   }
@@ -3200,7 +3200,7 @@ namespace Sass {
         int red = 0, green = 0, blue = 0, alpha = 0;
         if (name_to_color(plain, red, green, blue, alpha)) {
           return SASS_MEMORY_NEW(ColorExpression, identifier->pstate(),
-            SASS_MEMORY_NEW(Color, identifier->pstate(), ColorSpace::rgb,
+            SASS_MEMORY_NEW(Color, identifier->pstate(), ColorSpaces::rgb,
               red, green, blue, alpha, plain, false));
         }
         // if (const Color* color = name_to_color(plain)) {

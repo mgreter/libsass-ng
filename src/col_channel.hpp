@@ -8,21 +8,16 @@
 // to get the __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-// #include "ast_nodes.hpp"
-// #include "ast_values.hpp"
-#include "shim/optional.hpp"
 #include "ast_fwd_decl.hpp"
 #include "ast_def_macros.hpp"
 #include "memory_allocator.hpp"
-
-class Color;
+#include "shim/optional.hpp"
 
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  class GamutMapMethod;
   class ClipGamutMap;
   class LocalMindeGamutMap;
 
@@ -53,7 +48,7 @@ namespace Sass {
   public:
 
     ClipGamutMap() : GamutMapMethod("clip") {}
-    virtual ~ClipGamutMap() {}
+    // virtual ~ClipGamutMap() {}
     Color* map(Color* color) const final;
 
   };
@@ -61,7 +56,7 @@ namespace Sass {
   class LocalMindeGamutMap : public GamutMapMethod {
   public:
     LocalMindeGamutMap() : GamutMapMethod("local-minde") {}
-    virtual ~LocalMindeGamutMap() {}
+    // virtual ~LocalMindeGamutMap() {}
     Color* map(Color* color) const final;
 
   };
@@ -78,7 +73,6 @@ namespace Sass {
     bool requiresPercent = false;
     bool lowerClamped = false;
     bool upperClamped = false;
-    bool conventionallyPercent = false;
     bool isLinear = false;
 
   public:
@@ -87,13 +81,17 @@ namespace Sass {
     bool isPolarAngle;
     sass::string unit;
 
+  private:
 
     ColorChannel(sass::string name, bool isPolarAngle, sass::string unit)
       : name(name), isPolarAngle(isPolarAngle), unit(unit)
     {
     }
 
-    bool isAnalogous(const ColorChannel& other) const {
+  public:
+
+    inline bool isAnalogous(const ColorChannel& other) const
+    {
       if (name == "x" && other.name == "red") return true;
       if (name == "red" && other.name == "x") return true;
       if (name == "y" && other.name == "green") return true;
@@ -107,90 +105,91 @@ namespace Sass {
       return false;
     }
 
-
-    virtual ~ColorChannel() = default;
-  };
-
-  class LinearChannel : public ColorChannel {
-
-  public:
-    LinearChannel(sass::string name, double min, double max,
-      bool requiresPercent, bool lowerClamped, bool upperClamped,
-      bool conventionallyPercent = false, sass::string unit = "")
-      : ColorChannel(name, false, unit)
+    static ColorChannel polar(sass::string name, bool isPolarAngle, sass::string unit)
     {
-      this->min = min;
-      this->max = max;
-      this->requiresPercent = requiresPercent;
-      this->lowerClamped = lowerClamped;
-      this->upperClamped = upperClamped;
-      this->conventionallyPercent = conventionallyPercent;
-      this->isLinear = true;
+      ColorChannel channel(name, false, unit);
+      return channel;
     }
 
+      static ColorChannel linear(sass::string name, double min, double max,
+      bool requiresPercent, bool lowerClamped, bool upperClamped,
+      sass::string unit = "")
+    {
+      ColorChannel channel(name, false, unit);
+      channel.min = min;
+      channel.max = max;
+      channel.requiresPercent = requiresPercent;
+      channel.lowerClamped = lowerClamped;
+      channel.upperClamped = upperClamped;
+      channel.isLinear = true;
+      return channel;
+    }
+
+
+    virtual ~ColorChannel() = default;
   };
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
   const ColorChannel HslColorChannels[3]{
-    ColorChannel("hue", true, "deg"),
-    LinearChannel("saturation", 0, 100, false, true, false, false, "%"), // conf1
-    LinearChannel("lightness", 0, 100, true, false, false, false, "%") // conf2
+    ColorChannel::polar("hue", true, "deg"),
+    ColorChannel::linear("saturation", 0, 100, false, true, false, "%"), // conf1
+    ColorChannel::linear("lightness", 0, 100, true, false, false, "%") // conf2
   };
 
   const ColorChannel HwbColorChannels[3]{
-    ColorChannel("hue", true, "deg"),
-    LinearChannel("whiteness", 0, 100, true, false, false, false, "%"), // conf2
-    LinearChannel("blackness", 0, 100, true, false, false, false, "%") // conf2
+    ColorChannel::polar("hue", true, "deg"),
+    ColorChannel::linear("whiteness", 0, 100, true, false, false, "%"), // conf2
+    ColorChannel::linear("blackness", 0, 100, true, false, false, "%") // conf2
   };
 
   const ColorChannel LabColorChannels[3]{
-    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
-    LinearChannel("a", -125, 125, false, false, false),
-    LinearChannel("b", -125, 125, false, false, false)
+    ColorChannel::linear("lightness", 0, 100, false, true, true, "%"), // conf4
+    ColorChannel::linear("a", -125, 125, false, false, false), // conf3
+    ColorChannel::linear("b", -125, 125, false, false, false) // conf3
   };
 
   const ColorChannel LchColorChannels[3]{
-    LinearChannel("lightness", 0, 100, false, true, true, false, "%"),
-    LinearChannel("chroma", 0, 150, false, true, false),
-    ColorChannel("hue", true, "deg"),
+    ColorChannel::linear("lightness", 0, 100, false, true, true, "%"), // conf4
+    ColorChannel::linear("chroma", 0, 150, false, true, false),// conf1
+    ColorChannel::polar("hue", true, "deg"),
   };
 
   const ColorChannel LmsColorChannels[3]{
-    LinearChannel("long", 0, 1, false, false, false),
-    LinearChannel("medium", 0, 1, false, false, false),
-    LinearChannel("short", 0, 1, false, false, false)
+    ColorChannel::linear("long", 0, 1, false, false, false), // conf3
+    ColorChannel::linear("medium", 0, 1, false, false, false), // conf3
+    ColorChannel::linear("short", 0, 1, false, false, false) // conf3
   };
 
   const ColorChannel OkLabColorChannels[3]{
-    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
-    LinearChannel("a", -0.4, 0.4, false, false, false),
-    LinearChannel("b", -0.4, 0.4, false, false, false)
+    ColorChannel::linear("lightness", 0, 1, false, true, true, "%"),
+    ColorChannel::linear("a", -0.4, 0.4, false, false, false), // conf3
+    ColorChannel::linear("b", -0.4, 0.4, false, false, false) // conf3
   };
 
   const ColorChannel OkLchColorChannels[3]{
-    LinearChannel("lightness", 0, 1, false, true, true, true, "%"),
-    LinearChannel("chroma", 0, 0.4, false, true, false),
-    ColorChannel("hue", true, "deg"),
+    ColorChannel::linear("lightness", 0, 1, false, true, true, "%"),
+    ColorChannel::linear("chroma", 0, 0.4, false, true, false),// conf1
+    ColorChannel::polar("hue", true, "deg"),
   };
 
   const ColorChannel RgbColorChannels[3]{
-    LinearChannel("red", 0, 1, false, false, false),
-    LinearChannel("green", 0, 1, false, false, false),
-    LinearChannel("blue", 0, 1, false, false, false)
+    ColorChannel::linear("red", 0, 1, false, false, false), // conf3
+    ColorChannel::linear("green", 0, 1, false, false, false), // conf3
+    ColorChannel::linear("blue", 0, 1, false, false, false) // conf3
   };
 
   const ColorChannel Rgb255ColorChannels[3]{
-    LinearChannel("red", 0, 255, false, true, true),
-    LinearChannel("green", 0, 255, false, true, true),
-    LinearChannel("blue", 0, 255, false, true, true)
+    ColorChannel::linear("red", 0, 255, false, true, true), // conf4
+    ColorChannel::linear("green", 0, 255, false, true, true), // conf4
+    ColorChannel::linear("blue", 0, 255, false, true, true) // conf4
   };
 
   const ColorChannel XyzColorChannels[3]{
-    LinearChannel("x", 0, 1, false, false, false),
-    LinearChannel("y", 0, 1, false, false, false),
-    LinearChannel("z", 0, 1, false, false, false)
+    ColorChannel::linear("x", 0, 1, false, false, false), // conf3
+    ColorChannel::linear("y", 0, 1, false, false, false), // conf3
+    ColorChannel::linear("z", 0, 1, false, false, false) // conf3
   };
 
   // const ColorChannel Xyz255ColorChannels[3]{
@@ -199,7 +198,8 @@ namespace Sass {
   //   LinearChannel("z", 0, 255, false, true, true)
   // };
 
-  const LinearChannel AlphaChannel("alpha", 0, 1, false, false, false);
+  const ColorChannel AlphaChannel = ColorChannel::
+    linear("alpha", 0, 1, false, false, false);
 }
 
 #endif
