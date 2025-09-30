@@ -1187,6 +1187,7 @@ namespace Sass {
     unsigned long minSpecificity() const final;
 
     SelectorList* produce() {
+      return this;
       ComplexSelectors copy;
       for (ComplexSelector* child : elements_) {
         copy.emplace_back(child->produce());
@@ -1211,6 +1212,47 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
+
+  class ModifiableBox : public RefCounted, public Equatable<ModifiableBox>, Comparable<ModifiableBox> {
+  public:
+    SelectorListObj value;
+    ModifiableBox() {};
+
+    ModifiableBox(SelectorList* list)
+      : value(list)
+    {
+    };
+
+    bool operator==(const ModifiableBox& rhs) const final;
+    bool operator<(const ModifiableBox& rhs) const final;
+
+    size_t hash() const {
+      return value->hash();
+      // return (size_t)(this);
+    }
+
+    Box* seal();
+
+  };
+
+  class Box : public RefCounted, public Equatable<Box>, public Comparable<Box>  {
+  public:
+
+    ModifiableBoxObj _inner;
+
+    Box() : _inner() {};
+
+    Box(ModifiableBoxObj mbox);
+
+    bool operator==(const Box& rhs) const final;
+    bool operator<(const Box& rhs) const final;
+
+
+    //bool operator==(Box& rhs);
+
+    size_t hash() const;
+
+  };
 
 }
 

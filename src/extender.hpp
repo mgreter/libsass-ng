@@ -13,6 +13,7 @@
 #include "comparators.hpp"
 #include "containers.hpp"
 
+
 // #include "ankerl/unordered_dense.h"
 
 
@@ -21,30 +22,43 @@
 
 namespace Sass {
 
+  class Box;
+
   /////////////////////////////////////////////////////////////////////////
   // Different hash map types used by extender
   /////////////////////////////////////////////////////////////////////////
 
+  // typedef SelectorListObj ModifiableBoxArg;
+  typedef ModifiableBoxObj ModifiableBoxArg;
+
   // Changed often, but also looked up quite often
-  typedef sass::set::ptr<ExtensionObj> ExtSet; // `unsatisfiedExtensions`
-  typedef sass::set::obj<SimpleSelectorObj> ExtSmplSelSet; // `targetsUsed`
+  typedef sass::set::unordered::ptr<ExtensionObj> ExtSet; // `unsatisfiedExtensions`
+  typedef sass::set::unordered::obj<SimpleSelectorObj> ExtSmplSelSet; // `targetsUsed`
 
   // Inserted a lot (can grow very big)
-  typedef sass::set::ptr<ComplexSelectorObj> ExtCplxSelSet; // `originals91`
+  typedef sass::set::unordered::ptr<ComplexSelectorObj> ExtCplxSelSet; // `originals91`
   // The value part for the `selectors` below holding all `SelectorLists`
-  typedef sass::set::ptr<SelectorListObj> ExtListSelSet; // `selectors54[]`
+  typedef sass::set::unordered::ptr<ModifiableBoxArg> ExtListSelSet; // `selectors54[]`
 
   // Every (nested) simple selector in `_registerSelector` takes a lookup
   // `ExtListSelSet` may be inserted => `SelectorList` is added to that
   // Every simple selector seen will end up in this big data structure
-  typedef sass::map::obj<SimpleSelectorObj, ExtListSelSet> ExtSelMap; // `selectors54`
+  typedef sass::map::unordered::obj<SimpleSelectorObj, ExtListSelSet> ExtSelMap; // `selectors54`
 
   // Extensions by `@extend` rules (every rule gets an entry)
-  typedef sass::map::obj<SimpleSelectorObj, sass::vector<ExtensionObj>>ExtByExtMap;
+  typedef sass::map::unordered::obj<SimpleSelectorObj, sass::vector<ExtensionObj>>ExtByExtMap;
 
   // A map from all extended simple selectors
   typedef sass::stblmap::obj<ComplexSelectorObj, ExtensionObj> ExtSelExtMapEntry;
   typedef sass::map::obj<SimpleSelectorObj, ExtSelExtMapEntry> ExtSelExtMap;
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
 
   class ExtensionStore : public RefCounted {
 
@@ -93,7 +107,7 @@ namespace Sass {
     // If a rule is defined at the top level, it doesn't have an entry.
     /////////////////////////////////////////////////////////////////////////
     sass::stblmap::ptr<
-      SelectorListObj,
+      ModifiableBoxArg,
       CssMediaQueryVectorObj
     > mediaContexts;
     
@@ -172,7 +186,7 @@ namespace Sass {
     // The [mediaContext] is the media query context in which the selector was
     // defined, or `null` if it was defined at the top level of the document.
     /////////////////////////////////////////////////////////////////////////
-    void addSelector(
+    Box* addSelector(
       const SelectorListObj& selector,
       CssMediaQueryVector* mediaContext);
 
@@ -182,7 +196,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     void _registerSelector(
       const SelectorListObj& list,
-      const SelectorListObj& rule,
+      const ModifiableBoxArg& rule,
       bool onlyPublic = false);
 
     /////////////////////////////////////////////////////////////////////////
@@ -274,11 +288,10 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     // Extends [list] using [extensions].
     /////////////////////////////////////////////////////////////////////////
-    bool extendList(
+    SelectorList* extendList(
       const SelectorListObj& list,
       const ExtSelExtMap& extensions,
-      CssMediaQueryVector* mediaContext,
-      ComplexSelectors& result);
+      CssMediaQueryVector* mediaContext);
 
     /////////////////////////////////////////////////////////////////////////
     // Extends [complex] using [extensions], and

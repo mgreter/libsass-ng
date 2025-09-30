@@ -321,17 +321,31 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // CssStyleRule::CssStyleRule(
+  //   const SourceSpan& pstate,
+  //   CssParentNode* parent,
+  //   SelectorList* selector,
+  //   CssNodeVector&& children) :
+  //   CssParentNode(
+  //     pstate, parent,
+  //     std::move(children)),
+  //   selector_(selector),
+  //   original98_(selector ? selector->produce() : nullptr)
+  // {}
+
   CssStyleRule::CssStyleRule(
-    const SourceSpan& pstate,
-    CssParentNode* parent,
-    SelectorList* selector,
-    CssNodeVector&& children) :
+    const SourceSpan & pstate,
+    CssParentNode * parent,
+    Box* selector,
+    CssNodeVector && children) :
     CssParentNode(
       pstate, parent,
       std::move(children)),
-    selector_(selector),
-    original98_(selector ? selector->produce() : nullptr)
-  {}
+    selector_(nullptr),
+    boxsel_(selector),
+    original98_(selector && selector->_inner ? selector->_inner->value : nullptr)
+  {
+  }
 
   CssStyleRule::CssStyleRule(
     const CssStyleRule* ptr,
@@ -339,7 +353,8 @@ namespace Sass {
     CssParentNode(
       ptr, childless),
     selector_(ptr->selector_),
-    original98_(ptr->original98_)
+    original98_(ptr->original98_),
+    boxsel_(ptr->boxsel_)
   {}
 
   /////////////////////////////////////////////////////////////////////////

@@ -494,17 +494,30 @@ namespace Sass {
   {
   private:
 
-    ADD_CONSTREF(SelectorListObj, selector);
+    SelectorListObj selector_;
+
+
+    ADD_CONSTREF(BoxObj, boxsel);
+
     ADD_CONSTREF(SelectorListObj, original98);
     // ADD_CONSTREF(bool, fromPlainCss);
 
   public:
 
+    SelectorList* selector() { return boxsel_ && boxsel_->_inner ? boxsel_->_inner->value : nullptr; }
+    SelectorList* selector() const { return boxsel_ && boxsel_->_inner ? boxsel_->_inner->value : nullptr; }
+
     // Value constructor
+    //CssStyleRule(
+    //  const SourceSpan& pstate,
+    //  CssParentNode* parent,
+    //  SelectorList* selector,
+    //  CssNodeVector&& children = {});
+
     CssStyleRule(
       const SourceSpan& pstate,
       CssParentNode* parent,
-      SelectorList* selector,
+      Box* selector,
       CssNodeVector&& children = {});
 
     // Copy constructor
@@ -533,7 +546,7 @@ namespace Sass {
       }
       return SASS_MEMORY_NEW(CssStyleRule,
         pstate_, parent_,
-        original98_ ? original98_->produce() : nullptr,
+        boxsel_,
         std::move(copy));
     }
 

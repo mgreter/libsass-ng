@@ -184,8 +184,10 @@ namespace Sass {
       CssParentNode* chroot = current;
       /*if (!nest) */chroot = chroot->bubbleThroughCss();
       // Create a new style rule at the correct parent
+      ModifiableBoxObj foo = new ModifiableBox(slist);
       CssStyleRuleObj child = SASS_MEMORY_NEW(CssStyleRule,
-        css->pstate(), chroot, slist);
+        css->pstate(), chroot, foo->seal());
+      // CssStyleRuleObj child = nullptr;
       child->fromPlainCss(plainCss);
       // Add child to our parent
       chroot->addChildAt(child, true);

@@ -533,7 +533,7 @@ namespace Sass {
 
     // Create container where to put compiled css
     root->compiled = SASS_MEMORY_NEW(CssStyleRule,
-      root->pstate(), nullptr, nullptr);
+      root->pstate(), nullptr, new Box());
 
     RAII_OBJ(CssParentNode, current, root->compiled);
     RAII_PTR(Stylesheet, _stylesheet, root);
@@ -609,7 +609,11 @@ namespace Sass {
       auto beg = module->extender52->selectors54.begin();
       auto end = module->extender52->selectors54.end();
       while (beg != end) {
+#ifdef USE_SOME_MAP
         originalSelectors.insert(beg.key());
+#else
+        originalSelectors.insert(beg->first);
+#endif
         beg++;
       }
 

@@ -2225,14 +2225,14 @@ namespace Sass {
       // If previous extend rules match this selector it will
       // immediately do the extending, extend rules that occur
       // later will apply the extending to the existing ones.
-      _extensionStore->addSelector(slist, mediaQueries);
+      BoxObj boxed = _extensionStore->addSelector(slist, mediaQueries);
 
       // Find the parent we should append to (bubble up)
       CssParentNode* chroot = current; // ->bubbleThrough(true);
       if (nest) chroot = chroot->bubbleThrough(true);
       // Create a new style rule at the correct parent
       CssStyleRuleObj child = SASS_MEMORY_NEW(CssStyleRule,
-        node->pstate(), chroot, slist);
+        node->pstate(), chroot, boxed); // ModifiableCssStyleRule
       child->fromPlainCss(wasCss);
       // Add child to our parent
       chroot->addChildAt(child, true);

@@ -14,6 +14,42 @@
 
 namespace Sass {
 
+
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+
+  bool Box::operator==(const Box& rhs) const {
+    return &_inner == &rhs._inner;
+  }
+
+  bool Box::operator<(const Box& rhs) const {
+    return &_inner < &rhs._inner;
+  }
+
+  bool ModifiableBox::operator==(const ModifiableBox& rhs) const {
+    return false; // &_inner == &rhs._inner;
+  }
+
+  bool ModifiableBox::operator<(const ModifiableBox& rhs) const {
+    return false; //  &_inner < &rhs._inner;
+  }
+
+  size_t Box::hash() const {
+    return (size_t)&_inner;
+  }
+
+  Box* ModifiableBox::seal() {
+    return new Box(this);
+  }
+
+  Box::Box(ModifiableBoxObj mbox) {
+    _inner = mbox;
+  }
+
+
+
   /////////////////////////////////////////////////////////////////////////
   // Constructor with specific [mode].
   // [traces] are needed to throw errors.
@@ -153,8 +189,7 @@ namespace Sass {
               complex->pstate(), src, simple, {}, false, true);
           }
         }
-
-        extender->extendList(results, std::move(extensions), {}, results->elements());
+        results = extender->extendList(results, std::move(extensions), {});
 
       }
       else {
@@ -254,29 +289,34 @@ namespace Sass {
   // The [mediaContext] is the media query context in which the selector was
   // defined, or `null` if it was defined at the top level of the document.
   /////////////////////////////////////////////////////////////////////////
-  void ExtensionStore::addSelector(
-    const SelectorListObj& selector,
+  Box* ExtensionStore::addSelector(
+    const SelectorListObj& input,
     CssMediaQueryVector* mediaContext)
   {
 
-    if (!selector->isInvisible()) {
+    SelectorList* selector = input;
+    SelectorList* original = selector;
+
+    if (!original->isInvisible()) {
       // originals91.reserve(originals91.size() + selector->size());
       // for (const auto& complex : *selector)
-      originals91.insert(selector->begin(), selector->end());
+      originals91.insert(original->begin(), original->end());
     }
 
     if (!extensionsBySimpleSelector.empty()) {
-      extendList(selector, extensionsBySimpleSelector,
-        mediaContext, selector->elements());
+
+      selector = extendList(selector, extensionsBySimpleSelector, mediaContext);
       // Dart-Sass upgrades error here
     }
 
+    ModifiableBoxObj rv = new ModifiableBox(selector);
     if (mediaContext != nullptr && !mediaContext->empty()) {
-      mediaContexts[selector] = mediaContext;
+      mediaContexts[rv] = mediaContext;
     }
 
-    _registerSelector(selector, selector);
+    _registerSelector(selector, rv);
 
+    return rv->seal();
     // Dart-Sass returns wrapped in modifiable
   }
   // EO addSelector (checked)
@@ -287,11 +327,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   void ExtensionStore::_registerSelector(
     const SelectorListObj& list,
-    const SelectorListObj& rule,
+    const ModifiableBoxArg& rule,
     bool onlyPublic)
   {
     if (list.isNull() || list->empty()) return;
-    // std::cerr << "  register selector " << list->inspect() << " at " << this << "\n";
     // std::cerr << "Reg selector " << rule.ptr() << " - " << rule->inspect() << " => " << list->inspect() << "\n";
     for (auto& complex : list->elements()) {
       // std::cerr << "REGISTER SELECTOR " << complex->inspect() << "\n";
@@ -299,6 +338,7 @@ namespace Sass {
         if (auto& compound = component->selector()) {
           for (const SimpleSelectorObj& simple : compound->elements()) {
             // Creating this structure can take up to 5%
+            std::cerr << "Register selector " << simple->inspect() << "\n";
             selectors54[simple].insert(rule);
             if (const PseudoSelector* pseudo = simple->isaPseudoSelector()) {
               if (pseudo->selector() != nullptr) {
@@ -310,6 +350,8 @@ namespace Sass {
       }
     }
   }
+
+
   // EO _registerSelector (checked)
 
   /////////////////////////////////////////////////////////////////////////
@@ -555,10 +597,10 @@ namespace Sass {
     const ExtSelExtMap& newExtensions)
   {
     // register may extend what we iterate
-    sass::vector<SelectorList*> copy(
-      selectors.begin(), selectors.end());
+    //sass::vector<SelectorList*> copy(
+    //  selectors.begin(), selectors.end());
     // Is a modifyableCssStyleRUle in dart sass
-    for (SelectorList* selector : copy) {
+    for (ModifiableBox* selector : selectors) {
       CssMediaQueryVector* mediaContext = nullptr;
       auto it = mediaContexts.find(selector);
       if (it != mediaContexts.end()) {
@@ -573,12 +615,29 @@ namespace Sass {
       // Instead it passes back if the extend succeeded therefore
       // we do not need the `identical` check that Dart-Sass has
       //std::cerr << "extend selector [" << selector->inspect() << "]\n";
-      if (extendList(selector, newExtensions, mediaContext, selector->elements())) {
-        //std::cerr << "extended selector " << selector->inspect() << "\n";
-        //std::cerr << "Register existing selector " << selector->toString() << "\n";
-        _registerSelector(selector, selector);
-       // std::cerr << "REGGED EXISTING " << selector->inspect() << "\n";
+//      if (extendList(selector->value, newExtensions, mediaContext, nullptr)) {
+//        //std::cerr << "extended selector " << selector->inspect() << "\n";
+//        //std::cerr << "Register existing selector " << selector->toString() << "\n";
+//        _registerSelector(selector->value, selector);
+//       // std::cerr << "REGGED EXISTING " << selector->inspect() << "\n";
+//      }
+
+      SelectorList* old = selector->value;
+
+      selector->value = extendList(selector->value, newExtensions, mediaContext);
+
+      std::cerr << "Box is now " << selector->value->toString() << "\n";
+
+      if (old != selector->value) {
+        _registerSelector(selector->value, selector);
       }
+
+      // if (extendList(selector->value, newExtensions, mediaContext, nullptr)) {
+      //   //std::cerr << "extended selector " << selector->inspect() << "\n";
+      //   //std::cerr << "Register existing selector " << selector->toString() << "\n";
+      //   _registerSelector(selector->value, selector);
+      //   // std::cerr << "REGGED EXISTING " << selector->inspect() << "\n";
+      // }
 
     }
   }
@@ -720,11 +779,10 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // Extends [list] using [extensions].
   /////////////////////////////////////////////////////////////////////////
-  bool ExtensionStore::extendList(
+  SelectorList* ExtensionStore::extendList(
     const SelectorListObj& list,
     const ExtSelExtMap& extensions, // Move?
-    CssMediaQueryVector* mqContext,
-    ComplexSelectors& result)
+    CssMediaQueryVector* mqContext)
   {
     // This could be written more simply using [List.map], but we want to
     // avoid any allocations in the common case where no extends apply.
@@ -732,10 +790,13 @@ namespace Sass {
     for (auto cur = list->begin(), end = list->end(); cur != end; cur ++)
     {
       const ComplexSelectorObj& complex = *cur;
-      ComplexSelectors extended =
-        extendComplex(complex, extensions, mqContext);
+
+      std::cerr << "try to extend " << complex->toString() << "\n";
+      ComplexSelectors extended = extendComplex(
+        complex, extensions, mqContext);
 
       if (extended.empty()) {
+        // std::cerr << " => result was empty, abort\n";
         if (!results.empty()) {
           results.emplace_back(complex);
         }
@@ -754,20 +815,24 @@ namespace Sass {
     }
 
     if (results.empty()) {
-      // Indicate failure
-      return false;
+      // Indicate failure 
+      return list;
     }
 
     // Trim extended by checking if it was an original selector
     results = _trim(results, [&](ComplexSelector* complex) ->
       bool { return this->originals91.count(complex) != 0; });
 
+    auto rv = SASS_MEMORY_NEW(SelectorList, list->pstate(), std::move(results));
+
+    std::cerr << "result => " << rv->toString() << "\n";
+
     // Move extended back to results
     // Is a reference passed by caller
-    result = std::move(results);
+    // result = std::move(results);
 
     // Indicate success
-    return true;
+    return rv;
   }
   // EO extendList (review)
 
@@ -1396,27 +1461,26 @@ namespace Sass {
     const ExtSelExtMap& extensions,
     CssMediaQueryVector* mediaQueryContext)
   {
-    ComplexSelectors extended;
+    SelectorList* extended = nullptr;;
     // Call extend and abort if nothing was extended
-    if (!pseudo || !pseudo->selector() ||
-      !extendList(pseudo->selector(), extensions,
-        mediaQueryContext, extended)) {
-      // Abort pseudo extend
-      return {};
-    }
+    if (!pseudo || !pseudo->selector()) return {};
+
+    extended = extendList(pseudo->selector(), extensions, mediaQueryContext);
+
+    if (extended == pseudo->selector()) return {};
 
     // For `:not()`, we usually want to get rid of any complex selectors because
     // that will cause the selector to fail to parse on all browsers at time of
     // writing. We can keep them if either the original selector had a complex
     // selector, or the result of extending has only complex selectors, because
     // either way we aren't breaking anything that isn't already broken.
-    ComplexSelectors complexes = extended;
+    ComplexSelectors complexes = extended->elements();
 
     if (pseudo->normalized() == "not") {
       if (!hasAny(pseudo->selector()->elements(), hasMoreThanOne)) {
-        if (hasAny(extended, hasExactlyOne)) {
+        if (hasAny(extended->elements(), hasExactlyOne)) {
           complexes.clear();
-          for (auto& complex : extended) {
+          for (auto& complex : extended->elements()) {
             if (complex->size() <= 1) {
               complexes.push_back(complex);
             }

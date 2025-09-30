@@ -20,6 +20,9 @@ namespace Sass {
 
   class ModRule;
 
+  class Box;
+  class ModifiableBox;
+
   // Forward declare
   class EnvKey;
   class EnvRef;
@@ -329,6 +332,9 @@ namespace Sass {
   IMPL_MEM_OBJ(CompoundSelector);
   IMPL_MEM_OBJ(ComplexSelector);
   IMPL_MEM_OBJ(SelectorList);
+
+  IMPL_MEM_OBJ(ModifiableBox);
+  IMPL_MEM_OBJ(Box);
 
   /////////////////////////////////////////////////////////////////////////#
   // some often used typedefs
