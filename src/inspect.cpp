@@ -286,9 +286,12 @@ namespace Sass {
 
   void Inspect::visitCssStyleRule(CssStyleRule* node)
   {
-    SelectorListObj s = node->selector();
 
     if (!node || node->isInvisibleCss()) return;
+
+    SelectorListObj s = node->selector();
+
+   //  std::cerr << "visit css style rule with box " << node->boxsel()->_inner->dbh() << "\n";
 
     // if (output_style() == SASS_STYLE_NESTED) {
     //   indentation += node->tabs();

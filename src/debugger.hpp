@@ -1113,6 +1113,12 @@ inline void debug_ast(AstNode* node, std::string ind)
   else if (CssStyleRule* ruleset = Cast<CssStyleRule>(node)) {
     std::cerr << ind << "CssStyleRule " << ruleset;
     std::cerr << " (" << pstate_source_position(node) << ")";
+    if (ruleset->boxsel() && ruleset->boxsel()->_inner)
+    std::cerr << " BOX " << ruleset->boxsel()->_inner->dbh();
+    else if (ruleset->boxsel() && !ruleset->boxsel()->_inner)
+      std::cerr << " BOX NO INNER";
+    else
+      std::cerr << " BOX NO BOX";
     std::cerr << std::endl;
     debug_ast(ruleset->selector(), ind + ">");
     // debug_ast(ruleset->interpolation(), ind + "#");

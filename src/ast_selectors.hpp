@@ -1213,15 +1213,30 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  static size_t ids = 0;
+
   class ModifiableBox : public RefCounted, public Equatable<ModifiableBox>, Comparable<ModifiableBox> {
   public:
+
+    size_t id = 0;
+
     SelectorListObj value;
-    ModifiableBox() {};
+
+    ModifiableBox() {
+      // std::cerr << "## NEW EMPTY BOX " << dbh() << "\n";
+      id = ++ids;
+    };
 
     ModifiableBox(SelectorList* list)
       : value(list)
     {
+      id = ++ids;
+      // std::cerr << "## NEW MODIFIABLE BOX " << dbh() << "\n";
     };
+
+    size_t dbh() const {
+      return id;
+    }
 
     bool operator==(const ModifiableBox& rhs) const final;
     bool operator<(const ModifiableBox& rhs) const final;

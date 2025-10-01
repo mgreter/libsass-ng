@@ -12,6 +12,8 @@
 #include "ast_helpers.hpp"
 #include "ast_css.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
 
 
@@ -306,6 +308,7 @@ namespace Sass {
     if (!extensionsBySimpleSelector.empty()) {
 
       selector = extendList(selector, extensionsBySimpleSelector, mediaContext);
+
       // Dart-Sass upgrades error here
     }
 
@@ -313,6 +316,8 @@ namespace Sass {
     if (mediaContext != nullptr && !mediaContext->empty()) {
       mediaContexts[rv] = mediaContext;
     }
+
+    // std::cerr << "[ADD] Selector is now [" << rv->value->toString() << "] at box ref {" << rv->dbh() << "}\n";
 
     _registerSelector(selector, rv);
 
@@ -331,14 +336,14 @@ namespace Sass {
     bool onlyPublic)
   {
     if (list.isNull() || list->empty()) return;
-    // std::cerr << "Reg selector " << rule.ptr() << " - " << rule->inspect() << " => " << list->inspect() << "\n";
+    // std::cerr << "Reg selector " << rule.ptr() << " - " << rule->value->inspect() << " => Box ref " << rule->dbh() << "\n";
     for (auto& complex : list->elements()) {
       // std::cerr << "REGISTER SELECTOR " << complex->inspect() << "\n";
       for (auto& component : complex->elements()) {
         if (auto& compound = component->selector()) {
           for (const SimpleSelectorObj& simple : compound->elements()) {
             // Creating this structure can take up to 5%
-            std::cerr << "Register selector " << simple->inspect() << "\n";
+            // std::cerr << "+ Register " << simple->inspect() << "\n";
             selectors54[simple].insert(rule);
             if (const PseudoSelector* pseudo = simple->isaPseudoSelector()) {
               if (pseudo->selector() != nullptr) {
@@ -406,6 +411,8 @@ namespace Sass {
     // Get existing extensions for the given target (SimpleSelector)
     ExtSelExtMapEntry& sources = extensionsBySimpleSelector[target];
 
+    // std::cerr << "EXTENDER HAS " << extender->elements().size() << "\n";
+
     for (auto& complex : extender->elements()) {
       if (complex->isUseless()) continue;
       // std::cerr << "+++ " << complex->inspect() << "\n";
@@ -423,6 +430,8 @@ namespace Sass {
         // ToDo: mergeExtension needs error checks etc.
         continue;
       }
+
+      // std::cerr << "+HAS EXT FOR SMP " << extensionsBySimpleSelector[target].size() << "\n";
 
       sources[complex] = extension;
 
@@ -447,6 +456,7 @@ namespace Sass {
     }
     // EO foreach complex
 
+    // std::cerr << "+NOW EXT FOR SMP " << extensionsBySimpleSelector[target].size() << "\n";
     if (newExtensions.empty()) {
       return;
     }
@@ -596,6 +606,7 @@ namespace Sass {
     const ExtListSelSet& selectors,
     const ExtSelExtMap& newExtensions)
   {
+   // exit(1);
     // register may extend what we iterate
     //sass::vector<SelectorList*> copy(
     //  selectors.begin(), selectors.end());
@@ -626,9 +637,10 @@ namespace Sass {
 
       selector->value = extendList(selector->value, newExtensions, mediaContext);
 
-      std::cerr << "Box is now " << selector->value->toString() << "\n";
+      // std::cerr << "[EXT] Box is now [" << selector->value->toString() << "] at box ref {" << selector->dbh() << "}\n";
 
       if (old != selector->value) {
+        // std::cerr << "register selectors\n";
         _registerSelector(selector->value, selector);
       }
 
@@ -791,9 +803,10 @@ namespace Sass {
     {
       const ComplexSelectorObj& complex = *cur;
 
-      std::cerr << "try to extend " << complex->toString() << "\n";
+      // std::cerr << " - extended in " << complex->toString() << "\n";
       ComplexSelectors extended = extendComplex(
         complex, extensions, mqContext);
+      // std::cerr << " + extended out " << VecToString2(extended) << "\n";
 
       if (extended.empty()) {
         // std::cerr << " => result was empty, abort\n";
@@ -825,7 +838,7 @@ namespace Sass {
 
     auto rv = SASS_MEMORY_NEW(SelectorList, list->pstate(), std::move(results));
 
-    std::cerr << "result => " << rv->toString() << "\n";
+    // std::cerr << "result => " << rv->toString() << "\n";
 
     // Move extended back to results
     // Is a reference passed by caller
@@ -1316,7 +1329,9 @@ namespace Sass {
     if (extensionIt == extensions.end()) return {};
     auto& extensionsForSimple = extensionIt->second;
 
-      if (targetsUsed != nullptr) {
+    // std::cerr << "HAS EXT FOR SMP " << extensionsForSimple.size() << "\n";
+
+    if (targetsUsed != nullptr) {
       targetsUsed->insert(simple);
     }
 

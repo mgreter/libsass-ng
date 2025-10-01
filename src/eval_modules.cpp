@@ -9,6 +9,8 @@
 #include "ast_imports.hpp"
 #include "css_imported.hpp"
 
+#include "debugger.hpp"
+
 namespace Sass {
   
   /////////////////////////////////////////////////////////////////////////
@@ -470,8 +472,11 @@ namespace Sass {
           + " was already loaded, so it "
           "can't be configured using \"with\".");
       }
+      // debug_ast(sheet);
       CssRootObj rv = _combineCss(sheet, true);
+      // debug_ast(rv);
       if (rv != nullptr) rv->accept(this);
+      // debug_ast(current);
     }
 
   }

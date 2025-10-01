@@ -176,17 +176,23 @@ namespace Sass {
       RAII_SELECTOR(originalStack, SASS_MEMORY_COPY(slist));
 
 
-      if (_extensionStore) _extensionStore->addSelector(slist, mediaQueries);
-      else std::cerr << "no extension store\n";
+      auto result = _extensionStore->addSelector(slist, mediaQueries);
+      // else std::cerr << "no extension store\n";
       // check if selector must be extendable by downstream extends
 
       // Find the parent we should append to (bubble up)
       CssParentNode* chroot = current;
       /*if (!nest) */chroot = chroot->bubbleThroughCss();
       // Create a new style rule at the correct parent
-      ModifiableBoxObj foo = new ModifiableBox(slist);
+      // ModifiableBoxObj foo = nullptr;
+      // if (css->boxsel()) {
+      //   foo = css->boxsel()->_inner;
+      // }
+      // else {
+      //   foo = new ModifiableBox(slist);
+      // }
       CssStyleRuleObj child = SASS_MEMORY_NEW(CssStyleRule,
-        css->pstate(), chroot, foo->seal());
+        css->pstate(), chroot, result);
       // CssStyleRuleObj child = nullptr;
       child->fromPlainCss(plainCss);
       // Add child to our parent

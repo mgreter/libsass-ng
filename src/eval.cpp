@@ -2233,6 +2233,9 @@ namespace Sass {
       // Create a new style rule at the correct parent
       CssStyleRuleObj child = SASS_MEMORY_NEW(CssStyleRule,
         node->pstate(), chroot, boxed); // ModifiableCssStyleRule
+
+      //  std::cerr << "++ Evaled style rule with box " << boxed->_inner->dbh() << "\n";
+
       child->fromPlainCss(wasCss);
       // Add child to our parent
       chroot->addChildAt(child, true);
@@ -3066,53 +3069,51 @@ namespace Sass {
 
     // std::cerr << "visit extend [" << slist->inspect() << "]\n";
 
-    if (slist) {
+    if (slist == nullptr) return nullptr;
 
-      for (const auto& complex : slist->elements()) {
+    for (const auto& complex : slist->elements()) {
 
-        if (complex->size() != 1) {
-          CallStackFrame csf(logger, complex->pstate());
-          throw Exception::RuntimeException(logger,
-            "complex selectors may not be extended.");
-        }
+      if (complex->size() != 1) {
+        CallStackFrame csf(logger, complex->pstate());
+        throw Exception::RuntimeException(logger,
+          "complex selectors may not be extended.");
+      }
 
-        if (const CompoundSelector* compound = complex->first()->selector()) {
+      if (const CompoundSelector* compound = complex->first()->selector()) {
 
-          if (compound->size() != 1) {
+        if (compound->size() != 1) {
 
-            sass::sstream sels; bool addComma = false;
-            sels << "compound selectors may no longer be extended.\nConsider `@extend ";
-            for (const auto& sel : compound->elements()) {
-              if (addComma) sels << ", ";
-              sels << sel->inspect();
-              addComma = true;
-            }
-            sels << "` instead.\nSee https://sass-lang.com/d/extend-compound for details.";
-            #if SassRestrictCompoundExtending
-            CallStackFrame csf(logger, compound->pstate());
-            throw Exception::RuntimeException(logger, sels.str());
-            #else
-            logger.addDeprecation(sels.str(), compound->pstate());
-            #endif
-
-            // Make this an error once deprecation is over
-            for (SimpleSelectorObj simple : compound->elements()) {
-              if (_extensionStore) _extensionStore->addExtension(selector(), simple, mediaQueries, e, e->is_optional());
-              else std::cerr << "NO _extensionStore\n";
-            }
-
+          sass::sstream sels; bool addComma = false;
+          sels << "compound selectors may no longer be extended.\nConsider `@extend ";
+          for (const auto& sel : compound->elements()) {
+            if (addComma) sels << ", ";
+            sels << sel->inspect();
+            addComma = true;
           }
-          else {
-              if (_extensionStore) _extensionStore->addExtension(selector(), compound->first(), mediaQueries, e, e->is_optional());
-              else std::cerr << "NO _extensionStore\n";
+          sels << "` instead.\nSee https://sass-lang.com/d/extend-compound for details.";
+          #if SassRestrictCompoundExtending
+          CallStackFrame csf(logger, compound->pstate());
+          throw Exception::RuntimeException(logger, sels.str());
+          #else
+          logger.addDeprecation(sels.str(), compound->pstate());
+          #endif
+
+          // Make this an error once deprecation is over
+          for (SimpleSelectorObj simple : compound->elements()) {
+            _extensionStore->addExtension(readStyleRule->selector(), simple, mediaQueries, e, e->is_optional());
           }
 
         }
         else {
-          CallStackFrame csf(logger, complex->pstate());
-          throw Exception::RuntimeException(logger,
-            "complex selectors may not be extended.");
+          // std::cerr << "ADD EXTENSIONS " << slist->size() << "\n";
+            _extensionStore->addExtension(readStyleRule->selector(), compound->first(), mediaQueries, e, e->is_optional());
         }
+
+      }
+      else {
+        CallStackFrame csf(logger, complex->pstate());
+        throw Exception::RuntimeException(logger,
+          "complex selectors may not be extended.");
       }
     }
 
