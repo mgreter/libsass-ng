@@ -121,7 +121,8 @@ namespace Sass {
     size_t _indexAfterImports(sass::vector<CssNodeObj> statements);
 
 
-    void _visitUpstreamModule(Stylesheet* upstream, sass::vector<Stylesheet*>& sorted, std::set<sass::string>& seen, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone);
+    void _visitUpstreamModule(Stylesheet* upstream, CssRoot* css, sass::vector<Stylesheet*>& sorted,
+      std::set<sass::string>& seen, sass::vector<CssNodeObj>& imports, bool clone);
 
     CssRoot* _combineCss(Stylesheet* module, bool clone = false);
     sass::vector<Stylesheet*> _topologicalModules(Stylesheet* root, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone);

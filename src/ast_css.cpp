@@ -346,7 +346,6 @@ namespace Sass {
     CssParentNode(
       pstate, parent,
       std::move(children)),
-    selector_(nullptr),
     boxsel_(selector),
     original98_(selector && selector->_inner ? selector->_inner->value : nullptr)
   {
@@ -357,7 +356,6 @@ namespace Sass {
     bool childless) :
     CssParentNode(
       ptr, childless),
-    selector_(ptr->selector_),
     original98_(ptr->original98_),
     boxsel_(ptr->boxsel_)
   {}
@@ -380,7 +378,7 @@ namespace Sass {
   bool CssStyleRule::equalsIgnoringChildren(CssNode* other) const
   {
     if (const CssStyleRule* rule = other->isaCssStyleRule()) {
-      return ObjEqualityFn(selector_, rule->selector_);
+      return ObjEqualityFn(boxsel_->_inner, rule->boxsel_->_inner);
     }
     return false;
   }

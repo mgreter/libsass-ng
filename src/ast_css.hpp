@@ -532,7 +532,7 @@ namespace Sass {
   {
   private:
 
-    SelectorListObj selector_;
+    // SelectorListObj selector_;
 
 
     ADD_CONSTREF(BoxObj, boxsel);

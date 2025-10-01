@@ -15,12 +15,13 @@
 namespace Sass {
 
 
-  void Eval::_visitUpstreamModule(Stylesheet* current, sass::vector<Stylesheet*>& sorted, std::set<sass::string>& seen, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone)
+  void Eval::_visitUpstreamModule(Stylesheet* module, CssRoot* css, sass::vector<Stylesheet*>& sorted,
+    std::set<sass::string>& seen, sass::vector<CssNodeObj>& imports, bool clone)
   {
 
     // if (current->idxs->isImport) return;
 
-    for (Stylesheet* upstream : current->upstream77) {
+    for (Stylesheet* upstream : module->upstream77) {
       // if (upstream->idxs->isImport) continue;
       if (upstream == nullptr) continue;
       if (seen.count(upstream->import->getAbsPath())) continue;
@@ -30,61 +31,70 @@ namespace Sass {
         if (!css->empty()) css->append(head);
         else imports.push_back(head);
       }
-      _visitUpstreamModule(upstream, sorted, seen, css, imports, clone);
+
+      _visitUpstreamModule(upstream, css, sorted, seen, imports, clone);
     }
 
-    sorted.push_back(current);
-    if (current->compiled) {
+    sorted.push_back(module);
+    if (module->compiled) {
 
       // newExtensionStore = extensionStore.clone();
       // var(newExtensionStore, oldToNewSelectors) = extensionStore.clone();
 
-      sass::map::unordered::ptr<SelectorListObj, BoxObj> oldToNewSelectors;
+      if (clone)
+      {
+        sass::map::unordered::ptr<SelectorListObj, BoxObj> oldToNewSelectors;
+        ExtensionStoreObj newExtensionStore = module->extender52->clone(oldToNewSelectors);
+        CssClone cloner(oldToNewSelectors);
+        std::cerr << "cloning " << module->url << "\n";
+        CssRootObj copy = cloner.visitCssRoot(module->compiled);
+        // /*if (clone)*/ copy = SASS_MEMORY_CLONE(copy);
+        auto& statements = copy->elements();
+        auto index = _indexAfterImports(statements);
+        sass::vector<CssNodeObj> rest;
+        imports.insert(imports.end(), statements.begin(), statements.begin() + index);
+        css->elements().insert(css->elements().end(), statements.begin() + index, statements.end());
 
-      // ExtensionStoreObj newExtensionStore = current->extender52->clone(oldToNewSelectors);
+      }
+      else {
 
-      // CssClone cloner(oldToNewSelectors);
+        // debug_ast(module->compiled);
+        CssRootObj copy = module->compiled;
+        // debug_ast(copy);
+        // /*if (clone)*/ copy = SASS_MEMORY_CLONE(copy);
+        auto& statements = copy->elements();
+        auto index = _indexAfterImports(statements);
+        sass::vector<CssNodeObj> rest;
+        imports.insert(imports.end(), statements.begin(), statements.begin() + index);
+        css->elements().insert(css->elements().end(), statements.begin() + index, statements.end());
 
-      // cloner.visitCssRoot(current->compiled);
+      }
 
-      CssRootObj copy = current->compiled; // ->accept(&cloner);
-      // debug_ast(copy);
-      /*if (clone)*/ copy = SASS_MEMORY_CLONE(copy);
-      // debug_ast(copy);
-      auto& statements = copy->elements();
-      auto index = _indexAfterImports(statements);
-      sass::vector<CssNodeObj> rest;
-      imports.insert(imports.end(), statements.begin(), statements.begin() + index);
-      css->elements().insert(css->elements().end(), statements.begin() + index, statements.end());
     }
 
   }
 
 
-  sass::vector<Stylesheet*> Eval::_topologicalModules(Stylesheet* root, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone)
-  {
-    // Construct a topological ordering using depth-first traversal, as in
-    // https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search.
-    std::set<sass::string> seen;
-    sass::vector<Stylesheet*> sorted;
-    // Probably more efficient to push and resort
-    _visitUpstreamModule(root, sorted, seen, css, imports, clone);
-    std::reverse(sorted.begin(), sorted.end());
-    return sorted;
-  }
 
   CssRoot* Eval::_combineCss(Stylesheet* root, bool clone)
   {
-    CssRootObj mods = SASS_MEMORY_NEW(CssRoot, root->pstate());
-    RAII_OBJ(CssParentNode, current, mods);
+    CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
+    RAII_OBJ(CssParentNode, current, css);
     RAII_PTR(ExtensionStore, _extensionStore, root->extender52);
     RAII_PTR(Stylesheet, _stylesheet, root);
     sass::vector<CssNodeObj> imports;
-    auto sorted = _topologicalModules(root, mods, imports, clone);
+
+    std::set<sass::string> seen;
+    sass::vector<Stylesheet*> modules;
+    // Probably more efficient to push and resort
+    _visitUpstreamModule(root, css, modules, seen, imports, clone);
+    std::reverse(modules.begin(), modules.end());
+
+    // auto modules = _topologicalModules(root, mods, imports, clone);
     root->determineTransitivelyContainsExtensions();
-    if (root->transitivelyContainsExtensions) _extendModules(sorted);
-    mods->elements().insert(mods->elements().begin(), imports.begin(), imports.end());
-    return mods.detach();
+    if (root->transitivelyContainsExtensions) _extendModules(modules);
+    css->elements().insert(css->elements().begin(), imports.begin(), imports.end());
+    return css.detach();
   }
 
 

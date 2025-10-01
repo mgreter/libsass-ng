@@ -423,7 +423,7 @@ namespace Sass {
 
       CssRootObj oldcomp = root->compiled;
       root->compiled = nullptr;
-      CssRootObj rv = _combineCss(root);
+      CssRootObj rv = _combineCss(root, true);
       root->compiled = oldcomp;
       rv->accept(this);
 

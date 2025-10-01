@@ -18,7 +18,7 @@ namespace Sass {
 
   #ifdef DEBUG_SHARED_PTR
   void RefCounted::dumpMemLeaks() {
-    if (!all.empty()) {
+    if (false && !all.empty()) {
       std::cerr << "###################################\n";
       std::cerr << "# REPORTING MISSING DEALLOCATIONS #\n";
       std::cerr << "###################################\n";
@@ -31,7 +31,7 @@ namespace Sass {
           std::cerr << "LEAKED SOURCE " << ast->getDbgFile() << ":" << ast->getDbgLine() << "\n file: [" << ast->getAbsPath() << "]\n";
         }
         else {
-          std::cerr << "LEAKED REF " << ast->getDbgFile() << ":" << ast->getDbgLine() << "\n";
+          std::cerr << "LEAKED REF " << var->getDbgFile() << ":" << var->getDbgLine() << "\n";
         }
       }
       all.clear();

@@ -20,7 +20,7 @@ namespace Sass {
   {
     auto rv = SASS_MEMORY_COPY(css);
     for (auto& child : rv->elements())
-      child = SASS_MEMORY_COPY(child);
+      child = child->accept(this);
     return rv;
   }
 
@@ -43,7 +43,7 @@ namespace Sass {
   {
     auto rv = SASS_MEMORY_COPY(css);
     for(auto& child : rv->elements())
-      child = SASS_MEMORY_COPY(child);
+      child = child->accept(this);
     return rv;
   }
 
@@ -51,7 +51,7 @@ namespace Sass {
   {
     auto rv = SASS_MEMORY_COPY(css);
     for (auto& child : rv->elements())
-      child = SASS_MEMORY_COPY(child);
+      child = child->accept(this);
     return rv;
   }
 
@@ -59,7 +59,7 @@ namespace Sass {
   {
     auto rv = SASS_MEMORY_COPY(css);
     for (auto& child : rv->elements())
-      child = SASS_MEMORY_COPY(child);
+      child = child->accept(this);
     return rv;
   }
 
@@ -71,7 +71,7 @@ namespace Sass {
     {
       auto rv = SASS_MEMORY_COPY(css);
       for (auto& child : rv->elements())
-        child = SASS_MEMORY_COPY(child);
+        child = child->accept(this);
       rv->boxsel(sel.value());
       return rv;
     }
@@ -85,7 +85,7 @@ namespace Sass {
   {
     auto rv = SASS_MEMORY_COPY(css);
     for (auto& child : rv->elements())
-      child = SASS_MEMORY_COPY(child);
+      child = child->accept(this);
     return rv;
   }
 
