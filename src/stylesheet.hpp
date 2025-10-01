@@ -24,6 +24,8 @@ namespace Sass {
 
     bool plainCss = false;
 
+    bool hasExtends = false;
+
     // Import object through which this module was loaded.
     // It also has the input type (css vs sass) attached
     ImportObj import; // ToDo: maybe just need url?

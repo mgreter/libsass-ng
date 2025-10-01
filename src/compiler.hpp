@@ -104,6 +104,8 @@ namespace Sass {
     // main entry point for compilation
     ImportObj entry_point;
 
+    StylesheetObj sheet54;
+
     // Parsed ast-tree
     StylesheetObj sheet;
 

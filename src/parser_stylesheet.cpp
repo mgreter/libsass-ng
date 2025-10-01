@@ -57,6 +57,8 @@ namespace Sass {
     // Create new root object and setup all states
     StylesheetObj root = SASS_MEMORY_NEW(Stylesheet, scanner.rawSpan());
 
+    compiler.sheet54 = root;
+
     root->plainCss = parsingCss();
 
     // Get pointer to variables of current context
@@ -1053,6 +1055,7 @@ namespace Sass {
       scanWhitespace();
     }
     expectStatementSeparator("@extend rule");
+    compiler.sheet54->hasExtends = true;
     return SASS_MEMORY_NEW(ExtendRule,
       scanner.relevantSpanFrom(start), value, optional);
   }

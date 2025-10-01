@@ -1147,6 +1147,8 @@ namespace Sass {
     // Implement hash functionality
     size_t hash() const final;
 
+    Box* sealed();
+
     // Unify two selector lists with each other
     SelectorList* unifyWith(SelectorList*);
 

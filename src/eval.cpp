@@ -2232,6 +2232,10 @@ namespace Sass {
       // If previous extend rules match this selector it will
       // immediately do the extending, extend rules that occur
       // later will apply the extending to the existing ones.
+      //bool hasExtend = _stylesheet->transitivelyContainsExtensions;
+      //BoxObj boxed = _stylesheet->hasExtends || _stylesheet->transitivelyContainsExtensions ?
+      //  _extensionStore->addSelector(slist, mediaQueries) : slist->sealed();
+
       BoxObj boxed = _extensionStore->addSelector(slist, mediaQueries);
 
       // Find the parent we should append to (bubble up)

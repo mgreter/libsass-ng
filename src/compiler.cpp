@@ -767,6 +767,13 @@ namespace Sass {
     // Invoke correct parser according to format
     StylesheetObj stylesheet = parseSource(import);
 
+    // for (auto& qwe : stylesheet->modimps) {
+    //   Module* mod = qwe.second.second;
+    //   mod->
+    // }
+
+    sheet54 = stylesheet;
+
     // Put the parsed stylesheet into the map
     sheets21.insert({ abs_path, stylesheet });
 
@@ -775,6 +782,8 @@ namespace Sass {
     }
 
     stylesheet->extender52 = SASS_MEMORY_NEW(ExtensionStore, ExtensionStore::NORMAL, *this);
+
+    stylesheet->determineTransitivelyContainsExtensions();
 
     // Return pointer, it is already managed
     // Don't call detach, as it could leak then
