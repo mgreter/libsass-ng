@@ -15,24 +15,26 @@
 namespace Sass {
 
 
-  void Eval::_visitUpstreamModule(Stylesheet* module, CssRoot* css, sass::vector<Stylesheet*>& sorted,
+  void Eval::_visitUpstreamModule(Stylesheet* modu, CssRoot* css, sass::vector<StylesheetObj>& sorted,
     std::set<sass::string>& seen, sass::vector<CssNodeObj>& imports, bool clone)
   {
+
+    StylesheetObj module = modu; // SASS_MEMORY_NEW(Stylesheet, modu);
 
     // if (current->idxs->isImport) return;
     if (clone)
     {
-      std::cerr << "visit module " << module->url << "\n";
-      sass::map::unordered::ptr<SelectorListObj, BoxObj> oldToNewSelectors;
-      ExtensionStoreObj newExtensionStore = module->extender52->clone(oldToNewSelectors);
-      CssClone cloner(oldToNewSelectors);
+
       if (module->compiled) {
-        CssRootObj copy3 = cloner.visitCssRoot(module->compiled);
-        auto copy2 = new Stylesheet(*module);
-        copy2->compiled = copy3;
-        copy2->extender52 = newExtensionStore;
-        // newExtensionStore->selectors54 = 
-        // copy2->selectors54
+        // std::cerr << "visit module " << module->url << "\n";
+        sass::map::unordered::ptr<SelectorListObj, BoxObj> oldToNewSelectors;
+        ExtensionStoreObj newExtender = module->extender52->clone(oldToNewSelectors);
+        CssClone cloner(oldToNewSelectors);
+        StylesheetObj copy2 = SASS_MEMORY_NEW(Stylesheet, module.ptr());
+        copy2->compiled = cloner.visitCssRoot(module->compiled);
+        copy2->extender52 = newExtender;
+        // // newExtensionStore->selectors54 = 
+        // // copy2->selectors54
         module = copy2;
       }
     }
@@ -81,7 +83,7 @@ namespace Sass {
     sass::vector<CssNodeObj> imports;
 
     std::set<sass::string> seen;
-    sass::vector<Stylesheet*> modules;
+    sass::vector<StylesheetObj> modules;
     // Probably more efficient to push and resort
     _visitUpstreamModule(root, css, modules, seen, imports, clone);
     std::reverse(modules.begin(), modules.end());

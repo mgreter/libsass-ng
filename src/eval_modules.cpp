@@ -594,7 +594,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  void Eval::_extendModules(sass::vector<Stylesheet*> sortedModules)
+  void Eval::_extendModules(sass::vector<StylesheetObj> sortedModules)
   {
 
     std::unordered_map<sass::string, sass::vector<ExtensionStoreObj>> downstreamExtensionStores;
@@ -641,7 +641,7 @@ namespace Sass {
         module->extender52->addExtensions(downStreamIt->second);
       }
 
-      if (module->extender52->extensionsBySimpleSelector.empty()) {
+      if (module->extender52->extensionsBySelector.empty()) {
         continue;
       }
 

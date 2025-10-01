@@ -47,7 +47,7 @@ public:
 #define RAII_OBJ(var,name,opt) LocalOption<SharedPtr<var>> flag_##name(name, (var*)opt)
 // #define RAII_VEC(var,name,opt) LocalOption<sass::vector<var*>> flag_##name(name, opt)
 #define RAII_SELECTOR(name,opt) LocalStack<SelectorListObj> stack_##name(name, opt)
-#define RAII_MODULE(name,opt) LocalStack<Stylesheet*> stack_##name(name, opt)
+#define RAII_MODULE(name,opt) LocalStack<StylesheetObj> stack_##name(name, opt)
 
 // Macro to help impose maximum nesting to avoid stack overflow
 #define NESTING_GUARD(name) \

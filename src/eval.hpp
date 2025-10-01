@@ -121,12 +121,12 @@ namespace Sass {
     size_t _indexAfterImports(sass::vector<CssNodeObj> statements);
 
 
-    void _visitUpstreamModule(Stylesheet* upstream, CssRoot* css, sass::vector<Stylesheet*>& sorted,
+    void _visitUpstreamModule(Stylesheet* upstream, CssRoot* css, sass::vector<StylesheetObj>& sorted,
       std::set<sass::string>& seen, sass::vector<CssNodeObj>& imports, bool clone);
 
     CssRoot* _combineCss(Stylesheet* module, bool clone = false);
-    sass::vector<Stylesheet*> _topologicalModules(Stylesheet* root, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone);
-    void _extendModules(sass::vector<Stylesheet*> sortedModules);
+    sass::vector<StylesheetObj> _topologicalModules(Stylesheet* root, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone);
+    void _extendModules(sass::vector<StylesheetObj> sortedModules);
 
 
     EnvRefs* pudding(EnvRefs* idxs, bool intoRoot, EnvRefs* modFrame);

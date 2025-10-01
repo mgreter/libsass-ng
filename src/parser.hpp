@@ -32,7 +32,7 @@ namespace Sass {
     // Compiler context
     Compiler& compiler;
 
-    sass::vector<Stylesheet*> modules;
+    sass::vector<StylesheetObj> modules;
 
     // Alias into context
     WithConfig*& wconfig;

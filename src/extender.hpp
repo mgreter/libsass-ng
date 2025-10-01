@@ -55,11 +55,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-
-  /////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////
-
-
   class ExtensionStore : public RefCounted {
 
   public:
@@ -79,7 +74,7 @@ namespace Sass {
 
     /////////////////////////////////////////////////////////////////////////
     // A map from all simple selectors in the stylesheet to the rules that
-    // contain them.This is used to find which rules an `@extend` applies to.
+    // contain them. This is used to find which rules an `@extend` applies to.
     /////////////////////////////////////////////////////////////////////////
     ExtSelMap selectors54; // _selectors
 
@@ -87,12 +82,12 @@ namespace Sass {
     // A map from all extended simple selectors
     // to the sources of those extensions.
     /////////////////////////////////////////////////////////////////////////
-    ExtSelExtMap extensionsBySimpleSelector; // _extensions
+    ExtSelExtMap extensionsBySelector; // _extensions
 
     /// Whether this extender has no extensions.
     bool isEmpty() const {
       // Simply check if anything was registered
-      return extensionsBySimpleSelector.empty();
+      return extensionsBySelector.empty();
     }
 
     /////////////////////////////////////////////////////////////////////////

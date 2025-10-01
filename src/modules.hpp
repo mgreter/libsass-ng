@@ -74,7 +74,7 @@ namespace Sass {
     FidxEnvKeyMap mergedFwdFn;
 
     // Modules that this module uses.
-    sass::vector<Stylesheet*> upstream77;
+    sass::vector<StylesheetObj> upstream77;
 
     sass::vector<CssImportObj> imports56;
 
@@ -94,8 +94,10 @@ namespace Sass {
 
   public:
 
-    Module(const sass::string& url, EnvRefs* idxs);
+    // Copy constructor
+    Module(const Module* ptr);
 
+    Module(const sass::string& url, EnvRefs* idxs);
 
     void addExtension(
       const SelectorListObj& extender,

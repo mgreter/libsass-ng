@@ -110,7 +110,7 @@ namespace Sass {
     const ExtSmplSelSet& originalSelectors,
     ExtSet& unsatisfiedExtensions)
   {
-    for (const auto& entry : extensionsBySimpleSelector) {
+    for (const auto& entry : extensionsBySelector) {
       // Skip if entry is known in original selectors (by ptr)
       if (originalSelectors.count(entry.first)) continue;
       for (const auto& extension : entry.second) {
@@ -129,7 +129,7 @@ namespace Sass {
     const ExtSmplSelSet& originalSelectors,
     ExtSet& unsatisfiedExtensions)
   {
-    for (auto& entry : extensionsBySimpleSelector) {
+    for (auto& entry : extensionsBySelector) {
       if (!originalSelectors.count(entry.first)) continue;
       for (auto& extension : entry.second) {
         if (extension.second.isNull()) continue;
@@ -318,9 +318,9 @@ namespace Sass {
       originals91.insert(original->begin(), original->end());
     }
 
-    if (!extensionsBySimpleSelector.empty()) {
+    if (!extensionsBySelector.empty()) {
 
-      selector = extendList(selector, extensionsBySimpleSelector, mediaContext);
+      selector = extendList(selector, extensionsBySelector, mediaContext);
 
       // Dart-Sass upgrades error here
     }
@@ -422,7 +422,7 @@ namespace Sass {
     bool hasExistingExtensions = extensionsByExtender.find(target) != extensionsByExtender.end();
 
     // Get existing extensions for the given target (SimpleSelector)
-    ExtSelExtMapEntry& sources = extensionsBySimpleSelector[target];
+    ExtSelExtMapEntry& sources = extensionsBySelector[target];
 
     // std::cerr << "EXTENDER HAS " << extender->elements().size() << "\n";
 
@@ -554,7 +554,7 @@ namespace Sass {
       // }
 
       // Get all registered extensions for this (SimpleSelector) target
-      ExtSelExtMapEntry& sources = extensionsBySimpleSelector[target];
+      ExtSelExtMapEntry& sources = extensionsBySelector[target];
 
       // std::cerr << "Got sources " << ExtSelToStr(sources) << "\n";
 
@@ -654,7 +654,7 @@ namespace Sass {
 
       if (old != selector->value) {
 
-        std::cerr << "EXTENDED TO " << selector->value->toString() << "\n";
+       //  std::cerr << "EXTENDED TO " << selector->value->toString() << "\n";
         _registerSelector(selector->value, selector);
       }
 
@@ -724,17 +724,17 @@ namespace Sass {
     bool hasSelectors = false;
     bool hasExtensions = false;
 
-    std::cerr << "=======================\n";
+    // std::cerr << "=======================\n";
 
     for (ExtensionStore* extensionStore : extensionStores) {
 
-      std::cerr << "add extensions " << extensionStore << "\n";
+      // std::cerr << "add extensions " << extensionStore << "\n";
 
       if (extensionStore->isEmpty()) continue;
 
       mapAddAll(sourceSpecificity, extensionStore->sourceSpecificity);
 
-      auto& extensions = extensionStore->extensionsBySimpleSelector;
+      auto& extensions = extensionStore->extensionsBySelector;
       // for (auto& extension : extensions) {
       for (auto it = extensions.begin(); it != extensions.end(); ++it) {
 
@@ -756,28 +756,28 @@ namespace Sass {
         }
 
         // Find existing selectors to extend.
-        std::cerr << "look for " << target->toString() << " " << target << "\n";
+        /*std::cerr << "look for " << target->toString() << " " << target << "\n";
         for (auto& foo : selectors54) {
           std::cerr << "  candidate " << foo.first->toString() << " " << foo.first << "\n";
-        }
+        }*/
         auto selectorsForTargetIt = selectors54.find(target);
         if ((hasSelectors = (selectorsForTargetIt != selectors54.end()))) {
-          std::cerr << "FOUND SOME " << selectorsForTargetIt->second.size() << "\n";
+          // std::cerr << "FOUND SOME " << selectorsForTargetIt->second.size() << "\n";
           const ExtListSelSet& selectorsForTarget = selectorsForTargetIt->second;
-          for (auto& qwe : selectorsForTarget) {
+          /*for (auto& qwe : selectorsForTarget) {
             std::cerr << "+ append to extend " << qwe->toString() << "\n";
-          }
+          }*/
           selectorsToExtend.insert(selectorsForTarget.begin(), selectorsForTarget.end());
         }
 
         // Add [newSources] to [_extensions].
-        auto existingSourcesIt = extensionsBySimpleSelector.find(target);
-        if (existingSourcesIt == extensionsBySimpleSelector.end()) {
-          extensionsBySimpleSelector[target] = newSources;
+        auto existingSourcesIt = extensionsBySelector.find(target);
+        if (existingSourcesIt == extensionsBySelector.end()) {
+          extensionsBySelector[target] = newSources;
           if (hasExtensions || hasSelectors) {
-            for (auto& qwe : newSources) {
-              std::cerr << "ADDDD " << qwe.first->toString() << "\n";
-            }
+          //   for (auto& qwe : newSources) {
+          //     std::cerr << "ADDDD " << qwe.first->toString() << "\n";
+          //   }
             newExtensions[target] = newSources;
           }
         }
@@ -1748,38 +1748,45 @@ namespace Sass {
   ExtensionStore* ExtensionStore::clone(sass::map::unordered::ptr<SelectorListObj, BoxObj>& oldToNewSelectors)
   {
 
-    // sass::map::unordered::ptr<SelectorListObj, BoxObj> oldToNewSelectors; // = Map<SelectorList, Box<SelectorList>>.identity();
     ExtSelMap newSelectors;
-    sass::map::unordered::ptr<ModifiableBoxObj, sass::vector<CssMediaQueryObj>> newMediaContexts;
+
+    sass::stblmap::ptr<
+      ModifiableBoxArg,
+      CssMediaQueryVectorObj
+    > newMediaContexts;
 
     // A map from the old to the new selector boxes. This ensures that
     // if a single box is referenced by multiple simple selectors, we
     // only create a single new box for it in the cloned structure.
-    sass::map::unordered::ptr<ModifiableBoxObj, ModifiableBoxObj> newBoxes;
+    sass::map::unordered::ptr<
+      ModifiableBoxObj,
+      ModifiableBoxObj
+    > newBoxes;
 
-    std::cerr << "## old selectors is " << selectors54.size() << "\n";
-
-    for (auto& entry : selectors54) {
+    for (const auto& entry : selectors54) {
 
       const auto& simple = entry.first;
       const auto& selectors = entry.second;
 
-      sass::set::unordered::ptr<ModifiableBoxObj> newSelectorSet;
-      newSelectors[simple] = newSelectorSet;
+      // This will create the entry if missing
+      auto& newSelectorSet = newSelectors[simple];
 
       for (const ModifiableBoxObj selector : selectors) {
+
         ModifiableBoxObj newSelector;
 
         const auto srch = newBoxes.find(selector);
 
         if (srch == newBoxes.end()) {
-          newSelector = SASS_MEMORY_NEW(ModifiableBox, selector->value);
-          newBoxes[selector] = newSelector;
+          newBoxes[selector] = newSelector =
+            SASS_MEMORY_NEW(ModifiableBox, selector->value);
         }
         else {
           newSelector = srch.value();
         }
-        newSelectors[simple].insert(newSelector);
+
+        newSelectorSet.insert(newSelector);
+
         oldToNewSelectors[selector->value] = newSelector->seal();
 
         if (mediaContexts.count(selector) != 0) {
@@ -1788,25 +1795,28 @@ namespace Sass {
 
       }
       
+      // newSelectors[simple] = std::move(newSelectorSet);
 
     }
 
-    auto ext = new ExtensionStore(*this); // mode normal
 
-    std::cerr << "## new selectors is " << newSelectors.size() << "\n";
-    for (auto qwe : newSelectors) {
-      std::cerr << "  - " << qwe.first->toString() << " " << qwe.second.size() << "\n";
-    }
+    ExtensionStore* ext = SASS_MEMORY_NEW(
+      ExtensionStore, NORMAL, *traces);
+
+//    return ext;
+
+    // std::cerr << "## new selectors is " << newSelectors.size() << "\n";
+    // for (auto qwe : newSelectors) {
+    //   std::cerr << "  - " << qwe.first->toString() << " " << qwe.second.size() << "\n";
+    // }
     ext->selectors54 = newSelectors;
     /// Returns a deep copy of a map that contains maps.
-    ext->extensionsBySimpleSelector = ext->extensionsBySimpleSelector; // CopyMapOfMap
+    ext->extensionsBySelector = ext->extensionsBySelector; // CopyMapOfMap
     /// Returns a deep copy of a map that contains lists.
     ext->extensionsByExtender = ext->extensionsByExtender; // CopyMapOfList
-    newMediaContexts;
+    ext->mediaContexts = newMediaContexts;
     ext->sourceSpecificity; // Map.identity()..addAll
     ext->originals91; // Set.identity()..addAll
-
-    ext->mode = NORMAL;
 
     return ext;
   }

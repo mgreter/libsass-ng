@@ -30,6 +30,9 @@ namespace Sass {
     // It also has the input type (css vs sass) attached
     ImportObj import; // ToDo: maybe just need url?
 
+    // Copy constructor
+    Stylesheet(const Stylesheet* ptr);
+
     Stylesheet(const SourceSpan& pstate, size_t reserve = 0);
 
     Stylesheet(const SourceSpan& pstate, StatementVector&& vec);

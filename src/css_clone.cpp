@@ -76,7 +76,8 @@ namespace Sass {
       return rv;
     }
     else {
-      throw "Not same compilation";
+      std::cerr << "Not same compilation\n";
+      return css;
     }
 
   }

@@ -41,6 +41,7 @@ namespace Sass {
     static const GamutMapMethod& fromName(Logger& logger,
       Value* value, const sass::string& vname);
 
+    virtual ~GamutMapMethod() {};
   };
 
   class ClipGamutMap : public GamutMapMethod {
