@@ -606,6 +606,9 @@ namespace Sass {
 
     for (Stylesheet* module : sortedModules) {
 
+      // RAII_PTR(Stylesheet, _stylesheet, module);
+      // RAII_PTR(ExtensionStore, _extensionStore, module->extender52);
+
       const sass::string & key(module->import->getAbsPath());
 
       // Create a snapshot of the simple selectors currently in the
@@ -634,6 +637,7 @@ namespace Sass {
 
       auto downStreamIt = downstreamExtensionStores.find(key);
       if (downStreamIt != downstreamExtensionStores.end()) {
+        // std::cerr << "++ ADD EXTENSION " << downStreamIt->first << "\n";
         module->extender52->addExtensions(downStreamIt->second);
       }
 

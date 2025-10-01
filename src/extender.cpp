@@ -38,6 +38,19 @@ namespace Sass {
     return false; //  &_inner < &rhs._inner;
   }
 
+  sass::string ModifiableBox::toString() const
+  {
+    sass::sstream str;
+    str << "MBOX{" << id << "} ";
+    if (value == nullptr) {
+      str << "null";
+    }
+    else {
+      str << value->toString();
+    }
+    return str.str();
+  }
+
   size_t Box::hash() const {
     return (size_t)&_inner;
   }
@@ -640,7 +653,8 @@ namespace Sass {
       // std::cerr << "[EXT] Box is now [" << selector->value->toString() << "] at box ref {" << selector->dbh() << "}\n";
 
       if (old != selector->value) {
-        // std::cerr << "register selectors\n";
+
+        std::cerr << "EXTENDED TO " << selector->value->toString() << "\n";
         _registerSelector(selector->value, selector);
       }
 
@@ -710,9 +724,11 @@ namespace Sass {
     bool hasSelectors = false;
     bool hasExtensions = false;
 
+    std::cerr << "=======================\n";
+
     for (ExtensionStore* extensionStore : extensionStores) {
 
-      // std::cerr << "add extensions " << extensionStore << "\n";
+      std::cerr << "add extensions " << extensionStore << "\n";
 
       if (extensionStore->isEmpty()) continue;
 
@@ -724,7 +740,7 @@ namespace Sass {
 
         auto& target = it->first;
         // auto& newSources = it.value();
-        auto& newSources = sass_map_itval(it); // .value();
+        ExtSelExtMapEntry& newSources = sass_map_itval(it); // .value();
 
         // Private selectors can't be extended across module boundaries.
         if (auto* placeholder = target->isaPlaceholderSelector()) {
@@ -740,9 +756,17 @@ namespace Sass {
         }
 
         // Find existing selectors to extend.
+        std::cerr << "look for " << target->toString() << " " << target << "\n";
+        for (auto& foo : selectors54) {
+          std::cerr << "  candidate " << foo.first->toString() << " " << foo.first << "\n";
+        }
         auto selectorsForTargetIt = selectors54.find(target);
         if ((hasSelectors = (selectorsForTargetIt != selectors54.end()))) {
+          std::cerr << "FOUND SOME " << selectorsForTargetIt->second.size() << "\n";
           const ExtListSelSet& selectorsForTarget = selectorsForTargetIt->second;
+          for (auto& qwe : selectorsForTarget) {
+            std::cerr << "+ append to extend " << qwe->toString() << "\n";
+          }
           selectorsToExtend.insert(selectorsForTarget.begin(), selectorsForTarget.end());
         }
 
@@ -751,6 +775,9 @@ namespace Sass {
         if (existingSourcesIt == extensionsBySimpleSelector.end()) {
           extensionsBySimpleSelector[target] = newSources;
           if (hasExtensions || hasSelectors) {
+            for (auto& qwe : newSources) {
+              std::cerr << "ADDDD " << qwe.first->toString() << "\n";
+            }
             newExtensions[target] = newSources;
           }
         }
@@ -1730,6 +1757,8 @@ namespace Sass {
     // only create a single new box for it in the cloned structure.
     sass::map::unordered::ptr<ModifiableBoxObj, ModifiableBoxObj> newBoxes;
 
+    std::cerr << "## old selectors is " << selectors54.size() << "\n";
+
     for (auto& entry : selectors54) {
 
       const auto& simple = entry.first;
@@ -1750,7 +1779,7 @@ namespace Sass {
         else {
           newSelector = srch.value();
         }
-        newSelectorSet.insert(newSelector);
+        newSelectors[simple].insert(newSelector);
         oldToNewSelectors[selector->value] = newSelector->seal();
 
         if (mediaContexts.count(selector) != 0) {
@@ -1764,6 +1793,10 @@ namespace Sass {
 
     auto ext = new ExtensionStore(*this); // mode normal
 
+    std::cerr << "## new selectors is " << newSelectors.size() << "\n";
+    for (auto qwe : newSelectors) {
+      std::cerr << "  - " << qwe.first->toString() << " " << qwe.second.size() << "\n";
+    }
     ext->selectors54 = newSelectors;
     /// Returns a deep copy of a map that contains maps.
     ext->extensionsBySimpleSelector = ext->extensionsBySimpleSelector; // CopyMapOfMap

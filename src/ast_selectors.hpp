@@ -1228,6 +1228,8 @@ namespace Sass {
       // return (size_t)(this);
     }
 
+    sass::string toString() const;
+
     Box* seal();
 
   };

@@ -14,7 +14,7 @@ namespace Sass {
   {
     if (transitivelyContainsExtensions)
     {
-      std::cerr << "ALREADY SET TRANSITIVELY\n";
+     // std::cerr << "ALREADY SET TRANSITIVELY\n";
     }
     if (extender52 && !extender52->isEmpty())
     {

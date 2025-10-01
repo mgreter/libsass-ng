@@ -20,6 +20,23 @@ namespace Sass {
   {
 
     // if (current->idxs->isImport) return;
+    if (clone)
+    {
+      std::cerr << "visit module " << module->url << "\n";
+      sass::map::unordered::ptr<SelectorListObj, BoxObj> oldToNewSelectors;
+      ExtensionStoreObj newExtensionStore = module->extender52->clone(oldToNewSelectors);
+      CssClone cloner(oldToNewSelectors);
+      if (module->compiled) {
+        CssRootObj copy3 = cloner.visitCssRoot(module->compiled);
+        auto copy2 = new Stylesheet(*module);
+        copy2->compiled = copy3;
+        copy2->extender52 = newExtensionStore;
+        // newExtensionStore->selectors54 = 
+        // copy2->selectors54
+        module = copy2;
+      }
+    }
+
 
     for (Stylesheet* upstream : module->upstream77) {
       // if (upstream->idxs->isImport) continue;
@@ -35,28 +52,11 @@ namespace Sass {
       _visitUpstreamModule(upstream, css, sorted, seen, imports, clone);
     }
 
-    sorted.push_back(module);
+    sorted.push_back(module); // cloned one
     if (module->compiled) {
 
       // newExtensionStore = extensionStore.clone();
       // var(newExtensionStore, oldToNewSelectors) = extensionStore.clone();
-
-      if (clone)
-      {
-        sass::map::unordered::ptr<SelectorListObj, BoxObj> oldToNewSelectors;
-        ExtensionStoreObj newExtensionStore = module->extender52->clone(oldToNewSelectors);
-        CssClone cloner(oldToNewSelectors);
-        std::cerr << "cloning " << module->url << "\n";
-        CssRootObj copy = cloner.visitCssRoot(module->compiled);
-        // /*if (clone)*/ copy = SASS_MEMORY_CLONE(copy);
-        auto& statements = copy->elements();
-        auto index = _indexAfterImports(statements);
-        sass::vector<CssNodeObj> rest;
-        imports.insert(imports.end(), statements.begin(), statements.begin() + index);
-        css->elements().insert(css->elements().end(), statements.begin() + index, statements.end());
-
-      }
-      else {
 
         // debug_ast(module->compiled);
         CssRootObj copy = module->compiled;
@@ -68,7 +68,6 @@ namespace Sass {
         imports.insert(imports.end(), statements.begin(), statements.begin() + index);
         css->elements().insert(css->elements().end(), statements.begin() + index, statements.end());
 
-      }
 
     }
 
@@ -79,9 +78,6 @@ namespace Sass {
   CssRoot* Eval::_combineCss(Stylesheet* root, bool clone)
   {
     CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
-    RAII_OBJ(CssParentNode, current, css);
-    RAII_PTR(ExtensionStore, _extensionStore, root->extender52);
-    RAII_PTR(Stylesheet, _stylesheet, root);
     sass::vector<CssNodeObj> imports;
 
     std::set<sass::string> seen;
@@ -92,6 +88,12 @@ namespace Sass {
 
     // auto modules = _topologicalModules(root, mods, imports, clone);
     root->determineTransitivelyContainsExtensions();
+
+    RAII_OBJ(CssParentNode, current, css);
+    RAII_PTR(ExtensionStore, _extensionStore, root->extender52);
+    
+    RAII_PTR(Stylesheet, _stylesheet, root);
+
     if (root->transitivelyContainsExtensions) _extendModules(modules);
     css->elements().insert(css->elements().begin(), imports.begin(), imports.end());
     return css.detach();
