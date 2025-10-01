@@ -56,6 +56,9 @@ namespace Sass {
 
     // Create new root object and setup all states
     StylesheetObj root = SASS_MEMORY_NEW(Stylesheet, scanner.rawSpan());
+
+    root->plainCss = parsingCss();
+
     // Get pointer to variables of current context
     root->idxs = compiler.envstack.back();
     // Assign new module to the current context

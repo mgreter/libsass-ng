@@ -22,6 +22,8 @@ namespace Sass {
   {
   public:
 
+    bool plainCss = false;
+
     // Import object through which this module was loaded.
     // It also has the input type (css vs sass) attached
     ImportObj import; // ToDo: maybe just need url?
@@ -29,6 +31,7 @@ namespace Sass {
     Stylesheet(const SourceSpan& pstate, size_t reserve = 0);
 
     Stylesheet(const SourceSpan& pstate, StatementVector&& vec);
+
 
   };
 

@@ -2153,11 +2153,12 @@ namespace Sass {
     // Create a scope for lexical block variables
     EnvScope scope(compiler.varRoot, node->idxs);
 
-    // std::cerr << "EVAL RULE " << current->toString() << " => " << node->fromPlainCss() << "\n";
+    std::cerr << "EVAL RULE " << current->toString() << " => " << node->fromPlainCss() << "\n";
 
-    bool nest = current ? !node->fromPlainCss() : true;
+    bool nest = current ? !current->fromPlainCss() : true;
     // bool nest = current ? !current->fromPlainCss() : true;
-    bool nesting = current ? !node->fromPlainCss() : true;
+    bool nesting = current ? !current->fromPlainCss() : true;
+    // dart has parent selector clause
 
     // Keyframe blocks have a specific syntax inside them
     // Therefore style rules render a bit different inside them
@@ -2233,7 +2234,7 @@ namespace Sass {
       // Create a new style rule at the correct parent
       CssStyleRuleObj child = SASS_MEMORY_NEW(CssStyleRule,
         node->pstate(), chroot, boxed); // ModifiableCssStyleRule
-
+      child->fromPlainCss(_stylesheet->plainCss);
       //  std::cerr << "++ Evaled style rule with box " << boxed->_inner->dbh() << "\n";
 
       //child->fromPlainCss(wasCss);
