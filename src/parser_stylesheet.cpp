@@ -406,6 +406,7 @@ namespace Sass {
     StyleRuleObj rule = withChildren<StyleRule>(
       &StylesheetParser::readChildStatement,
       start, itpl.ptr(), local.idxs);
+    //rule->fromPlainCss(parsingCss());
     if (isIndented() && rule->empty()) {
       compiler.addWarning(selectorPstate, Logger::WARN_EMPTY_SELECTOR,
         []() { return "This selector doesn't have any properties and won't be rendered."; });

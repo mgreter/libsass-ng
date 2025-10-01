@@ -162,7 +162,8 @@ namespace Sass {
       std::move(pstate),
       std::move(children),
       idxs),
-    interpolation_(interpolation)
+    interpolation_(interpolation),
+    fromPlainCss_(false)
   {}
 
   /////////////////////////////////////////////////////////////////////////

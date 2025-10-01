@@ -147,10 +147,12 @@ namespace Sass {
         "Style rules may not be used within keyframe blocks.");
     }
 
-    bool nest = !plainCss;
-//     bool nest = !plainCss;
+    // if (css->selector()->toString() == "c") css->fromPlainCss(true);
+    bool nest = !plainCss; // && !css->fromPlainCss();
     // var nest = !(_styleRule?.fromPlainCss ?? false);
     // bool nesting = current ? !current->fromPlainCss() : true;
+
+    // std::cerr << "DO nest " << !css->fromPlainCss() << " from " << css->selector()->toString() << "\n";
 
     if (nest) {
       // Temporary fix
@@ -168,7 +170,7 @@ namespace Sass {
         }
       }
 
-      /*if (!nest)*/ slist = slist->resolveParentSelectors(original(), logger, !atRootExcludingStyleRule);
+      if (nest) slist = slist->resolveParentSelectors(original(), logger, !atRootExcludingStyleRule);
 
       // Append new selector list to the stack
       RAII_SELECTOR(selectorStack, slist/*->copy(false)*/);
@@ -183,7 +185,8 @@ namespace Sass {
 
       // Find the parent we should append to (bubble up)
       CssParentNode* chroot = current;
-      /*if (!nest) */chroot = chroot->bubbleThroughCss();
+      if (nest) chroot = chroot->bubbleThroughCss();
+      //else chroot = chroot->parent();
       // Create a new style rule at the correct parent
       // ModifiableBoxObj foo = nullptr;
       // if (css->boxsel()) {

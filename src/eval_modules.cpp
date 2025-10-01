@@ -539,7 +539,8 @@ namespace Sass {
 
     // Create container where to put compiled css
     root->compiled = SASS_MEMORY_NEW(CssStyleRule,
-      root->pstate(), nullptr, new Box(), {}, plainCss);
+      root->pstate(), nullptr, new Box());
+    root->compiled->fromPlainCss(false);
 
     RAII_OBJ(CssParentNode, current, root->compiled);
     RAII_PTR(Stylesheet, _stylesheet, root);

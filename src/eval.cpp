@@ -2153,7 +2153,7 @@ namespace Sass {
     // Create a scope for lexical block variables
     EnvScope scope(compiler.varRoot, node->idxs);
 
-    //  std::cerr << "EVAL FOR " << current->toString() << " => " << current->fromPlainCss() << "\n";
+    // std::cerr << "EVAL RULE " << current->toString() << " => " << node->fromPlainCss() << "\n";
 
     bool nest = current ? !current->fromPlainCss() : true;
     // bool nest = current ? !current->fromPlainCss() : true;

@@ -337,15 +337,13 @@ namespace Sass {
     const SourceSpan & pstate,
     CssParentNode * parent,
     Box* selector,
-    CssNodeVector && children,
-    bool fromPlainCss) :
+    CssNodeVector && children) :
     CssParentNode(
       pstate, parent,
       std::move(children)),
     selector_(nullptr),
     boxsel_(selector),
-    original98_(selector && selector->_inner ? selector->_inner->value : nullptr),
-    fromPlainCss_(fromPlainCss)
+    original98_(selector && selector->_inner ? selector->_inner->value : nullptr)
   {
   }
 
@@ -356,8 +354,7 @@ namespace Sass {
       ptr, childless),
     selector_(ptr->selector_),
     original98_(ptr->original98_),
-    boxsel_(ptr->boxsel_),
-    fromPlainCss_(ptr->fromPlainCss_)
+    boxsel_(ptr->boxsel_)
   {}
 
   /////////////////////////////////////////////////////////////////////////

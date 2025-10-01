@@ -115,6 +115,8 @@ namespace Sass {
     // Interpolation forming this style rule
     ADD_CONSTREF(InterpolationObj, interpolation);
 
+    ADD_CONSTREF(bool, fromPlainCss);
+
   public:
 
     // Value constructor
