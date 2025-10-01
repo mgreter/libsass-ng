@@ -52,7 +52,7 @@ namespace Sass {
     CssNode(pstate),
     Vectorized(std::move(children)),
     parent_(parent),
-    fromPlainCss_(false)
+    fromPlainCss22_(false)
   {}
   
   CssParentNode::CssParentNode(
@@ -61,7 +61,7 @@ namespace Sass {
     CssNode(ptr),
     Vectorized(ptr, childless),
     parent_(ptr->parent_),
-    fromPlainCss_(ptr->fromPlainCss_)
+    fromPlainCss22_(ptr->fromPlainCss22_)
   {}
 
   // Adds [node] as a child of the given [parent]. The parent

@@ -2155,9 +2155,9 @@ namespace Sass {
 
     std::cerr << "EVAL RULE " << current->toString() << " => " << node->fromPlainCss() << "\n";
 
-    bool nest = current ? !current->fromPlainCss() : true;
+    bool nest = current ? !current->fromPlainCss22() : true;
     // bool nest = current ? !current->fromPlainCss() : true;
-    bool nesting = current ? !current->fromPlainCss() : true;
+    bool nesting = current ? !current->fromPlainCss22() : true;
     // dart has parent selector clause
 
     // Keyframe blocks have a specific syntax inside them
@@ -2234,7 +2234,7 @@ namespace Sass {
       // Create a new style rule at the correct parent
       CssStyleRuleObj child = SASS_MEMORY_NEW(CssStyleRule,
         node->pstate(), chroot, boxed); // ModifiableCssStyleRule
-      child->fromPlainCss(_stylesheet->plainCss);
+      child->fromPlainCss22(_stylesheet->plainCss);
       //  std::cerr << "++ Evaled style rule with box " << boxed->_inner->dbh() << "\n";
 
       //child->fromPlainCss(wasCss);

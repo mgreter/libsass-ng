@@ -86,7 +86,7 @@ namespace Sass {
     // This must be a pointer to avoid circular references
     // Means it has a possibility of being a dangling pointer
     ADD_PROPERTY(CssParentNode*, parent);
-    ADD_PROPERTY(bool, fromPlainCss);
+    ADD_PROPERTY(bool, fromPlainCss22);
 
   public:
 

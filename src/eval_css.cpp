@@ -148,13 +148,19 @@ namespace Sass {
     }
 
     // if (css->selector()->toString() == "c") css->fromPlainCss(true);
-    bool nest = !plainCss && !css->fromPlainCss();
+    bool nest = !plainCss && !current->fromPlainCss22();
     // var nest = !(_styleRule?.fromPlainCss ?? false);
     // bool nesting = current ? !current->fromPlainCss() : true;
 
-    // std::cerr << "DO nest " << !css->fromPlainCss() << " from " << css->selector()->toString() << "\n";
+    // if (auto style = current->isaCssStyleRule()) {
+    //   std::cerr << "DO nest " << !current->fromPlainCss22() << " into " << style->selector()->toString() << "\n";
+    // }
+    // else {
+    //   std::cerr << "DO nest " << !current->fromPlainCss22() << " " << "\n";
+    // }
 
-    if (nest) {
+
+    if (true) {
       // Temporary fix
       SelectorListObj slist = css->selector();
       for (auto& complex : slist->elements()) {
@@ -198,7 +204,9 @@ namespace Sass {
       CssStyleRuleObj child = SASS_MEMORY_NEW(CssStyleRule,
         css->pstate(), chroot, result);
       // CssStyleRuleObj child = nullptr;
-      child->fromPlainCss(plainCss);
+
+      child->fromPlainCss22(css->fromPlainCss22());
+
       // Add child to our parent
       chroot->addChildAt(child, true);
       // Register new child as style rule
