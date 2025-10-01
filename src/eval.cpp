@@ -2153,12 +2153,13 @@ namespace Sass {
     // Create a scope for lexical block variables
     EnvScope scope(compiler.varRoot, node->idxs);
 
-    std::cerr << "EVAL RULE " << current->toString() << " => " << node->fromPlainCss() << "\n";
+    // std::cerr << "EVAL RULE " << current->toString() << " => " << node->fromPlainCss() << "\n";
 
     bool nest = current ? !current->fromPlainCss22() : true;
     // bool nest = current ? !current->fromPlainCss() : true;
     bool nesting = current ? !current->fromPlainCss22() : true;
-    // dart has parent selector clause
+
+    // dart has parent selector clause - see below
 
     // Keyframe blocks have a specific syntax inside them
     // Therefore style rules render a bit different inside them
@@ -2187,6 +2188,11 @@ namespace Sass {
       bool wasCss = imp->syntax == SASS_IMPORT_CSS;
       // Evaluate the interpolation and try to parse a selector list
       SelectorListObj slist = interpolationToSelector(node->interpolation(), wasCss);
+
+      if (current == nullptr || current->fromPlainCss22() == false) {
+        // Compound is marked as connecting to parent
+        // nest = !(_stylesheet->plainCss && slist->hasAnyExplicitParent());
+      }
 
       if (nesting && wasCss) {
         if (_stylesheet->import->syntax == SASS_IMPORT_CSS) {
