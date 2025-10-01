@@ -818,8 +818,6 @@ namespace Sass {
     unsigned long maxSpecificity() const final;
     unsigned long minSpecificity() const final;
 
-    ComplexSelector* produce();
-
     IMPLEMENT_SEL_COPY_CHILDREN(ComplexSelector);
     IMPLEMENT_ACCEPT(void, Selector, ComplexSelector);
     IMPLEMENT_ACCEPT(bool, Selector, ComplexSelector);
@@ -894,8 +892,6 @@ namespace Sass {
     ComplexSelector* wrapInComplex(SelectorCombinatorVector);
 
     ComplexSelector* wrapInComplex(const SourceSpan& pstate, SelectorCombinatorVector);
-
-    // virtual CplxSelComponent* produce() = 0;
 
     // To be implemented by specialization
     bool operator==(const CplxSelComponent& rhs) const override;
@@ -1011,10 +1007,6 @@ namespace Sass {
     // Implement hash functionality
     size_t hash() const final;
 
-    CplxSelComponent* produce() final {
-      return this;
-    }
-
     IMPLEMENT_SEL_COPY_IGNORE(SelectorCombinator);
     IMPLEMENT_ACCEPT(void, Selector, SelectorCombinator);
     IMPLEMENT_ACCEPT(bool, Selector, SelectorCombinator);
@@ -1111,8 +1103,6 @@ namespace Sass {
     unsigned long maxSpecificity() const final;
     unsigned long minSpecificity() const final;
 
-    CompoundSelector* produce();
-
     ComplexSelector* wrapInComplex3();
 
     ComplexSelector* wrapInComplex(SelectorCombinatorVector prefixes, SelectorCombinatorVector tails);
@@ -1185,16 +1175,6 @@ namespace Sass {
     // Specialize min and max specificity functions
     unsigned long maxSpecificity() const final;
     unsigned long minSpecificity() const final;
-
-    SelectorList* produce() {
-      return this;
-      ComplexSelectors copy;
-      for (ComplexSelector* child : elements_) {
-        copy.emplace_back(child->produce());
-      }
-      return SASS_MEMORY_NEW(SelectorList,
-        pstate_, std::move(copy));
-    }
 
     sass::string toString() const override {
       return toValue()->toCss();

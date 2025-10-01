@@ -44,7 +44,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  std::set<sass::string> SlashOperands{
+  std::unordered_set<sass::string> SlashOperands{
     "calc", "clamp", "hypot", "sin", "cos", "tan", "asin", "acos", "atan",
     "sqrt", "exp", "sign", "mod", "rem", "atan2", "pow", "log", "calc-size"
   };

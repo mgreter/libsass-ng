@@ -53,8 +53,6 @@ namespace Sass {
     // Returns the at-rule name for [node], or `null` if it's not an at-rule.
     virtual const sass::string& getAtRuleName() const { return Strings::empty; }
 
-    virtual CssNode* produce() { return this; }
-
     // Is this really obsolete now?
     // size_t tabs() const { return 0; }
     // void tabs(size_t tabs) const { }
@@ -349,15 +347,6 @@ namespace Sass {
       return visitor->visitCssRoot(this);
     }
 
-    CssNode* produce() final {
-      CssNodeVector copy;
-      for (CssNode* child : elements_) {
-          copy.emplace_back(child->produce());
-      }
-      return SASS_MEMORY_NEW(CssRoot,
-        pstate_, std::move(copy));
-    }
-
     CssRoot* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssRoot, this, childless);
     }
@@ -425,14 +414,6 @@ namespace Sass {
     }
 
     bool equalsIgnoringChildren(CssNode* other) const final;
-
-    CssAtRule* produce() final {
-      CssAtRuleObj copy = SASS_MEMORY_NEW(CssAtRule, this, false);
-      for (CssNode* child : elements_) {
-        copy->append(child->produce());
-      }
-      return copy.detach();
-    }
 
     // Define isaCssAtRule up-cast function
     IMPLEMENT_ISA_CASTER(CssAtRule);
@@ -537,17 +518,6 @@ namespace Sass {
     }
     bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssStyleRule(this);
-    }
-
-    CssStyleRule* produce() final {
-      CssNodeVector copy;
-      for (CssNode* child : elements_) {
-        copy.emplace_back(child->produce());
-      }
-      return SASS_MEMORY_NEW(CssStyleRule,
-        pstate_, parent_,
-        boxsel_,
-        std::move(copy));
     }
 
     // Declare via macro to allow line/col debugging
