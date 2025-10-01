@@ -30,6 +30,8 @@ namespace Sass {
     logger(logger)
   {
     // consume BOM before checking the full unicode range?
+    // this check can be expensive for big source files
+    // maybe we do this better on the fly when parsing?
     auto invalid = utf8::find_invalid(startpos, endpos);
     if (invalid != endpos) {
       SourceSpan pstate(source);

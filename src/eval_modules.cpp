@@ -475,8 +475,9 @@ namespace Sass {
       // debug_ast(sheet);
       CssRootObj rv = _combineCss(sheet, true);
       // debug_ast(rv);
+      // debug_ast(current->parent());
       if (rv != nullptr) rv->accept(this);
-      // debug_ast(current);
+//       debug_ast(current->parent());
     }
 
   }
@@ -538,7 +539,7 @@ namespace Sass {
 
     // Create container where to put compiled css
     root->compiled = SASS_MEMORY_NEW(CssStyleRule,
-      root->pstate(), nullptr, new Box());
+      root->pstate(), nullptr, new Box(), {}, plainCss);
 
     RAII_OBJ(CssParentNode, current, root->compiled);
     RAII_PTR(Stylesheet, _stylesheet, root);

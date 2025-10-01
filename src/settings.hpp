@@ -111,23 +111,23 @@
 #define USE_STD_THREAD_LOCAL 1
 
 // Implementation for unordered map/set
-// #define SASS_USE_TSL_ROBIN_MAP
-// #define SASS_USE_TSL_ROBIN_SET
+#define SASS_USE_TSL_ROBIN_MAP
+#define SASS_USE_TSL_ROBIN_SET
 
 // Comes with Zlib license attached
 // Improved environment lookups (5%)
 // Better O(logn) worst-case behavior
-// #define SASS_USE_SFL_ORDERED_FLAT_MAP
-// #define SASS_USE_SFL_UNORDERED_FLAT_MAP
+#define SASS_USE_SFL_ORDERED_FLAT_MAP
+#define SASS_USE_SFL_UNORDERED_FLAT_MAP
 
 // Comes with MIT license attached
 // Performance for on extreme extends
 // Improves heavy extend pretty well (5%)
-// #define SASS_USE_TSL_BHOPSCOTCH_MAP
-// #define SASS_USE_TSL_BHOPSCOTCH_SET
+#define SASS_USE_TSL_BHOPSCOTCH_MAP
+#define SASS_USE_TSL_BHOPSCOTCH_SET
 
 // Comes with Apache 2.0 license attached
-// Performance for on extreme extends
+// Performance for extreme extend cases
 // Improves heavy extend substantially (10%)
 #define SASS_USE_ABSEIL_BTREE_MAP
 #define SASS_USE_ABSEIL_BTREE_SET

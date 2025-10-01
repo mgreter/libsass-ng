@@ -249,7 +249,7 @@ namespace Sass {
 
   bool Calculation::operator==(const Value& rhs) const
   {
-    throw std::logic_error("Calculation::operator==");
+    // throw std::logic_error("Calculation::operator==");
     return this == &rhs; // or compare to pointers?
   }
 

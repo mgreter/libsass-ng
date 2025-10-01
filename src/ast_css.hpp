@@ -500,7 +500,8 @@ namespace Sass {
     ADD_CONSTREF(BoxObj, boxsel);
 
     ADD_CONSTREF(SelectorListObj, original98);
-    // ADD_CONSTREF(bool, fromPlainCss);
+
+    ADD_CONSTREF(bool, fromPlainCss);
 
   public:
 
@@ -518,7 +519,8 @@ namespace Sass {
       const SourceSpan& pstate,
       CssParentNode* parent,
       Box* selector,
-      CssNodeVector&& children = {});
+      CssNodeVector&& children = {},
+      bool fromPlainCss = false);
 
     // Copy constructor
     CssStyleRule(
