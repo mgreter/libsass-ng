@@ -1476,7 +1476,7 @@ namespace Sass {
     const ExtSelExtMap& extensions,
     CssMediaQueryVector* mediaQueryContext)
   {
-    SelectorList* extended = nullptr;;
+    SelectorListObj extended = nullptr;;
     // Call extend and abort if nothing was extended
     if (!pseudo || !pseudo->selector()) return {};
 

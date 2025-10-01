@@ -58,6 +58,7 @@ const T* Cast(const AstNode* ptr) {
 };
 
 inline void debug_ast(AstNode* node, std::string ind = "");
+inline void debug_ref(RefCounted* node, std::string ind = "");
 
 template <typename T>
 sass::string VecToString2(sass::vector<T> exts) {
@@ -472,6 +473,10 @@ inline void debug_idxs(Env* env) {
 
 static bool embedding = false;
 
+inline void debug_ref(RefCounted* node, std::string ind)
+{
+}
+
 inline void debug_ast(AstNode* node, std::string ind)
 {
   if (node == nullptr) return;
@@ -513,6 +518,17 @@ inline void debug_ast(AstNode* node, std::string ind)
     // std::cerr << " <" << query->inspect() << ">";
     std::cerr << std::endl;
   }
+  else if (Cast<Box>(node)) {
+    Box* box = Cast<Box>(node);
+    std::cerr << ind << "Box " << box;
+    std::cerr << " (" << pstate_source_position(node) << ")";
+    // std::cerr << (selector->hasInvisible() ? " [hasInvisible]" : " -");
+    // std::cerr << (selector->has_real_parent_ref() ? " [real-parent]" : " -");
+    std::cerr << std::endl;
+
+    debug_ref(box->_inner.ptr(), ind + " ");
+  }
+
   else if (Cast<SelectorList>(node)) {
     SelectorList* selector = Cast<SelectorList>(node);
     std::cerr << ind << "SelectorList " << selector;

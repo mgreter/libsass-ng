@@ -31,7 +31,7 @@ namespace Sass {
           std::cerr << "LEAKED SOURCE " << ast->getDbgFile() << ":" << ast->getDbgLine() << "\n file: [" << ast->getAbsPath() << "]\n";
         }
         else {
-          std::cerr << "LEAKED " << var << "\n";
+          std::cerr << "LEAKED REF " << ast->getDbgFile() << ":" << ast->getDbgLine() << "\n";
         }
       }
       all.clear();
