@@ -2155,9 +2155,9 @@ namespace Sass {
 
     // std::cerr << "EVAL RULE " << current->toString() << " => " << node->fromPlainCss() << "\n";
 
-    bool nest = current ? !current->fromPlainCss() : true;
+    bool nest = current ? !node->fromPlainCss() : true;
     // bool nest = current ? !current->fromPlainCss() : true;
-    bool nesting = current ? !current->fromPlainCss() : true;
+    bool nesting = current ? !node->fromPlainCss() : true;
 
     // Keyframe blocks have a specific syntax inside them
     // Therefore style rules render a bit different inside them
@@ -2236,7 +2236,7 @@ namespace Sass {
 
       //  std::cerr << "++ Evaled style rule with box " << boxed->_inner->dbh() << "\n";
 
-      child->fromPlainCss(wasCss);
+      //child->fromPlainCss(wasCss);
       // Add child to our parent
       chroot->addChildAt(child, true);
       // Register new child as style rule

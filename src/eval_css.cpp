@@ -148,7 +148,7 @@ namespace Sass {
     }
 
     // if (css->selector()->toString() == "c") css->fromPlainCss(true);
-    bool nest = !plainCss; // && !css->fromPlainCss();
+    bool nest = !plainCss && !css->fromPlainCss();
     // var nest = !(_styleRule?.fromPlainCss ?? false);
     // bool nesting = current ? !current->fromPlainCss() : true;
 
