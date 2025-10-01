@@ -2335,60 +2335,6 @@ namespace Sass {
   }
 
 
-  void Eval::_visitUpstreamModule(Stylesheet* current, sass::vector<Stylesheet*>& sorted, std::set<sass::string>& seen, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone)
-  {
-    // if (current->idxs->isImport) return;
-    for (Stylesheet* upstream : current->upstream77) {
-      // if (upstream->idxs->isImport) continue;
-      if (upstream == nullptr) continue;
-      if (seen.count(upstream->import->getAbsPath())) continue;
-      seen.insert(upstream->import->getAbsPath()); // protected
-
-      for (CssComment* head : upstream->precomments) {
-        if (!css->empty()) css->append(head);
-        else imports.push_back(head); 
-      }
-      _visitUpstreamModule(upstream, sorted, seen, css, imports, clone);
-    }
-
-    sorted.push_back(current);
-    if (current->compiled) {
-      CssParentNodeObj copy = current->compiled;
-      auto& statements = copy->elements();
-      auto index = _indexAfterImports(statements);
-      sass::vector<CssNodeObj> rest;
-      imports.insert(imports.end(), statements.begin(), statements.begin() + index);
-      css->elements().insert(css->elements().end(), statements.begin() + index, statements.end());
-    }
-
-  }
-
-
-  sass::vector<Stylesheet*> Eval::_topologicalModules(Stylesheet* root, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone)
-  {
-    // Construct a topological ordering using depth-first traversal, as in
-    // https://en.wikipedia.org/wiki/Topological_sorting#Depth-first_search.
-    std::set<sass::string> seen;
-    sass::vector<Stylesheet*> sorted;
-    // Probably more efficient to push and resort
-    _visitUpstreamModule(root, sorted, seen, css, imports, clone);
-    std::reverse(sorted.begin(), sorted.end());
-    return sorted;
-  }
-
-  CssRoot* Eval::_combineCss(Stylesheet* root, bool clone)
-  {
-    CssRootObj mods = SASS_MEMORY_NEW(CssRoot, root->pstate());
-    RAII_OBJ(CssParentNode, current, mods);
-    RAII_PTR(ExtensionStore, _extensionStore, root->extender52);
-    RAII_PTR(Stylesheet, _stylesheet, root);
-    sass::vector<CssNodeObj> imports;
-    auto sorted = _topologicalModules(root, mods, imports, clone);
-    if (root->transitivelyContainsExtensions) _extendModules(sorted);
-    mods->elements().insert(mods->elements().begin(), imports.begin(), imports.end());
-    return mods.detach();
-  }
-
   CssParentNode* Eval::hoistStyleRule(CssParentNode* node)
   {
     if (isInStyleRule()) {

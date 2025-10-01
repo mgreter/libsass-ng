@@ -417,6 +417,11 @@ namespace Sass {
     static bool hasExactlyOne(const ComplexSelectorObj& vec);
     static bool hasMoreThanOne(const ComplexSelectorObj& vec);
 
+    /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
+    public:
+    ExtensionStore* clone(sass::map::unordered::ptr<SelectorListObj, BoxObj>& oldToNewSelectors);
+
   };
 
 

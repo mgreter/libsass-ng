@@ -60,6 +60,11 @@ namespace Sass {
     #define SASS_MEMORY_COPY(obj) \
       ((obj)->copy(__FILE__, __LINE__, false)) \
 
+    // Full copy but same children
+    // Children are the same reference
+    #define SASS_MEMORY_CLONE(obj) \
+      ((obj)->clone(__FILE__, __LINE__, false)) \
+
   #else
 
     // Macro to call the constructor
@@ -82,6 +87,11 @@ namespace Sass {
     // Children are the same reference
     #define SASS_MEMORY_COPY(obj) \
       ((obj)->copy(false)) \
+
+    // Full copy but same children
+    // Children are the same reference
+    #define SASS_MEMORY_CLONE(obj) \
+      ((obj)->clone(false)) \
 
   #endif
 

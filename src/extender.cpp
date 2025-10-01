@@ -1715,6 +1715,68 @@ namespace Sass {
   {
     return vec->size() > 1;
   }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+  ExtensionStore* ExtensionStore::clone(sass::map::unordered::ptr<SelectorListObj, BoxObj>& oldToNewSelectors)
+  {
+
+    // sass::map::unordered::ptr<SelectorListObj, BoxObj> oldToNewSelectors; // = Map<SelectorList, Box<SelectorList>>.identity();
+    ExtSelMap newSelectors;
+    sass::map::unordered::ptr<ModifiableBoxObj, sass::vector<CssMediaQueryObj>> newMediaContexts;
+
+    // A map from the old to the new selector boxes. This ensures that
+    // if a single box is referenced by multiple simple selectors, we
+    // only create a single new box for it in the cloned structure.
+    sass::map::unordered::ptr<ModifiableBoxObj, ModifiableBoxObj> newBoxes;
+
+    for (auto& entry : selectors54) {
+
+      const auto& simple = entry.first;
+      const auto& selectors = entry.second;
+
+      sass::set::unordered::ptr<ModifiableBoxObj> newSelectorSet;
+      newSelectors[simple] = newSelectorSet;
+
+      for (const ModifiableBoxObj selector : selectors) {
+        ModifiableBoxObj newSelector;
+
+        const auto srch = newBoxes.find(selector);
+
+        if (srch == newBoxes.end()) {
+          newSelector = SASS_MEMORY_NEW(ModifiableBox, selector->value);
+          newBoxes[selector] = newSelector;
+        }
+        else {
+          newSelector = srch.value();
+        }
+        newSelectorSet.insert(newSelector);
+        oldToNewSelectors[selector->value] = newSelector->seal();
+
+        if (mediaContexts.count(selector) != 0) {
+          newMediaContexts[newSelector] = mediaContexts[selector];
+        }
+
+      }
+      
+
+    }
+
+    auto ext = new ExtensionStore(*this); // mode normal
+
+    ext->selectors54 = newSelectors;
+    /// Returns a deep copy of a map that contains maps.
+    ext->extensionsBySimpleSelector = ext->extensionsBySimpleSelector; // CopyMapOfMap
+    /// Returns a deep copy of a map that contains lists.
+    ext->extensionsByExtender = ext->extensionsByExtender; // CopyMapOfList
+    newMediaContexts;
+    ext->sourceSpecificity; // Map.identity()..addAll
+    ext->originals91; // Set.identity()..addAll
+
+    ext->mode = NORMAL;
+
+    return ext;
+  }
   // hasMoreThanOne
 
 }

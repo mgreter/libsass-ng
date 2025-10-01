@@ -20,7 +20,8 @@ namespace Sass {
 
   class CssNode : public AstNode,
     public CssVisitable<void>,
-    public CssVisitable<bool>
+    public CssVisitable<bool>,
+    public CssVisitable<CssNode*>
   {
 
   private:
@@ -40,6 +41,7 @@ namespace Sass {
     // Needed here to avoid ambiguity from base-classes!??
     void accept(CssVisitor<void>* visitor) override = 0;
     bool accept(CssVisitor<bool>* visitor) override = 0;
+    CssNode* accept(CssVisitor<CssNode*>* visitor) override = 0;
 
     bool isInvisibleOtherThanBogusCombinators() const;
 
@@ -52,6 +54,10 @@ namespace Sass {
 
     // Returns the at-rule name for [node], or `null` if it's not an at-rule.
     virtual const sass::string& getAtRuleName() const { return Strings::empty; }
+
+    // Must be implemented in derived classes
+    virtual CssNode* copy(SASS_MEMORY_ARGS bool childless = false) const = 0;
+    virtual CssNode* clone(SASS_MEMORY_ARGS bool childless = false) const = 0;
 
     // Is this really obsolete now?
     // size_t tabs() const { return 0; }
@@ -107,7 +113,8 @@ namespace Sass {
     bool isInvisibleCss() const override;
 
     // Must be implemented in derived classes
-    virtual CssParentNode* copy(SASS_MEMORY_ARGS bool childless) const = 0;
+    CssParentNode* copy(SASS_MEMORY_ARGS bool childless) const override = 0;
+    CssParentNode* clone(SASS_MEMORY_ARGS bool childless) const override = 0;
 
     // Returns if items should bubble further up (to be specialized)
     virtual bool bubbles(bool stopAtMediaRule = false) const { return false; }
@@ -227,6 +234,13 @@ namespace Sass {
       bool newline = false);
     CssComment(const CssComment* ptr);
 
+    CssComment* copy(SASS_MEMORY_ARGS bool childless = false) const final {
+      return SASS_MEMORY_NEW_DBG(CssComment, this);
+    }
+    CssComment* clone(SASS_MEMORY_ARGS bool childless = false) const final {
+      return SASS_MEMORY_NEW_DBG(CssComment, this);
+    }
+
     // Css visitor and rendering entry function
     void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssComment(this);
@@ -234,6 +248,10 @@ namespace Sass {
     bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssComment(this);
     }
+    CssNode* accept(CssVisitor<CssNode*>* visitor) final {
+      return visitor->visitCssComment(this);
+    }
+
     IMPLEMENT_ISA_CASTER(CssComment);
     FINALIZE_AST_NODE(CssComment);
   };
@@ -262,11 +280,21 @@ namespace Sass {
         && name_[1] == '-';
     }
 
+    CssDeclaration* copy(SASS_MEMORY_ARGS bool childless = false) const final {
+      return SASS_MEMORY_NEW_DBG(CssDeclaration, this);
+    }
+    CssDeclaration* clone(SASS_MEMORY_ARGS bool childless = false) const final {
+      return SASS_MEMORY_NEW_DBG(CssDeclaration, this);
+    }
+
     // Css visitor and rendering entry function
     void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssDeclaration(this);
     }
     bool accept(CssVisitor<bool>* visitor) final {
+      return visitor->visitCssDeclaration(this);
+    }
+    CssNode* accept(CssVisitor<CssNode*>* visitor) final {
       return visitor->visitCssDeclaration(this);
     }
 
@@ -309,11 +337,21 @@ namespace Sass {
     // Copy constructor
     CssImport(const CssImport* ptr);
 
+    CssImport* copy(SASS_MEMORY_ARGS bool childless = false) const final {
+      return SASS_MEMORY_NEW_DBG(CssImport, this);
+    }
+    CssImport* clone(SASS_MEMORY_ARGS bool childless = false) const final {
+      return SASS_MEMORY_NEW_DBG(CssImport, this);
+    }
+
     // Css visitor and rendering entry function
     void accept(CssVisitor<void>* visitor) final {
       return visitor->visitCssImport(this);
     }
     bool accept(CssVisitor<bool>* visitor) final {
+      return visitor->visitCssImport(this);
+    }
+    CssNode* accept(CssVisitor<CssNode*>* visitor) final {
       return visitor->visitCssImport(this);
     }
 
@@ -346,8 +384,15 @@ namespace Sass {
     bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssRoot(this);
     }
+    CssNode* accept(CssVisitor<CssNode*>* visitor) final {
+      return visitor->visitCssRoot(this);
+    }
+
 
     CssRoot* copy(SASS_MEMORY_ARGS bool childless) const final {
+      return SASS_MEMORY_NEW_DBG(CssRoot, this, childless);
+    }
+    CssRoot* clone(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssRoot, this, childless);
     }
 
@@ -408,8 +453,14 @@ namespace Sass {
     bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssAtRule(this);
     }
+    CssNode* accept(CssVisitor<CssNode*>* visitor) final {
+      return visitor->visitCssAtRule(this);
+    }
 
     CssAtRule* copy(SASS_MEMORY_ARGS bool childless) const final {
+      return SASS_MEMORY_NEW_DBG(CssAtRule, this, childless);
+    }
+    CssAtRule* clone(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssAtRule, this, childless);
     }
 
@@ -456,8 +507,14 @@ namespace Sass {
     bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssKeyframeBlock(this);
     }
+    CssNode* accept(CssVisitor<CssNode*>* visitor) final {
+      return visitor->visitCssKeyframeBlock(this);
+    }
 
     CssKeyframeBlock* copy(SASS_MEMORY_ARGS bool childless) const final {
+      return SASS_MEMORY_NEW_DBG(CssKeyframeBlock, this, childless);
+    }
+    CssKeyframeBlock* clone(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssKeyframeBlock, this, childless);
     }
 
@@ -519,11 +576,16 @@ namespace Sass {
     bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssStyleRule(this);
     }
+    CssNode* accept(CssVisitor<CssNode*>* visitor) final {
+      return visitor->visitCssStyleRule(this);
+    }
 
     // Declare via macro to allow line/col debugging
     CssStyleRule* copy(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssStyleRule, this, childless);
     }
+
+    CssStyleRule* clone(SASS_MEMORY_ARGS bool childless) const final;
 
     bool equalsIgnoringChildren(CssNode* other) const final;
 
@@ -566,9 +628,15 @@ namespace Sass {
     bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssSupportsRule(this);
     }
+    CssNode* accept(CssVisitor<CssNode*>* visitor) final {
+      return visitor->visitCssSupportsRule(this);
+    }
 
     // Declare via macro to allow line/col debugging
     CssSupportsRule* copy(SASS_MEMORY_ARGS bool childless) const final {
+      return SASS_MEMORY_NEW_DBG(CssSupportsRule, this, childless);
+    }
+    CssSupportsRule* clone(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssSupportsRule, this, childless);
     }
 
@@ -624,6 +692,9 @@ namespace Sass {
     bool accept(CssVisitor<bool>* visitor) final {
       return visitor->visitCssMediaRule(this);
     }
+    CssNode* accept(CssVisitor<CssNode*>* visitor) final {
+      return visitor->visitCssMediaRule(this);
+    }
 
     // Check if two instances are considered equal
     // Used by Extension::assertCompatibleMediaContext
@@ -631,6 +702,9 @@ namespace Sass {
 
     // Declare via macro to allow line/col debugging
     CssMediaRule* copy(SASS_MEMORY_ARGS bool childless) const final {
+      return SASS_MEMORY_NEW_DBG(CssMediaRule, this, childless);
+    }
+    CssMediaRule* clone(SASS_MEMORY_ARGS bool childless) const final {
       return SASS_MEMORY_NEW_DBG(CssMediaRule, this, childless);
     }
 

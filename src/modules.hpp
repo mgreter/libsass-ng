@@ -57,7 +57,7 @@ namespace Sass {
     bool isCompiled = false;
 
     // The compiled AST-Tree
-    CssParentNodeObj compiled;
+    CssRootObj compiled;
 
     // Whether this module *or* any modules
     // in [upstream] contain `@extend` rules.

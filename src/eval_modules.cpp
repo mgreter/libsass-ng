@@ -421,7 +421,7 @@ namespace Sass {
         }
       }
 
-      CssParentNodeObj oldcomp = root->compiled;
+      CssRootObj oldcomp = root->compiled;
       root->compiled = nullptr;
       CssRootObj rv = _combineCss(root);
       root->compiled = oldcomp;
@@ -538,8 +538,8 @@ namespace Sass {
     RAII_SELECTOR(originalStack, nullptr);
 
     // Create container where to put compiled css
-    root->compiled = SASS_MEMORY_NEW(CssStyleRule,
-      root->pstate(), nullptr, new Box());
+    root->compiled = SASS_MEMORY_NEW(CssRoot,
+      root->pstate());
 
     root->compiled->fromPlainCss22(false);
 

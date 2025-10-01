@@ -168,6 +168,20 @@ namespace Sass {
     return other->isaCssRoot() != nullptr;
   }
 
+  // CssRoot* CssRoot::clone(SASS_MEMORY_ARGS bool childless) const {
+  //   auto rv = SASS_MEMORY_NEW_DBG(CssRoot, this, childless);
+  //   for (auto& child : rv->elements()) child = SASS_MEMORY_CLONE(child);
+  //   return rv;
+  // }
+
+  CssStyleRule* CssStyleRule::clone(SASS_MEMORY_ARGS bool childless) const {
+    auto rv = SASS_MEMORY_NEW_DBG(CssStyleRule, this, childless);
+    auto sel = SASS_MEMORY_COPY(rv->selector());
+    // rv->selector(sel);
+    for (auto& child : rv->elements()) child = SASS_MEMORY_CLONE(child);
+    return rv;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
