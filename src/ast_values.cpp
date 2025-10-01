@@ -604,9 +604,11 @@ namespace Sass {
     // Next case is a bit complicated and not super well defined in Math
     if (std::isinf(y) && std::signbit(y) != std::signbit(x)) return NaN;
 
-    if ((x > 0 && y < 0) || (x < 0 && y > 0)) {
+    // if ((x > 0 && y < 0) || (x < 0 && y > 0)) {
+    if (std::signbit(x) != std::signbit(y)) {
+      // Dart always return this as positive zero
       double ret = std::fmod(x, y);
-      return ret ? ret + y : ret;
+      return ret ? ret + y : 0;
     }
     else {
       double ret = std::fmod(x, y);
@@ -615,9 +617,11 @@ namespace Sass {
   }
   inline static double rem(double x, double y)
   {
-    if ((x > 0 && y < 0) || (x < 0 && y > 0)) {
+    // if ((x > 0 && y < 0) || (x < 0 && y > 0)) {
+    if (std::signbit(x) != std::signbit(y)) {
+      // Dart always return this as negative zero
       double ret = std::remainder(x, y);
-      return ret ? ret + y : ret;
+      return ret ? ret + y : -0;
     }
     else {
       return std::remainder(x, y);

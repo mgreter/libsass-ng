@@ -139,6 +139,15 @@ namespace Sass {
 
       }
 
+      static BUILT_IN_FN(fnSign)
+      {
+        auto number = arguments[0]->assertNumber(compiler, Strings::number);
+        number->assertNumberStrictWithoutUnit(compiler, Strings::number);
+
+        return SASS_MEMORY_NEW(String, pstate,
+          std::signbit(number->value()) ? "-0.0" : "0.0");
+      }
+
       static BUILT_IN_FN(fnLog)
       {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
@@ -406,6 +415,8 @@ namespace Sass {
         module.addFunction(key_abs, ctx.registerInternalFunction(key_abs, "$number", abs));
 
         module.addFunction(key_hypot, ctx.createBuiltInFunction(key_hypot, "$number...", fnHypot));
+
+        module.addFunction(EnvKey("sign"), ctx.createBuiltInFunction(EnvKey("sign"), "$number", fnSign));
 
         module.addFunction(key_log, ctx.createBuiltInFunction(key_log, "$number, $base: null", fnLog));
         module.addFunction(key_pow, ctx.createBuiltInFunction(key_pow, "$base, $exponent", fnPow));
