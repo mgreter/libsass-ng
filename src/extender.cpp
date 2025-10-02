@@ -1799,24 +1799,19 @@ namespace Sass {
 
     }
 
-    auto ext = new ExtensionStore(*this); // mode normal
+    ExtensionStore* ext2 = SASS_MEMORY_NEW(
+      ExtensionStore, NORMAL, *traces);
 
-    std::cerr << "## new selectors is " << newSelectors.size() << "\n";
-    for (auto qwe : newSelectors) {
-      std::cerr << "  - " << qwe.first->toString() << " " << qwe.second.size() << "\n";
-    }
-    ext->selectors54 = newSelectors;
+    ext2->selectors54 = newSelectors;
+    ext2->mediaContexts = newMediaContexts;
     /// Returns a deep copy of a map that contains maps.
-    ext->extensionsBySelector = ext->extensionsBySelector; // CopyMapOfMap
+    ext2->extensionsBySelector = extensionsBySelector; // CopyMapOfMap
     /// Returns a deep copy of a map that contains lists.
-    ext->extensionsByExtender = ext->extensionsByExtender; // CopyMapOfList
-    ext->mediaContexts = newMediaContexts;
-    ext->sourceSpecificity; // Map.identity()..addAll
-    ext->originals91; // Set.identity()..addAll
+    ext2->extensionsByExtender = extensionsByExtender; // CopyMapOfList
+    ext2->sourceSpecificity = sourceSpecificity; // Map.identity()..addAll
+    ext2->originals91 = originals91; // Set.identity()..addAll
 
-    ext->mode = NORMAL;
-
-    return ext;
+    return ext2;
   }
   // hasMoreThanOne
 
