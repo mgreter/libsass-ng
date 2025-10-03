@@ -356,8 +356,8 @@ namespace Sass {
     bool childless) :
     CssParentNode(
       ptr, childless),
-    original98_(ptr->original98_),
-    boxsel_(ptr->boxsel_)
+    boxsel_(ptr->boxsel_),
+    original98_(ptr->original98_)
   {}
 
   /////////////////////////////////////////////////////////////////////////
