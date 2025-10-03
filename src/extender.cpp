@@ -1771,7 +1771,7 @@ namespace Sass {
       // This will create the entry if missing
       auto& newSelectorSet = newSelectors[simple];
 
-      for (const ModifiableBoxObj selector : selectors) {
+      for (const ModifiableBoxObj& selector : selectors) {
 
         ModifiableBoxObj newSelector;
 

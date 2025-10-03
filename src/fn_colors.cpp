@@ -2546,7 +2546,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
 
         Color* color = arguments[0]->assertColor2(compiler, "color");
-        const ColorSpace& space = _spaceOrDefault(compiler, color, arguments[1], "space");
+        const ColorSpace space = _spaceOrDefault(compiler, color, arguments[1], "space");
 
         if (arguments[2] == nullptr || arguments[2]->isNull()) {
           throw Exception::SassScriptException(compiler, pstate,

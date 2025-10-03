@@ -116,10 +116,10 @@ private:
             : key_equal(std::move(e))
         {}
 
-        bool operator()(const value_type& x, const value_type& y) const
-        {
-            return key_equal::operator()(x.first, y.first);
-        }
+        // bool operator()(const value_type& x, const value_type& y) const
+        // {
+        //     return key_equal::operator()(x.first, y.first);
+        // }
 
         template <typename K>
         bool operator()(const value_type& x, const K& y) const

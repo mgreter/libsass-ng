@@ -185,6 +185,7 @@ namespace Sass {
     if (wbuf.srcmap) wbuf.srcmap->append(Offset(chr));
   }
 
+  /*
   static sass::string cleanComment(const sass::string& text)
   {
     size_t minIndent = 10e30,
@@ -252,7 +253,7 @@ namespace Sass {
     std::cerr << cleaned << "\n";
     std::cerr << "=============\n";
     return text;
-  }
+  }*/
 
   // append some text or token to the buffer
   // comments indent also depend on where original

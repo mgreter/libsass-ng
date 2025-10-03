@@ -903,18 +903,18 @@ namespace Sass {
     append_token(value->value() ? "true" : "false", value);
   }
 
-  static bool is_hex_doublet(double n)
-  {
-    return n == 0x00 || n == 0x11 || n == 0x22 || n == 0x33 ||
-      n == 0x44 || n == 0x55 || n == 0x66 || n == 0x77 ||
-      n == 0x88 || n == 0x99 || n == 0xAA || n == 0xBB ||
-      n == 0xCC || n == 0xDD || n == 0xEE || n == 0xFF;
-  }
+  // static bool is_hex_doublet(double n)
+  // {
+  //   return n == 0x00 || n == 0x11 || n == 0x22 || n == 0x33 ||
+  //     n == 0x44 || n == 0x55 || n == 0x66 || n == 0x77 ||
+  //     n == 0x88 || n == 0x99 || n == 0xAA || n == 0xBB ||
+  //     n == 0xCC || n == 0xDD || n == 0xEE || n == 0xFF;
+  // }
 
-  static bool is_color_doublet(double r, double g, double b)
-  {
-    return is_hex_doublet(r) && is_hex_doublet(g) && is_hex_doublet(b);
-  }
+  // static bool is_color_doublet(double r, double g, double b)
+  // {
+  //   return is_hex_doublet(r) && is_hex_doublet(g) && is_hex_doublet(b);
+  // }
 
   void Inspect::_writeHsl(Color* color)
   {
@@ -1080,9 +1080,9 @@ namespace Sass {
           fuzzyIsInt(rgba->getChannel1(), 10e-11) &&
           fuzzyIsInt(rgba->getChannel2(), 10e-11)) {
 
-          double a = fuzzyRound(rgba->getChannel0(), 10e-11);
-          double b = fuzzyRound(rgba->getChannel1(), 10e-11);
-          double c = fuzzyRound(rgba->getChannel2(), 10e-11);
+          long a = fuzzyRound(rgba->getChannel0(), 10e-11);
+          long b = fuzzyRound(rgba->getChannel1(), 10e-11);
+          long c = fuzzyRound(rgba->getChannel2(), 10e-11);
           int numval = a * 0x10000 + b * 0x100 + c;
           if (const char* disp = color_to_name(numval)) {
 
