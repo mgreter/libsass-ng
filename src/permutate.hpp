@@ -47,7 +47,10 @@ namespace Sass {
       if (in[i].size() == 0) return {};
     }
 
-    size_t* state = new size_t[L + 1]{};
+    // std::array<size_t, L + 1> state;
+    std::vector<size_t> state;
+    state.resize(L + 1);
+    // size_t* state = new size_t[L + 1]{};
     sass::vector<sass::vector<T>> out;
 
     // First initialize all states for every permutation group
@@ -86,7 +89,7 @@ namespace Sass {
       out.emplace_back(perm);
     }
 
-    delete[] state;
+    // delete[] state;
     return out;
   }
   // EO permutate
@@ -124,7 +127,9 @@ namespace Sass {
       if (in[i].size() == 0) return {};
     }
 
-    size_t* state = new size_t[L];
+    std::vector<size_t> state;
+    state.resize(L + 1);
+    // size_t* state = new size_t[L];
     sass::vector<sass::vector<T>> out;
 
     // First initialize all states for every permutation group
@@ -164,7 +169,7 @@ namespace Sass {
       out.emplace_back(perm);
     }
 
-    delete[] state;
+    // delete[] state;
     return out;
   }
   // EO permutateAlt

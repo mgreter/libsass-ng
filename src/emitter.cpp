@@ -269,7 +269,7 @@ namespace Sass {
 
 
 
-    size_t minIndent = 10e30,
+    size_t minIndent = std::numeric_limits<size_t>::max(),
       curIndent = 0, i = 0;
     while (i < text.size()) {
       if (Character::isNewline(text[i++])) {

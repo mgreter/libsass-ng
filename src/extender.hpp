@@ -55,6 +55,11 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+
   class ExtensionStore : public RefCounted {
 
   public:
@@ -74,7 +79,7 @@ namespace Sass {
 
     /////////////////////////////////////////////////////////////////////////
     // A map from all simple selectors in the stylesheet to the rules that
-    // contain them. This is used to find which rules an `@extend` applies to.
+    // contain them.This is used to find which rules an `@extend` applies to.
     /////////////////////////////////////////////////////////////////////////
     ExtSelMap selectors54; // _selectors
 
@@ -113,12 +118,12 @@ namespace Sass {
     // selectors that need to exist to satisfy the [second law that of extend][].
     // [second law of extend]: https://github.com/sass/sass/issues/324#issuecomment-4607184
     /////////////////////////////////////////////////////////////////////////
-    std::map<
+    std::unordered_map<
       SimpleSelectorObj,
       size_t,
-      // ObjPtrHash,
-      // ObjPtrEquality,
-      ObjPtrLessThan,
+      ObjPtrHash,
+      ObjPtrEquality,
+      // ObjPtrLessThan,
       Sass::Allocator<std::pair<
       const SimpleSelectorObj,
       size_t
