@@ -401,7 +401,7 @@ namespace Sass {
       value = withoutSlash3(value);
       // Set lexical variable on scope
       compiler.varRoot.setVariable({ idxs, i },
-        value->withoutSlash(), false);
+        value/*->withoutSlash()*/, false);
     }
 
     // Needed here for a specific edge case: restargs must be consumed

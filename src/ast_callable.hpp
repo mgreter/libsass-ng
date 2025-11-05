@@ -174,7 +174,7 @@ namespace Sass {
   // Meaning we only allocate the necessary container on demand
   // Doesn't do much for positionals, as we seldomly have empty args
   /////////////////////////////////////////////////////////////////////////
-
+  class ArgumentResults;
   class CallableArguments final : public AstNode
   {
   private:
@@ -194,6 +194,7 @@ namespace Sass {
     // This can be an already evaluated Map (via call) or a MapExpression.
     // So we must guarantee that this evaluates to a real Map value.
     ADD_CONSTREF(ExpressionObj, kwdRest);
+
 
   public:
 
@@ -295,6 +296,15 @@ namespace Sass {
       separator_(SASS_UNDEF)
     {};
 
+    // Copy constructor
+    ArgumentResults(const ArgumentResults& obj) :
+      positional_((obj.positional_)),
+      named_((obj.named_)),
+      separator_(obj.separator_)
+    {
+      std::cerr << "use copy\n";
+    };
+
     // Preallocate constructor
     ArgumentResults(size_t size) :
       separator_(SASS_UNDEF)
@@ -315,6 +325,10 @@ namespace Sass {
     // Move assignment operator
     ArgumentResults& operator=(
       ArgumentResults&& other) noexcept;
+
+    // Move assignment operator
+    ArgumentResults& operator=(
+      const ArgumentResults& other) noexcept;
 
     // Clear results
     void clear() {

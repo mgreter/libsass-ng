@@ -5,6 +5,8 @@
 // to get the  __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
+// #include "ankerl/rapidhash.h"
+
 namespace Sass {
 
   class EnvKey {
@@ -123,6 +125,12 @@ namespace Sass {
     // Calculate only on demand
     size_t hash() const {
       if (_hash == 0) {
+        /*
+        _hash = rapidhash_withSeed(
+          (void*)_norm.c_str(),
+          (size_t)_norm.size(),
+          getHashSeed());
+        */
         _hash = MurmurHash3(
           (void*)_norm.c_str(),
           (int)_norm.size(),
@@ -146,7 +154,7 @@ namespace Sass {
     }
   };
   */
-
+  /*
   struct hashString {
     inline size_t operator()(const sass::string& str) const
     {
@@ -162,6 +170,7 @@ namespace Sass {
       return lhs == rhs;
     }
   };
+  */
 
 };
 

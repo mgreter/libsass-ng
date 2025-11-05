@@ -205,7 +205,7 @@ namespace Sass {
     SharedPtr() : node(nullptr) {}
     SharedPtr(T* ptr) : node(ptr) { incRefCount(); }
     SharedPtr(const SharedPtr<T>& obj) : node(obj.node) { incRefCount(); }
-    SharedPtr(SharedPtr<T>&& obj) noexcept : node(obj.node) {
+    SharedPtr(SharedPtr<T>&& obj) noexcept : node(std::move(obj.node)) {
       obj.node = nullptr; // reset old node pointer
     }
     ~SharedPtr() {
@@ -233,7 +233,7 @@ namespace Sass {
     {
       if (node != obj.node) {
         if (node) decRefCount();
-        node = obj.node;
+        node = std::move(obj.node);
         obj.node = nullptr;
       }
       else if (node != nullptr) {

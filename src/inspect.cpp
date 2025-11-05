@@ -998,13 +998,15 @@ namespace Sass {
     append_token(ss, color);
   }
 
-  bool _canUseHexForChannel(double channel) {
-    return fuzzyIsInt(channel, sass::epsilon) &&
-      fuzzyGreaterThanOrEquals(channel, 0, sass::epsilon) &&
-      fuzzyLessThan(channel, 256, sass::epsilon);
+  bool Inspect::_canUseHexForChannel(double channel)
+  {
+    return fuzzyIsInt(channel, outopt.epsilon) &&
+      fuzzyLessThan(channel, 256, outopt.epsilon) &&
+      fuzzyGreaterThanOrEquals(channel, 0, outopt.epsilon);
   }
 
-  bool _canUseHex(const Color* rgb) {
+  bool Inspect::_canUseHexForColor(const Color* rgb)
+  {
     if (rgb->space() == ColorSpaces::rgb) {
       return _canUseHexForChannel(rgb->getChannel0()) &&
         _canUseHexForChannel(rgb->getChannel1()) &&
@@ -1013,7 +1015,7 @@ namespace Sass {
     return false;
   }
 
-  char hexCharFor(int number) {
+  static char hexCharFor(int number) {
     // return number < 0xA ? $0 + number : $a - 0xA + number;
     return number < 0xA ? 0x30 + number : 0x61 - 0xA + number;
   }
@@ -1076,13 +1078,13 @@ namespace Sass {
         // double c = std::round(std::round(rgba->getChannel2() * sass::iepsilon) * sass::epsilon);
         // cannot round, we need to check if it is either within fuzzy range of ceil or floor
 
-        if (fuzzyIsInt(rgba->getChannel0(), 10e-11) &&
-          fuzzyIsInt(rgba->getChannel1(), 10e-11) &&
-          fuzzyIsInt(rgba->getChannel2(), 10e-11)) {
+        if (fuzzyIsInt(rgba->getChannel0(), outopt.epsilon) &&
+          fuzzyIsInt(rgba->getChannel1(), outopt.epsilon) &&
+          fuzzyIsInt(rgba->getChannel2(), outopt.epsilon)) {
 
-          long a = fuzzyRound(rgba->getChannel0(), 10e-11);
-          long b = fuzzyRound(rgba->getChannel1(), 10e-11);
-          long c = fuzzyRound(rgba->getChannel2(), 10e-11);
+          long a = fuzzyRound(rgba->getChannel0(), outopt.epsilon);
+          long b = fuzzyRound(rgba->getChannel1(), outopt.epsilon);
+          long c = fuzzyRound(rgba->getChannel2(), outopt.epsilon);
           int numval = a * 0x10000 + b * 0x100 + c;
           if (const char* disp = color_to_name(numval)) {
 
@@ -1093,7 +1095,7 @@ namespace Sass {
           }
         }
 
-        if (_canUseHex(rgba)) {
+        if (_canUseHexForColor(rgba)) {
           flush_schedules();
           write_char('#');
           _writeHexComponent((int)std::round(rgba->getChannel0()));

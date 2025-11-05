@@ -10,6 +10,7 @@
 
 #include "randomize.hpp"
 #include "MurmurHash3.hpp"
+#include "ankerl/rapidhash.h"
 
 //////////////////////////////////////////////////////////
 // `hash_combine` comes from boost (functional/hash):
@@ -26,10 +27,11 @@ namespace Sass {
   // Our base implementation to hash strings
   inline size_t hash_string(const sass::string& str)
   {
-    return MurmurHash3(
-      (void*)str.c_str(),
-      (int)str.size(),
-      getHashSeed());
+    // return MurmurHash3(
+    return rapidhash_withSeed(
+       (void*)str.c_str(),
+       (size_t)str.size(),
+       getHashSeed());
   }
   // EO hash_string
 

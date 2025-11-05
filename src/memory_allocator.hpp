@@ -12,6 +12,9 @@
 #include "MurmurHash3.hpp"
 #include "randomize.hpp"
 
+// #include "ankerl/rapidhash.h"
+// #include "ankerl/fast_vector.h"
+
 #include <deque>
 #include <vector>
 #include <limits>
@@ -159,9 +162,15 @@ namespace std {
       const sass::string& name) const
     {
       return MurmurHash3(
+          (void*)name.c_str(),
+          (int)name.size(),
+          Sass::getHashSeed());
+      /*
+      return rapidhash_withSeed(
         (void*)name.c_str(),
-        (int)name.size(),
+        (size_t)name.size(),
         Sass::getHashSeed());
+      */
     }
   };
 }
