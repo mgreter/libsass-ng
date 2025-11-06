@@ -2106,7 +2106,7 @@ namespace Sass {
     if (bracketList) {
       // beforeBracket = scanner.position;
       scanner.expectChar($lbracket);
-      scanWhitespace(consumeWhiteSpace);
+      scanWhitespace(true);
 
       if (scanner.scanChar($rbracket)) {
         ListExpression* list = SASS_MEMORY_NEW(ListExpression,
@@ -3651,6 +3651,9 @@ namespace Sass {
 
     sass::string urlid;
 
+    sass::vector<uint8_t> brackets;
+    uint8_t bracket;
+
     while (true) {
       if (!scanner.peekChar(next)) {
         goto endOfLoop;
@@ -3702,7 +3705,7 @@ namespace Sass {
       case $cr:
       case $lf:
       case $ff:
-        if (isIndented()) goto endOfLoop;
+        if (isIndented() && brackets.empty()) goto endOfLoop;
         buffer.write(scanner.readChar());
         break;
 
@@ -3734,7 +3737,24 @@ namespace Sass {
           buffer.addInterpolation(contents);
         }
         break;
+/*
+      case $lparen:
+      case $lbracket:
+        bracket = scanner.readChar();
+        buffer.writeCharCode(bracket);
+        brackets.emplace_back(opposite(bracket));
+        break;
 
+      case $rparen:
+      case $rbracket:
+          if (brackets.empty()) {
+            error("Unexpected \"next\".", scanner.relevantSpan());
+          }
+        bracket = brackets.back();
+        brackets.pop_back();
+        scanner.expectChar(bracket);
+        buffer.writeCharCode(bracket);
+*/
       default:
         if (lookingAtIdentifier()) {
           auto ident = readIdentifier();
