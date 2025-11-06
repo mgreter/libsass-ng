@@ -4422,7 +4422,7 @@ namespace Sass {
     ExpressionObj name;
     StringScannerState state(scanner.state());
     try {
-      name = readExpression();
+      name = readExpression(false, false, true);
       scanner.expectChar($colon);
     }
     catch (Exception::ParserException& err) {
@@ -4851,7 +4851,8 @@ namespace Sass {
 
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
-    // Offset before(scanner.offset);
+
+    Offset before(scanner.offset);
     StringToken name = readIdentifierToken();
 
     if (StringUtils::startsWith(name.str, "--", 2)) {
@@ -4863,12 +4864,8 @@ namespace Sass {
         });
     }
     else if (StringUtils::equalsIgnoreCase(name.str, "type", 4)) {
-      compiler.addDeprecation(name.pstate,
-        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
-          return "Sass @functions named \"type\" are deprecated for forward-"
-            "compatibility with the plain CSS type() function.\n\n"
-            "For details, see https://sass-lang.com/d/type-function";
-        });
+      error("This name is reserved for the plain-CSS function.",
+        scanner.relevantSpanFrom(before));
     }
 
     sass::string normalized(name.str);
