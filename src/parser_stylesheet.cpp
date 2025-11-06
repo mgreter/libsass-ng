@@ -2121,7 +2121,7 @@ namespace Sass {
     bool wasInParentheses = inParentheses;
 
     while (true) {
-      scanWhitespace(consumeWhiteSpace);
+      scanWhitespace(consumeWhiteSpace || bracketList);
       if (until != nullptr && (this->*until)()) break;
 
       uint8_t next, first = scanner.peekChar();
