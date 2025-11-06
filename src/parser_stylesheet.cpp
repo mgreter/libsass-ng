@@ -176,6 +176,7 @@ namespace Sass {
       scanImportArgument(rule);
       scanWhitespace();
     } while (scanner.scanChar($comma));
+
     // Check for expected finalization token
     expectStatementSeparator("@import rule");
     return rule.detach();
@@ -4135,7 +4136,7 @@ namespace Sass {
         scanWhitespace(true);
         buffer.writeCharCode($colon);
         buffer.writeCharCode($space);
-        buffer.add(readExpression());
+        buffer.add(readExpression(false, false, true));
       }
       else {
         auto next = scanner.peekChar();
@@ -4168,9 +4169,9 @@ namespace Sass {
         }
       }
     }
-  //  std::cerr << "buffer " << buffer.text << "\n";
+  // std::cerr << "buffer " << buffer.text.buffer << "\n";
     scanner.expectChar($rparen);
-    scanWhitespace(true);
+    scanWhitespace(false);
     buffer.writeCharCode($rparen);
   }
 

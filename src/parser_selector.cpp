@@ -64,9 +64,9 @@ namespace Sass {
     ComplexSelectors items;
     items.emplace_back(readComplexSelector(start));
 
-    scanWhitespace(true);
+    scanWhitespace();
     while (scanner.scanChar($comma)) {
-      scanWhitespace(true);
+      scanWhitespace();
       start = scanner.offset;
       uint8_t next = scanner.peekChar();
       if (next == $comma) continue;
@@ -108,7 +108,7 @@ namespace Sass {
     SelectorCombinatorVector prefixes;
 
     while (true) {
-      scanWhitespace(true);
+      scanWhitespace();
 
       // Offset before(scanner.offset);
       bool hasIdentifier = false;
