@@ -244,6 +244,9 @@ namespace Sass {
 
         // Right trim the line to report
         StringUtils::makeRightTrimmed(lines[i]);
+        // Adjust position if it is impacted
+        if (beg.column > lines[i].size())
+          beg.column = lines[i].size();
 
         // Write the line number and the code
         stream
