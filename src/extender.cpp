@@ -469,7 +469,7 @@ namespace Sass {
     }
     // EO foreach complex
 
-    // std::cerr << "+NOW EXT FOR SMP " << extensionsBySimpleSelector[target].size() << "\n";
+    // std::cerr << "+NOW EXT FOR SMP " << extensionsByExtender[target].size() << "\n";
     if (newExtensions.empty()) {
       return;
     }
@@ -519,18 +519,20 @@ namespace Sass {
   // Note: dart-sass throws an error in here
   /////////////////////////////////////////////////////////////////////////
   ExtSelExtMap ExtensionStore::_extendExistingExtensions(
-    const sass::vector<ExtensionObj>& oldExtensions,
+    const sass::vector<ExtensionObj> oldExtensions, // must copy
     const ExtSelExtMap& newExtensions)
   {
 
     ExtSelExtMap additionalExtensions;
 
-    // std::cerr << "_extendExistingExtensions\n";
+    // std::cerr << "_extendExistingExtensions << " << oldExtensions.size() << "\n";
 
     // During the loop `oldExtensions` vector might be changed.
     // Callers normally pass this from `extensionsByExtender` and
     // that points back to the `sources` vector from `extensions`.
     for (size_t i = 0, iL = oldExtensions.size(); i < iL; i += 1) {
+
+      // std::cerr << "      A -> " << oldExtensions.size() << "\n";
 
       const ExtensionObj& extension = oldExtensions[i];
       if (extension == nullptr) {
@@ -561,6 +563,9 @@ namespace Sass {
       // Do the actual extending of the selector on extender
       ComplexSelectors selectors(extendComplex(
         extender.selector, newExtensions, mediaContext));
+
+      // std::cerr << "      B -> " << oldExtensions.size() << "\n";
+
       // Dart-sass upgrades error?
 
       if (selectors.empty()) {
@@ -586,6 +591,7 @@ namespace Sass {
         if (it != sources.end()) {
           sources[complex] = mergeExtension(
             it->second, withExtender);
+          // std::cerr << "      C1 -> " << oldExtensions.size() << "\n";
         }
         else {
           sources[complex] = withExtender;
@@ -593,13 +599,18 @@ namespace Sass {
           for (const auto& component : complex->elements()) {
             if (const auto& compound = component->selector()) {
               for (const auto& simple : compound->elements()) {
-                extensionsByExtender[simple].emplace_back(withExtender);
+                auto& foo = extensionsByExtender[simple];
+                // std::cerr << "      C2 -> " << &oldExtensions << " vs " << &foo << "\n";
+                // This may change oldExtensions!
+                foo.emplace_back(withExtender);
+                // std::cerr << "      C2 -> " << oldExtensions.size() << "\n";
               }
             }
           }
           if (newExtensions.find(target) != newExtensions.end()) {
             ExtSelExtMapEntry& entry = additionalExtensions[target];
             entry.emplace(std::make_pair(complex, withExtender));
+            // std::cerr << "      C3 -> " << oldExtensions.size() << "\n";
           }
         }
       }

@@ -52,7 +52,11 @@ namespace Sass {
 
   void SassParser::expectStatementSeparator(sass::string name)
   {
-    if (!atEndOfStatement()) expectNewline();
+
+    bool trailingSemicolon = tryTrailingSemicolon();
+
+    if (!atEndOfStatement()) expectNewline(trailingSemicolon);
+
     if (peekIndentation() <= currentIndentation) return;
     sass::sstream strm;
     strm << "Nothing may be indented ";
@@ -391,28 +395,32 @@ namespace Sass {
     return SASS_MEMORY_NEW(LoudComment, std::move(pstate), itpl);
   }
 
-  void SassParser::scanWhitespaceWithoutComments()
+  void SassParser::scanWhitespaceWithoutComments(bool consumeNewlines)
   {
     // This overrides whitespace consumption so that
     // it doesn't consume newlines or loud comments.
     while (!scanner.isDone()) {
       uint8_t next = scanner.peekChar();
-      if (next != $tab && next != $space) break;
+      if (consumeNewlines) {
+        if (!isWhitespace(next)) break;
+      }
+      else if (!isSpaceOrTab(next)) break;
       scanner.readChar();
     }
 
-    if (scanner.peekChar() == $slash && scanner.peekChar(1) == $slash) {
-      lastSilentComment = readSilentComment();
-    }
+    // ToDo: this is gone in dart
+    // if (scanner.peekChar() == $slash && scanner.peekChar(1) == $slash) {
+    //   lastSilentComment = readSilentComment();
+    // }
   }
 
-  void SassParser::expectNewline()
+  void SassParser::expectNewline(bool trailingSemicolon)
   {
     switch (scanner.peekChar()) {
-    case $semicolon:
-      error("semicolons aren't allowed in the indented syntax.",
-        scanner.rawSpan());
-      return;
+    // case $semicolon:
+    //   error("semicolons aren't allowed in the indented syntax.",
+    //     scanner.rawSpan());
+    //   return;
     case $cr:
       scanner.readChar();
       if (scanner.peekChar() == $lf) scanner.readChar();
@@ -422,8 +430,15 @@ namespace Sass {
       scanner.readChar();
       return;
     default:
-      error("expected newline.",
-        scanner.rawSpan());
+      if (trailingSemicolon) {
+        error("multiple statements on one line are"
+          " not supported in the indented syntax.",
+          scanner.rawSpan());
+      }
+      else {
+        error("expected newline.",
+          scanner.rawSpan());
+      }
     }
   }
 
@@ -561,4 +576,19 @@ namespace Sass {
     }
   }
 
+  static bool isSemicolon(uint8_t chr) {
+    // [](uint8_t chr) { return chr == $semicolon; })
+    return chr == $semicolon;
+  }
+
+  /// Consumes a semicolon and trailing whitespace, including comments.
+  ///
+  /// Returns whether a semicolon was consumed.
+  bool SassParser::tryTrailingSemicolon() {
+    if (scanCharIf(isSemicolon)) {
+      scanWhitespace();
+      return true;
+    }
+    return false;
+  }
 }

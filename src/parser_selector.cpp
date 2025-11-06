@@ -64,9 +64,9 @@ namespace Sass {
     ComplexSelectors items;
     items.emplace_back(readComplexSelector(start));
 
-    scanWhitespace();
+    scanWhitespace(true);
     while (scanner.scanChar($comma)) {
-      scanWhitespace();
+      scanWhitespace(true);
       start = scanner.offset;
       uint8_t next = scanner.peekChar();
       if (next == $comma) continue;
@@ -108,7 +108,7 @@ namespace Sass {
     SelectorCombinatorVector prefixes;
 
     while (true) {
-      scanWhitespace();
+      scanWhitespace(true);
 
       // Offset before(scanner.offset);
       bool hasIdentifier = false;
@@ -311,7 +311,7 @@ namespace Sass {
       else {
         // readParentSelector logic is in readCompoundSelector
         scanner.readChar();
-        // scanWhitespace();
+        // scanWhitespace(true);
       if (!allowParent) {
         error(
           "Parent selectors aren't allowed here.",
@@ -333,11 +333,11 @@ namespace Sass {
 
     scanner.expectChar($lbracket);
 
-    scanWhitespace();
+    scanWhitespace(true);
     Offset start(scanner.offset);
     struct QualifiedName name(readAttributeName());
     SourceSpan span(scanner.relevantSpanFrom(start));
-    scanWhitespace();
+    scanWhitespace(true);
 
     if (scanner.scanChar($rbracket)) {
       return SASS_MEMORY_NEW(AttributeSelector,
@@ -346,7 +346,7 @@ namespace Sass {
 
     sass::string op(readAttributeOperator());
 
-    scanWhitespace();
+    scanWhitespace(true);
 
     bool isIdent = true;
     sass::string value;
@@ -360,11 +360,11 @@ namespace Sass {
       isIdent = isIdentifier(value); // 1%
     }
 
-    scanWhitespace();
+    scanWhitespace(true);
     uint8_t modifier = 0;
     if (isAlphabetic(scanner.peekChar())) {
       modifier = scanner.readChar();
-      scanWhitespace();
+      scanWhitespace(true);
     }
 
     span = scanner.relevantSpanFrom(start);
@@ -484,7 +484,7 @@ namespace Sass {
       return SASS_MEMORY_NEW(PseudoSelector,
         scanner.rawSpanFrom(start), name, element);
     }
-    scanWhitespace();
+    scanWhitespace(true);
 
     sass::string unvendored(name);
     unvendored = StringUtils::unvendor(unvendored);
@@ -512,11 +512,11 @@ namespace Sass {
     }
     else if (unvendored == "nth-child" || unvendored == "nth-last-child") {
       argument = readAnPlusB();
-      scanWhitespace();
+      scanWhitespace(true);
       if (isWhitespace(scanner.peekChar(-1)) && scanner.peekChar() != $rparen) {
         expectIdentifier("of", "\"of\"");
         argument += " of";
-        scanWhitespace();
+        scanWhitespace(true);
         selector = readSelectorList();
       }
     }
@@ -563,19 +563,19 @@ namespace Sass {
       while (isDigit(scanner.peekChar())) {
         buffer.write(scanner.readChar());
       }
-      scanWhitespace();
+      scanWhitespace(true);
       if (!scanIdentChar($n)) return buffer.buffer;
     }
     else {
       expectIdentChar($n);
     }
     buffer.write($n);
-    scanWhitespace();
+    scanWhitespace(true);
 
     scanner.peekChar(next);
     if (next != $plus && next != $minus) return buffer.buffer;
     buffer.write(scanner.readChar());
-    scanWhitespace();
+    scanWhitespace(true);
 
     if (!scanner.peekChar(last) || !isDigit(last)) {
       error("Expected a number.",

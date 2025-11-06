@@ -56,7 +56,7 @@ namespace Sass {
 
 	  // assert(singleExpression != null);
 
-	  parser.scanWhitespace();
+	  parser.scanWhitespace(true);
 
 
     if (op == SassOperator::MOD && !parser.lookingAtExpression()) {

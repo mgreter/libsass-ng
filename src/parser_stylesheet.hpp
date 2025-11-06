@@ -385,7 +385,9 @@ namespace Sass {
     // called each time the expression could end and still be a valid expression.
     // When it returns `true`, this returns the expression.
     Expression* readExpression(
-      bool bracketList = false, bool singleEquals = false,
+      bool bracketList = false,
+      bool singleEquals = false,
+      bool consumeWhiteSpace = false,
       bool(StylesheetParser::* until)() = nullptr);
 
     // Returns `true` if scanner reached a `,`
@@ -539,7 +541,7 @@ namespace Sass {
     Expression* readExpressionUntilComparison();
 
     // Consumes a `@supports` condition.
-    SupportsCondition* readSupportsCondition();
+    SupportsCondition* readSupportsCondition(bool inParentheses = false);
 
     // Consumes a parenthesized supports condition, or an interpolation.
     SupportsCondition* readSupportsConditionInParens();
@@ -580,6 +582,20 @@ namespace Sass {
         scanner.relevantSpanFrom(start),
         args..., std::move(elements));
       scanWhitespaceWithoutComments();
+      return result.detach();
+    }
+
+    // Consumes a block of [child] statements and passes them, as well as
+    // the span from [start] to the end of the child block, to [create].
+    template <typename T, typename ...Args>
+    T* withChildrenAndNewlines(Statement* (StylesheetParser::* child)(),
+      const Offset& start, Args... args)
+    {
+      StatementVector elements(readChildren(child));
+      SharedPtr<T> result = SASS_MEMORY_NEW(T,
+        scanner.relevantSpanFrom(start),
+        args..., std::move(elements));
+      scanWhitespaceWithoutComments(true);
       return result.detach();
     }
 

@@ -121,10 +121,10 @@ namespace Sass {
     // it doesn't consume multi-line comments.
     void scanLoudComment() final;
 
-    void scanWhitespaceWithoutComments() final;
+    void scanWhitespaceWithoutComments(bool consumeNewlines = false) final;
 
     // Expect and consume a single newline character.
-    void expectNewline();
+    void expectNewline(bool trailingSemicolon = false);
 
     // Returns whether the scanner is immediately before *two* newlines.
     bool lookingAtDoubleNewline();
@@ -144,6 +144,8 @@ namespace Sass {
     // The [containsTab] and [containsSpace] parameters refer to
     // a single line of indentation that has just been parsed.
     void checkIndentationConsistency(bool containsTab, bool containsSpace);
+
+    bool tryTrailingSemicolon();
 
   };
 

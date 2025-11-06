@@ -282,7 +282,7 @@ namespace Sass {
     // Returns `null` (Note: empty map) if there are no extensions to add.
     /////////////////////////////////////////////////////////////////////////
     ExtSelExtMap _extendExistingExtensions( // was ExtSelExtMap
-      const sass::vector<ExtensionObj>& extensions,
+      const sass::vector<ExtensionObj> extensions, // must copy
       const ExtSelExtMap& newExtensions);
 
     /////////////////////////////////////////////////////////////////////////

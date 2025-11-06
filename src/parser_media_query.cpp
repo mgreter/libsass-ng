@@ -20,8 +20,9 @@ namespace Sass {
   {
     sass::vector<CssMediaQueryObj> queries;
     do {
-      scanWhitespace();
+      scanWhitespace(true);
       queries.emplace_back(readMediaQuery());
+      scanWhitespace(true);
     } while (scanner.scanChar($comma));
     scanner.expectDone();
     return SASS_MEMORY_NEW(CssMediaQueryVector, std::move(queries));
@@ -41,9 +42,9 @@ namespace Sass {
     sass::vector<sass::string> result;
     while (true) {
       result.push_back(readMediaInParens());
-      scanWhitespace();
+      scanWhitespace(true);
       if (!scanIdentifier(op)) return result;
-      expectWhitespace();
+      expectWhitespace(true);
     }
   }
 
@@ -59,7 +60,7 @@ namespace Sass {
     if (scanner.peekChar() == $lparen) {
       StringVector conditions;
       conditions.push_back(readMediaInParens());
-      scanWhitespace();
+      scanWhitespace(true);
 
       bool conjunction = true;
       if (scanIdentifier("and")) {
@@ -100,7 +101,7 @@ namespace Sass {
       }
     }
 
-    scanWhitespace();
+    scanWhitespace(true);
     if (!lookingAtIdentifier()) {
       // For example, "@media screen {"
       // return CssMediaQuery.type(identifier1);
@@ -117,7 +118,7 @@ namespace Sass {
       type = identifier1;
     }
     else {
-      scanWhitespace();
+      scanWhitespace(true);
       modifier = identifier1;
       type = identifier2;
       if (scanIdentifier("and")) {

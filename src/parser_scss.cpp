@@ -34,7 +34,7 @@ namespace Sass {
   // whitespace, but nothing else, including comments.
   void ScssParser::expectStatementSeparator(sass::string name)
   {
-    scanWhitespaceWithoutComments();
+    scanWhitespaceWithoutComments(true);
     if (scanner.isDone()) return;
     uint8_t next = scanner.peekChar();
     if (next == $semicolon || next == $rbrace) return;
@@ -69,7 +69,7 @@ namespace Sass {
   {
     // ToDo: can we move this after whitespace?
     StringScannerState start = scanner.state();
-    scanWhitespace();
+    scanWhitespace(true);
     StringScannerState beforeAt = scanner.state();
     if (scanner.scanChar($at)) {
       if (scanIdentifier("else", true)) return true;
@@ -98,7 +98,7 @@ namespace Sass {
     Statement* (StylesheetParser::* child)())
   {
     scanner.expectChar($lbrace);
-    scanWhitespaceWithoutComments();
+    scanWhitespaceWithoutComments(true);
     StatementVector children;
     while (true) {
       switch (scanner.peekChar()) {
@@ -110,11 +110,11 @@ namespace Sass {
         switch (scanner.peekChar(1)) {
         case $slash:
           lastSilentComment = readSilentComment();
-          scanWhitespaceWithoutComments();
+          scanWhitespaceWithoutComments(true);
           break;
         case $asterisk:
           children.emplace_back(readLoudComment());
-          scanWhitespaceWithoutComments();
+          scanWhitespaceWithoutComments(true);
           break;
         default:
           children.emplace_back((this->*child)());
@@ -124,7 +124,7 @@ namespace Sass {
 
       case $semicolon:
         scanner.readChar();
-        scanWhitespaceWithoutComments();
+        scanWhitespaceWithoutComments(true);
         break;
 
       case $rbrace:
@@ -144,7 +144,7 @@ namespace Sass {
   StatementVector ScssParser::readStatements(
     Statement* (StylesheetParser::* statement)())
   {
-    scanWhitespaceWithoutComments();
+    scanWhitespaceWithoutComments(true);
     StatementVector statements;
     while (!scanner.isDone()) {
       switch (scanner.peekChar()) {
@@ -156,11 +156,11 @@ namespace Sass {
         switch (scanner.peekChar(1)) {
         case $slash:
           lastSilentComment = readSilentComment();
-          scanWhitespaceWithoutComments();
+          scanWhitespaceWithoutComments(true);
           break;
         case $asterisk:
           statements.emplace_back(readLoudComment());
-          scanWhitespaceWithoutComments();
+          scanWhitespaceWithoutComments(true);
           break;
         default:
           StatementObj child = (this->*statement)();
@@ -171,7 +171,7 @@ namespace Sass {
 
       case $semicolon:
         scanner.readChar();
-        scanWhitespaceWithoutComments();
+        scanWhitespaceWithoutComments(true);
         break;
 
       default:
@@ -194,7 +194,7 @@ namespace Sass {
       while (!scanner.isDone() &&
         !isNewline(scanner.readChar())) {}
       if (scanner.isDone()) break;
-      scanWhitespaceWithoutComments();
+      scanWhitespaceWithoutComments(true);
     }
     while (scanner.scan("//"));
 
