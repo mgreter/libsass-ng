@@ -941,7 +941,7 @@ namespace Sass {
 
         if (extended.empty()) {
           if (!extendedNotExpanded.empty()) {
-            auto s = SASS_MEMORY_NEW(ComplexSelector, complex->pstate(),
+            ComplexSelector* s = SASS_MEMORY_NEW(ComplexSelector, complex->pstate(),
               {}, { component }, complex->hasLineBreak());
             // std::cerr << "ADD 1 [" << s->inspect() << "]\n";
             extendedNotExpanded.push_back({
@@ -974,7 +974,7 @@ namespace Sass {
             for (size_t n = 0; n < i; n++) {
               components.push_back(complex->get(n));
             }
-            auto s = SASS_MEMORY_NEW(ComplexSelector, complex->pstate(),
+            ComplexSelector* s = SASS_MEMORY_NEW(ComplexSelector, complex->pstate(),
               complex->leadingCombinators(), components,
               complex->hasLineBreak());
             // std::cerr << "ADD 3 [" << s->inspect() << "]\n";

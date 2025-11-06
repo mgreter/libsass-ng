@@ -41,7 +41,7 @@ namespace Sass {
   bool Parser::isIdentifier(sass::string text)
   {
     try {
-      auto src = SASS_MEMORY_NEW(SourceString,
+      SourceString* src = SASS_MEMORY_NEW(SourceString,
         "sass:://identifier", std::move(text));
       Parser parser(compiler, src);
       sass::string id(parser.readIdentifier());

@@ -471,13 +471,19 @@ namespace Sass {
       const sass::string& url,
       bool isImport = false);
 
+    // If the current [_parent] is not the last child of its grandparent,
+    // makes a new childless copy of it and sets [_parent] to that.
+    // Otherwise, leaves [_parent] as-is.
+    CssParentNode* copyParentAfterSibling(CssParentNode* parent);
+
     // Loading of parsed rules
     Stylesheet* loadModRule(ModRule* rule);
     Stylesheet* loadModRule2(ModRule* rule);
 
     Stylesheet* _loadStylesheet(ModRule* rule);
 
-    void _addChild(CssNode* node, bool(*through)(CssNode* node)) const;
+    void _addChild(CssNode* node, bool(*through)(CssNode*)) const;
+    // void _addChild(CssNode* node, bool(*through)(CssNode* node)) const;
 
 
   private:

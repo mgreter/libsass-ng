@@ -58,7 +58,7 @@ namespace Sass {
 
   Box* SelectorList::sealed()
   {
-    auto mbox = SASS_MEMORY_NEW(ModifiableBox, this);
+    ModifiableBox* mbox = SASS_MEMORY_NEW(ModifiableBox, this);
     return mbox->seal();
   }
 

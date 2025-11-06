@@ -217,7 +217,7 @@ namespace Sass {
                 break;
               }
               else {
-                auto newMap = SASS_MEMORY_NEW(Map,
+                Map* newMap = SASS_MEMORY_NEW(Map,
                   map->pstate(), {});
                 it.value() = newMap;
                 map = newMap;
@@ -231,7 +231,7 @@ namespace Sass {
               break;
             }
             else {
-              auto newMap = SASS_MEMORY_NEW(Map,
+              Map* newMap = SASS_MEMORY_NEW(Map,
                 map->pstate(), {});
               map->insert({ qwe, newMap });
               map = newMap;

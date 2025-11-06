@@ -433,7 +433,7 @@ namespace Sass {
               "no module with namespace \"" + ns->value() + "\".");
           }
           for (auto& entry : refs->varIdxs) {
-            auto name = SASS_MEMORY_NEW(String, pstate,
+            String* name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef vidx(refs, entry.second);
             list->insert({ name, compiler.
@@ -441,7 +441,7 @@ namespace Sass {
           }
           if (root)
           for (auto& entry : root->mergedFwdVar) {
-            auto name = SASS_MEMORY_NEW(String, pstate,
+            String* name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef vidx(entry.second);
             list->insert({ name, compiler.
@@ -471,20 +471,20 @@ namespace Sass {
               "no module with namespace \"" + ns->value() + "\".");
           }
           for (const auto& entry : refs->mixIdxs) {
-            auto name = SASS_MEMORY_NEW(String, pstate,
+            String* name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef fidx(refs, entry.second);
             const auto& callable = compiler.varRoot.getMixin(fidx);
-            auto fn = SASS_MEMORY_NEW(Mixin, pstate, callable);
+            Mixin* fn = SASS_MEMORY_NEW(Mixin, pstate, callable);
             list->insert({ name, fn });
           }
           if (root)
             for (const auto& entry : root->mergedFwdMix) {
-              auto name = SASS_MEMORY_NEW(String, pstate,
+              String* name = SASS_MEMORY_NEW(String, pstate,
                 sass::string(entry.first.norm()), true);
               EnvRef fidx(entry.second);
               const auto& callable = compiler.varRoot.getMixin(fidx);
-              auto fn = SASS_MEMORY_NEW(Mixin, pstate, callable);
+              Mixin* fn = SASS_MEMORY_NEW(Mixin, pstate, callable);
               list->insert({ name, fn });
             }
         }
@@ -509,20 +509,20 @@ namespace Sass {
               "no module with namespace \"" + ns->value() + "\".");
           }
           for (const auto& entry : refs->fnIdxs) {
-            auto name = SASS_MEMORY_NEW(String, pstate,
+            String* name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef fidx(refs, entry.second);
             const auto& callable = compiler.varRoot.getFunction(fidx);
-            auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
+            Function* fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
           }
           if (root)
           for (const auto& entry : root->mergedFwdFn) {
-            auto name = SASS_MEMORY_NEW(String, pstate,
+            String* name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
             EnvRef fidx(entry.second);
             const auto& callable = compiler.varRoot.getFunction(fidx);
-            auto fn = SASS_MEMORY_NEW(Function, pstate, callable);
+            Function* fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
           }
         }

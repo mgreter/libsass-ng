@@ -470,7 +470,7 @@ namespace Sass {
               ImportStackFrame iframe(*this, &import);
               Stylesheet* sheet = registerImport(&import);
               // Add a dynamic import to the import rule
-              auto inc = SASS_MEMORY_NEW(IncludeImport,
+              IncludeImport* inc = SASS_MEMORY_NEW(IncludeImport,
                 pstate, ctx_path, path_key, &import);
               inc->root47(sheet);
               rule->append(inc);
@@ -508,7 +508,7 @@ namespace Sass {
                 ImportStackFrame iframe(*this, loaded);
                 Stylesheet* sheet = registerImport(loaded);
                 const sass::string& url(resolved[0].abs_path);
-                auto inc = SASS_MEMORY_NEW(IncludeImport,
+                IncludeImport* inc = SASS_MEMORY_NEW(IncludeImport,
                   pstate, ctx_path, url, &import);
                 inc->root47(sheet);
                 rule->append(inc);
@@ -565,7 +565,7 @@ namespace Sass {
     SourceDataObj source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", "(" + signature + ")");
     CallableSignature* args = CallableSignature::parse(*this, source);
-    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
+    BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     callable->acceptsContent(acceptsContent);
     auto& mixins(varRoot.intMixin);
     uint32_t offset((uint32_t)mixins.size());
@@ -594,7 +594,7 @@ namespace Sass {
     SourceDataObj source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", "(" + signature + ")");
     auto args = CallableSignature::parse(*this, source);
-    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
+    BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb);
     auto& functions(varRoot.intFunction);
     uint32_t offset((uint32_t)functions.size());
     varRoot.intFunction.push_back(callable);
@@ -612,7 +612,7 @@ namespace Sass {
     SourceDataObj source = SASS_MEMORY_NEW(SourceString,
       "sass://signature", "(" + signature + ")");
     auto args = CallableSignature::parse(*this, source);
-    auto callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb, true);
+    BuiltInCallable* callable = SASS_MEMORY_NEW(BuiltInCallable, name, args, cb, true);
     auto& functions(varRoot.intFunction);
     uint32_t offset((uint32_t)functions.size());
     varRoot.intFunction.push_back(callable);
@@ -635,7 +635,7 @@ namespace Sass {
       auto args = CallableSignature::parse(*this, source);
       pairs.emplace_back(std::make_pair(args, overload.second));
     }
-    auto callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
+    BuiltInCallables* callable = SASS_MEMORY_NEW(BuiltInCallables, name, pairs);
     auto& functions(varRoot.intFunction);
     uint32_t offset((uint32_t)functions.size());
     varRoot.intFunction.push_back(callable);

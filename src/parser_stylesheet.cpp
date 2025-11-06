@@ -1329,7 +1329,7 @@ namespace Sass {
             auto query = readImportSupportsQuery();
             if (!query->isaSupportsDeclaration())
               buffer.writeCharCode($lparen);
-            auto foo = SASS_MEMORY_NEW(SupportsExpression,
+            auto* foo = SASS_MEMORY_NEW(SupportsExpression,
               scanner.rawSpanFrom(start), query);
             // std::cerr << "0 ++ " << foo->toString() << "\n";
             buffer.add(foo);

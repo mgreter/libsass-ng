@@ -123,7 +123,7 @@ namespace Sass {
 
   ComplexSelector* SimpleSelector::wrapInComplex(SelectorCombinatorVector prefixes)
   {
-    auto* qwe = wrapInCompound()->wrapInComponent({});
+    CplxSelComponent* qwe = wrapInCompound()->wrapInComponent({});
     return SASS_MEMORY_NEW(ComplexSelector, pstate(), std::move(prefixes), { qwe });
   }
 
@@ -144,13 +144,13 @@ namespace Sass {
 
   ComplexSelector* CompoundSelector::wrapInComplex3()
   {
-    auto comp = SASS_MEMORY_NEW(CplxSelComponent, pstate(), {}, this);
+    CplxSelComponent* comp = SASS_MEMORY_NEW(CplxSelComponent, pstate(), {}, this);
     return SASS_MEMORY_NEW(ComplexSelector, pstate(), { comp });
   }
 
   ComplexSelector* CompoundSelector::wrapInComplex(SelectorCombinatorVector prefixes, SelectorCombinatorVector tails)
   {
-    auto comp = SASS_MEMORY_NEW(CplxSelComponent, pstate(), std::move(tails), this);
+    CplxSelComponent* comp = SASS_MEMORY_NEW(CplxSelComponent, pstate(), std::move(tails), this);
     return SASS_MEMORY_NEW(ComplexSelector, pstate(), std::move(prefixes), { comp });
   }
 

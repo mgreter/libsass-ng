@@ -2494,10 +2494,12 @@ namespace Sass {
     sass::string value(interpolationToCssString(node->value(), true, true));
 
     if (node->empty()) {
+      // copyParentAfterSibling();
       CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
         node->pstate(), current,
         std::move(name), std::move(value),
         node->isChildless());
+      current = copyParentAfterSibling(current);
       current->addChildAt(css, false);
       return nullptr;
     }
@@ -2510,7 +2512,7 @@ namespace Sass {
     RAII_FLAG(inKeyframes, isKeyframe);
 
 
-    auto pu = current->bubbleThrough(true);
+    CssParentNode* pu = current->bubbleThrough(true);
 
 
 
@@ -2522,6 +2524,7 @@ namespace Sass {
       node->isChildless());
 
     // Adds new empty atRule to Root!
+//    copyParentAfterSibling(pu);
     pu->addChildAt(css, false);
 
     RAII_OBJ(CssParentNode, current, css);
@@ -2872,6 +2875,8 @@ namespace Sass {
     // it to CSS will throw an error that we want the user to see.
     if (cssValue != nullptr && (!cssValue->isBlank() || cssValue->lengthAsList() == 0))
     {
+      // std::cerr << "[[" << (current->toString()) << "]]\n";
+      current = copyParentAfterSibling(current);
       // Only place we create css declarations!?
       current->append(SASS_MEMORY_NEW(CssDeclaration,
         node->pstate(), name, cssValue, was_custom_property));
@@ -2883,6 +2888,7 @@ namespace Sass {
     }
 
     if (!node->empty()) {
+      // copyParentAfterSibling();
       // Now produce the inner declarations
       LocalOption<sass::string> ll1(declarationName, name);
       for (Statement* child : node->elements()) {
@@ -2904,8 +2910,11 @@ namespace Sass {
     }
 
 
+    // copyParentAfterSibling();
+
     sass::string text(acceptInterpolation(c->text(), false));
     bool preserve = text[2] == '!';
+    current = copyParentAfterSibling(current);
     current->append(SASS_MEMORY_NEW(CssComment, c->pstate(), std::move(text), preserve, c->newline()));
     return nullptr;
   }
@@ -3201,6 +3210,7 @@ namespace Sass {
 
     if (current != _stylesheet->compiled) {
       // std::cerr << "EVAL ADD IMPORT INTO SCOPE\n";
+      // copyParentAfterSibling();
       current->append(css.ptr());
     }
     else if (_endOfImports == _stylesheet->compiled->size()) {
@@ -3601,4 +3611,19 @@ namespace Sass {
     return sheet;
   }
 
+  // If the current [_parent] is not the last child of its grandparent,
+  // makes a new childless copy of it and sets [_parent] to that.
+  // Otherwise, leaves [_parent] as-is.
+  CssParentNode* Eval::copyParentAfterSibling(CssParentNode* parent)
+  {
+    auto grandparent = parent->parent();
+    if (grandparent == nullptr || grandparent->empty()) return parent;
+    if (grandparent->elements().back() != parent) {
+      CssParentNode* copy = parent->copy(true);
+      grandparent->append(copy);
+      return copy;
+    }
+    return parent;
+  }
+  
 }

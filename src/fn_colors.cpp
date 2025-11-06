@@ -868,7 +868,7 @@ namespace Sass {
           if (parts.size() == 0) return { nullptr, nullptr };
           else if (parts.size() == 1) return { input, nullptr };
           else if (parts.size() == 2) {
-            auto initial = SASS_MEMORY_NEW(List, pstate, {
+            List* initial = SASS_MEMORY_NEW(List, pstate, {
               list.begin(), list.end() - 1 }, SASS_SPACE);
             initial->append(_parseNumberOrString(compiler, pstate, parts[0]));
             return { initial, _parseNumberOrString(compiler, pstate, parts[1]) };
@@ -883,7 +883,7 @@ namespace Sass {
       if (Number* back = list.back()->isaNumber()) {
         // std::cerr << "Has As Slash " << back->hasAsSlash() << "\n";
         if (back->hasAsSlash() == true) {
-          auto initial = SASS_MEMORY_NEW(List, pstate, {
+          List* initial = SASS_MEMORY_NEW(List, pstate, {
             list.begin(), list.end() - 1 }, SASS_SPACE);
           initial->append(back->lhsAsSlash().ptr());
           return { initial, back->rhsAsSlash().ptr() };
