@@ -1424,7 +1424,7 @@ namespace Sass {
       return nullptr;
     }
 
-    auto value = readInterpolatedDeclarationValue(true, true);
+    auto value = readInterpolatedDeclarationValue(true, true, true, true, true, true);
     scanner.expectChar($rparen);
 
     return new SupportsFunction(
