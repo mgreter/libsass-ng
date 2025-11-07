@@ -4445,7 +4445,7 @@ namespace Sass {
       // after all, so we rethrow the declaration-parsing error.
       InterpolationBuffer buffer(scanner);
       buffer.addInterpolation(identifier);
-      buffer.addInterpolation(readInterpolatedDeclarationValue(true, true, false));
+      buffer.addInterpolation(readInterpolatedDeclarationValue(true, true, false, true, true, true));
       if (scanner.peekChar() == $colon) throw err;
       scanner.expectChar($rparen);
 
