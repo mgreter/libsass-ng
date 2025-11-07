@@ -3738,7 +3738,7 @@ namespace Sass {
           buffer.addInterpolation(contents);
         }
         break;
-/*
+
       case $lparen:
       case $lbracket:
         bracket = scanner.readChar();
@@ -3755,7 +3755,8 @@ namespace Sass {
         brackets.pop_back();
         scanner.expectChar(bracket);
         buffer.writeCharCode(bracket);
-*/
+        break;
+
       default:
         if (lookingAtIdentifier()) {
           auto ident = readIdentifier();
