@@ -8,7 +8,6 @@
 #include <cstring>
 #include "compiler.hpp"
 #include "charcode.hpp"
-#include "charcode.hpp"
 #include "character.hpp"
 #include "color_maps.hpp"
 #include "exceptions.hpp"
@@ -18,6 +17,8 @@
 #include "ast_statements.hpp"
 #include "ast_expressions.hpp"
 #include "parser_expression.hpp"
+
+#include "debugger.hpp"
 
 namespace Sass {
 
@@ -1841,6 +1842,7 @@ namespace Sass {
   {
     scanWhitespace(true);
     SupportsConditionObj condition(readSupportsCondition());
+    // debug_ast(condition);
     scanWhitespace();
     EnvFrame local(compiler, true);
     return withChildren<SupportsRule>(

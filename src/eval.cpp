@@ -2710,8 +2710,8 @@ namespace Sass {
   sass::string Eval::_parenthesize(SupportsCondition* condition) {
     SupportsNegation* negation = condition->isaSupportsNegation();
     SupportsOperation* operation = condition->isaSupportsOperation();
-    SupportsAnything* anything = condition->isaSupportsAnything();
-    if (negation != nullptr || operation != nullptr || anything != nullptr) {
+    // SupportsAnything* anything = condition->isaSupportsAnything();
+    if (negation != nullptr || operation != nullptr /* || anything != nullptr */) {
       return "(" + _visitSupportsCondition(condition) + ")";
     }
     else {

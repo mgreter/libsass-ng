@@ -874,7 +874,7 @@ inline void debug_ast(AstNode* node, std::string ind)
     std::cerr << ind << "SupportsAnything " << block;
     std::cerr << " (" << pstate_source_position(node) << ")"
       << std::endl;
-    // debug_ast(block->condition(), ind + " condition) ");
+    debug_ast(block->contents(), ind + " condition) ");
   }
   else if (Cast<SupportsNegation>(node)) {
     SupportsNegation* block = Cast<SupportsNegation>(node);
