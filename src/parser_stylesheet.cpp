@@ -688,6 +688,7 @@ namespace Sass {
       return readAtRootRule(start);
     }
     else if (plain == "charset") {
+      scanWhitespace(true);
       isUseAllowed = wasUseAllowed;
       if (!root) throwDisallowedAtRule(start);
       sass::string throwaway(string());
