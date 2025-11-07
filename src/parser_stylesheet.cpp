@@ -1739,6 +1739,7 @@ namespace Sass {
   AtRule* StylesheetParser::readMozDocumentRule(Offset start, Interpolation* name)
   {
 
+    scanWhitespace(false);
     Offset valueStart(scanner.offset);
     InterpolationBuffer buffer(scanner);
     bool needsDeprecationWarning = false;
