@@ -4330,7 +4330,7 @@ namespace Sass {
   // top-level `<`, `>`, or a `=` that's not `==`.
   Expression* StylesheetParser::readExpressionUntilComparison()
   {
-    return readExpression(false, false,
+    return readExpression(false, false, true,
       &StylesheetParser::lookingAtExpressionEnd);
   }
 
