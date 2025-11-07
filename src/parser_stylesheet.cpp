@@ -4391,7 +4391,7 @@ namespace Sass {
 
       if (scanner.scanChar($lparen)) {
         InterpolationObj arguments =
-          readInterpolatedDeclarationValue(true, true, true);
+          readInterpolatedDeclarationValue(true, true, true, true, true, true);
         scanner.expectChar($rparen);
         return SASS_MEMORY_NEW(SupportsFunction,
           scanner.relevantSpanFrom(start),
