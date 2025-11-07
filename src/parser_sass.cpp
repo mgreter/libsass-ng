@@ -33,22 +33,22 @@ namespace Sass {
   // Consumes and ignores a loud (CSS-style) comment.
   // This overrides loud comment consumption so that
   // it doesn't consume multi-line comments.
-  void SassParser::scanLoudComment()
-  {
-    scanner.expect("/*");
-    while (true) {
-      auto next = scanner.readChar();
-      if (isNewline(next)) {
-        scanner.fail("*/");
-      }
-      if (next != $asterisk) continue;
-
-      do {
-        next = scanner.readChar();
-      } while (next == $asterisk);
-      if (next == $slash) break;
-    }
-  }
+  // void SassParser::scanLoudComment()
+  // {
+  //   scanner.expect("/*");
+  //   while (true) {
+  //     auto next = scanner.readChar();
+  //     if (isNewline(next)) {
+  //       scanner.fail("*/");
+  //     }
+  //     if (next != $asterisk) continue;
+  // 
+  //     do {
+  //       next = scanner.readChar();
+  //     } while (next == $asterisk);
+  //     if (next == $slash) break;
+  //   }
+  // }
 
   void SassParser::expectStatementSeparator(sass::string name)
   {
