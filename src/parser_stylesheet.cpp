@@ -1840,7 +1840,7 @@ namespace Sass {
   // [start] should point before the `@`.
   SupportsRule* StylesheetParser::readSupportsRule(Offset start)
   {
-    scanWhitespace(true);
+    scanWhitespace();
     SupportsConditionObj condition(readSupportsCondition());
     // debug_ast(condition);
     scanWhitespace();
