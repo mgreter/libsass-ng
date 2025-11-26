@@ -1253,11 +1253,11 @@ namespace Sass {
       vars.push_back(kvar);
 
       if (!scanner.scanChar($comma)) break;
-      scanWhitespace();
+      scanWhitespace(true);
       if (!lookingAtExpression()) break;
     }
 
-    scanWhitespace();
+    // scanWhitespace();
     scanner.expectChar($rparen);
     return true;
   }
@@ -1581,12 +1581,12 @@ namespace Sass {
     std::set<EnvKey> callFilters;
     // Offset beforeShow(scanner.offset);
     if (scanIdentifier("show")) {
-      // scanWhitespace(true);
+      scanWhitespace(true);
       readForwardMembers(varFilters, callFilters);
       isShown = true;
     }
     else if (scanIdentifier("hide")) {
-      // scanWhitespace(true);
+      scanWhitespace(true);
       readForwardMembers(varFilters, callFilters);
       isHidden = true;
     }
@@ -3753,7 +3753,9 @@ namespace Sass {
       case $rparen:
       case $rbracket:
           if (brackets.empty()) {
-            error("Unexpected \"next\".", scanner.relevantSpan());
+            sass::string chr(next, 1);
+            error("Unexpected \"" + chr + "\".",
+              scanner.relevantSpan());
           }
         bracket = brackets.back();
         brackets.pop_back();
@@ -4737,7 +4739,7 @@ namespace Sass {
           scanner.relevantSpanFrom(flagStart));
       }
 
-      scanWhitespace(true);
+      scanWhitespace(false);
       flagStart = scanner.offset;
     }
 

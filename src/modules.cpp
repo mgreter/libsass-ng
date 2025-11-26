@@ -10,6 +10,39 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  Module::Module(const Module* ptr) :
+    Env(ptr->idxs),
+    url(ptr->url),
+    isBuiltIn(ptr->isBuiltIn),
+    isLoaded(ptr->isLoaded),
+    isCompiled(ptr->isCompiled),
+    compiled(ptr->compiled),
+    transitivelyContainsExtensions(ptr->transitivelyContainsExtensions),
+    mergedFwdVar(ptr->mergedFwdVar),
+    mergedFwdMix(ptr->mergedFwdMix),
+    mergedFwdFn(ptr->mergedFwdFn),
+    upstream77(ptr->upstream77),
+    imports56(ptr->imports56),
+    moduse(ptr->moduse),
+    modimps(ptr->modimps),
+    extender52(ptr->extender52),
+    precomments(ptr->precomments)
+  {
+  }
+
+  void Module::addExtension(
+    const SelectorListObj& extender3,
+    const SimpleSelectorObj& target,
+    const CssMediaRuleObj& mediaQueryContext,
+    const ExtendRuleObj& extend,
+    bool is_optional) const
+  {
+    extender52->addExtension(extender3, target, mediaQueryContext->queries(), extend, is_optional);
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   void Module::determineTransitivelyContainsExtensions()
   {
     if (transitivelyContainsExtensions)

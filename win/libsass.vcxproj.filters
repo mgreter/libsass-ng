@@ -132,9 +132,6 @@
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\eval.hpp">
       <Filter>API Includes</Filter>
     </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sel_any.hpp">
-      <Filter>Visitor Headers</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\sel_bogus.hpp">
       <Filter>Visitor Headers</Filter>
     </ClInclude>
@@ -182,6 +179,9 @@
     </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\memory_config.hpp">
       <Filter>1-Settings</Filter>
+    </ClInclude>
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\calc_names.hpp">
+      <Filter>API Includes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -303,6 +303,9 @@
     </ClCompile>
     <ClCompile Include="$(LIBSASS_SRC_DIR)\environment.cpp">
       <Filter>LibSass Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="$(LIBSASS_SRC_DIR)\calc_names.cpp">
+      <Filter>CAPI Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -513,12 +516,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\comparators.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\containers.hpp">
-      <Filter>LibSass Headers</Filter>
-    </ClInclude>
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\modules.hpp">
       <Filter>LibSass Headers</Filter>
     </ClInclude>

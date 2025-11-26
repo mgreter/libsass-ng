@@ -121,11 +121,19 @@ namespace Sass {
 
   static bool SameConfig(WithConfig* a, WithConfig* b)
   {
+
+    if (a == b) return true;
     if (a == nullptr) return false;
     if (b == nullptr) return false;
+    // if (!a->hasConfig) return true;
+    // if (!b->hasConfig) return true;
     a = GetParentConfig(a);
     b = GetParentConfig(b);
-    return a == b;
+    if (a == b) return true;
+
+
+
+    return false;
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -193,6 +201,7 @@ namespace Sass {
     else {
 
       // No idea why this is needed!
+      // Probably for "with" configs!?
       for (auto& var : modFrame->varIdxs) {
         idxs->module->mergedFwdVar.insert(var);
       }
