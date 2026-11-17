@@ -4718,6 +4718,7 @@ namespace Sass {
             });
         }
         guarded = true;
+        // std::cerr << "FOUND VARIABLE with !default\n";
       }
       else if (flag == "global") {
         if (!ns.empty()) {
@@ -4747,8 +4748,13 @@ namespace Sass {
 
     // Skip to optional global scope
     EnvRefs* frame = global ?
-      compiler.envstack.front() :
+      compiler.getCurrentModule2() :
       compiler.envstack.back();
+
+    if (frame == compiler.envstack.front() && guarded) {
+//      Module* module = modules.back();
+//      module->defaults.insert(name);
+    }
 
     SourceSpan pstate(scanner.relevantSpanFrom(start));
 
@@ -4758,6 +4764,10 @@ namespace Sass {
       if (ns.empty()) {
         if (chroot->varIdxs.count(name)) {
           hasVar = true;
+          if (guarded) {
+            Module* module = modules.back();
+            module->defaults.insert(name);
+          }
           break;
         }
       }
@@ -4775,7 +4785,10 @@ namespace Sass {
       {}, value, guarded, global);
 
     if (ns.empty() && !hasVar) {
-      frame->createVariable(name);
+      // declaration->vidx(
+        frame->createVariable(name)
+          // )
+          ;
     }
 
     return declaration;

@@ -44,7 +44,8 @@ namespace Sass {
 
   void ImportedCssVisitor::visitCssDeclaration(CssDeclaration* css)
   {
-    std::cerr << "THIS SHOULD NOT HAPPEN, NO CSS KEY FRAME BLOCKS!!!!\n";
+    eval._addChild(css, SkipNone);
+    // std::cerr << "THIS SHOULD NOT HAPPEN, NO CSS DECLARATION BLOCKS!!!!\n";
   }
 
   void ImportedCssVisitor::visitCssImport(CssImport* css)

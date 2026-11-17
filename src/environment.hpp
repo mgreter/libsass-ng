@@ -164,7 +164,7 @@ namespace Sass {
     // bool isForward = false;
 
     // Flag if this scope is considered internal
-    bool isInternal = false;
+    bool isInternal53 = false;
 
     // Rules like `@if`, `@for` etc. are semi-global (permeable).
     // Assignments directly in those can bleed to the root scope.
@@ -184,7 +184,7 @@ namespace Sass {
       root(root),
       pscope(pscope),
       isImport(isImport),
-      isInternal(isInternal),
+      isInternal53(isInternal),
       isSemiGlobal(isSemiGlobal)
     {}
 

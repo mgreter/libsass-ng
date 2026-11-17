@@ -551,7 +551,7 @@ namespace Sass {
   {
     if (isMathOperator(operand())) {
       return left()->isCalcSafe()
-        || right()->isCalcSafe();
+        && right()->isCalcSafe();
     }
     return false;
   }

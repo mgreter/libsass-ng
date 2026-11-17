@@ -70,7 +70,7 @@ namespace Sass {
   {
     if (isInternal) {
       // Lives in built-in scope
-      idxs->isInternal = true;
+      idxs->isInternal53 = true;
     }
     // Check and prevent stack smashing
     if (stack55.size() > SassMaxNesting) {
@@ -106,7 +106,7 @@ namespace Sass {
   EnvRef EnvRefs::createVariable(
     const EnvKey& name)
   {
-    if (isInternal) {
+    if (isInternal53) {
       size_t offset = root.intVariables.size();
       root.intVariables.resize(offset + 1);
       varIdxs[name] = (uint32_t)offset;
@@ -128,7 +128,7 @@ namespace Sass {
   EnvRef EnvRefs::createFunction(
     const EnvKey& name, bool special)
   {
-    if (isInternal) {
+    if (isInternal53) {
       size_t offset = root.intFunction.size();
       // ToDo: why is this here, very weird!
       // if (!special)
@@ -153,7 +153,7 @@ namespace Sass {
   EnvRef EnvRefs::createMixin(
     const EnvKey& name)
   {
-    if (isInternal) {
+    if (isInternal53) {
       size_t offset = root.intMixin.size();
       root.intMixin.resize(offset + 1);
       mixIdxs[name] = (uint32_t)offset;
@@ -196,7 +196,7 @@ namespace Sass {
       std::cerr << " Trying to access invalid variable\n";
       return qwe;
     }
-    if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+    if (vidx.idxs == nullptr || vidx.idxs->isInternal53) {
       if (vidx.offset >= intVariables.size()) {
         std::cerr << " Trying to access non existing variable " << vidx.offset << "\n";
         return qwe;
@@ -243,7 +243,7 @@ namespace Sass {
   // Just converting and returning reference to array offset
   CallableObj& EnvRoot::getFunction(const EnvRef& fidx)
   {
-    if (fidx.idxs == nullptr || fidx.idxs->isInternal) {
+    if (fidx.idxs == nullptr || fidx.idxs->isInternal53) {
       return intFunction[fidx.offset];
     }
     else {
@@ -256,7 +256,7 @@ namespace Sass {
   // Just converting and returning reference to array offset
   CallableObj& EnvRoot::getMixin(const EnvRef& midx)
   {
-    if (midx.idxs == nullptr || midx.idxs->isInternal) {
+    if (midx.idxs == nullptr || midx.idxs->isInternal53) {
       return intMixin[midx.offset];
     }
     else {
@@ -285,7 +285,7 @@ namespace Sass {
     if (!vidx.isValid()) {
       return;
     }
-    if (vidx.idxs == nullptr || vidx.idxs->isInternal) {
+    if (vidx.idxs == nullptr || vidx.idxs->isInternal53) {
       //if (value == nullptr)std::cerr << "SET VARIABLE " << vidx.offset << " to NULL\n";
       //else std::cerr << "SET VARIABLE " << vidx.offset << " to " << value->toString() << "\n";
       ValueObj& slot(intVariables[vidx.offset]);
@@ -310,7 +310,7 @@ namespace Sass {
     if (!fidx.isValid()) {
       return;
     }
-    if (fidx.idxs == nullptr || fidx.idxs->isInternal) {
+    if (fidx.idxs == nullptr || fidx.idxs->isInternal53) {
       if (!guarded || intFunction[fidx.offset] == nullptr)
         if (value != nullptr) intFunction[fidx.offset] = value;
     }
@@ -329,7 +329,7 @@ namespace Sass {
     if (!midx.isValid()) {
       return;
     }
-    if (midx.idxs == nullptr || midx.idxs->isInternal) {
+    if (midx.idxs == nullptr || midx.idxs->isInternal53) {
       if (!guarded || intMixin[midx.offset] == nullptr)
         intMixin[midx.offset] = value;
     }
@@ -717,7 +717,7 @@ namespace Sass {
   // Flag if this scope is considered internal
   bool EnvRef::isInternal() const {
     if (idxs == nullptr) return false;
-    return idxs->isInternal;
+    return idxs->isInternal53;
   }
 
   // Rules like `@if`, `@for` etc. are semi-global (permeable).
@@ -762,7 +762,8 @@ namespace Sass {
     // Meaning it no scoped items at all
     if (idxs == nullptr) return;
 
-    if (!idxs->isInternal) {
+    //if (!idxs->isInternal53)
+    {
 
       // Check if we have scoped variables
       if (idxs->varIdxs.size() != 0) {
@@ -817,7 +818,7 @@ namespace Sass {
     // Meaning it no scoped items at all
     if (idxs == nullptr) return;
 
-    if (!idxs->isInternal) {
+    if (!idxs->isInternal53) {
 
       // Check if we had scoped variables
       if (idxs->varIdxs.size() != 0) {

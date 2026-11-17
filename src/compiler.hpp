@@ -335,6 +335,18 @@ namespace Sass {
       return stack.back();
     }
 
+    EnvRefs* getCurrentModule2() const {
+      auto& stack = varRoot.compiler.envstack;
+      if (stack.empty()) return nullptr;
+      auto current = stack.back();
+      while (current->pscope) {
+        if (current->module)
+          if (!current->isImport) break;
+        current = current->pscope;
+      }
+      return current;
+    }
+
     EnvRefs* getCurrentModule() const {
       auto& stack = varRoot.compiler.envstack;
       if (stack.empty()) return nullptr;

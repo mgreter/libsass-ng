@@ -87,10 +87,12 @@ namespace Sass {
     ExtensionStoreObj extender52 = nullptr;
 
     sass::vector<CssCommentObj> precomments;
+
     // Special set with global assignments
     // Needed for imports within style-rules
     // ToDo: not really tested via specs yet?
     // EnvKeySet globals;
+    EnvKeySet defaults;
 
   public:
 

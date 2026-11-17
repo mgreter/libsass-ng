@@ -30,6 +30,8 @@
 #include "plugins.hpp"
 #include "file.hpp"
 
+#include "debugger.hpp"
+
 #include <cstring>
 #include <csignal>
 #ifdef _MSC_VER
@@ -158,7 +160,7 @@ namespace Sass {
 
     Eval eval(*this, *this, plainCss);
 
-    //debug_ast(root);
+    // debug_ast(root);
     CssRootObj compiled;
     {
       ImportStackFrame iframe(eval.compiler, root->import);

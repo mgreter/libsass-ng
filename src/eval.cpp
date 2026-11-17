@@ -725,6 +725,12 @@ namespace Sass {
     for (const auto& arg : arguments->positional())
     {
       ValueObj result(arg->accept(this));
+      // Can happen when we have an assignment that is never run
+      // E.g. x { @if false { $member: value !global; } }
+      if (result == nullptr) {
+        positional.emplace_back(result);
+        return results;
+      }
       if (Number* nr = result->isaNumber()) {
         result = withoutSlash4(nr);
       }
@@ -1446,7 +1452,14 @@ namespace Sass {
       else {
         EnvRef vidx = compiler.varRoot.findVarIdx(
           variable->name(), variable->ns());
-        if (vidx.isValid()) variable->vidxs().push_back(vidx);
+        if (vidx.isValid()) {
+          // variable->vidxs().push_back(vidx);
+          const ValueObj& value =
+            compiler.varRoot.getVariable(vidx);
+          if (value == nullptr) return value;
+          if (value.isNull()) return value;
+          return value->withoutSlash();
+        }
         // std::cerr << "INT FOUND " << vidx.offset << "\n";
       }
 
@@ -2188,7 +2201,7 @@ namespace Sass {
       bool wasCss = imp->syntax == SASS_IMPORT_CSS;
       // Evaluate the interpolation and try to parse a selector list
       SelectorListObj slist = interpolationToSelector(node->interpolation(), wasCss);
-
+      // debug_ast(slist);
       if (current == nullptr || current->fromPlainCss22() == false) {
         // Compound is marked as connecting to parent
         // nest = !(_stylesheet->plainCss && slist->hasAnyExplicitParent());
@@ -3270,7 +3283,7 @@ namespace Sass {
 
   Value* Eval::visitAssignRule(AssignRule* a)
   {
-
+    //std::cerr << "visitAssignRule " << a->variable().norm() << "\n";
     // Optimize case where we know to what variable to assign to
     // This should potentially increase performance, but real-time
     // profiling only show a very minor increase (but keep anyway).
@@ -3294,7 +3307,7 @@ namespace Sass {
       // If we have a config and the variable is already set
       // we still overwrite the variable beside being guarded
       WithConfigVar* wconf = nullptr;
-      if (wconfig && scope->isInternal && a->ns().empty()) {
+      if (wconfig && scope->isInternal53 && a->ns().empty()) {
         wconf = wconfig->getCfgVar(vname);
       }
       if (wconf) {
@@ -3395,7 +3408,13 @@ namespace Sass {
       {
         // Assignment must succeed!
         // Create variable if necessary!
-        a->vidx(compiler.envstack.back()->createVariable(a->variable()));
+        if (a->is_global()) {
+          a->vidx(compiler.getCurrentModule2()->createVariable(a->variable()));
+        }
+        else {
+          a->vidx(compiler.envstack.back()->createVariable(a->variable()));
+        }
+        // Value* value = compiler.varRoot.getVariable(a->vidx());
         // CallStackFrame frame(logger, a->pstate());
         // throw Exception::RuntimeException(logger, "Undefined variable.");
       }
@@ -3604,6 +3623,7 @@ namespace Sass {
     }
 
     // Permeable seems to have minor negative impact!?
+    // EnvFrame local(compiler, false, false, isImport); // correct
     EnvFrame local(compiler, false, true, isImport); // correct
     Stylesheet* sheet = compiler.registerImport(loaded);
     sheet->idxs = local.idxs;

@@ -119,9 +119,33 @@ namespace Sass {
     return cfg;
   }
 
+  static bool IsCompatibleConfig(ModRule* rule, WithConfig* b)
+  {
+    Stylesheet* sheet = rule->root47();
+    WithConfig* a = rule;
+    if (a == b) return true;
+    if (a == nullptr) return false;
+    if (b == nullptr) return false;
+    // if (!a->hasConfig) return true;
+    // if (!b->hasConfig) return true;
+    // a = GetParentConfig(a);
+    // b = GetParentConfig(b);
+    // if (a == b) return true;
+
+    // if (b == nullptr) return true;
+
+    for (auto name : b->config) {
+      // std::cerr << "Check for " << name.first.norm() << "\n";
+      if (sheet->defaults.contains(name.first)) return false;
+    }
+
+    // for (auto upstream : sheet->upstream77)
+
+    return true;
+  }
+
   static bool SameConfig(WithConfig* a, WithConfig* b)
   {
-
     if (a == b) return true;
     if (a == nullptr) return false;
     if (b == nullptr) return false;
@@ -130,9 +154,6 @@ namespace Sass {
     a = GetParentConfig(a);
     b = GetParentConfig(b);
     if (a == b) return true;
-
-
-
     return false;
   }
 
@@ -314,7 +335,7 @@ namespace Sass {
         rule->finalize(compiler);
       }
       else if (compiler.hasWithConfig || rule->hasConfig) {
-        if (!SameConfig(rule, compiler.wconfig99)) {
+        if (!IsCompatibleConfig(rule, compiler.wconfig99)) {
           throw Exception::ParserException(compiler,
             "This module was already loaded, so it "
             "can't be configured using \"with\".");
@@ -369,7 +390,7 @@ namespace Sass {
       pframe = pframe->pscope;
     }
 
-    if (pframe->isInternal) {
+    if (pframe->isInternal53) {
 
       EnvRefs* cidxs = rule->root47()->idxs;
 
@@ -393,6 +414,47 @@ namespace Sass {
         }
       }
     }
+    else {
+
+      EnvRefs* cidxs = rule->root47()->idxs;
+
+      /*
+
+      // Merge it up through all imports
+      for (auto& fn : cidxs->fnIdxs) {
+        if (pframe->fnIdxs.count(fn.first) == 0) {
+          pframe->createFunction(fn.first, true);
+        }
+      }
+      */
+
+      // Merge it up through all imports
+      for (auto& mix : cidxs->mixIdxs) {
+        if (pframe->mixIdxs.count(mix.first) == 0) {
+          pframe->createMixin(mix.first);
+          if (pframe->mixOffset == NPOS) {
+            pframe->mixOffset = 0;
+          }
+          else {
+            pframe->mixOffset++;
+          }
+        }
+      }
+
+      // Merge it up through all imports
+      for (auto& fn : cidxs->fnIdxs) {
+        if (pframe->fnIdxs.count(fn.first) == 0) {
+          pframe->createFunction(fn.first);
+          if (pframe->fnOffset == NPOS) {
+            pframe->fnOffset = 0;
+          }
+          else {
+            pframe->fnOffset++;
+          }
+        }
+      }
+
+    }
 
   }
   // EO exposeImpRule
@@ -410,14 +472,20 @@ namespace Sass {
       CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
       {
         // Only triggers for very vew specs if unscoped
-        EnvScope envscope(compiler.varRoot, root->idxs);
-        ImportStackFrame iframe(compiler, root->import);
-        RAII_PTR(Stylesheet, _stylesheet, root);
-        RAII_OBJ(CssParentNode, current, css);
-        exposeImpRule1(rule); // May also be outside
-        for (auto& item : root->elements()) {
-          ValueObj child = item->accept(this);
-          // if (child) delete child;
+        {
+          RAII_PTR(Stylesheet, _stylesheet, root);
+          ImportStackFrame iframe(compiler, root->import);
+          EnvScope envscope(compiler.varRoot, root->idxs);
+          {
+            RAII_OBJ(CssParentNode, current, css);
+            exposeImpRule1(rule); // May also be outside
+          }
+          for (auto& item : root->elements()) {
+            RAII_OBJ(CssParentNode, current, css);
+            ValueObj child = item->accept(this);
+            // if (child) delete child;
+            // debug_ast(child);
+          }
         }
       }
 
@@ -429,12 +497,13 @@ namespace Sass {
           exposeFwdRule(qwe);
         }
       }
-
+            
       CssRootObj oldcomp = root->compiled;
       root->compiled = nullptr;
       CssRootObj rv = _combineCss(root, true);
       root->compiled = oldcomp;
       rv->accept(this);
+      debug_ast(css);
 
       ImportedCssVisitor visitor(*this);
       for (auto& child : css->elements()) {
