@@ -250,10 +250,36 @@ namespace Sass {
     return this;
   }
 
+  // Calculation arguments are values (numbers, strings, operations or
+  // nested calculations). Compare and hash them structurally like dart-sass.
+  static bool calcArgEquals(const AstNode* lhs, const AstNode* rhs)
+  {
+    if (lhs == rhs) return true;
+    if (lhs == nullptr || rhs == nullptr) return false;
+    const Value* lval = dynamic_cast<const Value*>(lhs);
+    const Value* rval = dynamic_cast<const Value*>(rhs);
+    return lval && rval && *lval == *rval;
+  }
+
+  static size_t calcArgHash(const AstNode* node)
+  {
+    const Value* value = dynamic_cast<const Value*>(node);
+    return value ? value->hash() : 0;
+  }
+
+  // Equal if same name and equal arguments (dart-sass semantics)
   bool Calculation::operator==(const Value& rhs) const
   {
-    // throw std::logic_error("Calculation::operator==");
-    return this == &rhs; // or compare to pointers?
+    if (this == &rhs) return true;
+    const Calculation* other = rhs.isaCalculation();
+    if (other == nullptr) return false;
+    if (name_ != other->name_) return false;
+    if (arguments_.size() != other->arguments_.size()) return false;
+    VALUE_NESTING_GUARD();
+    for (size_t i = 0; i < arguments_.size(); i++) {
+      if (!calcArgEquals(arguments_[i], other->arguments_[i])) return false;
+    }
+    return true;
   }
 
   Value* Calculation::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
@@ -286,10 +312,17 @@ namespace Sass {
       logger, pstate, this, "-");
   }
 
+  // Must be consistent with operator== (name and arguments)
   size_t Calculation::hash() const
   {
-    throw std::logic_error("Calculation::hash()");
-    return typeid(Calculation).hash_code();
+    VALUE_NESTING_GUARD();
+    size_t hash = 0;
+    hash_start(hash, typeid(Calculation).hash_code());
+    hash_combine(hash, name_);
+    for (const auto& arg : arguments_) {
+      hash_combine(hash, calcArgHash(arg));
+    }
+    return hash;
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -1658,14 +1691,28 @@ namespace Sass {
   {
   }
 
+  // Must be consistent with operator== (operator and operands)
   size_t CalcOperation::hash() const
   {
-    return 123;
+    VALUE_NESTING_GUARD();
+    size_t hash = 0;
+    hash_start(hash, typeid(CalcOperation).hash_code());
+    hash_combine(hash, size_t(op_));
+    hash_combine(hash, calcArgHash(left_));
+    hash_combine(hash, calcArgHash(right_));
+    return hash;
   }
 
+  // Equal if same operator and equal operands (dart-sass semantics)
   bool CalcOperation::operator==(const Value& rhs) const
   {
-    return false;
+    if (this == &rhs) return true;
+    const CalcOperation* other = rhs.isaCalcOperation();
+    if (other == nullptr) return false;
+    if (op_ != other->op_) return false;
+    VALUE_NESTING_GUARD();
+    return calcArgEquals(left_, other->left_) &&
+      calcArgEquals(right_, other->right_);
   }
 
   /////////////////////////////////////////////////////////////////////////
