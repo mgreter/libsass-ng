@@ -465,6 +465,15 @@ namespace Sass {
             if (import.isLoaded()) {
               // Resolved abs_path should be set by custom importer
               // Use the created uniq_path as fall-back (enforce?)
+              // Store fall-backs on the source, as the import stack,
+              // registration and error reporting all expect paths.
+              if (abs_path == nullptr || rel_path == nullptr) {
+                if (auto src = dynamic_cast<SourceWithPath*>(source.ptr())) {
+                  src->setMissingPaths(imp_path, uniq_path);
+                  rel_path = import.getImpPath();
+                  abs_path = import.getAbsPath();
+                }
+              }
               sass::string path_key(abs_path ? abs_path : uniq_path);
               // Import is ready to be served
               if (import.syntax == SASS_IMPORT_AUTO)
@@ -474,6 +483,8 @@ namespace Sass {
               // Add a dynamic import to the import rule
               IncludeImport* inc = SASS_MEMORY_NEW(IncludeImport,
                 pstate, ctx_path, path_key, &import);
+              // Same as `Eval::resolveIncludeImport` (module and root)
+              inc->module32(sheet);
               inc->root47(sheet);
               rule->append(inc);
             }
@@ -512,6 +523,8 @@ namespace Sass {
                 const sass::string& url(resolved[0].abs_path);
                 IncludeImport* inc = SASS_MEMORY_NEW(IncludeImport,
                   pstate, ctx_path, url, &import);
+                // Same as `Eval::resolveIncludeImport` (module and root)
+                inc->module32(sheet);
                 inc->root47(sheet);
                 rule->append(inc);
               }

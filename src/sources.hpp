@@ -59,6 +59,14 @@ namespace Sass {
 
     void resolveAbsPath(const sass::string& pwd) override;
 
+    // Fill in paths that are not set (e.g. custom importers may return
+    // sources without paths, but downstream code expects valid paths).
+    void setMissingPaths(const sass::string& imp, const sass::string& abs)
+    {
+      if (imp_path.empty()) imp_path = imp;
+      if (abs_path.empty()) abs_path = abs;
+    }
+
     // Returns the requested line. Will take interpolations into
     // account to show more accurate debug messages. Calling this
     // can be rather expensive, so only use it for debugging.
