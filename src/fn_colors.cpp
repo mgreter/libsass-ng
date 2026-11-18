@@ -1010,9 +1010,12 @@ namespace Sass {
           else if (!channels[i]->isaNumber() &&
             !channels[i]->isSpecialNumber(true)) {
             CallStackFrame csf(compiler, channels[i]->pstate());
-            throw Exception::SassScriptException(compiler, name,
-              "Expected channel " + std::to_string(i + 1) +
-              " to be a number, was " + channels[i]->toString() + ".");
+            // Use `sass::sstream`, as `sass::string` may use a custom
+            // allocator (not compatible with `std::to_string`).
+            sass::sstream msg;
+            msg << "Expected channel " << (i + 1) << " to be a number, was "
+              << channels[i]->toString() << ".";
+            throw Exception::SassScriptException(compiler, name, msg.str());
           }
 
           // auto channel = channels[i];

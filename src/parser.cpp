@@ -463,7 +463,8 @@ namespace Sass {
       scanCharIf(isWhitespace);
     }
     else {
-      value = scanner.readChar();
+      // Read the whole (possibly multi-byte) character
+      value = readCodePoint();
     }
 
     if (identifierStart ? isNameStart(value) : isName(value)) {
@@ -476,7 +477,7 @@ namespace Sass {
     }
     else if (value <= 0x1F ||
       value == 0x7F ||
-      (identifierStart && isDigit(value))) {
+      (identifierStart && value < 0x80 && isDigit((uint8_t)value))) {
       buffer.write($backslash);
       if (value > 0xF) buffer.write(hexCharFor(value >> 4));
       buffer.write(hexCharFor(value & 0xF));
@@ -517,7 +518,7 @@ namespace Sass {
       }
       if (value == 0 ||
         (value >= 0xD800 && value <= 0xDFFF) ||
-        value >= 0x10FFFF) {
+        value > 0x10FFFF) {
         return 0xFFFD;
       }
       else {
@@ -525,8 +526,31 @@ namespace Sass {
       }
     }
     else {
-      return scanner.readChar();
+      // Read the whole (possibly multi-byte) character
+      return readCodePoint();
     }
+  }
+
+  // Consumes one full UTF-8 encoded code point. The scanner only reads
+  // single bytes, so reading a byte would split multi-byte characters.
+  // Invalid sequences consume the offending bytes and return 0xFFFD.
+  uint32_t Parser::readCodePoint()
+  {
+    uint8_t lead = scanner.readChar();
+    if (lead < 0x80) return lead;
+    size_t length; uint32_t value; uint32_t minimum;
+    if ((lead & 0xE0) == 0xC0) { length = 1; value = lead & 0x1F; minimum = 0x80; }
+    else if ((lead & 0xF0) == 0xE0) { length = 2; value = lead & 0x0F; minimum = 0x800; }
+    else if ((lead & 0xF8) == 0xF0) { length = 3; value = lead & 0x07; minimum = 0x10000; }
+    else return 0xFFFD; // stray continuation or invalid lead byte
+    for (size_t i = 0; i < length; i++) {
+      uint8_t next;
+      if (!scanner.peekChar(next) || (next & 0xC0) != 0x80) return 0xFFFD;
+      value = (value << 6) | (scanner.readChar() & 0x3F);
+    }
+    // Reject overlong encodings, surrogates and values above U+10FFFF
+    if (value < minimum || !utf8::internal::is_code_point_valid(value)) return 0xFFFD;
+    return value;
   }
 
   // Consumes the next character if it matches [condition].
@@ -548,8 +572,10 @@ namespace Sass {
     }
     else if (next == $backslash) {
       StringScannerState state = scanner.state();
-      next = escapeCharacter();
-      if (letter == next) return true;
+      // Keep the full code point (truncating e.g. U+0174 to 't' would
+      // allow escapes to spoof keywords like `through` or `else`)
+      uint32_t escaped = escapeCharacter();
+      if (escaped == letter) return true;
       scanner.backtrack(state);
     }
     return false;
@@ -564,8 +590,9 @@ namespace Sass {
     }
     else if (next == $backslash) {
       StringScannerState state = scanner.state();
-      next = escapeCharacter();
-      if (equalsLetterIgnoreCase(letter, next)) return true;
+      // Keep the full code point (see `scanIdentCharSensitive`)
+      uint32_t escaped = escapeCharacter();
+      if (escaped < 0x80 && equalsLetterIgnoreCase(letter, (uint8_t)escaped)) return true;
       scanner.backtrack(state);
     }
     return false;

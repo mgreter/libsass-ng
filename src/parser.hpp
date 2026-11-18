@@ -152,6 +152,10 @@ namespace Sass {
     // Consumes an escape sequence and returns the character it represents.
     uint32_t escapeCharacter();
 
+    // Consumes one full UTF-8 encoded code point (the scanner
+    // reads single bytes). Returns 0xFFFD for invalid sequences.
+    uint32_t readCodePoint();
+
     // Consumes the next character if it matches [condition].
     // Returns whether or not the character was consumed.
     bool scanCharIf(bool (*condition)(uint8_t character));

@@ -38,6 +38,7 @@ namespace Sass {
   {
     // first check if anyone has an unknown version
     const char* our_version = libsass_version();
+    if (their_version == nullptr) return false;
     if (!strcmp(their_version, "[na]")) return false;
     if (!strcmp(our_version, "[na]")) return false;
 
@@ -48,7 +49,10 @@ namespace Sass {
     // if we do not have two dots we fall back to compare complete string
     if (pos == sass::string::npos) { return strcmp(their_version, our_version) ? 0 : 1; }
     // otherwise only compare up to the second dot (major versions)
-    else { return strncmp(their_version, our_version, pos) ? 0 : 1; }
+    // Their version must also end its minor part there (e.g. `3.6` must
+    // not match `3.60`), so check the next char is a dot or the end.
+    if (strncmp(their_version, our_version, pos) != 0) return false;
+    return their_version[pos] == '.' || their_version[pos] == '\0';
 
   }
 
@@ -73,7 +77,11 @@ namespace Sass {
       if (LOAD_LIB_FN(__plugin_version__, plugin_version, "libsass_get_version"))
       {
         // get the libsass version of the plugin
-        if (!compatibility(plugin_version())) return false;
+        if (!compatibility(plugin_version())) {
+          // release the incompatible library again
+          CLOSE_LIB(plugin);
+          return false;
+        }
         // try to get import address for "plugin_set_seed_function"
         if (LOAD_LIB_FN(__plugin_set_seed__, plugin_set_seed_function, "libsass_set_seed_function"))
         {
@@ -127,23 +135,21 @@ namespace Sass {
         HANDLE hFile = FindFirstFileW(wglobsrch.c_str(), &data);
         // check if system called returned a result
         // ToDo: maybe we should print a debug message
-        if (hFile == INVALID_HANDLE_VALUE) return -1;
+        if (hFile == INVALID_HANDLE_VALUE) return 0;
 
-        // read directory
-        while (true)
+        // read directory (always advance to the next entry, also
+        // when skipping one, otherwise we would loop forever)
+        do
         {
           try
           {
             // the system will report the filenames with wide chars (utf16)
             sass::string entry = Unicode::utf16to8(data.cFileName);
-            // check if file ending matches exactly
+            // check if file ending matches exactly (`*.dll` also matches
+            // e.g. `x.dllx` via its 8.3 short name `X~1.DLL`)
             if (!StringUtils::endsWith(entry, ".dll", 4)) continue;
             // load the plugin and increase counter
             if (load_plugin(path + entry)) ++ loaded;
-            // check if there should be more entries
-            if (GetLastError() == ERROR_NO_MORE_FILES) break;
-            // load next entry (check for return type)
-            if (!FindNextFileW(hFile, &data)) break;
           }
           catch (...)
           {
@@ -152,6 +158,10 @@ namespace Sass {
             std::cerr << "filename in plugin path has invalid utf8?" << STRMLF;
           }
         }
+        // load next entry (stops on ERROR_NO_MORE_FILES or any error)
+        while (FindNextFileW(hFile, &data));
+        // release the search handle
+        FindClose(hFile);
       }
       catch (utf8::invalid_utf8&)
       {
@@ -165,7 +175,7 @@ namespace Sass {
       DIR *dp;
       struct dirent *dirp;
       using namespace StringUtils;
-      if((dp  = opendir(path.c_str())) == NULL) return -1;
+      if((dp  = opendir(path.c_str())) == NULL) return 0;
       while ((dirp = readdir(dp)) != NULL) {
         #if __APPLE__
           if (!endsWithIgnoreCase(dirp->d_name, ".dylib", 6)) continue;
