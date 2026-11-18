@@ -152,6 +152,14 @@ namespace Sass {
 
     static void setTaint(bool val) { taint = val; }
 
+    // Delete an object whose reference count dropped to zero. Deleting an
+    // object releases its members, which may in turn drop to zero. Doing
+    // this recursively overflows the stack for deeply nested structures
+    // (e.g. a list nested thousands of levels deep, built in a loop).
+    // Therefore any deletion triggered while another one is already in
+    // progress (on the same thread) is queued and processed iteratively.
+    static void release(RefCounted* obj) noexcept;
+
     #ifdef SASS_CUSTOM_ALLOCATOR
     inline void* operator new(size_t nbytes) {
       return allocateMem(nbytes);
@@ -319,7 +327,7 @@ namespace Sass {
           }
           // node->deleted.insert(node->objId);
         #endif
-        delete node;
+        RefCounted::release(node);
       }
       #ifdef DEBUG_SHARED_PTR
       else if (node->refcount & SET_DETACHED_BITMASK) {
