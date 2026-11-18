@@ -102,8 +102,13 @@ namespace Sass {
         }
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (eval.assigne && eval.assigne->ptr() == list2 && list2->refcount < SassAssignableRefCount) {
-          if (List* lst = list2->isaList()) {
+        // Optimize `$list: join($list, $other)` by appending in place.
+        // Only valid if the assigned variable holds the first list, and
+        // never when joining a list with itself (would insert own range).
+        // Arglists are excluded, as the result must be a plain list.
+        if (eval.assigne && eval.assigne->ptr() == list1 && list1 != list2 &&
+          list1->refcount < SassAssignableRefCount && !list1->isaArgumentList()) {
+          if (List* lst = list1->isaList()) {
             lst->separator(separator);
             lst->hasBrackets(bracketed);
             lst->elements().insert(lst->end(),
