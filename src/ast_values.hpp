@@ -262,6 +262,8 @@ namespace Sass {
 
     // Implement interface for base Value class
     size_t hash() const final;
+    // Hash value rounded to the epsilon used by `operator==`
+    static size_t _fuzzyHash(double value);
     SassValueType getTag() const final { return SASS_NUMBER; }
     const sass::string& type() const final { return Strings::number; }
 

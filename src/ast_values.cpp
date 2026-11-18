@@ -463,13 +463,35 @@ namespace Sass {
   size_t Number::hash() const
   {
     if (hash_ == 0) {
-      hash_start(hash_, std::hash<double>{}(value_));
-      for (const auto& numerator : numerators)
-        hash_combine(hash_, numerator);
-      for (const auto& denominator : denominators)
-        hash_combine(hash_, denominator);
+      // Must be consistent with `operator==`, which compares reduced and
+      // normalized values fuzzily (e.g. `1in == 96px`, `0.1 + 0.2 == 0.3`).
+      // Like dart-sass (`fuzzyHashCode` of the canonical value) we hash the
+      // canonical value rounded to the comparison epsilon. After reducing
+      // and normalizing, equal numbers also have identical units.
+      if (isUnitless()) {
+        hash_start(hash_, _fuzzyHash(value_));
+      }
+      else {
+        Number canonical(*this);
+        canonical.reduce();
+        canonical.normalize();
+        hash_start(hash_, _fuzzyHash(canonical.value()));
+        for (const auto& numerator : canonical.numerators)
+          hash_combine(hash_, numerator);
+        for (const auto& denominator : canonical.denominators)
+          hash_combine(hash_, denominator);
+      }
     }
     return hash_;
+  }
+
+  // Hash a value rounded to the epsilon used for number equality
+  size_t Number::_fuzzyHash(double value)
+  {
+    double rounded = std::round(value / NUMBER_EPSILON);
+    // Fold negative zero into zero (MSVC hashes the raw bytes)
+    if (rounded == 0.0) rounded = 0.0;
+    return std::hash<double>{}(rounded);
   }
 
   /////////////////////////////////////////////////////////////////////////
