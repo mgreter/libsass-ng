@@ -42,6 +42,9 @@ namespace Sass {
 
   Compiler::~Compiler()
   {
+    // Release rendered source-map and footer
+    sass_free_c_string(srcmap);
+    sass_free_c_string(footer);
     sources19.clear();
     sheets21.clear();
     for (auto& mod : modules64) {

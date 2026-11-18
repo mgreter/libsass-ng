@@ -15,6 +15,7 @@
 #include "backtrace.hpp"
 #include "base64vlq.hpp"
 #include "mapping.hpp"
+#include <memory>
 
 namespace Sass {
 
@@ -109,8 +110,8 @@ namespace Sass {
     // Main buffer string
     sass::string buffer;
 
-    // Optional source map
-    SourceMap* srcmap;
+    // Optional source map (owned, freed with the buffer)
+    std::unique_ptr<SourceMap> srcmap;
 
     // Default constructor
     OutputBuffer(bool srcmap = false) noexcept;

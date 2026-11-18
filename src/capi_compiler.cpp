@@ -139,6 +139,11 @@ namespace Sass {
       }
     }
 
+    // Release buffers from a previous render (if any)
+    sass_free_c_string(compiler.srcmap);
+    sass_free_c_string(compiler.footer);
+    compiler.srcmap = nullptr;
+    compiler.footer = nullptr;
     switch (options.mode) {
     case SASS_SRCMAP_NONE:
       compiler.srcmap = nullptr;
