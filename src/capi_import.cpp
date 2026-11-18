@@ -175,7 +175,8 @@ extern "C" {
     return ptr;
   }
 
-  // Append additional import to the list container.
+  // Append additional import to the list container. The list takes over the
+  // reference owned by the caller (do not delete the import afterwards).
   void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport* import)
   {
     if (list == nullptr) return;
@@ -183,11 +184,13 @@ extern "C" {
   }
 
   // Append additional import to the list container and takes ownership of the import.
+  // Same as `sass_import_list_push`: the list takes over the reference owned by the
+  // caller (released via `sass_delete_import_list` or passed on by `shift`). This
+  // previously also decremented the reference count, leaving imports in the list
+  // without any counted owner, which caused use-after-free once LibSass used them.
   void ADDCALL sass_import_list_emplace(struct SassImportList* list, struct SassImport* import)
   {
     sass_import_list_push(list, import);
-    // Reduce refcount by one (we took ownership)
-    if (import) Import::unwrap(import).refcount--;
   }
 
   /////////////////////////////////////////////////////////////////////////

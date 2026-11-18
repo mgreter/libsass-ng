@@ -4,9 +4,11 @@
 Imports on the C-API side can either be used as compilation entry points or
 imports returned from custom importers/headers. They represent a loadable
 resource with text to be parsed. These object are reference-counted and
-must always be freed by the allocator. To improve usage with `SassImportList`
-there is a convenience method `sass_import_list_emplace` that will transfer
-the ownership of the import to the list object.
+must always be freed by the allocator. Adding an import to a `SassImportList`
+(via `sass_import_list_push` or `sass_import_list_emplace`, which are the same)
+transfers the ownership of the import to the list object. Do not delete it
+afterwards; the list releases it, and `sass_import_list_shift` returns the
+ownership to the caller.
 
 ### Imports and source-maps
 
@@ -88,10 +90,10 @@ size_t sass_import_list_size(struct SassImportList* list);
 // Remove and return first item in the list (as in a fifo queue).
 struct SassImport* sass_import_list_shift(struct SassImportList* list);
 
-// Append an additional import to the list container.
+// Append an additional import to the list container and take ownership of the import.
 void sass_import_list_push(struct SassImportList* list, struct SassImport* import);
 
-// Append an additional import to the list container and takes ownership of the import.
+// Same as `sass_import_list_push` (kept for API compatibility).
 void sass_import_list_emplace(struct SassImportList* list, struct SassImport* import);
 
 /////////////////////////////////////////////////////////////////////////

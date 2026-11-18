@@ -73,10 +73,12 @@ extern "C" {
   // Remove and return first item in the list (as in a fifo queue).
   ADDAPI struct SassImport* ADDCALL sass_import_list_shift(struct SassImportList* list);
 
-  // Append additional import to the list container.
+  // Append additional import to the list container and take ownership of the import.
+  // Do not delete the import afterwards; the list releases it when deleted, and
+  // `sass_import_list_shift` hands the ownership back to the caller.
   ADDAPI void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport* import);
 
-  // Append additional import to the list container and takes ownership of the import.
+  // Same as `sass_import_list_push` (kept for API compatibility).
   ADDAPI void ADDCALL sass_import_list_emplace(struct SassImportList* list, struct SassImport* import);
 
   /////////////////////////////////////////////////////////////////////////
