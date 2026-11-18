@@ -58,6 +58,7 @@ namespace Sass {
   // Consumes a selector list.
   SelectorList* SelectorParser::readSelectorList()
   {
+    NESTING_GUARD(recursion);
     Offset start(scanner.offset);
     // const char* previousLine = scanner.position;
     size_t previousLine = scanner.offset.getRawLine();

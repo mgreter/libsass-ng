@@ -4113,6 +4113,7 @@ namespace Sass {
   // Consumes a `MediaInParens` expression and writes it to [buffer].
   void StylesheetParser::readMediaInParens(InterpolationBuffer& buffer)
   {
+    NESTING_GUARD(recursion);
     // std::cerr << "read media in parens\n";
     scanner.expectChar($lparen, "media condition in parentheses");
     buffer.writeCharCode($lparen);
@@ -4384,6 +4385,7 @@ namespace Sass {
   // Consumes a parenthesized supports condition, or an interpolation.
   SupportsCondition* StylesheetParser::readSupportsConditionInParens()
   {
+    NESTING_GUARD(recursion);
     Offset start(scanner.offset);
 
     if (lookingAtInterpolatedIdentifier()) {

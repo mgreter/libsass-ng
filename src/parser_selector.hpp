@@ -24,6 +24,8 @@ namespace Sass {
 
     // Whether to parse the selector as plain CSS.
     bool plainCss;
+    // Current parsing recursion depth (see NESTING_GUARD)
+    size_t recursion = 0;
 
     // Value constructor
     SelectorParser(
