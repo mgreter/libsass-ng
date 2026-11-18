@@ -104,16 +104,21 @@ namespace Sass {
   sass::string SourceWithPath::getLine(size_t line)
   {
     countLines();
-    if (line > lfs.size()) {
+    // `lfs` holds the start offset of every line plus the
+    // end offset, so valid lines are `0 .. lfs.size() - 2`.
+    if (line + 1 >= lfs.size()) {
       return sass::string();
     }
     size_t first = lfs[line];
     size_t last = lfs[line + 1];
-    if (first == last) return sass::string();
     const char* beg = content() + first;
     const char* end = content() + last;
-    if (end[-1] == $lf) end -= 1;
-    if (end[-1] == $cr) end -= 1;
+    // Strip the trailing line break (LF, CR, CRLF or LFCR).
+    // Each line only ends with its own break, and we must
+    // never read before `beg` (e.g. for an empty first line).
+    while (end > beg && (end[-1] == $lf || end[-1] == $cr)) {
+      end -= 1;
+    }
     return sass::string(beg, end);
   }
 
