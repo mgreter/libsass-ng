@@ -1005,9 +1005,14 @@ namespace Sass {
             channels[i]->assertColorChannel(compiler,
               space->_channels[i].name, name);
           }
-          else {
-            channels[i]->assertColorChannel(compiler,
-              "channel " + std::to_string(i + 1), name);
+          // Same acceptance as `assertColorChannel` (numbers, calculations,
+          // special numbers and `none`), but with dart-sass wording.
+          else if (!channels[i]->isaNumber() &&
+            !channels[i]->isSpecialNumber(true)) {
+            CallStackFrame csf(compiler, channels[i]->pstate());
+            throw Exception::SassScriptException(compiler, name,
+              "Expected channel " + std::to_string(i + 1) +
+              " to be a number, was " + channels[i]->toString() + ".");
           }
 
           // auto channel = channels[i];
