@@ -26,10 +26,10 @@ namespace Sass {
     namespace Texts {
 
       // ToDo: move to unicode helper
-      long _codepointForIndex(long index, long lengthInCodepoints, bool allowNegative = false) {
+      int64_t _codepointForIndex(int64_t index, int64_t lengthInCodepoints, bool allowNegative = false) {
         if (index == 0) return 0;
         if (index > 0) return std::min(index - 1, lengthInCodepoints);
-        long result = lengthInCodepoints + index;
+        int64_t result = lengthInCodepoints + index;
         if (result < 0 && !allowNegative) return 0;
         return result;
       }
@@ -87,7 +87,7 @@ namespace Sass {
         String* string = arguments[0]->assertString(compiler, "string");
         String* insert = arguments[1]->assertString(compiler, "insert");
         size_t len = Unicode::codePointCount(string->value());
-        long index = arguments[2]->assertNumber(compiler, "index")
+        int64_t index = arguments[2]->assertNumber(compiler, "index")
           ->assertNumberStrictWithoutUnit(compiler, "index")
           ->assertInt(compiler, "index");
 
@@ -98,10 +98,10 @@ namespace Sass {
         if (index < 0) {
           // +1 because negative indexes start counting from -1 rather than 0, and
           // another +1 because we want to insert *after* that index.
-          index = (long)std::fmax((long)len + index + 2, 0);
+          index = (int64_t)std::fmax((int64_t)len + index + 2, 0);
         }
 
-        index = (long) _codepointForIndex(index, (long)len);
+        index = (int64_t) _codepointForIndex(index, (int64_t)len);
 
         sass::string str(string->value());
         str.insert(Unicode::byteOffsetAtPosition(
@@ -137,8 +137,8 @@ namespace Sass {
         size_t len = Unicode::codePointCount(string->value());
         beg = beg->assertNumberStrictWithoutUnit(compiler, "start-at");
         end = end->assertNumberStrictWithoutUnit(compiler, "end-at");
-        long begInt = beg->assertInt(compiler, "start-at");
-        long endInt = end->assertInt(compiler, "end-at");
+        int64_t begInt = beg->assertInt(compiler, "start-at");
+        int64_t endInt = end->assertInt(compiler, "end-at");
 
         // No matter what the start index is, an end
         // index of 0 will produce an empty string.
@@ -147,10 +147,10 @@ namespace Sass {
             pstate, "", string->hasQuotes());
         }
 
-        begInt = (long)_codepointForIndex(begInt, (long)len, false);
-        endInt = (long)_codepointForIndex(endInt, (long)len, true);
+        begInt = (int64_t)_codepointForIndex(begInt, (int64_t)len, false);
+        endInt = (int64_t)_codepointForIndex(endInt, (int64_t)len, true);
 
-        if (endInt == (long)len) endInt = (long)len - 1;
+        if (endInt == (int64_t)len) endInt = (int64_t)len - 1;
         if (endInt < begInt) {
           return SASS_MEMORY_NEW(String,
             pstate, "", string->hasQuotes());
@@ -174,7 +174,7 @@ namespace Sass {
         String* string = arguments[0]->assertString(compiler, "string");
         String* separator = arguments[1]->assertString(compiler, "separator");
         Number* limit = arguments[2]->assertNumberOrNull(compiler, "limit");
-        long limiter = std::numeric_limits<long>().max();
+        int64_t limiter = std::numeric_limits<int64_t>().max();
         if (limit != nullptr) {
           limiter = limit->assertInt(compiler, "limit");
           if (limiter < 1) throw Exception::SassScriptException(
@@ -202,7 +202,7 @@ namespace Sass {
         else {
           for (size_t found = text.find(delim);
             found != sass::string::npos
-              && (long)results.size() < limiter;
+              && (int64_t)results.size() < limiter;
             found = text.find(delim, start))
           {
             results.push_back(SASS_MEMORY_NEW(String, pstate,

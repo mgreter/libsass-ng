@@ -10,6 +10,7 @@
 
 #include "units.hpp"
 #include "ast_nodes.hpp"
+#include <cstdint>
 #include "ast_callables.hpp"
 #include "calc_names.hpp"
 
@@ -289,7 +290,9 @@ namespace Sass {
     Number* assertNumberStrictWithoutUnit(Logger& logger, const sass::string& name = Strings::empty);
 
     // Implement number specific assertions
-    long assertInt(Logger& logger, const sass::string& name = Strings::empty) const;
+    // Returns 64bit on all platforms (`long` is 32bit on Windows).
+    // Any value accepted by fuzzyIsInt (up to ~2^53) fits exactly.
+    int64_t assertInt(Logger& logger, const sass::string& name = Strings::empty) const;
 
     // Asserts that [number] is a percentage or has no units, and normalizes the
     // value. If [number] has no units, its value is clamped to be greater than `0`

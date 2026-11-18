@@ -621,7 +621,7 @@ namespace Sass {
             "\nMore info: https://sass-lang.com/d/function-units";
         });
     }
-    long index = nr->assertInt(logger, name);
+    int64_t index = nr->assertInt(logger, name);
     if (index == 0) throw Exception::SassScriptException(
       "List index may not be 0.", logger, sassIndex->pstate(), name);
     size_t size = lengthAsList();

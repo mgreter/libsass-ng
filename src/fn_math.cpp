@@ -239,10 +239,10 @@ namespace Sass {
             getRandomDouble(0, 1));
         }
         Number* nr = arguments[0]->assertNumber(compiler, "limit");
-        long limit = nr->assertInt(compiler, "limit");
+        int64_t limit = nr->assertInt(compiler, "limit");
         if (limit >= 1) {
           return SASS_MEMORY_NEW(Number, pstate,
-            (long) getRandomDouble(1, double(limit) + 1));
+            std::floor(getRandomDouble(1, double(limit) + 1)));
         }
         // Report invalid arguments error
         sass::sstream strm;

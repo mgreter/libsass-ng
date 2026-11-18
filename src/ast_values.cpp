@@ -881,10 +881,10 @@ namespace Sass {
   // Implement number specific assertions
   /////////////////////////////////////////////////////////////////////////
 
-  long Number::assertInt(Logger& logger, const sass::string& name) const
+  int64_t Number::assertInt(Logger& logger, const sass::string& name) const
   {
     if (fuzzyIsInt(value_, logger.epsilon)) {
-      return lround(value_);
+      return static_cast<int64_t>(std::llround(value_));
     }
     SourceSpan span(this->pstate());
     CallStackFrame csf(logger, span);
