@@ -204,41 +204,35 @@ namespace Sass {
         }
 
 
+        // The last item in `$args` is the value, all others are keys.
+        // Walk down the keys, copying every nested map on the path,
+        // since those may be shared with the input map (or elsewhere).
         while (cur != end) {
-          auto qwe = *cur;
-          auto it = map->find(qwe);
-          if (it != map->end()) {
-            ValueObj inner = it->second;
-            if (auto qwe = inner->isaMap()) {
-              map = qwe;
-            }
-            else {  
-              if (cur == end - 2) {
-                ++cur;
-                it.value() = *cur;
-                break;
-              }
-              else {
-                Map* newMap = SASS_MEMORY_NEW(Map,
-                  map->pstate(), {});
-                it.value() = newMap;
-                map = newMap;
-              }
-            }
+          const ValueObj& key = *cur;
+          // Last key: set the value (replacing whatever is there)
+          if (cur == end - 2) {
+            auto value = cur; ++value;
+            map->insertOrSet(key, *value);
+            break;
           }
-          else {
-            if (cur == end - 2) {
-              ++cur;
-              map->insert({ qwe, *cur });
-              break;
+          // Descend into a copy of the nested map, or create
+          // a new map if the key is missing or not a map.
+          Map* nested = nullptr;
+          auto it = map->find(key);
+          if (it != map->end()) {
+            if (Map* inner = it->second->isaMap()) {
+              nested = SASS_MEMORY_COPY(inner);
             }
             else {
-              Map* newMap = SASS_MEMORY_NEW(Map,
-                map->pstate(), {});
-              map->insert({ qwe, newMap });
-              map = newMap;
+              nested = SASS_MEMORY_NEW(Map, map->pstate(), {});
             }
+            it.value() = nested;
           }
+          else {
+            nested = SASS_MEMORY_NEW(Map, map->pstate(), {});
+            map->insert({ key, nested });
+          }
+          map = nested;
           ++cur;
         }
 
