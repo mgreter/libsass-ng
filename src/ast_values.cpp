@@ -16,6 +16,9 @@
 
 namespace Sass {
 
+  // Shared depth counter for VALUE_NESTING_GUARD (see ast_def_macros.hpp)
+  THREAD_LOCAL(size_t) valueNestingDepth = 0;
+
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -1332,6 +1335,7 @@ namespace Sass {
   // at the same key, order is not important.
   bool Map::operator==(const Map& rhs) const
   {
+    VALUE_NESTING_GUARD();
     if (size() != rhs.size()) return false;
     for (const auto& kv : elements_) {
       const auto& lv = kv.second;
@@ -1344,6 +1348,7 @@ namespace Sass {
   size_t Map::hash() const
   {
     if (Hashed<ValueObj, ValueObj>::hash_ == 0) {
+      VALUE_NESTING_GUARD();
       hash_start(Value::hash_, typeid(Map).hash_code());
       hash_combine(Value::hash_, Hashed<ValueObj, ValueObj>::hash());
     }
@@ -1441,8 +1446,20 @@ namespace Sass {
     return false;
   }
 
+  // Check if value would render empty
+  bool List::isBlank() const
+  {
+    if (hasBrackets_) return false;
+    VALUE_NESTING_GUARD();
+    for (const Value* value : elements()) {
+      if (!value->isBlank()) return false;
+    }
+    return true;
+  }
+
   bool List::operator==(const List& rhs) const
   {
+    VALUE_NESTING_GUARD();
     if (size() != rhs.size()) return false;
     if (separator() != rhs.separator()) return false;
     if (hasBrackets() != rhs.hasBrackets()) return false;
@@ -1459,6 +1476,7 @@ namespace Sass {
   size_t List::hash() const
   {
     if (Vectorized<Value>::hash_ == 0) {
+      VALUE_NESTING_GUARD();
       hash_start(Value::hash_, typeid(List).hash_code());
       hash_combine(Value::hash_, Vectorized<Value>::hash());
       hash_combine(Value::hash_, separator());
@@ -1530,6 +1548,7 @@ namespace Sass {
   size_t ArgumentList::hash() const
   {
     if (Vectorized<Value>::hash_ == 0) {
+      VALUE_NESTING_GUARD();
       hash_start(Value::hash_, typeid(ArgumentList).hash_code());
       hash_combine(Value::hash_, Vectorized<Value>::hash());
       if (_keywords) for (const auto& child : *_keywords) {

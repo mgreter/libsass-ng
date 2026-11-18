@@ -24,6 +24,7 @@ namespace Sass {
       // the same key, this recursively merges those maps as well.
       static Map* deepMergeImpl(Map* map1, Map* map2)
       {
+        VALUE_NESTING_GUARD();
 
         if (map2->empty()) return map1;
         if (map1->empty()) return map2;
@@ -81,6 +82,7 @@ namespace Sass {
       // the same key, this recursively merges those maps as well.
       Map* deepMergeImplOptimized(Map* map1, Map* map2)
       {
+        VALUE_NESTING_GUARD();
 
         if (map2->empty()) return map1;
 

@@ -16,14 +16,17 @@
 
 namespace Sass {
 
+  // Queue of objects whose deletion was deferred by `RefCounted::release`.
+  // The queue itself lives on the stack of the outermost release call; this
+  // only points to it (we must only use PODs for thread-locals). Defined at
+  // namespace scope so it outlives function-local statics holding objects.
+  // Uses `std::vector` to stay independent of the custom allocator.
+  static THREAD_LOCAL(std::vector<const RefCounted*>*) pendingReleases = nullptr;
+
   // See declaration in header for rationale.
-  void RefCounted::release(RefCounted* obj) noexcept
+  void RefCounted::release(const RefCounted* obj) noexcept
   {
-    // The queue lives on the stack of the outermost call; the thread-local
-    // only points to it. This keeps the thread-local trivially destructible,
-    // so objects released during static destruction remain safe.
-    // Uses `std::vector` to stay independent of the custom allocator.
-    thread_local std::vector<RefCounted*>* pending = nullptr;
+    std::vector<const RefCounted*>*& pending = pendingReleases;
     if (pending != nullptr) {
       try {
         pending->push_back(obj);
@@ -35,11 +38,11 @@ namespace Sass {
         return;
       }
     }
-    std::vector<RefCounted*> queue;
+    std::vector<const RefCounted*> queue;
     pending = &queue;
     delete obj;
     while (!queue.empty()) {
-      RefCounted* next = queue.back();
+      const RefCounted* next = queue.back();
       queue.pop_back();
       delete next;
     }

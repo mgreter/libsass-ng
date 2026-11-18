@@ -794,6 +794,7 @@ namespace Sass {
 
   void Inspect::visitList(List* list)
   {
+    VALUE_NESTING_GUARD();
     // Handle empty case
     if (list->empty()) {
       if (list->hasBrackets()) {
@@ -1302,6 +1303,7 @@ namespace Sass {
 
   void Inspect::visitMap(Map* value)
   {
+    VALUE_NESTING_GUARD();
     if (value->empty()) {
       append_string("()");
       return;

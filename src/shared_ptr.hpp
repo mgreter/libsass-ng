@@ -158,7 +158,7 @@ namespace Sass {
     // (e.g. a list nested thousands of levels deep, built in a loop).
     // Therefore any deletion triggered while another one is already in
     // progress (on the same thread) is queued and processed iteratively.
-    static void release(RefCounted* obj) noexcept;
+    static void release(const RefCounted* obj) noexcept;
 
     #ifdef SASS_CUSTOM_ALLOCATOR
     inline void* operator new(size_t nbytes) {

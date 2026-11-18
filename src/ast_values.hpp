@@ -605,13 +605,7 @@ namespace Sass {
     }
 
     // Check if value would render empty
-    bool isBlank() const final {
-      if (hasBrackets_) return false;
-      for (const Value* value : elements()) {
-        if (!value->isBlank()) return false;
-      }
-      return true;
-    }
+    bool isBlank() const final;
 
     // Search the position of the given value
     size_t indexOf(Value* value) final;
