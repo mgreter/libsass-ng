@@ -2970,40 +2970,29 @@ namespace Sass {
     NumberObj sass_end = high->assertNumber(logger);
     // Support compatible unit types (e.g. cm to mm)
     sass_end = sass_end->coerce(logger, sass_start);
-    // Can only use integer ranges
-    sass_start->assertInt(logger);
-    sass_end->assertInt(logger);
+    // Can only use integer ranges. Like dart-sass, iterate over the
+    // rounded integers, not the raw values: `assertInt` accepts values
+    // that are only fuzzy equal to an int (e.g. 0.99999999999), and an
+    // integer counter also guarantees the loop always terminates.
+    int64_t start = sass_start->assertInt(logger);
+    int64_t end = sass_end->assertInt(logger);
     // check if units are valid for sequence
     if (sass_start->unit() != sass_end->unit()) {
       CallStackFrame csf(logger, f->pstate());
       throw Exception::UnitMismatch(
         logger, sass_start, sass_end);
     }
-    double start = sass_start->value();
-    double end = sass_end->value();
+    int64_t direction = start > end ? -1 : 1;
+    if (f->is_inclusive()) end += direction;
     // only create iterator once in this environment
     ValueObj val;
-    if (start < end) {
-      if (f->is_inclusive()) ++end;
-      for (double i = start; i < end; ++i) {
-        NumberObj it = SASS_MEMORY_NEW(Number,
-          low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(
-          { f->idxs, 0 }, it.ptr(), false);
-        val = acceptChildren(f);
-        if (val) break;
-      }
-    }
-    else {
-      if (f->is_inclusive()) --end;
-      for (double i = start; i > end; --i) {
-        NumberObj it = SASS_MEMORY_NEW(Number,
-          low->pstate(), i, sass_end->unit());
-        compiler.varRoot.setVariable(
-          { f->idxs, 0 }, it.ptr(), false);
-        val = acceptChildren(f);
-        if (val) break;
-      }
+    for (int64_t i = start; i != end; i += direction) {
+      NumberObj it = SASS_MEMORY_NEW(Number,
+        low->pstate(), double(i), sass_end->unit());
+      compiler.varRoot.setVariable(
+        { f->idxs, 0 }, it.ptr(), false);
+      val = acceptChildren(f);
+      if (val) break;
     }
     return val.detach();
   }
