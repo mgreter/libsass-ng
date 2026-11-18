@@ -168,8 +168,23 @@ extern "C" {
   void ADDCALL sass_list_push(struct SassValue* list, struct SassValue* value) { getList(list)->append(getValue(value)); }
   // void ADDCALL sass_list_unshift(struct SassValue* list, struct SassValue* value) { getList(list)->unshift(getValue(value)); }
   struct SassValue* ADDCALL sass_list_at(struct SassValue* list, size_t i) { return Value::wrap(getList(list)->at(i)); }
-  struct SassValue* ADDCALL sass_list_pop(struct SassValue* list, struct SassValue* value) { return Value::wrap(getList(list)->pop()); }
-  struct SassValue* ADDCALL sass_list_shift(struct SassValue* list, struct SassValue* value) { return Value::wrap(getList(list)->shift()); }
+  // Remove and return the last/first item (or nullptr if the list is empty).
+  // The item is no longer owned by the list, so the caller receives a new
+  // reference and must release it via `sass_delete_value`.
+  struct SassValue* ADDCALL sass_list_pop(struct SassValue* list, struct SassValue* value)
+  {
+    List* lst = getList(list);
+    if (lst->empty()) return nullptr;
+    ValueObj item = lst->pop();
+    return newSassValue(item);
+  }
+  struct SassValue* ADDCALL sass_list_shift(struct SassValue* list, struct SassValue* value)
+  {
+    List* lst = getList(list);
+    if (lst->empty()) return nullptr;
+    ValueObj item = lst->shift();
+    return newSassValue(item);
+  }
 
   // Getters and setters for Sass_List values
   struct SassValue* ADDCALL sass_list_get_value(struct SassValue* v, size_t i) { return Value::wrap(getList(v)->at(i)); } 
@@ -250,13 +265,13 @@ extern "C" {
 
   void ADDCALL sass_delete_value(struct SassValue* value)
   {
-    ValueObj val = getValue(value);
-    //if (value) {
-    //  val->refcount -= 1;
-    //  if (val->refcount == 0) {
-    //    delete val;
-    //  }
-    //}
+    if (value == nullptr) return;
+    Value* val = getValue(value);
+    // Never underflow (e.g. deleting a borrowed value twice)
+    if (val->refcount == 0) return;
+    // Release the reference owned by the caller. Values still referenced
+    // elsewhere (e.g. added to a list or map) are not destroyed.
+    if (--val->refcount == 0) RefCounted::release(val);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -294,8 +309,9 @@ extern "C" {
 
     try {
       switch (op) {
-        case SassOperator::OR:  return Value::wrap(lhs->isTruthy() ? lhs : rhs);
-        case SassOperator::AND: return Value::wrap(lhs->isTruthy() ? rhs : lhs);
+        // Return a new reference like all other operations (caller deletes it)
+        case SassOperator::OR:  return newSassValue(lhs->isTruthy() ? lhs : rhs);
+        case SassOperator::AND: return newSassValue(lhs->isTruthy() ? rhs : lhs);
         case SassOperator::ADD: copy = lhs->plus(rhs, logger, pstate); break;
         case SassOperator::SUB: copy = lhs->minus(rhs, logger, pstate); break;
         case SassOperator::MUL: copy = lhs->times(rhs, logger, pstate); break;

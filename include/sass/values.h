@@ -20,6 +20,20 @@
 // Since underlying pointers are often RefCounted, we know how to handle the reference count
 // for memory management when destruction is requested from C-API. Whenever the created value
 // is a e.g. added to a container, the actual destruction of the original is skipped.
+//
+// Memory ownership rules (reference counted):
+// - `sass_make_*`, `sass_clone_value`, `sass_value_op`, `sass_value_stringify`,
+//   `sass_list_pop` and `sass_list_shift` return a new reference, which the
+//   caller owns and must release via `sass_delete_value` (or return it from a
+//   custom function, which passes ownership to LibSass).
+// - `sass_list_at`, `sass_list_get_value`, `sass_map_get` and the map iterator
+//   getters return borrowed references, valid as long as the container holds
+//   them. Do not delete them; use `sass_clone_value` to keep a copy.
+// - `sass_list_push`, `sass_list_set_value` and `sass_map_set` take their own
+//   reference. The caller still owns the passed value and should delete it.
+// - Values returned from custom functions are owned by LibSass. Return a new
+//   value (e.g. via `sass_clone_value`), never a borrowed argument.
+// - Arguments passed to custom functions are borrowed and released by LibSass.
 
 // ToDo: how should we handle sass colors now that we have RGBA, HSLA and HWBA format?
 

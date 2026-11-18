@@ -576,8 +576,12 @@ namespace Sass {
     struct SassValue* c_val = (*lambda)(
       c_args, compiler.wrap(), callable->cookie());
     // It may not return anything at all
-    if (c_val == nullptr) return nullptr;
-    // Unwrap the result into C++ object
+    if (c_val == nullptr) {
+      sass_delete_value(c_args);
+      return nullptr;
+    }
+    // Unwrap the result into C++ object. The function returns
+    // a new reference, which we release below (after we took ours).
     ValueObj value(&Value::unwrap(c_val));
 
     // Check for some specific return types to handle
@@ -596,8 +600,7 @@ namespace Sass {
       sass::string message("C-API function "
         + name.orig() + ": " + warn->message());
       // warn->pstate(pstate);
-      sass_delete_value(c_args);
-      sass_delete_value(c_val);
+      // Note: c_args and c_val are released below
       logger.addWarning(message,
         Logger::WARN_CAPI_FN);
     }
