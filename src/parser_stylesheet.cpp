@@ -31,11 +31,16 @@ namespace Sass {
   {
     // LibSass specials functions start with an `@`
     bool hasAt = scanner.scanChar(Character::$at);
+    // Parse name before arguments. Must be separate statements, as the
+    // evaluation order of function arguments is unspecified (GCC evaluates
+    // right-to-left, which parsed the arguments before the function name).
+    sass::string name(readIdentifier());
+    if (hasAt) name = "@" + name;
+    CallableSignature* params = parseArgumentDeclaration();
     // Return new external callable object
     ExternalCallableObj callable =
-      SASS_MEMORY_NEW(ExternalCallable, hasAt ?
-        "@" + readIdentifier() : readIdentifier(),
-        parseArgumentDeclaration(), nullptr);
+      SASS_MEMORY_NEW(ExternalCallable,
+        name, params, nullptr);
     if (!scanner.isDone()) {
       error("expected selector.",
         scanner.rawSpan());

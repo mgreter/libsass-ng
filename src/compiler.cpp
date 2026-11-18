@@ -966,11 +966,18 @@ namespace Sass {
   // Implementation for `sass_compiler_find_file`
   sass::string Compiler::findFile(const sass::string& path)
   {
-    // Get last import entry for current base
-    Import& import = import_stack.back();
     // create the vector with paths to lookup
-    sass::vector<sass::string> incpaths(1 + includePaths.size());
-    incpaths.emplace_back(File::dir_name(import.source->getAbsPath()));
+    sass::vector<sass::string> incpaths;
+    incpaths.reserve(1 + includePaths.size());
+    // First look relative to the last import (if any). The import
+    // stack is empty if called outside of a compilation phase.
+    if (!import_stack.empty()) {
+      const Import& import = import_stack.back();
+      if (const char* abs_path = import.getAbsPath()) {
+        incpaths.emplace_back(File::dir_name(abs_path));
+      }
+    }
+    // Then look in every include path
     incpaths.insert(incpaths.end(), includePaths.begin(), includePaths.end());
     return File::find_file(path, PWD, incpaths, fileExistsCache);
   }
