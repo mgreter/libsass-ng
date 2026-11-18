@@ -19,6 +19,7 @@
 
   <ItemGroup Label="CAPI Headers">
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_sass.hpp" />
+    <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_guard.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_error.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_traces.hpp" />
     <ClInclude Include="$(LIBSASS_HEADERS_DIR)\capi_import.hpp" />

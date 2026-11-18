@@ -2,6 +2,7 @@
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
 #include "capi_error.hpp"
+#include "capi_guard.hpp"
 
 #include <sstream>
 #include "json.hpp"
@@ -170,11 +171,21 @@ extern "C" {
 
   // Getter for error status as css (In order to show error in browser).
   // Memory returned by this function must be freed via `sass_free_c_string`.
-  char* ADDCALL sass_error_get_css(const struct SassError* error) { return error->getCss(); }
+  // Returns nullptr on failure (e.g. invalid utf8 in message, out of memory).
+  char* ADDCALL sass_error_get_css(const struct SassError* error)
+  {
+    return capiGuard<char*>(__func__, nullptr,
+      [&]() { return error->getCss(); });
+  }
 
   // Getter for error status as json object (Useful to pass to downstream).
   // Memory returned by this function must be freed via `sass_free_c_string`.
-  char* ADDCALL sass_error_get_json(const struct SassError* error) { return error->getJson(true); }
+  // Returns nullptr on failure (e.g. out of memory).
+  char* ADDCALL sass_error_get_json(const struct SassError* error)
+  {
+    return capiGuard<char*>(__func__, nullptr,
+      [&]() { return error->getJson(true); });
+  }
 
   // Getter for formatted error message. According to logger style this
   // may be in unicode and may contain ANSI escape codes for colors.
@@ -224,8 +235,8 @@ extern "C" {
   // Getter for nth trace (or nullptr if `n` is invalid).
   const struct SassTrace* ADDCALL sass_error_get_trace(const struct SassError* error, size_t i)
   {
-    if (error->traces.size() < i) return nullptr;
-    return error->traces.at(i).wrap();
+    if (i >= error->traces.size()) return nullptr;
+    return error->traces[i].wrap();
   }
 
   /////////////////////////////////////////////////////////////////////////

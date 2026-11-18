@@ -4,6 +4,19 @@
 #ifndef SASS_BASE_H
 #define SASS_BASE_H
 
+/////////////////////////////////////////////////////////////////////////
+// General C-API contract (applies to all LibSass headers):
+// - Handles (e.g. `struct SassCompiler*`, `struct SassValue*`, `struct
+//   SassImport*`) passed to any API function must not be NULL, unless the
+//   function explicitly documents otherwise. Passing NULL is a programming
+//   error with undefined behavior. Usually the process aborts, either with
+//   a "Null-Pointer passed to ...::unwrap" message or a plain crash.
+// - String arguments may be NULL where documented. Out-of-range indexes
+//   return NULL (or are ignored by setters) instead of failing.
+// - Errors during compilation are never reported via aborts; query them
+//   with `sass_compiler_get_status` and `sass_compiler_get_error`.
+/////////////////////////////////////////////////////////////////////////
+
 #ifdef _MSC_VER
   #pragma warning(disable : 4503)
   #ifndef _SCL_SECURE_NO_WARNINGS

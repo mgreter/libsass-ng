@@ -21,6 +21,9 @@
 // for memory management when destruction is requested from C-API. Whenever the created value
 // is a e.g. added to a container, the actual destruction of the original is skipped.
 //
+// All functions require valid (non-NULL) value handles (see `sass/base.h`),
+// except `sass_delete_value`, which accepts NULL.
+//
 // Memory ownership rules (reference counted):
 // - `sass_make_*`, `sass_clone_value`, `sass_value_op`, `sass_value_stringify`,
 //   `sass_list_pop` and `sass_list_shift` return a new reference, which the

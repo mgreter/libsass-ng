@@ -2,6 +2,7 @@
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
 #include "capi_values.hpp"
+#include "capi_guard.hpp"
 
 #include "exceptions.hpp"
 #include "ast_colors.hpp"
@@ -102,17 +103,23 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   // Return the value stored at the given key (or nullptr if it doesn't exist)
+  // Hashing/comparing keys may throw (e.g. too deeply nested values)
   struct SassValue* ADDCALL sass_map_get(struct SassValue* map, struct SassValue* key)
   {
-    auto value = getMap(map)->at(getValue(key));
-    if (value.isNull()) return nullptr;
-    return Value::wrap(value);
+    return capiGuard<struct SassValue*>(__func__, nullptr, [&]() -> struct SassValue* {
+      auto value = getMap(map)->at(getValue(key));
+      if (value.isNull()) return nullptr;
+      return Value::wrap(value);
+    });
   }
 
   // Set or create the value in the map for the given key
+  // Hashing/comparing keys may throw (e.g. too deeply nested values)
   void ADDCALL sass_map_set(struct SassValue* map, struct SassValue* key, struct SassValue* value)
   {
-    getMap(map)->insertOrSet(getValue(key), getValue(value));
+    capiGuardVoid(__func__, [&]() {
+      getMap(map)->insertOrSet(getValue(key), getValue(value));
+    });
   }
 
   // Create an iterator to loop over all key/value pairs of this map
@@ -167,7 +174,13 @@ extern "C" {
 
   void ADDCALL sass_list_push(struct SassValue* list, struct SassValue* value) { getList(list)->append(getValue(value)); }
   // void ADDCALL sass_list_unshift(struct SassValue* list, struct SassValue* value) { getList(list)->unshift(getValue(value)); }
-  struct SassValue* ADDCALL sass_list_at(struct SassValue* list, size_t i) { return Value::wrap(getList(list)->at(i)); }
+  // Returns nullptr if index is out of range
+  struct SassValue* ADDCALL sass_list_at(struct SassValue* list, size_t i)
+  {
+    List* lst = getList(list);
+    if (i >= lst->size()) return nullptr;
+    return Value::wrap(lst->get(i));
+  }
   // Remove and return the last/first item (or nullptr if the list is empty).
   // The item is no longer owned by the list, so the caller receives a new
   // reference and must release it via `sass_delete_value`.
@@ -187,8 +200,20 @@ extern "C" {
   }
 
   // Getters and setters for Sass_List values
-  struct SassValue* ADDCALL sass_list_get_value(struct SassValue* v, size_t i) { return Value::wrap(getList(v)->at(i)); } 
-  void ADDCALL sass_list_set_value(struct SassValue* v, size_t i, struct SassValue* value) { getList(v)->set(i, getValue(value)); }
+  // Returns nullptr if index is out of range
+  struct SassValue* ADDCALL sass_list_get_value(struct SassValue* v, size_t i)
+  {
+    List* lst = getList(v);
+    if (i >= lst->size()) return nullptr;
+    return Value::wrap(lst->get(i));
+  }
+  // Does nothing if index is out of range
+  void ADDCALL sass_list_set_value(struct SassValue* v, size_t i, struct SassValue* value)
+  {
+    List* lst = getList(v);
+    if (i >= lst->size()) return;
+    lst->set(i, getValue(value));
+  }
 
   // Getters and setters for Sass_Error
   const char* ADDCALL sass_error_get_message(struct SassValue* v) { return getError(v)->message().c_str(); };
@@ -288,11 +313,16 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // On failure (e.g. too deeply nested values) returns an error value
   struct SassValue* ADDCALL sass_value_stringify(struct SassValue* value, bool compressed, int precision)
   {
-    Value* val = getValue(value);
-    sass::string str(val->inspect(precision));
-    return sass_make_string(str.c_str(), true);
+    try {
+      Value* val = getValue(value);
+      sass::string str(val->inspect(precision));
+      return sass_make_string(str.c_str(), true);
+    }
+    catch (std::exception& e) { return sass_make_error(e.what()); }
+    catch (...) { return sass_make_error("unknown"); }
   }
 
   /////////////////////////////////////////////////////////////////////////

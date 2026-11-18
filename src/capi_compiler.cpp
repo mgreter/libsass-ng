@@ -2,6 +2,7 @@
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
 #include "capi_compiler.hpp"
+#include "capi_guard.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -448,7 +449,10 @@ extern "C" {
   // Note: the passed in `paths` can be path separated (`;` on windows, `:` otherwise).
   void ADDCALL sass_compiler_add_include_paths(struct SassCompiler* compiler, const char* paths)
   {
-    Compiler::unwrap(compiler).addIncludePaths(paths);
+    if (paths == nullptr) return;
+    capiGuardVoid(__func__, [&]() {
+      Compiler::unwrap(compiler).addIncludePaths(paths);
+    });
   }
 
   // Load dynamic loadable plugins from `paths`. Plugins are only supported on certain OSs and
@@ -458,7 +462,10 @@ extern "C" {
   // Note: the passed in `paths` can be path separated (`;` on windows, `:` otherwise).
   void ADDCALL sass_compiler_load_plugins(struct SassCompiler* compiler, const char* paths)
   {
-    Compiler::unwrap(compiler).loadPlugins(paths);
+    if (paths == nullptr) return;
+    capiGuardVoid(__func__, [&]() {
+      Compiler::unwrap(compiler).loadPlugins(paths);
+    });
   }
 
   // Add a custom header importer that will always be executed before any other
@@ -537,7 +544,9 @@ extern "C" {
   // Getter for compiler entry point (which file or data to parse first).
   struct SassImport* ADDCALL sass_compiler_get_entry_point(struct SassCompiler* compiler)
   {
-    return Compiler::unwrap(compiler).entry_point->wrap();
+    // Returns nullptr if no entry point was set yet
+    Import* entry = Compiler::unwrap(compiler).entry_point;
+    return entry ? entry->wrap() : nullptr;
   }
 
   // Setter for compiler entry point (which file or data to parse first).
@@ -578,9 +587,11 @@ extern "C" {
   // Getter for warnings that occurred during any step.
   const char* ADDCALL sass_compiler_get_warn_string(struct SassCompiler* compiler)
   {
-    if (Compiler::unwrap(compiler).warnings.empty()) return nullptr;
-    Compiler::unwrap(compiler).reportSuppressedWarnings();
-    return Compiler::unwrap(compiler).warnings.c_str();
+    return capiGuard<const char*>(__func__, nullptr, [&]() -> const char* {
+      if (Compiler::unwrap(compiler).warnings.empty()) return nullptr;
+      Compiler::unwrap(compiler).reportSuppressedWarnings();
+      return Compiler::unwrap(compiler).warnings.c_str();
+    });
   }
 
   // Getter for output after parsing, compilation and rendering.
@@ -629,7 +640,7 @@ extern "C" {
   // Note: LibSass does not write the file, implementers should write to this path.
   void ADDCALL sass_compiler_set_srcmap_path(struct SassCompiler* compiler, const char* path)
   {
-    Compiler::unwrap(compiler).mapopt.path = path;
+    Compiler::unwrap(compiler).mapopt.path = path ? path : "";
   }
 
   // Getter for source-map path (where to store the source-mapping).
@@ -646,7 +657,7 @@ extern "C" {
   // Note: if not given, no root attribute will be added to the srcmap info object.
   void ADDCALL sass_compiler_set_srcmap_root(struct SassCompiler* compiler, const char* root)
   {
-    Compiler::unwrap(compiler).mapopt.root = root;
+    Compiler::unwrap(compiler).mapopt.root = root ? root : "";
   }
 
   // Setter for source-map file-url option (renders urls in srcmap as `file://` urls)
@@ -682,7 +693,10 @@ extern "C" {
   // Getter to return path to the included file at position `n`.
   const char* ADDCALL sass_compiler_get_included_file_path(struct SassCompiler* compiler, size_t n)
   {
-    return Compiler::unwrap(compiler).included_sources.at(n)->getAbsPath();
+    // Returns nullptr if index is out of range
+    const auto& sources = Compiler::unwrap(compiler).included_sources;
+    if (n >= sources.size()) return nullptr;
+    return sources[n]->getAbsPath();
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -691,7 +705,10 @@ extern "C" {
   // Getter for current import context. Use `SassImport` functions to query the state.
   const struct SassImport* ADDCALL sass_compiler_get_last_import(struct SassCompiler* compiler)
   {
-    return Compiler::unwrap(compiler).import_stack.back()->wrap();
+    // Returns nullptr if called outside of a compilation phase
+    const auto& stack = Compiler::unwrap(compiler).import_stack;
+    if (stack.empty()) return nullptr;
+    return stack.back()->wrap();
   }
 
   // Returns status code for compiler (0 meaning success, anything else is an error)
@@ -713,8 +730,11 @@ extern "C" {
   // Resolve a file relative to last import or include paths in the sass option struct.
   char* ADDCALL sass_compiler_find_file(const char* file, struct SassCompiler* compiler)
   {
-    sass::string path(Compiler::unwrap(compiler).findFile(file));
-    return path.empty() ? nullptr : sass_copy_c_string(path.c_str());
+    if (file == nullptr) return nullptr;
+    return capiGuard<char*>(__func__, nullptr, [&]() -> char* {
+      sass::string path(Compiler::unwrap(compiler).findFile(file));
+      return path.empty() ? nullptr : sass_copy_c_string(path.c_str());
+    });
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -758,8 +778,11 @@ extern "C" {
 
   void ADDCALL sass_compiler_set_work_directory(struct SassCompiler* compiler, const char* cwd)
   {
-    auto& pwd = Compiler::unwrap(compiler).PWD;
-    pwd = File::rel2abs(sass::string(cwd) + "/", pwd, pwd);
+    if (cwd == nullptr) return;
+    capiGuardVoid(__func__, [&]() {
+      auto& pwd = Compiler::unwrap(compiler).PWD;
+      pwd = File::rel2abs(sass::string(cwd) + "/", pwd, pwd);
+    });
   }
 
 }
