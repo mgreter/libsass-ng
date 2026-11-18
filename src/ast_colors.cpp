@@ -130,12 +130,18 @@ namespace Sass {
 
     tl::optional<double> mixedAlpha = missing_alpha1 && missing_alpha2
       ? tl::optional<double>() : alpha1 * weight + alpha2 * (1 - weight);
+    // Undo premultiplication. Per CSS Color 4 (13.5 Interpolating with Alpha):
+    // "If the interpolated alpha value is zero or none, the un-premultiplied
+    // value is the premultiplied value." Dividing by a zero alpha (e.g. when
+    // mixing two fully transparent colors) would otherwise produce NaN.
+    double unpremultiply = mixedAlpha.has_value() && *mixedAlpha != 0.0
+      ? *mixedAlpha : 1.0;
     tl::optional<double> mixed0 = missing1_0 && missing2_0 ? tl::optional<double>() :
-      (channel1_0 * thisMultiplier + channel2_0 * otherMultiplier) / mixedAlpha.value_or(1.0);
+      (channel1_0 * thisMultiplier + channel2_0 * otherMultiplier) / unpremultiply;
     tl::optional<double> mixed1 = missing1_1 && missing2_1 ? tl::optional<double>() :
-      (channel1_1 * thisMultiplier + channel2_1 * otherMultiplier) / mixedAlpha.value_or(1.0);
+      (channel1_1 * thisMultiplier + channel2_1 * otherMultiplier) / unpremultiply;
     tl::optional<double> mixed2 = missing1_2 && missing2_2 ? tl::optional<double>()
-      : (channel1_2 * thisMultiplier + channel2_2 * otherMultiplier) / mixedAlpha.value_or(1.0);
+      : (channel1_2 * thisMultiplier + channel2_2 * otherMultiplier) / unpremultiply;
 
     ColorObj rv;
 
