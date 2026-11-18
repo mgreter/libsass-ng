@@ -17,7 +17,7 @@
 namespace Sass {
 
   // Shared depth counter for VALUE_NESTING_GUARD (see ast_def_macros.hpp)
-  THREAD_LOCAL(size_t) valueNestingDepth = 0;
+  thread_local size_t valueNestingDepth = 0;
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -1338,9 +1338,11 @@ namespace Sass {
     VALUE_NESTING_GUARD();
     if (size() != rhs.size()) return false;
     for (const auto& kv : elements_) {
-      const auto& lv = kv.second;
-      const auto& rv = rhs.at(kv.first);
-      return ObjEqualityFn(lv, rv);
+      // `at` returns nullptr if key is missing
+      // Sass `null` is a `Null` object, never nullptr
+      ValueObj rv = rhs.at(kv.first);
+      if (rv.isNull()) return false;
+      if (!ObjEqualityFn(kv.second, rv)) return false;
     }
     return true;
   }

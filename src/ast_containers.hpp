@@ -617,10 +617,17 @@ namespace Sass {
     {
       if (hash_ == 0) {
         hash_start(hash_, typeid(this).hash_code());
+        // Must not depend on insertion order, since maps with the
+        // same entries in different order compare equal (Map::operator==).
+        // Hash each pair, then combine pairs commutatively (by summing).
+        std::size_t entries = 0;
         for (auto& kv : elements_) {
-          hash_combine(hash_, kv.first->hash());
-          hash_combine(hash_, kv.second->hash());
+          std::size_t pair = 0;
+          hash_combine(pair, kv.first->hash());
+          hash_combine(pair, kv.second->hash());
+          entries += pair;
         }
+        hash_combine(hash_, entries);
       }
       return hash_;
     }

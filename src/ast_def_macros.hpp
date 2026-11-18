@@ -57,8 +57,9 @@ public:
 // Values can be nested to any depth at runtime (e.g. a list wrapped into
 // itself inside a loop), so parser guards don't protect recursive value
 // operations (equality, hashing, inspection, merging). Those share this
-// per-thread depth counter (defined in ast_values.cpp).
-namespace Sass { extern THREAD_LOCAL(size_t) valueNestingDepth; }
+// per-thread depth counter (defined in ast_values.cpp). Native thread_local
+// is fine for PODs on all supported compilers (avoids the THREAD_LOCAL shim).
+namespace Sass { extern thread_local size_t valueNestingDepth; }
 #define VALUE_NESTING_GUARD() \
   LocalOption<size_t> cnt_valueNestingDepth(valueNestingDepth, valueNestingDepth + 1); \
   if (valueNestingDepth > SassMaxNesting) throw Exception::RecursionLimitError(); \
