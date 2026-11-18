@@ -220,12 +220,16 @@ namespace Sass {
       decRefCount();
     }
 
+    // Note: we must take the new reference before releasing the old one.
+    // The new target may only be owned by the old node (e.g. `p = p->child`),
+    // so releasing first would destroy the target before we reference it.
     SharedPtr<T>& operator=(T* other)
     {
       if (node != other) {
-        if (node) decRefCount();
+        T* old = node;
         node = other;
         incRefCount();
+        decRefCount(old);
       } else if (node != nullptr) {
         node->refcount &= UNSET_DETACHED_BITMASK;
       }
@@ -240,9 +244,12 @@ namespace Sass {
     SharedPtr<T>& operator=(SharedPtr<T>&& obj) noexcept
     {
       if (node != obj.node) {
-        if (node) decRefCount();
-        node = std::move(obj.node);
+        // Take over the reference before releasing the old node, since
+        // `obj` may live inside it (e.g. `p = std::move(p->child)`).
+        T* old = node;
+        node = obj.node;
         obj.node = nullptr;
+        decRefCount(old);
       }
       else if (node != nullptr) {
         node->refcount &= UNSET_DETACHED_BITMASK;
@@ -275,8 +282,10 @@ namespace Sass {
 
     void clear() {
       if (node != nullptr) {
-        decRefCount();
+        // Reset first, as releasing may re-enter
+        T* old = node;
         node = nullptr;
+        decRefCount(old);
       }
     }
 
@@ -313,26 +322,30 @@ namespace Sass {
 
     // ##__declspec(noinline)
     inline void decRefCount() noexcept {
-      if (node == nullptr) return;
+      decRefCount(node);
+    }
+    // Release one reference of the given node (may be other than `node`)
+    inline void decRefCount(T* ptr) noexcept {
+      if (ptr == nullptr) return;
       #ifdef DEBUG_SHARED_PTR
-      if (node->dbg) {
-        std::cerr << "- " << node << " X " << ((node->refcount & SET_DETACHED_BITMASK) ? "detached " : "")
-          << (node->refcount - (node->refcount  & SET_DETACHED_BITMASK)) << " (" << this << ") " << "\n";
+      if (ptr->dbg) {
+        std::cerr << "- " << ptr << " X " << ((ptr->refcount & SET_DETACHED_BITMASK) ? "detached " : "")
+          << (ptr->refcount - (ptr->refcount  & SET_DETACHED_BITMASK)) << " (" << this << ") " << "\n";
       }
       #endif
-      if (--node->refcount == 0) {
+      if (--ptr->refcount == 0) {
         #ifdef DEBUG_SHARED_PTR
-          if (node->dbg) {
-            std::cerr << "DELETE NODE " << node << "\n";
+          if (ptr->dbg) {
+            std::cerr << "DELETE NODE " << ptr << "\n";
           }
-          // node->deleted.insert(node->objId);
+          // ptr->deleted.insert(ptr->objId);
         #endif
-        RefCounted::release(node);
+        RefCounted::release(ptr);
       }
       #ifdef DEBUG_SHARED_PTR
-      else if (node->refcount & SET_DETACHED_BITMASK) {
-        if (node->dbg) {
-          std::cerr << "NODE EVADED DELETE " << node << "\n";
+      else if (ptr->refcount & SET_DETACHED_BITMASK) {
+        if (ptr->dbg) {
+          std::cerr << "NODE EVADED DELETE " << ptr << "\n";
         }
       }
       #endif
