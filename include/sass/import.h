@@ -20,8 +20,9 @@ extern "C" {
   ADDAPI struct SassImport* ADDCALL sass_make_file_import(const char* imp_path);
 
   // Create import entry for the passed data with optional path.
-  // Note: we take ownership of the passed `content` memory.
-  ADDAPI struct SassImport* ADDCALL sass_make_content_import(char* content, const char* imp_path);
+  // Note: the `content` is copied; the caller keeps ownership of the
+  // passed memory (string literals and borrowed buffers are fine).
+  ADDAPI struct SassImport* ADDCALL sass_make_content_import(const char* content, const char* imp_path);
 
   // Create single import entry returned by the custom importer inside the list.
   // Note: source/srcmap can be empty to let LibSass do the file resolving.

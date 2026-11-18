@@ -10,10 +10,9 @@ struct SassImportList* sass_importer(SassImporterLambda lambda, double priority,
 {
   // get the cookie from importer descriptor
   struct SassImportList* list = sass_make_import_list();
-  char* local = sass_copy_c_string("local { color: green; }");
-  char* remote = sass_copy_c_string("remote { color: red; }");
-  sass_import_list_emplace(list, sass_make_content_import(local, "/tmp/styles.scss"));
-  sass_import_list_emplace(list, sass_make_content_import(remote, "http://www.example.com"));
+  // content is copied, so string literals can be passed directly
+  sass_import_list_emplace(list, sass_make_content_import("local { color: green; }", "/tmp/styles.scss"));
+  sass_import_list_emplace(list, sass_make_content_import("remote { color: red; }", "http://www.example.com"));
   return list;
 }
 

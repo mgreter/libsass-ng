@@ -46,8 +46,9 @@ extern "C" {
   // EO sass_make_file_import
 
   // Create import entry for the passed data with optional path.
-  // Note: we take ownership of the passed `content` memory.
-  struct SassImport* ADDCALL sass_make_content_import(char* content, const char* path)
+  // Note: the `content` is copied; the caller keeps ownership of the
+  // passed memory (string literals and borrowed buffers are fine).
+  struct SassImport* ADDCALL sass_make_content_import(const char* content, const char* path)
   {
     Import* loaded = SASS_MEMORY_NEW(Import,
       SASS_MEMORY_NEW(SourceString,
