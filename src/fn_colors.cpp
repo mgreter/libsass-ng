@@ -999,8 +999,16 @@ namespace Sass {
 
         for (size_t i = 0; i < channels.size(); i++) {
 
-          channels[i]->assertColorChannel(compiler,
-            space->_channels[i].name, name);
+          // `space` is null if the space name is a `var()`. Like dart-sass
+          // fall back to a positional name (`space?.channels[i] ?? 'channel N'`)
+          if (space != nullptr && i < size_t(space->_channelSize)) {
+            channels[i]->assertColorChannel(compiler,
+              space->_channels[i].name, name);
+          }
+          else {
+            channels[i]->assertColorChannel(compiler,
+              "channel " + std::to_string(i + 1), name);
+          }
 
           // auto channel = channels[i];
           // 
@@ -1019,7 +1027,9 @@ namespace Sass {
 
       if (alphaValue != nullptr) {
         if (isSpecialNumber(alphaValue)) {
-          if (channels.size() == 3 && (*space == ColorSpaces::rgb || *space == ColorSpaces::hsl)) {
+          // `space` is null if the space name is a `var()`
+          if (channels.size() == 3 && space != nullptr &&
+            (*space == ColorSpaces::rgb || *space == ColorSpaces::hsl)) {
             sass::sstream args;
             // If size is 3, we must comma separate them
             // Otherwise we keep it space separated!?
