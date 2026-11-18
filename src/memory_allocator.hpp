@@ -73,6 +73,8 @@ namespace Sass {
     // allocate but don't initialize count of elements of type T
     pointer allocate(size_type count, const_pointer /* hint */ = 0)
     {
+      // Guard against overflow of `count * sizeof(T)`
+      if (count > max_size()) throw std::bad_alloc();
       return (pointer)(Sass::allocateMem(count * sizeof(T)));
     }
 

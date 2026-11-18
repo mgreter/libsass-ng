@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 #include <climits>
+#include <cstdint>
+#include <new>
 #include <algorithm>
 #include <iostream>
 
@@ -112,6 +114,13 @@ namespace Sass {
     // Allocate a slice of the memory pool
     void* allocate(size_t size)
     {
+
+      // Reject sizes that would overflow once we add
+      // book-keeping and alignment (would return a tiny
+      // slice for a huge request otherwise).
+      if (size > SIZE_MAX - SassAllocatorBookSize - SASS_MEM_ALIGN) {
+        throw std::bad_alloc();
+      }
 
       // Increase size so its memory is aligned
       size = alignMemAddr(

@@ -43,6 +43,16 @@ namespace Sass {
   // Destroys the pool when it is emptied.
   void deallocateMem(void* ptr)
   {
+    // Memory may be freed on a different thread than it was allocated on
+    // (e.g. compile on one thread, delete the compiler on another). Such
+    // a thread may not have a pool yet, so create one. Freed slices go
+    // onto this thread's free list; arenas are never released in release
+    // builds, so slices from other pools stay valid for reuse.
+    #ifndef DEBUG
+    if (pool == nullptr) {
+      pool = new MemoryPool();
+    }
+    #endif
 
     #ifdef DEBUG
 
