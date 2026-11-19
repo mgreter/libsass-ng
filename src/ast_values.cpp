@@ -1071,14 +1071,23 @@ namespace Sass {
 
   double Number::roundWithStep(const Number* step, Round::RNDSTRAT strategy) const
   {
+    // Special cases in the same order as dart-sass (`_roundWithStep`).
+    // The result is NaN if both are infinite, if the step is zero or if
+    // any of both is NaN (the infinite step case below compares with
+    // the value, which would otherwise turn NaN into a signed zero).
+    if ((std::isinf(value_) && std::isinf(step->value_)) ||
+      step->value_ == 0 || std::isnan(value_) || std::isnan(step->value_)) {
+      return NANR;
+    }
+    // Infinite numbers stay as they are
+    if (std::isinf(value_)) {
+      return value_;
+    }
     // Special case when step is infinite
     if (std::isinf(step->value_))
     {
       if (value_ == 0) {
         return value_;
-      }
-      if (std::isinf(value_)) {
-        return NANR;
       }
       if (strategy == Round::RNDSTRAT::UP) {
         return value_ > 0 ? INFNR : -0.0;
@@ -1086,7 +1095,7 @@ namespace Sass {
       if (strategy == Round::RNDSTRAT::DOWN) {
         return value_ < 0 ? -INFNR : 0.0;
       }
-      if (std::isinf(value_)) return -NANR;
+      // Nearest and to-zero
       return value_ > 0 ? 0.0 : -0.0;
     }
     // Convert step number into our units
