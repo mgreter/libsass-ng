@@ -901,20 +901,13 @@ namespace Sass {
   {
     if (const Number* nr = other->isaNumber()) {
       if (!nr->hasUnits()) {
-        double result = value();
-        if (double divisor = nr->value()) {
-          result /= divisor;
-        }
-        else {
-          if ((result < 0) != std::signbit(divisor)) return SASS_MEMORY_NEW(
-            Number, pstate, -std::numeric_limits<double>::infinity(), this);
-          else if (result > 0) return SASS_MEMORY_NEW(Number, pstate,
-            std::numeric_limits<double>::infinity(), this);
-          else return SASS_MEMORY_NEW(Number, pstate,
-            std::numeric_limits<double>::quiet_NaN(), this);
-        }
+        // IEEE 754 division (like dart-sass) also covers division by
+        // zero: x / ±0 is ±infinity with the sign of x times the sign
+        // of the zero, and 0 / 0 or NaN / 0 is NaN.
+        static_assert(std::numeric_limits<double>::is_iec559,
+          "IEEE 754 doubles are required for division by zero");
         return SASS_MEMORY_NEW(Number,
-          pstate, result, this);
+          pstate, value() / nr->value(), this);
       }
       else {
         return operate(div, *nr, logger, pstate);
