@@ -179,7 +179,11 @@ extern "C" {
   size_t ADDCALL sass_list_get_size(struct SassValue* v) { return getList(v)->size(); }
 
   SassSeparator ADDCALL sass_list_get_separator(struct SassValue* v) { return getList(v)->separator(); }
-  void ADDCALL sass_list_set_separator(struct SassValue* v, SassSeparator separator) { getList(v)->separator(separator); }
+  void ADDCALL sass_list_set_separator(struct SassValue* v, SassSeparator separator) {
+    // Invalid values are ignored
+    if (!capiEnumInRange(separator, SASS_COMMA, SASS_UNDEF)) return;
+    getList(v)->separator(separator);
+  }
   bool ADDCALL sass_list_get_is_bracketed(struct SassValue* v) { return getList(v)->hasBrackets(); }
   void ADDCALL sass_list_set_is_bracketed(struct SassValue* v, bool is_bracketed) { getList(v)->hasBrackets(is_bracketed); }
 
@@ -266,6 +270,8 @@ extern "C" {
 
   struct SassValue* ADDCALL sass_make_list(SassSeparator sep, bool is_bracketed)
   {
+    // Invalid values fall back to an undetermined separator
+    if (!capiEnumInRange(sep, SASS_COMMA, SASS_UNDEF)) sep = SASS_UNDEF;
     return newSassValue(SASS_MEMORY_NEW(
       List, SourceSpan::internal32("sass://list"), {}, sep, is_bracketed));
   }

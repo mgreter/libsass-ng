@@ -36,6 +36,18 @@ namespace Sass {
     return fallback;
   }
 
+  /////////////////////////////////////////////////////////////////////////
+  // C callers can pass any integer as an enum value. Check the range
+  // before storing it, since out-of-range values of these enums are
+  // undefined in C++ and later code only handles the declared values.
+  /////////////////////////////////////////////////////////////////////////
+  template <typename E>
+  inline bool capiEnumInRange(E value, E first, E last) noexcept
+  {
+    const long long v = static_cast<long long>(value);
+    return v >= static_cast<long long>(first)
+      && v <= static_cast<long long>(last);
+  }
   template <typename F>
   inline void capiGuardVoid(const char* fn, F&& body) noexcept
   {

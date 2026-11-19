@@ -13,6 +13,10 @@
 //   a "Null-Pointer passed to ...::unwrap" message or a plain crash.
 // - String arguments may be NULL where documented. Out-of-range indexes
 //   return NULL (or are ignored by setters) instead of failing.
+// - Enum arguments outside the declared values are ignored by setters
+//   (the previous value is kept); `sass_make_list` falls back to
+//   `SASS_UNDEF`. `SASS_STYLE_TO_CSS` is internal and not accepted as
+//   an output style.
 // - Errors during compilation are never reported via aborts; query them
 //   with `sass_compiler_get_status` and `sass_compiler_get_error`.
 /////////////////////////////////////////////////////////////////////////

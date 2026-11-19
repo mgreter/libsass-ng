@@ -2,6 +2,7 @@
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
 #include "capi_import.hpp"
+#include "capi_guard.hpp"
 
 #include "import.hpp"
 #include "sources.hpp"
@@ -108,6 +109,8 @@ extern "C" {
   // Setter for specific import format for the given import (force css/sass/scss or set to auto)
   void ADDCALL sass_import_set_syntax(struct SassImport* import, enum SassImportSyntax syntax)
   {
+    // Invalid values are ignored
+    if (!capiEnumInRange(syntax, SASS_IMPORT_AUTO, SASS_IMPORT_CSS)) return;
     Import::unwrap(import).syntax = syntax;
   }
 

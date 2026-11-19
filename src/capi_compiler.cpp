@@ -508,12 +508,16 @@ extern "C" {
   // Setter for output style (see `enum SassOutputStyle` for possible options).
   void ADDCALL sass_compiler_set_input_syntax(struct SassCompiler* compiler, enum SassImportSyntax syntax)
   {
+    // Invalid values are ignored
+    if (!capiEnumInRange(syntax, SASS_IMPORT_AUTO, SASS_IMPORT_CSS)) return;
     Compiler::unwrap(compiler).input_syntax = syntax;
   }
 
   // Setter for output style (see `enum SassOutputStyle` for possible options).
   void ADDCALL sass_compiler_set_output_style(struct SassCompiler* compiler, enum SassOutputStyle style)
   {
+    // Invalid values are ignored (`SASS_STYLE_TO_CSS` is internal only)
+    if (!capiEnumInRange(style, SASS_STYLE_NESTED, SASS_STYLE_COMPRESSED)) return;
     Compiler::unwrap(compiler).output_style = style;
   }
 
@@ -637,6 +641,8 @@ extern "C" {
   // Setter for source-map mode (how to embed or not embed the source-map).
   void ADDCALL sass_compiler_set_srcmap_mode(struct SassCompiler* compiler, enum SassSrcMapMode mode)
   {
+    // Invalid values are ignored
+    if (!capiEnumInRange(mode, SASS_SRCMAP_NONE, SASS_SRCMAP_EMBED_JSON)) return;
     Compiler::unwrap(compiler).mapopt.mode = mode;
   }
 
