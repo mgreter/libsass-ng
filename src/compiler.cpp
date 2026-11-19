@@ -408,6 +408,17 @@ namespace Sass {
   // @param importers Array of custom importers/headers to go through
   // @param singleton Whether to use all importers or only first successful
   /////////////////////////////////////////////////////////////////////////
+  // Release C-API import objects when leaving scope (also on exceptions,
+  // e.g. parse errors in imported content or detected import loops).
+  struct ImportListReleaser {
+    struct SassImportList* list;
+    ~ImportListReleaser() { sass_delete_import_list(list); }
+  };
+  struct ImportReleaser {
+    struct SassImport* import;
+    ~ImportReleaser() { sass_delete_import(import); }
+  };
+
   bool Compiler::callCustomLoader(const sass::string& imp_path, SourceSpan& pstate,
     ImportRule* rule, const sass::vector<struct SassImporter*>& importers, bool singleton)
   {
@@ -429,6 +440,8 @@ namespace Sass {
       struct SassImportList* imports = fn(imp_path.c_str(), importer, this->wrap());
       // External provider want to handle this
       if (imports != nullptr) {
+        // Released when leaving this block (incl. exceptions)
+        ImportListReleaser importsGuard{ imports };
 
         // Get the list of possible imports
         // A list with zero items does nothing
@@ -437,6 +450,8 @@ namespace Sass {
           ++count;
           // Consume the first item from the list
           struct SassImport* entry = sass_import_list_shift(imports);
+          // Released at the end of this iteration (incl. exceptions)
+          ImportReleaser entryGuard{ entry };
           Import& import = Import::unwrap(entry);
           // Create a unique path to use as key
           sass::string uniq_path = imp_path;
@@ -457,8 +472,6 @@ namespace Sass {
             traces.push_back(BackTrace(pstate));
             Exception::CustomImportError err(traces,
               sass_import_get_error_message(entry));
-            sass_delete_import_list(imports);
-            sass_delete_import(entry);
             throw err;
           }
           // Source must be set, even if the actual data is not loaded yet
@@ -506,8 +519,6 @@ namespace Sass {
                 BackTraces& traces = *this;
                 traces.push_back(BackTrace(pstate));
                 Exception::CustomImportNotFound err(traces, path);
-                sass_delete_import_list(imports);
-                sass_delete_import(entry);
                 throw err;
               }
               // Error if multiple files to import were found
@@ -515,8 +526,6 @@ namespace Sass {
                 BackTraces& traces = *this;
                 traces.push_back(BackTrace(pstate));
                 Exception::CustomImportAmbigous err(traces, path);
-                sass_delete_import_list(imports);
-                sass_delete_import(entry);
                 throw err;
               }
               // We made sure exactly one entry was found, load its content
@@ -536,18 +545,13 @@ namespace Sass {
                 BackTraces& traces = *this;
                 traces.push_back(BackTrace(pstate));
                 Exception::CustomImportLoadError err(traces, path);
-                sass_delete_import_list(imports);
-                sass_delete_import(entry);
                 throw err;
               }
 
             }
           }
-          sass_delete_import(entry);
         }
 
-        // Deallocate the returned memory
-        sass_delete_import_list(imports);
         // Set success flag
         has_import = true;
         // Break out of loop?
@@ -865,33 +869,27 @@ namespace Sass {
 
     auto& source(import->source);
     auto& stack(compiler.import_stack);
-
-    // std::cerr << "IMPORT " << sass::string(stack.size(), ' ') << source->getAbsPath() << "\n";
-
-    stack.push_back(import);
-
-    if (stack.size() < 2) return;
-
-
-    // check existing import stack for possible recursion
-    for (size_t i = stack.size() - 2;; --i) {
-      const SourceDataObj parent = stack[i]->source;
-      if (std::strcmp(parent->getAbsPath(), source->getAbsPath()) == 0) {
+    const char* path = source->getAbsPath();
+    // Check existing import stack for possible recursion before pushing.
+    // If the constructor throws, the destructor (which pops) never runs,
+    // so pushing first would leave a stale entry on the import stack.
+    for (size_t i = stack.size(); i-- > 0;) {
+      const char* parent = stack[i]->source->getAbsPath();
+      if (parent && path && std::strcmp(parent, path) == 0) {
         // make path relative to the current directory
         sass::string msg("An @import loop has been found:");
-        // CallStackFrame frame(compiler, import->pstate());
-        for (size_t n = i; n < stack.size() - 1; ++n) {
-          msg += "\n    " + sass::string(File::abs2rel(stack[n]->source->getAbsPath(), compiler.PWD, compiler.PWD)) +
-            " imports " + sass::string(File::abs2rel(stack[n + 1]->source->getAbsPath(), compiler.PWD, compiler.PWD));
+        for (size_t n = i; n < stack.size(); ++n) {
+          const char* from = stack[n]->source->getAbsPath();
+          const char* to = n + 1 < stack.size() ? stack[n + 1]->source->getAbsPath() : path;
+          msg += "\n    " + sass::string(File::abs2rel(from ? from : "", compiler.PWD, compiler.PWD)) +
+            " imports " + sass::string(File::abs2rel(to ? to : "", compiler.PWD, compiler.PWD));
         }
         // implement error throw directly until we
         // decided how to handle full stack traces
         throw Exception::RuntimeException(compiler, msg);
       }
-      // Exit condition
-      if (i == 0) break;
     }
-
+    stack.push_back(import);
   }
 
   ImportStackFrame::~ImportStackFrame()
