@@ -123,7 +123,10 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Getter for warnings that occurred during any step.
+  // Getter for warnings that occurred during any step (NULL if none).
+  // Updated after each step (parse, compile, render); includes a final
+  // note if similar warnings were suppressed. The string is owned by the
+  // compiler and valid until the next step runs or the compiler is deleted.
   ADDAPI const char* ADDCALL sass_compiler_get_warn_string(struct SassCompiler* compiler);
 
   // Getter for output after parsing, compilation and rendering.

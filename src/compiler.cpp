@@ -264,9 +264,14 @@ namespace Sass {
   }
   // EO renderEmbeddedSrcMap
 
-  // Render an additional message if warnings were suppressed
-  void Compiler::reportSuppressedWarnings()
+  // Update `warnings` from the log, plus a final note if similar
+  // warnings were suppressed. Called after every compiler phase, so
+  // the note always reflects the total count (it does not alter the
+  // suppression state, which spans all phases).
+  void Compiler::updateWarnings()
   {
+    Logger& logger(*this);
+    warnings = logger.logstrm.str();
     if (suppressed > 0) {
       sass::sstream message;
       message << getTerm(Terminal::yellow);
@@ -279,11 +284,9 @@ namespace Sass {
       }
       message << getTerm(Terminal::reset);
       warnings += message.str();
-      reported.reset();
-      suppressed = 0;
     }
   }
-  // EO reportSuppressedWarnings
+  // EO updateWarnings
 
   // Memory returned by this function must be freed by caller via `sass_free_c_string`
   char* Compiler::renderSrcMapJson(const SourceMap& source_map)

@@ -339,10 +339,11 @@ namespace Sass {
     T& compiler, void (*fn)(T& compiler, ARGS...), ARGS... args)
   {
     // fn(compiler, args...); return;
-    Logger& logger(compiler);
     try { sass_wrap_msvc_exception(compiler, fn, args...); }
     catch (...) { handle_errors(compiler); }
-    compiler.warnings = logger.logstrm.str();
+    // Make the warnings of this phase available via the C-API
+    try { compiler.updateWarnings(); }
+    catch (...) { handle_errors(compiler); }
   }
   // EO sass_wrap_exception
 
@@ -592,11 +593,10 @@ extern "C" {
   // Getter for warnings that occurred during any step.
   const char* ADDCALL sass_compiler_get_warn_string(struct SassCompiler* compiler)
   {
-    return capiGuard<const char*>(__func__, nullptr, [&]() -> const char* {
-      if (Compiler::unwrap(compiler).warnings.empty()) return nullptr;
-      Compiler::unwrap(compiler).reportSuppressedWarnings();
-      return Compiler::unwrap(compiler).warnings.c_str();
-    });
+    // Pure getter; `warnings` is updated after every compiler phase
+    const Compiler& cpl(Compiler::unwrap(compiler));
+    if (cpl.warnings.empty()) return nullptr;
+    return cpl.warnings.c_str();
   }
 
   // Getter for output after parsing, compilation and rendering.
