@@ -11,6 +11,8 @@
 #include <utility>
 #include <iterator>
 #include <functional>
+#include <limits>
+#include <stdexcept>
 #include "ast_helpers.hpp"
 
 namespace Sass {
@@ -210,13 +212,19 @@ namespace Sass {
     if (m == 0) return {};
     if (n == 0) return {};
 
+    // Guard the table size against overflow (the vectors
+    // themselves throw if it exceeds their max_size)
+    if (mm > std::numeric_limits<size_t>::max() / nn) {
+      throw std::length_error("lcs input is too large");
+    }
+
     // MSVC does not support variable-length arrays
-    // To circumvent, allocate one array on the heap
-    // Then use a macro to access via double index
-    // e.g. `size_t L[m][n]` is supported by gcc
-    size_t* len = new size_t[mm * nn + 8];
-    bool* acc = new bool[mm * nn + 8]{};
-    T* res = new T[mm * nn + 8];
+    // To circumvent, use flat vectors (released on
+    // exceptions, e.g. if `select` throws) and use
+    // a macro to access them via double index.
+    sass::vector<size_t> len(mm * nn);
+    sass::vector<char> acc(mm * nn, 0);
+    sass::vector<T> res(mm * nn);
 
     #define LEN(x, y) len[(x) * nn + (y)]
     #define ACC(x, y) acc[(x) * nn + (y)]
@@ -274,11 +282,6 @@ namespace Sass {
 
     // reverse now as we used emplace_back
     std::reverse(lcs.begin(), lcs.end());
-
-    // Delete temp memory on heap
-    delete[] len;
-    delete[] acc;
-    delete[] res;
 
     #undef LEN
     #undef ACC

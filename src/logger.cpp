@@ -269,9 +269,6 @@ namespace Sass {
 
             // Print the initial code line
             auto line_beg = lines[i].begin();
-            if (line_beg + (beg.column - 1) == lines[i].end()) {
-              std::cerr << "Already at the end\n";
-            }
             utf8::advance(line_beg, beg.column, lines[i].end());
             lines[i].insert(line_beg - lines[i].begin(), getTerm(Terminal::red));
             stream << "  " << lines[i] << getTerm(Terminal::reset) << STRMLF;

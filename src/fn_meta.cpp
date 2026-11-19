@@ -309,8 +309,6 @@ namespace Sass {
             {}, {}, SASS_MEMORY_NEW(ValueExpression, callable->pstate(), arglist));
           eval.applyMixin(pstate, bc->name(), bc, ctblk, args);
           return SASS_MEMORY_NEW(Boolean, pstate, false);
-
-          std::cerr << "Is built in callable " << bc << "\n";
         }
         
         return SASS_MEMORY_NEW(Boolean, pstate, false);

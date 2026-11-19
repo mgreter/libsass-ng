@@ -1138,7 +1138,7 @@ namespace Sass {
   // ToDo: replace coerceToDeg/Rad
   double Number::coerceToUnit(Logger& logger, const Units& units, const sass::string& vname) const
   {
-    if (double factor = getUnitConversionFactor(unit_rad)) {
+    if (double factor = getUnitConversionFactor(units)) {
       return value() * factor;
     }
     CallStackFrame csf(logger, pstate());

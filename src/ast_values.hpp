@@ -250,6 +250,8 @@ namespace Sass {
     }
 
     Number* coerce(Logger& logger, Number& rhs);
+    // Returns the value converted to [units]. Throws if not compatible;
+    // the error message currently assumes [units] is an angle unit.
     double coerceToUnit(Logger& logger, const Units& units, const sass::string& vname) const;
     double factorToUnits(const Units& units) const;
 

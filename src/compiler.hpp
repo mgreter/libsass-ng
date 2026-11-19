@@ -191,6 +191,12 @@ namespace Sass {
     // import and then looks in all include folders.
     sass::string findFile(const sass::string& path);
 
+    // Resolve like an `@import` relative to the last import or include paths
+    sass::string findInclude(const sass::string& path);
+
+    // Directory of the last import (if any), then all include paths
+    sass::vector<sass::string> lookupPaths() const;
+
     // Look for all possible filename variants (e.g. partials)
     // Returns all results (e.g. for ambiguous but valid imports)
     const sass::vector<ResolvedImport>& findIncludes(const ImportRequest& import, bool forImport);

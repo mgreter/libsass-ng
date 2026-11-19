@@ -202,8 +202,10 @@ extern "C" {
   ADDAPI char* ADDCALL sass_compiler_find_file(const char* path, struct SassCompiler* compiler);
 
   // Resolve an include relative to last import or include paths in the sass option struct.
-  // This will do a lookup as LibSass would do internally (partials, different extensions).
-  // ToDo: Check if we should add `includeIndex` option to check for directory index files!?
+  // This will do a lookup as LibSass would do internally for `@import` (partials, different
+  // extensions, directory index files and import-only files). If multiple files match, the
+  // first one is returned. Returns NULL if nothing is found.
+  // Memory returned by this function must be freed via `sass_free_c_string`.
   ADDAPI char* ADDCALL sass_compiler_find_include(const char* path, struct SassCompiler* compiler);
 
   /////////////////////////////////////////////////////////////////////////

@@ -536,20 +536,10 @@ namespace Sass {
       // std::cerr << "      A -> " << oldExtensions.size() << "\n";
 
       const ExtensionObj& extension = oldExtensions[i];
-      if (extension == nullptr) {
-        std::cerr << "WHAT THE 1\n";
-        continue;
-      }
+      if (extension == nullptr) continue;
       const Extender& extender = extension->extender;
-      if (extension == nullptr) {
-        std::cerr << "WHAT THE 3\n";
-        continue;
-      }
       SimpleSelectorObj& target = extension->target;
-      if (target == nullptr) {
-        std::cerr << "WHAT THE 2\n";
-        continue;
-      }
+      if (target == nullptr) continue;
       CssMediaQueryVector* mediaContext = extension->mediaContext;
       // if (mediaContext == nullptr) {
       //   std::cerr << "WHAT THE 3\n";

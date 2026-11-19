@@ -965,7 +965,8 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Implementation for `sass_compiler_find_file`
-  sass::string Compiler::findFile(const sass::string& path)
+  // Paths used by `findFile` and `findInclude`
+  sass::vector<sass::string> Compiler::lookupPaths() const
   {
     // create the vector with paths to lookup
     sass::vector<sass::string> incpaths;
@@ -980,7 +981,19 @@ namespace Sass {
     }
     // Then look in every include path
     incpaths.insert(incpaths.end(), includePaths.begin(), includePaths.end());
-    return File::find_file(path, PWD, incpaths, fileExistsCache);
+    return incpaths;
+  }
+
+  // Resolves like an `@import` (partials, extensions,
+  // directory index and import-only files)
+  sass::string Compiler::findInclude(const sass::string& path)
+  {
+    return File::find_include(path, PWD, lookupPaths(), true, fileExistsCache);
+  }
+
+  sass::string Compiler::findFile(const sass::string& path)
+  {
+    return File::find_file(path, PWD, lookupPaths(), fileExistsCache);
   }
 
   // Look for all possible filename variants (e.g. partials)

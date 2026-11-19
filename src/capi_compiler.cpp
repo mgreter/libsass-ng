@@ -733,6 +733,15 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   // Resolve a file relative to last import or include paths in the sass option struct.
+  char* ADDCALL sass_compiler_find_include(const char* file, struct SassCompiler* compiler)
+  {
+    if (file == nullptr) return nullptr;
+    return capiGuard<char*>(__func__, nullptr, [&]() -> char* {
+      sass::string path(Compiler::unwrap(compiler).findInclude(file));
+      return path.empty() ? nullptr : sass_copy_c_string(path.c_str());
+    });
+  }
+
   char* ADDCALL sass_compiler_find_file(const char* file, struct SassCompiler* compiler)
   {
     if (file == nullptr) return nullptr;

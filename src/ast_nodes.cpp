@@ -259,13 +259,10 @@ namespace Sass {
   {
     switch (type) {
     case MapIterator:
-      cur = std::max(cur - offset, (size_t)0);
-      break;
     case ListIterator:
-      cur = std::max(cur - offset, (size_t)0);
-      break;
     case SingleIterator:
-      cur = 1;
+      // Clamp at the start (`cur - offset` would wrap around)
+      cur = offset > cur ? 0 : cur - offset;
       break;
     case NullPtrIterator:
       break;
@@ -276,19 +273,7 @@ namespace Sass {
   Iterator Iterator::operator-(size_t offset)
   {
     Iterator copy(*this);
-    switch (type) {
-    case MapIterator:
-      copy.cur = std::max(copy.cur - offset, (size_t)0);
-      break;
-    case ListIterator:
-      copy.cur = std::max(copy.cur - offset, (size_t)0);
-      break;
-    case SingleIterator:
-      copy.cur = 1;
-      break;
-    case NullPtrIterator:
-      break;
-    }
+    copy -= offset;
     return copy;
   }
 

@@ -422,9 +422,7 @@ namespace Sass {
     positional_(std::move(other.positional_)),
     named_(std::move(other.named_)),
     separator_(other.separator_)
-  {
-    std::cerr << "use move\n";
-  }
+  {}
 
   ArgumentResults& ArgumentResults::operator=(
     ArgumentResults&& other) noexcept

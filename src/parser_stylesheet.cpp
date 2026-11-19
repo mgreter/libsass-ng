@@ -1319,7 +1319,6 @@ namespace Sass {
         // if (!buffer.empty()) buffer.writeCharCode($space);
 
         InterpolationObj identifier = readInterpolatedIdentifier();
-        if (identifier == nullptr) std::cerr << "IS NULL";
         // std::cerr << "got ident\n";
         if (!buffer.empty()) buffer.writeCharCode($space);
         buffer.addInterpolation(identifier);
