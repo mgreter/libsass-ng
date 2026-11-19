@@ -58,7 +58,8 @@ namespace Sass {
     const sass::vector<sass::vector<T>>& in)
   {
 
-    size_t L = in.size(), n = 0;
+    const size_t L = in.size();
+    size_t n = 0;
 
     if (L == 0) return {};
     // Exit early if any entry is empty
@@ -139,7 +140,7 @@ namespace Sass {
   sass::vector<sass::vector<T>> permutateAlt(
     const sass::vector<sass::vector<T>>& in) {
 
-    size_t L = in.size();
+    const size_t L = in.size();
     size_t n = in.size() - 1;
 
     if (L == 0) return {};

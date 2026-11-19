@@ -1646,7 +1646,7 @@ namespace Sass {
         // Make sure we don't include duplicate originals, which could happen if
         // a style rule extends a component of its own selector.
         bool skip = false;
-        size_t key1 = equalityKey(complex1);
+        const size_t key1 = equalityKey(complex1);
         for (size_t j = 0; j < numOriginals; j++) {
           if (keys[j] == key1 && ObjEqualityFn(result[j], complex1)) {
             // std::cerr << "ROTATE SLICES\n";

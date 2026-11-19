@@ -1066,7 +1066,7 @@ namespace Sass {
     // Create final selectors from path permutations
     ComplexSelectors resolved;
     resolved.reserve(selectors.size());
-    for (ComplexSelectors& append : selectors) {
+    for (const ComplexSelectors& append : selectors) {
 
       if (append.empty()) continue;
 
