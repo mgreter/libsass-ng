@@ -829,7 +829,8 @@ namespace Sass {
     choices.erase(std::remove_if(choices.begin(), choices.end(), checkForEmptyChild
       <sass::vector<CplxSelComponentVector>>), choices.end());
 
-    auto perm = permutate(choices);
+    // No call stack is available here (also used by `selector.unify`)
+    auto perm = permutate(choices, {}, base->pstate());
 
     ComplexSelectors foobar;
     for (const auto& path : perm) {

@@ -1067,7 +1067,7 @@ namespace Sass {
 
     // Permutate through all paths
     // ToDo: why alternate version
-    selectors = permutateAlt(selectors);
+    selectors = permutateAlt(selectors, traces, pstate());
 
 
     // Create final selectors from path permutations
@@ -1312,9 +1312,13 @@ namespace Sass {
   {
     // // if (parent == nullptr && preserve_parent) return this;
     sass::vector<ComplexSelectors> lists;
+    size_t total = 0;
     for (ComplexSelector* sel : elements()) {
       lists.emplace_back(sel->resolveParentSelectors
       (parent, traces, implicit_parent));
+      // Each nesting level may multiply the list
+      total += lists.back().size();
+      assertSelectorListLimit(total, traces, pstate());
     }
     return SASS_MEMORY_NEW(SelectorList, pstate(),
       flattenVertically<ComplexSelectorObj>(lists));

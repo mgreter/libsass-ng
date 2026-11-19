@@ -243,6 +243,10 @@ namespace Sass {
     public:
       EndlessExtendError(BackTraces traces);
     };
+    class SelectorTooLarge : public Base {
+    public:
+      SelectorTooLarge(BackTraces traces);
+    };
 
     class OpNotCalcSafe : public RuntimeException {
     public:

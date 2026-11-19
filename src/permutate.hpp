@@ -12,25 +12,49 @@
 
 #include <cstddef>
 #include <vector>
+#include "backtrace.hpp"
+#include "exceptions.hpp"
 
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Returns the number of paths [permutate] will return for [in], used
-  // to reserve the output. Saturates instead of overflowing; it is only
-  // a capacity hint, so it is capped to keep the reservation sane.
+  // Returns the number of paths [permutate] will return for [in], or
+  // `limit + 1` if there are more than [limit] (avoids any overflow).
   template <class T>
-  size_t permutationCount(const sass::vector<sass::vector<T>>& in)
+  size_t permutationCount(const sass::vector<sass::vector<T>>& in, size_t limit)
   {
-    const size_t cap = 4096;
     size_t count = 1;
     for (const auto& group : in) {
       if (group.empty()) return 0;
-      if (count > cap / group.size()) return cap;
+      if (count > limit / group.size()) return limit + 1;
       count *= group.size();
     }
+    return count;
+  }
+
+  // Throws if a selector list grew to more than `SassMaxSelectorPaths`
+  // complex selectors (e.g. by repeated `@extend` or deep nesting).
+  inline void assertSelectorListLimit(size_t size,
+    const BackTraces& traces, const SourceSpan& pstate)
+  {
+    if (size > SassMaxSelectorPaths) {
+      // Add the location on a copy (leaves the callers stack intact)
+      BackTraces stack(traces);
+      stack.push_back(BackTrace(pstate));
+      throw Exception::SelectorTooLarge(stack);
+    }
+  }
+
+  // Throws if [permutate] would return more than `SassMaxSelectorPaths`
+  // paths for [in], before allocating anything. Returns the count.
+  template <class T>
+  size_t assertPermutationLimit(const sass::vector<sass::vector<T>>& in,
+    const BackTraces& traces, const SourceSpan& pstate)
+  {
+    const size_t count = permutationCount(in, SassMaxSelectorPaths);
+    assertSelectorListLimit(count, traces, pstate);
     return count;
   }
 
@@ -55,8 +79,11 @@ namespace Sass {
   // Note: called `paths` in dart-sass
   template <class T>
   sass::vector<sass::vector<T>> permutate(
-    const sass::vector<sass::vector<T>>& in)
+    const sass::vector<sass::vector<T>>& in,
+    const BackTraces& traces, const SourceSpan& pstate)
   {
+
+    const size_t count = assertPermutationLimit(in, traces, pstate);
 
     const size_t L = in.size();
     size_t n = 0;
@@ -72,7 +99,7 @@ namespace Sass {
     state.resize(L + 1);
     // size_t* state = new size_t[L + 1]{};
     sass::vector<sass::vector<T>> out;
-    out.reserve(permutationCount(in));
+    out.reserve(count); // exact and bounded by the limit
 
     // First initialize all states for every permutation group
     for (size_t i = 0; i < L; i += 1) {
@@ -138,7 +165,10 @@ namespace Sass {
   // Used by resolveParentSelectors
   template <class T>
   sass::vector<sass::vector<T>> permutateAlt(
-    const sass::vector<sass::vector<T>>& in) {
+    const sass::vector<sass::vector<T>>& in,
+    const BackTraces& traces, const SourceSpan& pstate) {
+
+    const size_t count = assertPermutationLimit(in, traces, pstate);
 
     const size_t L = in.size();
     size_t n = in.size() - 1;
@@ -153,7 +183,7 @@ namespace Sass {
     state.resize(L + 1);
     // size_t* state = new size_t[L];
     sass::vector<sass::vector<T>> out;
-    out.reserve(permutationCount(in));
+    out.reserve(count); // exact and bounded by the limit
 
     // First initialize all states for every permutation group
     for (size_t i = 0; i < L; i += 1) {

@@ -853,6 +853,8 @@ namespace Sass {
         results.insert(results.end(),
           std::make_move_iterator(extended.begin()),
           std::make_move_iterator(extended.end()));
+        // Each extension may multiply the list (k^n after n steps)
+        assertSelectorListLimit(results.size(), *traces, list->pstate());
       }
     }
 
@@ -1026,7 +1028,7 @@ namespace Sass {
 
     // ToDo: either change weave or paths to work with the same data?
     sass::vector<ComplexSelectors>
-      paths = permutate(extendedNotExpanded);
+      paths = permutate(extendedNotExpanded, *traces, complex->pstate());
 
     for (const ComplexSelectors& path : paths) {
       // Unpack the inner complex selector to component list
@@ -1230,7 +1232,8 @@ namespace Sass {
     // bool first = mode != ExtendMode::REPLACE;
     // ComplexSelectors result;
 
-    sass::vector<sass::vector<Extender>> extenderPaths = permutate(options);
+    sass::vector<sass::vector<Extender>> extenderPaths =
+      permutate(options, *traces, compound->pstate());
 
     size_t i = 0;
     result.clear();

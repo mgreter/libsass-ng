@@ -41,6 +41,15 @@
 #ifndef SassMaxNumberUnits
 #define SassMaxNumberUnits 1024
 #endif
+// Maximum number of complex selectors a selector list may expand to,
+// via `@extend` or parent selectors in nested rules, and maximum number
+// of combinations in a single expansion step. Expansion is exponential
+// (a list extended n times with k alternatives each, or nested n levels
+// deep with k selectors each, has k^n entries), so a few hundred bytes
+// of Sass could otherwise exhaust memory.
+#ifndef SassMaxSelectorPaths
+#define SassMaxSelectorPaths 100000
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // Should we preserve color information when possible

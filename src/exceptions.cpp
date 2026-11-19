@@ -161,6 +161,14 @@ namespace Sass {
     {
       msg = "Extend is creating an absurdly big selector, aborting!";
     }
+    SelectorTooLarge::SelectorTooLarge(BackTraces traces)
+      : Base(def_msg, traces)
+    {
+      sass::sstream strm;
+      strm << "Selector would expand to more than "
+        << SassMaxSelectorPaths << " combinations, aborting!";
+      msg = strm.str();
+    }
 
     DuplicateKeyError::DuplicateKeyError(BackTraces traces, const Map& dup, const Value& org)
     : Base(def_msg, traces), dup(dup), org(org)
