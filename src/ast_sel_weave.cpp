@@ -403,7 +403,7 @@ namespace Sass {
 
 
   template<class T>
-  T backOrNull(sass::vector<T> asd) {
+  T backOrNull(const sass::vector<T>& asd) {
     if (asd.size() == 0) return nullptr;
     return asd.back();
   }

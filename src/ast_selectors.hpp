@@ -857,7 +857,7 @@ namespace Sass {
 
     sass::string inspecter() const;
 
-    void appendCombinators(SelectorCombinatorVector trails);
+    void appendCombinators(const SelectorCombinatorVector& trails);
 
     CplxSelComponent* withAdditionalCombinators(const SelectorCombinatorVector& combinators);
 
@@ -1092,7 +1092,7 @@ namespace Sass {
         SelectorList* parent,
         BackTraces& traces,
         SelectorCombinatorVector prefixes,
-        SelectorCombinatorVector tails,
+        const SelectorCombinatorVector& tails,
         bool implicit_parent = true);
 
     // Determine if given `this` is a sub-selector of `sub`

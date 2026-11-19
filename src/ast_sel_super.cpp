@@ -338,15 +338,17 @@ namespace Sass {
 /// [Iterable.length] fields.
   static bool _compoundComponentsIsSuperselector(
     const SimpleSelectors& compound1,
-    SimpleSelectors compound2,
+    const SimpleSelectors& compound2,
     const sass::vector<CplxSelComponentObj>& parents)
   {
     if (compound1.empty()) return true;
     if (compound2.empty()) {
-      compound2.push_back(
+      // An empty compound acts like the universal selector
+      const SimpleSelectors universal{
         new TypeSelector(
           SourceSpan::internal32("FAKE"),
-          "*", "*"));
+          "*", "*") };
+      return compoundIsSuperselector(compound1, universal, parents);
     }
     return compoundIsSuperselector(compound1, compound2, parents);
   }
@@ -466,7 +468,7 @@ namespace Sass {
   }
 
   template<class T>
-  T frontOrNull(sass::vector<T> asd) {
+  T frontOrNull(const sass::vector<T>& asd) {
     if (asd.size() == 0) return nullptr;
     return asd.front();
   }
@@ -644,8 +646,8 @@ namespace Sass {
   // [complex] matches, as well as possibly additional elements.
   /////////////////////////////////////////////////////////////////////////
   static bool listHasSuperslectorForComplex(
-    ComplexSelectors list,
-    ComplexSelectorObj complex)
+    const ComplexSelectors& list,
+    const ComplexSelectorObj& complex)
   {
     // Return true if every [complex] selector on [list2]
     // is a super selector of the full selector [list1].

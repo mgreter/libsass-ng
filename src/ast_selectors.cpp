@@ -841,7 +841,7 @@ namespace Sass {
 
 
   template <typename T>
-  sass::string VecToString(sass::vector<T> exts) {
+  sass::string VecToString(const sass::vector<T>& exts) {
     sass::string msg = "[";
     for (auto& entry : exts) {
       if (msg != "[") msg += ", ";
@@ -902,8 +902,15 @@ namespace Sass {
     return text;
   }
 
-  void CplxSelComponent::appendCombinators(SelectorCombinatorVector trails)
+  void CplxSelComponent::appendCombinators(const SelectorCombinatorVector& trails)
   {
+    // Inserting a vector's own range into itself is undefined
+    if (&trails == &combinators_) {
+      SelectorCombinatorVector copy(trails);
+      combinators_.insert(combinators_.end(),
+        copy.begin(), copy.end());
+      return;
+    }
     combinators_.insert(combinators_.end(),
       trails.begin(), trails.end());
   }
@@ -1032,7 +1039,7 @@ namespace Sass {
         if (n == 0) leads.insert(leads.end(),
           leadingCombinators_.begin(),
           leadingCombinators_.end());
-        auto tails(component->combinators());
+        const SelectorCombinatorVector& tails(component->combinators());
 
         // loosing postfix combinators of component?
         ComplexSelectors complexes =
@@ -1151,7 +1158,7 @@ namespace Sass {
     CompoundSelector::resolveParentSelectors2(
       SelectorList* parents, BackTraces& traces,
       SelectorCombinatorVector prefixes, // from complex selector
-      SelectorCombinatorVector tails, // From compound component
+      const SelectorCombinatorVector& tails, // From compound component
       bool implicit_parent)
   {
 
