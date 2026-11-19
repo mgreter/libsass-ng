@@ -1065,11 +1065,18 @@ namespace Sass {
 
     // Create final selectors from path permutations
     ComplexSelectors resolved;
+    resolved.reserve(selectors.size());
     for (ComplexSelectors& append : selectors) {
 
       if (append.empty()) continue;
 
       ComplexSelectorObj front = SASS_MEMORY_COPY(append[0]);
+      // Reserve for all components appended below
+      size_t components = front->size();
+      for (size_t i = 1; i < append.size(); i += 1) {
+        components += append[i]->size();
+      }
+      front->elements().reserve(components);
       // ToDo: this seems suspicious, why this logic?
       if (hasPreLineFeed() && expl == nullptr) {
         front->hasPreLineFeed(true);

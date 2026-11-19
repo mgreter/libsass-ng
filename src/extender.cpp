@@ -13,6 +13,7 @@
 #include "ast_css.hpp"
 
 #include "debugger.hpp"
+#include <algorithm>
 
 namespace Sass {
 
@@ -1572,6 +1573,37 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
 
+  // Returns a key that is equal for all selectors that compare equal.
+  // Only uses data `operator==` compares and no cached hashes (which
+  // may be stale after in-place mutation), so it can be used to rule
+  // out equality cheaply: different keys mean not equal.
+  static size_t equalityKey(const ComplexSelector* complex)
+  {
+    // Cheap mixing is enough, collisions only cost a full compare
+    size_t key = complex->size();
+    auto mix = [&key](size_t value) { key = key * 1000003 ^ value; };
+    for (const CplxSelComponentObj& component : complex->elements()) {
+      mix(component->combinators().size());
+      const CompoundSelector* compound = component->selector();
+      if (compound == nullptr) continue;
+      mix(compound->size());
+      for (const SimpleSelectorObj& simple : compound->elements()) {
+        // Parent selectors compare equal regardless of their name
+        if (simple->isaCssParentSelector()) continue;
+        // Use length and up to the last four chars of the name
+        const sass::string& name = simple->name();
+        mix(name.size());
+        size_t tail = 0;
+        for (size_t i = name.size() > 4 ? name.size() - 4 : 0; i < name.size(); i++) {
+          tail = (tail << 8) | (unsigned char)name[i];
+        }
+        mix(tail);
+      }
+    }
+    return key;
+  }
+
+
   /////////////////////////////////////////////////////////////////////////
   // Removes elements from [selectors] if they're subselectors of other
   // elements. The [isOriginal] callback indicates which selectors are
@@ -1598,6 +1630,12 @@ namespace Sass {
     auto result = ComplexSelectors();
     size_t numOriginals = 0;
 
+    // Keys for the selectors in [result] (same order). Equal selectors
+    // have equal keys, so the quadratic duplicate scan below only needs
+    // the full comparison if the keys match.
+    sass::vector<size_t> keys;
+    keys.reserve(selectors.size());
+
     for (size_t i = selectors.size(); i-- > 0;) {
       //std::cerr << "LOOP " << i << "\n";
       const auto& complex1 = selectors[i];
@@ -1608,10 +1646,13 @@ namespace Sass {
         // Make sure we don't include duplicate originals, which could happen if
         // a style rule extends a component of its own selector.
         bool skip = false;
+        size_t key1 = equalityKey(complex1);
         for (size_t j = 0; j < numOriginals; j++) {
-          if (ObjEqualityFn(result[j], complex1)) {
+          if (keys[j] == key1 && ObjEqualityFn(result[j], complex1)) {
             // std::cerr << "ROTATE SLICES\n";
             rotateSlice(result, 0, j + 1);
+            // Same rotation as `rotateSlice` (last element to the front)
+            std::rotate(keys.begin(), keys.begin() + j, keys.begin() + j + 1);
             //std::cerr << "SKIP SLICE\n";
             skip = true;
             break;
@@ -1623,6 +1664,7 @@ namespace Sass {
         //std::cerr << "insert result " << complex1->inspect() << "\n";
         //std::cerr << "insert result 1 " << complex1->inspect() << "\n";
         result.insert(result.begin(), complex1);
+        keys.insert(keys.begin(), key1);
         continue;
       }
 
@@ -1657,6 +1699,7 @@ namespace Sass {
       // std::cerr << "insert result 2 " << complex1->inspect() << "\n";
       // ToDo: Maybe use deque for front insert?
       result.insert(result.begin(), complex1);
+      keys.insert(keys.begin(), equalityKey(complex1));
 
       // Look in [result] rather than [selectors] for selectors after [i]. This
       // ensures that we aren't comparing against a selector that's already been

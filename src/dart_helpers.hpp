@@ -96,9 +96,12 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   template <typename T>
-  sass::vector<T> flattenVertically(sass::vector<sass::vector<T>> lists)
+  sass::vector<T> flattenVertically(const sass::vector<sass::vector<T>>& lists)
   {
     sass::vector<T> result;
+    size_t total = 0;
+    for (const auto& list : lists) total += list.size();
+    result.reserve(total);
     // Loop until all arrays are exhausted
     size_t lvl = 0; bool consumed = false; do {
       // aborts when nothing more can be consumed

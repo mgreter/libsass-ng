@@ -18,6 +18,25 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Returns the number of paths [permutate] will return for [in], used
+  // to reserve the output. Saturates instead of overflowing; it is only
+  // a capacity hint, so it is capped to keep the reservation sane.
+  template <class T>
+  size_t permutationCount(const sass::vector<sass::vector<T>>& in)
+  {
+    const size_t cap = 4096;
+    size_t count = 1;
+    for (const auto& group : in) {
+      if (group.empty()) return 0;
+      if (count > cap / group.size()) return cap;
+      count *= group.size();
+    }
+    return count;
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // Returns a list of all possible paths through the given lists.
   //
   // For example, given `[[1, 2], [3, 4], [5, 6]]`, this returns:
@@ -52,6 +71,7 @@ namespace Sass {
     state.resize(L + 1);
     // size_t* state = new size_t[L + 1]{};
     sass::vector<sass::vector<T>> out;
+    out.reserve(permutationCount(in));
 
     // First initialize all states for every permutation group
     for (size_t i = 0; i < L; i += 1) {
@@ -59,6 +79,7 @@ namespace Sass {
     }
     while (true) {
       sass::vector<T> perm;
+      perm.reserve(L);
       // Create one permutation for state
       for (size_t i = 0; i < L; i += 1) {
         perm.emplace_back(in.at(i).at(in[i].size() - state[i] - 1));
@@ -69,7 +90,7 @@ namespace Sass {
         while (n < L && state[++n] == 0) {}
 
         if (n == L) {
-          out.emplace_back(perm);
+          out.emplace_back(std::move(perm));
           break;
         }
 
@@ -86,7 +107,7 @@ namespace Sass {
       else {
         state[n] -= 1;
       }
-      out.emplace_back(perm);
+      out.emplace_back(std::move(perm));
     }
 
     // delete[] state;
@@ -131,6 +152,7 @@ namespace Sass {
     state.resize(L + 1);
     // size_t* state = new size_t[L];
     sass::vector<sass::vector<T>> out;
+    out.reserve(permutationCount(in));
 
     // First initialize all states for every permutation group
     for (size_t i = 0; i < L; i += 1) {
@@ -139,6 +161,7 @@ namespace Sass {
 
     while (true) {
       sass::vector<T> perm;
+      perm.reserve(L);
       // Create one permutation for state
       for (size_t i = 0; i < L; i += 1) {
         perm.emplace_back(in.at(i).at(in[i].size() - state[i] - 1));
@@ -159,14 +182,14 @@ namespace Sass {
           n = L - 1;
         }
         else {
-          out.emplace_back(perm);
+          out.emplace_back(std::move(perm));
           break;
         }
       }
       else {
         state[n] -= 1;
       }
-      out.emplace_back(perm);
+      out.emplace_back(std::move(perm));
     }
 
     // delete[] state;
