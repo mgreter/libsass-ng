@@ -148,8 +148,8 @@ namespace Sass {
 
     ~ExtensionStore();
 
-    void addNonOriginalSelectors(const ExtSmplSelSet& originalSelectors, ExtSet& unsatisfiedExtensions);
-    void delNonOriginalSelectors(const ExtSmplSelSet& originalSelectors, ExtSet& unsatisfiedExtensions);
+    void addNonOriginalSelectors(const ExtSmplSelSet& originalSelectors, ExtSet& unsatisfiedExtensions) const;
+    void delNonOriginalSelectors(const ExtSmplSelSet& originalSelectors, ExtSet& unsatisfiedExtensions) const;
 
     /////////////////////////////////////////////////////////////////////////
     // Empty desctructor
@@ -238,7 +238,7 @@ namespace Sass {
     void addExtensions(
       sass::vector<ExtensionStoreObj>& extensionStores);
 
-    Extension* PutOrMerge(ExtSelExtMapEntry& map, const ComplexSelectorObj& key, Extension* value);
+    static Extension* PutOrMerge(ExtSelExtMapEntry& map, const ComplexSelectorObj& key, Extension* value);
 
   private:
 
@@ -381,7 +381,7 @@ namespace Sass {
     ComplexSelectors _unifyExtenders(
       sass::vector<Extender>& extenders,
       CssMediaQueryVector* mediaQueryContext,
-      const SourceSpan span);
+      const SourceSpan& span) const;
 
     /////////////////////////////////////////////////////////////////////////
     // Removes elements from [selectors] if they're subselectors of other
@@ -391,7 +391,7 @@ namespace Sass {
     ComplexSelectors _trim(
       const ComplexSelectors& selectors,
       std::function<bool(ComplexSelector* complex)> isOriginal
-      /*bool(*isOriginal)(const ComplexSelector* complex)*/);
+      /*bool(*isOriginal)(const ComplexSelector* complex)*/) const;
 
     /////////////////////////////////////////////////////////////////////////
     // Returns the maximum specificity of the given [simple] source selector.
@@ -420,7 +420,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
     public:
-    ExtensionStore* clone(sass::map::unordered::ptr<SelectorListObj, BoxObj>& oldToNewSelectors);
+    ExtensionStore* clone(sass::map::unordered::ptr<SelectorListObj, BoxObj>& oldToNewSelectors) const;
 
   };
 

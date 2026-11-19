@@ -75,7 +75,7 @@ namespace Sass {
 
     bool isInvisible() const;
 
-    void assertNotBogus(Logger& logger, const sass::string& name);
+    void assertNotBogus(Logger& logger, const sass::string& name) const;
 
     // To be implemented by specialization
     virtual unsigned long specificity() const = 0;
@@ -1150,7 +1150,7 @@ namespace Sass {
     Box* sealed();
 
     // Unify two selector lists with each other
-    SelectorList* unifyWith(SelectorList*);
+    SelectorList* unifyWith(SelectorList*) const;
 
     const Selector* getExplicitParent() const;
 

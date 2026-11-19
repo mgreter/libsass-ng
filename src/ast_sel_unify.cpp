@@ -397,7 +397,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   // only called from the sass function `selector-unify`
   /////////////////////////////////////////////////////////////////////////
-  SelectorList* SelectorList::unifyWith(SelectorList* rhs)
+  SelectorList* SelectorList::unifyWith(SelectorList* rhs) const
   {
     ComplexSelectors selectors;
     // Unify all of children with RHS's children,

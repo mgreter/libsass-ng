@@ -109,7 +109,7 @@ namespace Sass {
   // extensionsWhereTarget((target) = > !originalSelectors.contains(target))
   void ExtensionStore::addNonOriginalSelectors(
     const ExtSmplSelSet& originalSelectors,
-    ExtSet& unsatisfiedExtensions)
+    ExtSet& unsatisfiedExtensions) const
   {
     for (const auto& entry : extensionsBySelector) {
       // Skip if entry is known in original selectors (by ptr)
@@ -128,11 +128,11 @@ namespace Sass {
   // extensionsWhereTarget((target) = > !originalSelectors.contains(target))
   void ExtensionStore::delNonOriginalSelectors(
     const ExtSmplSelSet& originalSelectors,
-    ExtSet& unsatisfiedExtensions)
+    ExtSet& unsatisfiedExtensions) const
   {
-    for (auto& entry : extensionsBySelector) {
+    for (const auto& entry : extensionsBySelector) {
       if (!originalSelectors.count(entry.first)) continue;
-      for (auto& extension : entry.second) {
+      for (const auto& extension : entry.second) {
         if (extension.second.isNull()) continue;
         extension.second->EraseAllFrom(unsatisfiedExtensions);
       }
@@ -1296,7 +1296,7 @@ namespace Sass {
   ComplexSelectors ExtensionStore::_unifyExtenders(
     sass::vector<Extender>& extenders,
     CssMediaQueryVector* mediaQueryContext,
-    const SourceSpan pstate)
+    const SourceSpan& pstate) const
   {
 
     ComplexSelectors toUnify;
@@ -1612,7 +1612,7 @@ namespace Sass {
 
   ComplexSelectors ExtensionStore::_trim(
     const ComplexSelectors& selectors,
-    std::function<bool(ComplexSelector* complex)> isOriginal)
+    std::function<bool(ComplexSelector* complex)> isOriginal) const
   {
 
     // Avoid truly horrific quadratic behavior.
@@ -1799,7 +1799,7 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
-  ExtensionStore* ExtensionStore::clone(sass::map::unordered::ptr<SelectorListObj, BoxObj>& oldToNewSelectors)
+  ExtensionStore* ExtensionStore::clone(sass::map::unordered::ptr<SelectorListObj, BoxObj>& oldToNewSelectors) const
   {
 
     ExtSelMap newSelectors;
@@ -1843,8 +1843,9 @@ namespace Sass {
 
         oldToNewSelectors[selector->value] = newSelector->seal();
 
-        if (mediaContexts.count(selector) != 0) {
-          newMediaContexts[newSelector] = mediaContexts[selector];
+        const auto media = mediaContexts.find(selector);
+        if (media != mediaContexts.end()) {
+          newMediaContexts[newSelector] = media->second;
         }
 
       }

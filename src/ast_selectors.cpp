@@ -80,7 +80,7 @@ namespace Sass {
     return const_cast<Selector*>(this)->accept(&visitor);
   }
 
-  void Selector::assertNotBogus(Logger& logger, const sass::string& name)
+  void Selector::assertNotBogus(Logger& logger, const sass::string& name) const
   {
     if (isBogusStrict()) {
       logger.addDeprecation(pstate(), Logger::WARN_SEL_BOGUS, [&]() {
