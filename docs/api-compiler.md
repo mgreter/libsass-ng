@@ -137,6 +137,9 @@ void sass_compiler_set_precision(struct SassCompiler* compiler, int precision);
 struct SassImport* sass_compiler_get_entry_point(struct SassCompiler* compiler);
 
 // Setter for compiler entry point (which file or data to parse first).
+// Note: the compiler keeps its own reference; release yours afterwards via
+// `sass_delete_import`, otherwise the import (including its source content)
+// is never freed, even after `sass_delete_compiler`.
 void sass_compiler_set_entry_point(struct SassCompiler* compiler, struct SassImport* import);
 
 // Getter for compiler output path (where to store the result)
