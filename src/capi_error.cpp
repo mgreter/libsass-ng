@@ -64,11 +64,21 @@ void SassError::writeCss(std::ostream& css) const
   StringUtils::makeRightTrimmed(comment);
 
   // Remove ANSI color codes
+  // Strips CSI sequences (ESC '[' params final-byte), e.g.
+  // "\x1B[1;31m"; a lone or truncated ESC is removed on its own.
   size_t found = comment.find_first_of("\x1B");
   while (found != std::string::npos) {
-    auto end = found + 2;
-    while (comment[end] != '\0' && comment[end] != ';' && comment[end] != 'm') end += 1;
-    comment.replace(found, end - found + (comment[end] == '\0' ? 0 : 1), "");
+    size_t end = found + 1;
+    if (end < comment.size() && comment[end] == '[') {
+      size_t pos = end + 1;
+      // Parameter and intermediate bytes (0x20-0x3F)
+      while (pos < comment.size() &&
+        comment[pos] >= 0x20 && comment[pos] <= 0x3F) pos += 1;
+      // Final byte (0x40-0x7E) terminates the sequence
+      if (pos < comment.size() &&
+        comment[pos] >= 0x40 && comment[pos] <= 0x7E) end = pos + 1;
+    }
+    comment.erase(found, end - found);
     found = comment.find_first_of("\x1B", found);
   }
 
@@ -76,12 +86,17 @@ void SassError::writeCss(std::ostream& css) const
   sass::string content(comment);
 
   // Sanitize comment closer with unicode
+  // Replaces the slash of every "*/" with U+2215 (division slash)
   found = comment.find_first_of("/");
   while (found != std::string::npos) {
     if (found != 0 && comment[found - 1] == '*') {
-      comment.replace(found, 2, "*\xE2\x88\x95");
+      comment.replace(found, 1, "\xE2\x88\x95");
+      found += 3; // skip the inserted bytes
     }
-    found = comment.find_first_of("/", found + 4);
+    else {
+      found += 1;
+    }
+    found = comment.find_first_of("/", found);
   }
   // Prefix each line with another star
   found = comment.find_first_of("\n");
@@ -127,7 +142,7 @@ void SassError::writeCss(std::ostream& css) const
   auto end = content.end();
   while (cur != end) {
     uint32_t cp = utf8::next(cur, end);
-    if (cp <= 127) {
+    if (cp >= 0x20 && cp < 0x7F) {
       // Just pass the char
       css << (char)cp;
     }
