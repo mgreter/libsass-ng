@@ -503,7 +503,6 @@ namespace Sass {
       CssRootObj rv = _combineCss(root, true);
       root->compiled = oldcomp;
       rv->accept(this);
-      debug_ast(css);
 
       ImportedCssVisitor visitor(*this);
       for (auto& child : css->elements()) {
