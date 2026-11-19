@@ -18,8 +18,11 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
 
   struct SassMapIterator {
-    Hashed<ValueObj, ValueObj>::ordered_map_type::iterator pos;
-    Hashed<ValueObj, ValueObj>::ordered_map_type::iterator end;
+    // Keeps the map alive while the iterator exists
+    MapObj map;
+    // An index (unlike raw iterators) can't dangle when the map is
+    // altered; every access is bounds-checked against the current size
+    size_t index;
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -122,41 +125,49 @@ extern "C" {
     });
   }
 
-  // Create an iterator to loop over all key/value pairs of this map
-  // This iterator will get invalid once you alter the underlying map
+  // Create an iterator to loop over all key/value pairs of this map.
+  // The iterator holds a reference to the map, so it stays valid even if
+  // the caller releases the map first. Returns NULL if [map] is not a map.
   struct SassMapIterator* ADDCALL sass_map_make_iterator(struct SassValue* map)
   {
-    return new SassMapIterator{ getMap(map)->begin(), getMap(map)->end() };
+    Map* sassMap = getMap(map);
+    if (sassMap == nullptr) return nullptr;
+    return capiGuard<struct SassMapIterator*>(__func__, nullptr,
+      [&]() -> struct SassMapIterator* {
+        return new SassMapIterator{ sassMap, 0 };
+      });
   }
 
-  // Delete the iterator after you are done with it
+  // Delete the iterator after you are done with it (accepts NULL)
   void ADDCALL sass_map_delete_iterator(struct SassMapIterator* it)
   {
     delete it;
   }
 
-  // Get key for the current map iterator position
+  // Get key for the current map iterator position (NULL once exhausted)
   struct SassValue* ADDCALL sass_map_iterator_get_key(struct SassMapIterator* it)
   {
-    return Value::wrap(it->pos->first);
+    if (it->index >= it->map->size()) return nullptr;
+    return Value::wrap((it->map->begin() + it->index)->first);
   }
 
-  // Get value for the current map iterator position
+  // Get value for the current map iterator position (NULL once exhausted)
   struct SassValue* ADDCALL sass_map_iterator_get_value(struct SassMapIterator* it)
   {
-    return Value::wrap(it->pos->second);
+    if (it->index >= it->map->size()) return nullptr;
+    return Value::wrap((it->map->begin() + it->index)->second);
   }
 
   // Returns true once the iterator has reached the end
   bool ADDCALL sass_map_iterator_exhausted(struct SassMapIterator* it)
   {
-    return it->pos == it->end;
+    return it->index >= it->map->size();
   }
 
-  // Advance the iterator to the next key/value pair or the end
+  // Advance the iterator to the next key/value pair (stops at the end)
   void ADDCALL sass_map_iterator_next(struct SassMapIterator* it)
   {
-    it->pos += 1;
+    if (it->index < it->map->size()) it->index += 1;
   }
 
   /////////////////////////////////////////////////////////////////////////

@@ -184,6 +184,19 @@ extern "C" {
 
   ADDAPI void ADDCALL sass_map_set(struct SassValue* m, struct SassValue* k, struct SassValue* v);
 
+  // Map iterator, e.g.:
+  //   struct SassMapIterator* it = sass_map_make_iterator(map);
+  //   while (!sass_map_iterator_exhausted(it)) {
+  //     struct SassValue* key = sass_map_iterator_get_key(it);
+  //     struct SassValue* val = sass_map_iterator_get_value(it);
+  //     sass_map_iterator_next(it);
+  //   }
+  //   sass_map_delete_iterator(it);
+  // The iterator holds its own reference to the map, so it stays valid if
+  // the map is released first. `sass_map_make_iterator` returns NULL if the
+  // value is not a map. Key and value are borrowed (see above) and NULL once
+  // the iterator is exhausted; `next` stops at the end. Altering the map while
+  // iterating is safe, but entries may then be skipped or seen twice.
   ADDAPI struct SassMapIterator* ADDCALL sass_map_make_iterator(struct SassValue* map);
   ADDAPI void ADDCALL sass_map_delete_iterator(struct SassMapIterator* it);
   ADDAPI bool ADDCALL sass_map_iterator_exhausted(struct SassMapIterator* it);
