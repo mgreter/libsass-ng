@@ -156,7 +156,7 @@ static void getopt_set_srcmap_mode(struct SassGetOpt* getopt, union SassOptionVa
 static void getopt_set_srcmap_file_urls(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.file_urls = value.boolean; }
 static void getopt_set_srcmap_contents(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.embed_contents = value.boolean; }
 //static void getopt_set_srcmap_root(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.root = value.boolean; }
-static void getopt_set_srcmap_path(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.path = value.boolean; }
+static void getopt_set_srcmap_path(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.mapopt.path = value.string ? value.string : ""; }
 static void getopt_set_term_unicode(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_unicode = value.boolean; }
 static void getopt_set_term_colors(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.support_colors = value.boolean; }
 static void getopt_set_suppress_stderr(struct SassGetOpt* getopt, union SassOptionValue value) { getopt->compiler.suppress_stderr = true; }
@@ -183,7 +183,8 @@ static void getopt_set_precision(struct SassGetOpt* getopt, union SassOptionValu
 }
 
 static void cli_sass_compiler_set_line_numbers(struct SassGetOpt* getopt, union SassOptionValue value) {
-  std::cerr << "cli_sass_compiler_set_line_numbers " << value.boolean << "\n";
+  // Emit `/* line N, file */` comments before each rule
+  getopt->compiler.source_comments = value.boolean;
 }
 
 
@@ -201,7 +202,8 @@ static void getopt_print_help(struct SassGetOpt* getopt, std::ostream& stream);
 
 static void cli_sass_compiler_input_file_arg(struct SassGetOpt* getopt, const char* path)
 {
-  struct SassImport* entry = strncmp(path, "--", 2) == 0
+  // A lone `--` means read from stdin (see `INPUT_FILE|--`)
+  struct SassImport* entry = strcmp(path, "--") == 0
     ? sass_make_stdin_import("stream://stdin")
     : sass_make_file_import(path);
   sass_compiler_set_entry_point(getopt->compiler.wrap(), entry);
@@ -305,6 +307,8 @@ static sass::vector<const SassOption*> find_long_options(struct SassGetOpt* geto
 {
   sass::vector<const SassOption*> matches;
   for (const SassOption& option : getopt->options) {
+    // Options may be registered with only a short name
+    if (option.name == nullptr) continue;
     if (StringUtils::startsWithIgnoreCase(option.name, arg)) {
       if (arg == option.name) return { &option };
       matches.push_back(&option);
@@ -313,7 +317,8 @@ static sass::vector<const SassOption*> find_long_options(struct SassGetOpt* geto
       if (StringUtils::startsWithIgnoreCase(arg, "no-", 3)) {
         sass::string name(arg.begin() + 3, arg.end());
         if (StringUtils::startsWithIgnoreCase(option.name, name)) {
-          if (arg == option.name) return { &option };
+          // Compare the name without `no-` for an exact match
+          if (name == option.name) return { &option };
           matches.push_back(&option);
         }
       }
