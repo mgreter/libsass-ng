@@ -790,7 +790,14 @@ namespace Sass {
     }
 
     // Invoke correct parser according to format
+    // Also links the stylesheet back to the import
     StylesheetObj stylesheet = parseSource(import);
+
+    // The parsers return a stylesheet or throw. Check anyway, since all
+    // callers use the result and a null entry must never get cached.
+    if (stylesheet.isNull()) {
+      throw std::runtime_error("Parser returned no stylesheet for " + abs_path);
+    }
 
     // for (auto& qwe : stylesheet->modimps) {
     //   Module* mod = qwe.second.second;
@@ -801,10 +808,6 @@ namespace Sass {
 
     // Put the parsed stylesheet into the map
     sheets21.insert({ abs_path, stylesheet });
-
-    if (stylesheet.ptr() != nullptr) {
-      stylesheet->import = import;
-    }
 
     stylesheet->extender52 = SASS_MEMORY_NEW(ExtensionStore, ExtensionStore::NORMAL, *this);
 
