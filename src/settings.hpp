@@ -29,6 +29,12 @@
 #define SassMaxNesting 512
 #endif
 
+// Maximum precision for number output (digits after the decimal point).
+// A double has up to 309 integer digits, so this always fits the buffer.
+#ifndef SassMaxPrecision
+#define SassMaxPrecision 100
+#endif
+
 // Maximum number of units a number may carry. Units are stored as a
 // list (e.g. `px*px*px`), so repeatedly squaring a number doubles it
 // each time, which can exhaust memory with just a few lines of Sass.

@@ -94,6 +94,7 @@ extern "C" {
   ADDAPI int ADDCALL sass_compiler_get_precision(struct SassCompiler* compiler);
 
   // Setter for number precision (how floating point numbers are truncated).
+  // Note: the value is clamped to the range 0 to 100 (default is 10).
   ADDAPI void ADDCALL sass_compiler_set_precision(struct SassCompiler* compiler, int precision);
 
   // Getter for compiler entry point (which file or data to parse first).

@@ -121,6 +121,10 @@ namespace Sass {
     // Update precision and epsilon etc.
     void setPrecision(int precision)
     {
+      // Clamp to a sane range: negative values would create an invalid
+      // format string, and huge ones would not fit the output buffer.
+      if (precision < 0) precision = 0;
+      if (precision > SassMaxPrecision) precision = SassMaxPrecision;
       this->precision = precision;
       this->epsilon = std::pow(0.1, precision);
       // Update sprintf format to match precision

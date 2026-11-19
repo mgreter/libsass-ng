@@ -4,6 +4,7 @@
 #include "inspect.hpp"
 
 #include <iomanip>
+#include <cstring>
 #include "file.hpp"
 #include "ast_css.hpp"
 #include "charcode.hpp"
@@ -24,37 +25,36 @@ namespace Sass {
     append_string(PrintNumber(nr, outopt));
   }
 
-  sass::string Inspect::PrintNumber(double nr, const OutputOptions& outopt)
+  // Format a number with the configured precision and strip trailing
+  // zeros of the fractional part. Zeros are only removed after a decimal
+  // point (otherwise precision 0 turned "10" into "1"), and we never move
+  // before the start of the buffer (previously "0" read uf[-1]).
+  static sass::string formatNumber(double nr, const OutputOptions& outopt)
   {
-
-    // Avoid streams
+    // Avoid streams (precision is clamped, so the result always fits)
     char buf[1024];
-
-    snprintf(buf, 1024, 
-      outopt.nr_sprintf,
-      nr);
-
-    // Operate from behind
-    char* end = buf;
-
-    // Move to last position
-    while (*end != 0) ++end;
-    if (end != buf) end--;
-    // Delete trailing zeros
-    while (*end == '0') {
-      *end = 0;
-      end--;
+    int len = snprintf(buf, sizeof(buf), outopt.nr_sprintf, nr);
+    if (len < 0) return sass::string();
+    if (len >= int(sizeof(buf))) len = int(sizeof(buf)) - 1;
+    // Only trim if there is a fractional part
+    if (memchr(buf, '.', size_t(len)) != nullptr) {
+      char* end = buf + len - 1;
+      // Delete trailing zeros
+      while (end > buf && *end == '0') *end-- = 0;
+      // Delete trailing decimal separator
+      if (*end == '.') *end = 0;
     }
-    // Delete trailing decimal separator
-    if (*end == '.') *end = 0;
-
     // Some final cosmetics
     if (buf[0] == '-' && buf[1] == '0' && buf[2] == 0) {
       buf[0] = '0'; buf[1] = 0;
     }
+    return sass::string(buf);
+  }
+  sass::string Inspect::PrintNumber(double nr, const OutputOptions& outopt)
+  {
 
     // add units later
-    return sass::string(buf);
+    return formatNumber(nr, outopt);
 
   }
 
@@ -65,34 +65,8 @@ namespace Sass {
       return str_none;
     }
 
-    // Avoid streams
-    char buf[1024];
-
-    snprintf(buf, 1024,
-      outopt.nr_sprintf,
-      nr.value());
-
-    // Operate from behind
-    char* end = buf;
-
-    // Move to last position
-    while (*end != 0) ++end;
-    if (end != buf) end--;
-    // Delete trailing zeros
-    while (*end == '0') {
-      *end = 0;
-      end--;
-    }
-    // Delete trailing decimal separator
-    if (*end == '.') *end = 0;
-
-    // Some final cosmetics
-    if (buf[0] == '-' && buf[1] == '0' && buf[2] == 0) {
-      buf[0] = '0'; buf[1] = 0;
-    }
-
     // add units later
-    return sass::string(buf);
+    return formatNumber(nr.value(), outopt);
   }
 
   Inspect::Inspect(const OutputOptions& outopt)
