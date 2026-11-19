@@ -35,7 +35,9 @@
 // - `sass_list_push`, `sass_list_set_value` and `sass_map_set` take their own
 //   reference. The caller still owns the passed value and should delete it.
 // - Values returned from custom functions are owned by LibSass. Return a new
-//   value (e.g. via `sass_clone_value`), never a borrowed argument.
+//   value (e.g. via `sass_clone_value`). Returning an argument or a part of
+//   it (e.g. via `sass_list_at`) is detected and handled, but other borrowed
+//   values (e.g. from `sass_env_get_global`) must be cloned before returning.
 // - Arguments passed to custom functions are borrowed and released by LibSass.
 
 // ToDo: how should we handle sass colors now that we have RGBA, HSLA and HWBA format?

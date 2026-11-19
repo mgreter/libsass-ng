@@ -22,6 +22,7 @@
 #include "calculation.hpp"
 #include "calc_names.hpp"
 #include <limits>
+#include <unordered_set>
 
 #include "environment.hpp"
 #include "debugger.hpp"
@@ -475,6 +476,43 @@ namespace Sass {
   //*************************************************//
   // Call external C-API function
   //*************************************************//
+  // Check if `needle` is `root` itself or nested anywhere inside it
+  // (list items and map keys/values). Iterative to avoid recursion and
+  // guarded against cycles, which in-place list optimizations can create.
+  static bool isPartOfValue(Value* root, const Value* needle)
+  {
+    sass::vector<Value*> todo{ root };
+    std::unordered_set<const Value*> seen;
+    while (!todo.empty()) {
+      Value* cur = todo.back(); todo.pop_back();
+      if (cur == nullptr) continue;
+      if (cur == needle) return true;
+      if (!seen.insert(cur).second) continue;
+      if (List* list = cur->isaList()) {
+        for (const ValueObj& item : list->elements()) todo.push_back(item.ptr());
+      }
+      else if (Map* map = cur->isaMap()) {
+        for (const auto& kv : map->elements()) {
+          todo.push_back(kv.first.ptr());
+          todo.push_back(kv.second.ptr());
+        }
+      }
+    }
+    return false;
+  }
+
+  // Release the value returned by a C-API function. Functions must return a
+  // new reference (owned by us), but returning an argument (or a part of it,
+  // e.g. via `sass_list_at`) is a common mistake. Releasing such a borrowed
+  // value would steal a reference from its owner (use-after-free), so we only
+  // release values that are not part of the arguments we passed in.
+  static void releaseCapiResult(struct SassValue* c_val, struct SassValue* c_args)
+  {
+    if (c_val == nullptr) return;
+    if (isPartOfValue(&Value::unwrap(c_args), &Value::unwrap(c_val))) return;
+    sass_delete_value(c_val);
+  }
+
   Value* Eval::_runExternalCallable(
     CallableArguments* arguments,
     ExternalCallable* callable,
@@ -589,8 +627,8 @@ namespace Sass {
     if (CustomError* err = value->isaCustomError()) {
       sass::string message("C-API function " +
         name.orig() + ": " + err->message());
+      releaseCapiResult(c_val, c_args);
       sass_delete_value(c_args);
-      sass_delete_value(c_val);
       throw Exception::ParserException(logger, message);
     }
     // This will simply invoke the warning handler
@@ -604,7 +642,8 @@ namespace Sass {
       logger.addWarning(message,
         Logger::WARN_CAPI_FN);
     }
-    sass_delete_value(c_val);
+    // Must be released before the arguments (checks them)
+    releaseCapiResult(c_val, c_args);
     sass_delete_value(c_args);
 
     // If we had no rest arguments, this will be true
@@ -2093,8 +2132,9 @@ namespace Sass {
     sass_list_push(c_args, Value::wrap(message));
     struct SassValue* c_val = lambda(
       c_args, compiler.wrap(), def->cookie());
+    // Must be released before the arguments (checks them)
+    releaseCapiResult(c_val, c_args);
     sass_delete_value(c_args);
-    sass_delete_value(c_val);
   }
 
   /////////////////////////////////////////////////////////////////////////
