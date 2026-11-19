@@ -1236,7 +1236,8 @@ void emit_string(SB *out, const char *str)
             *b++ = 0xBDu;
           }
           s++;
-        } else if (c < 0x1F || (c >= 0x80 && escape_unicode)) {
+        } else if (c <= 0x1F || (c >= 0x80 && escape_unicode)) {
+          /* JSON requires escaping all control characters U+0000-U+001F */
           /* Encode using \u.... */
           uint32_t unicode;
 
