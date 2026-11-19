@@ -22,7 +22,6 @@
 #include "calculation.hpp"
 #include "calc_names.hpp"
 #include <limits>
-#include <unordered_set>
 
 #include "environment.hpp"
 #include "debugger.hpp"
@@ -476,31 +475,55 @@ namespace Sass {
   //*************************************************//
   // Call external C-API function
   //*************************************************//
-  // Check if `needle` is `root` itself or nested anywhere inside it
-  // (list items and map keys/values). Iterative to avoid recursion and
-  // guarded against cycles, which in-place list optimizations can create.
-  static bool isPartOfValue(Value* root, const Value* needle)
+  // Recursive search for `needle` inside lists and maps without any heap
+  // allocations. Bounded by `budget` (visited nodes) and `depth`, which
+  // also protects against cyclic lists. Returns true if found or if a limit
+  // was reached (callers then assume the value is borrowed, which at worst
+  // leaks one value but never frees one that is still in use).
+  static bool searchValue(Value* cur, const Value* needle, size_t& budget, size_t depth)
   {
-    sass::vector<Value*> todo{ root };
-    std::unordered_set<const Value*> seen;
-    while (!todo.empty()) {
-      Value* cur = todo.back(); todo.pop_back();
-      if (cur == nullptr) continue;
-      if (cur == needle) return true;
-      if (!seen.insert(cur).second) continue;
-      if (List* list = cur->isaList()) {
-        for (const ValueObj& item : list->elements()) todo.push_back(item.ptr());
+    if (cur == nullptr) return false;
+    if (cur == needle) return true;
+    if (budget == 0 || depth == 0) return true;
+    --budget;
+    if (List* list = cur->isaList()) {
+      for (const ValueObj& item : list->elements()) {
+        if (searchValue(item.ptr(), needle, budget, depth - 1)) return true;
       }
-      else if (Map* map = cur->isaMap()) {
-        for (const auto& kv : map->elements()) {
-          todo.push_back(kv.first.ptr());
-          todo.push_back(kv.second.ptr());
-        }
+    }
+    else if (Map* map = cur->isaMap()) {
+      for (const auto& kv : map->elements()) {
+        if (searchValue(kv.first.ptr(), needle, budget, depth - 1)) return true;
+        if (searchValue(kv.second.ptr(), needle, budget, depth - 1)) return true;
       }
     }
     return false;
   }
 
+  // Check if `needle` is `root` itself or nested anywhere inside it
+  // (list items and map keys/values).
+  static bool isPartOfValue(Value* root, const Value* needle)
+  {
+    // Fast path: check the root and its direct items. Only search
+    // deeper if any item is a non-empty container (arguments are
+    // mostly simple values like numbers or strings).
+    if (root == needle) return true;
+    bool hasContainers = false;
+    if (List* list = root->isaList()) {
+      for (const ValueObj& item : list->elements()) {
+        if (item.ptr() == needle) return true;
+        if (const List* inner = item->isaList()) hasContainers |= !inner->empty();
+        else if (const Map* inner = item->isaMap()) hasContainers |= !inner->empty();
+      }
+    }
+    else if (const Map* map = root->isaMap()) {
+      hasContainers = !map->empty();
+    }
+    if (!hasContainers) return false;
+    // Slow path: bounded search through all nested lists and maps
+    size_t budget = 100000;
+    return searchValue(root, needle, budget, 256);
+  }
   // Release the value returned by a C-API function. Functions must return a
   // new reference (owned by us), but returning an argument (or a part of it,
   // e.g. via `sass_list_at`) is a common mistake. Releasing such a borrowed
