@@ -9,6 +9,9 @@
 #include "exceptions.hpp"
 #include "string_utils.hpp"
 #include "capi_compiler.hpp"
+#include "capi_guard.hpp"
+#include <memory>
+#include <new>
 
 using namespace Sass;
 
@@ -166,6 +169,26 @@ static void getopt_error(struct SassGetOpt* getopt, const char* what)
   if (getopt) {
     handle_error(getopt->compiler, 9, what, nullptr);
   }
+}
+
+// Report an unexpected exception on the compiler (same status codes as
+// the compiler's own error handler), so the caller sees it as a regular
+// error. Falls back to stderr if even that fails (e.g. out of memory).
+static void getopt_report(Compiler& compiler, int status, const char* what) noexcept
+{
+  try { handle_error(compiler, status, what, nullptr); }
+  catch (...) { reportCapiException("getopt", what); }
+}
+
+// Exception barrier for the getopt C-API functions. Option callbacks
+// and allocations may throw, which must never cross the C boundary.
+template <typename F>
+static void getopt_guard(Compiler& compiler, F&& body) noexcept
+{
+  try { body(); }
+  catch (const std::bad_alloc& e) { getopt_report(compiler, 2, e.what()); }
+  catch (const std::exception& e) { getopt_report(compiler, 3, e.what()); }
+  catch (...) { getopt_report(compiler, 5, "unknown"); }
 }
 
 // Precision setter has specific validation (no corresponding type in GetOpt parser)
@@ -584,22 +607,31 @@ extern "C" {
   // But can also be used to parse any other list of config strings
   struct SassGetOpt* ADDCALL sass_make_getopt(struct SassCompiler* compiler)
   {
-    return new struct SassGetOpt(Compiler::unwrap(compiler));
+    Compiler& cpl(Compiler::unwrap(compiler));
+    struct SassGetOpt* getopt = nullptr;
+    getopt_guard(cpl, [&]() { getopt = new struct SassGetOpt(cpl); });
+    return getopt; // NULL on failure (error is set on the compiler)
   }
   // EO sass_make_getopt
 
   void ADDCALL sass_getopt_parse(struct SassGetOpt* getopt, const char* value)
   {
-    getopt_parse(getopt, value);
+    getopt_guard(getopt->compiler, [&]() {
+      getopt_parse(getopt, value);
+    });
   }
 
   // Return string with the full help message describing all commands
   // This is formatted in a similar fashion as GNU tools using getopt
   char* ADDCALL sass_getopt_get_help(struct SassGetOpt* getopt)
   {
-    sass::sstream usage;
-    getopt_print_help(getopt, usage);
-    return sass_copy_string(usage.str());
+    char* help = nullptr;
+    getopt_guard(getopt->compiler, [&]() {
+      sass::sstream usage;
+      getopt_print_help(getopt, usage);
+      help = sass_copy_string(usage.str());
+    });
+    return help; // NULL on failure (error is set on the compiler)
   }
   // EO sass_getopt_get_help
 
@@ -607,14 +639,17 @@ extern "C" {
   // this before you want to start the actual compilation phase.
   void ADDCALL sass_delete_getopt(struct SassGetOpt* getopt)
   {
-    // Check for pending required option
-    getopt_check_required_option(getopt);
-    // Check for too many or not enough arguments
-    // Skip this check if nothing is expected at all
-    // This will simply store the arguments in `args`
-    getopt_check_and_consume_arguments(getopt);
-    // Release memory
-    delete getopt;
+    if (getopt == nullptr) return;
+    // Release memory in any case (also if the checks below fail)
+    std::unique_ptr<struct SassGetOpt> owner(getopt);
+    getopt_guard(getopt->compiler, [&]() {
+      // Check for pending required option
+      getopt_check_required_option(getopt);
+      // Check for too many or not enough arguments
+      // Skip this check if nothing is expected at all
+      // This will simply store the arguments in `args`
+      getopt_check_and_consume_arguments(getopt);
+    });
   }
   // EO sass_delete_getopt
 
@@ -636,8 +671,10 @@ extern "C" {
     // Callback function, where we pass back the given option value
     void (*cb) (struct SassGetOpt* getopt, union SassOptionValue value))
   {
-    getopt->options.emplace_back(SassOption{ short_name, long_name,
-      description, boolean, argument, optional, enums, cb });
+    getopt_guard(getopt->compiler, [&]() {
+      getopt->options.emplace_back(SassOption{ short_name, long_name,
+        description, boolean, argument, optional, enums, cb });
+    });
   }
   // EO sass_getopt_register_option
 
@@ -650,7 +687,9 @@ extern "C" {
     // Callback function, where we pass back the given argument value
     void (*cb) (struct SassGetOpt* getopt, const char* value))
   {
-    getopt->arguments.emplace_back(SassArgument{ optional, name, cb });
+    getopt_guard(getopt->compiler, [&]() {
+      getopt->arguments.emplace_back(SassArgument{ optional, name, cb });
+    });
   }
   // EO sass_getopt_register_argument
 

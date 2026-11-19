@@ -32,13 +32,27 @@ extern "C" {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Errors (invalid options or arguments, but also unexpected failures,
+  // e.g. out of memory) are reported on the compiler; check them with
+  // `sass_compiler_get_status` and `sass_compiler_get_error`. Once an
+  // error is set, further parsing is skipped.
+  //
+  // The strings passed to `sass_getopt_register_option` and
+  // `sass_getopt_register_argument` (names, descriptions and enums)
+  // are not copied and must stay valid until the parser is deleted
+  // (string literals are fine). Register all options and arguments
+  // before calling `sass_getopt_parse`.
+
   // Create a new option parser to help with parsing config from users
   // Optimized to act like GNU GetOpt Long to consume main `argv` items
   // But can also be used to parse any other list of config strings
+  // Returns NULL on failure (the error is set on the compiler).
   ADDAPI struct SassGetOpt* ADDCALL sass_make_getopt(struct SassCompiler* compiler);
 
   // Delete and finalize the option parser. Make sure to call
   // this before you want to start the actual compilation phase.
+  // Finalizing checks for missing or extra arguments and reports
+  // them on the compiler. The parser is always freed. Accepts NULL.
   ADDAPI void ADDCALL sass_delete_getopt(struct SassGetOpt* getopt);
 
   // Utility function to tell LibSass to register its default options
@@ -53,6 +67,7 @@ extern "C" {
 
   // Return string with the full help message describing all commands
   // This is formatted in a similar fashion as GNU tools using getopt
+  // Must be freed via `sass_free_c_string`; NULL on failure.
   ADDAPI char* ADDCALL sass_getopt_get_help(struct SassGetOpt* getopt);
   
   // Register additional option that can be parsed
