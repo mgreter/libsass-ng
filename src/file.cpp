@@ -533,33 +533,48 @@ namespace Sass {
         if (rv == 0) throw Exception::OperationError("Path could not be resolved");
         HANDLE hFile = CreateFileW(resolved.get(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
         if (hFile == INVALID_HANDLE_VALUE) return 0;
+        // Always close the handle, also on early returns and exceptions
+        struct HandleCloser { HANDLE handle; ~HandleCloser() { CloseHandle(handle); } } closer{ hFile };
         // ToDo: do some file locking here!?
-        DWORD dwFileLength = GetFileSize(hFile, NULL);
-        if (dwFileLength == INVALID_FILE_SIZE) return 0;
+        // Use 64bit size (`GetFileSize` alone drops the high part, which
+        // would silently read a truncated file if it is larger than 4GB)
+        LARGE_INTEGER fileSize;
+        if (!GetFileSizeEx(hFile, &fileSize)) return 0;
+        // A single `ReadFile` call is limited to a 32bit length
+        if (fileSize.QuadPart < 0 || fileSize.QuadPart >= MAXDWORD)
+          throw Exception::OperationError("File is too large");
+        DWORD dwFileLength = DWORD(fileSize.QuadPart);
         // allocate an extra byte for the null terminator
         contents = (char*) sass_alloc_memory(size_t(dwFileLength) + 1);
-        if (!ReadFile(hFile, contents, dwFileLength, &dwBytes, NULL))
+        // Must read the whole file (otherwise contents is partially uninitialized)
+        if (!ReadFile(hFile, contents, dwFileLength, &dwBytes, NULL) || dwBytes != dwFileLength) {
+          sass_free_memory(contents);
           throw Exception::OperationError("Could not read file");
+        }
         contents[dwFileLength] = '\0'; // ensure null terminator
-        CloseHandle(hFile);
       #else
         // Read the file using `<cstdio>` instead of `<fstream>` for better portability.
         // The `<fstream>` header initializes `<locale>` which is buggy in GCC4/5 with static linking.
         // https://www.spinics.net/lists/gcchelp/msg46851.html
         // https://github.com/sass/sassc-ruby/issues/128
-        struct stat st;
-        if (stat(path.c_str(), &st) == -1 || S_ISDIR(st.st_mode)) return 0;
         FILE* fd = std::fopen(path.c_str(), "rb");
         if (fd == nullptr) return nullptr;
+        // Query the size of the opened file (avoids a race between
+        // checking the path and opening it, if the file is replaced)
+        struct stat st;
+        if (fstat(fileno(fd), &st) == -1 || S_ISDIR(st.st_mode)) {
+          std::fclose(fd);
+          return nullptr;
+        }
         const std::size_t size = st.st_size;
-        char* contents = static_cast<char*>(sass_alloc_memory(st.st_size + 1 * sizeof(char)));
+        char* contents = static_cast<char*>(sass_alloc_memory(size + 1));
         if (std::fread(static_cast<void*>(contents), 1, size, fd) != size) {
-          free(contents);
+          sass_free_memory(contents);
           std::fclose(fd);
           return nullptr;
         }
         if (std::fclose(fd) != 0) {
-          free(contents);
+          sass_free_memory(contents);
           return nullptr;
         }
         contents[size] = '\0';
