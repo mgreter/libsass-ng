@@ -29,6 +29,13 @@
 #define SassMaxNesting 512
 #endif
 
+// Maximum number of units a number may carry. Units are stored as a
+// list (e.g. `px*px*px`), so repeatedly squaring a number doubles it
+// each time, which can exhaust memory with just a few lines of Sass.
+#ifndef SassMaxNumberUnits
+#define SassMaxNumberUnits 1024
+#endif
+
 /////////////////////////////////////////////////////////////////////////
 // Should we preserve color information when possible
 // E.g. if we create a HWB color with zero hue (which is always `gray`),

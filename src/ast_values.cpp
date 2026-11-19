@@ -700,6 +700,14 @@ namespace Sass {
     size_t l_units = l_n_units + l_d_units;
     size_t r_units = r_n_units + r_d_units;
 
+    // Multiplication and division concatenate the units of both sides
+    // (reducing can only cancel them), so bound the combined count.
+    if ((op == mul || op == div) && l_units + r_units > SassMaxNumberUnits) {
+      sass::sstream msg;
+      msg << "Number has too many units (more than " << SassMaxNumberUnits << ").";
+      throw Exception::SassScriptException(msg.str(), logger, pstate);
+    }
+
     double lval = value();
     double rval = rhs.value();
 
