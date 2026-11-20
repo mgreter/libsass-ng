@@ -247,7 +247,7 @@ namespace Sass {
         }
 
         while (!scanner.isDone() && !isNewline(scanner.peekChar())) {
-          buffer.writeCharCode(scanner.readChar());
+          buffer.write(scanner.readChar());
         }
         buffer.write("\n");
 
@@ -317,14 +317,14 @@ namespace Sass {
             buffer.add(readSingleInterpolation());
           }
           else {
-            buffer.writeCharCode(scanner.readChar());
+            buffer.write(scanner.readChar());
           }
           break;
 
         case $asterisk:
           if (scanner.peekChar(1) == $slash) {
-            buffer.writeCharCode(scanner.readChar());
-            buffer.writeCharCode(scanner.readChar());
+            buffer.write(scanner.readChar());
+            buffer.write(scanner.readChar());
             auto span = scanner.rawSpanFrom(start);
             scanWhitespace();
 
@@ -361,13 +361,13 @@ namespace Sass {
             }
           }
           else {
-            buffer.writeCharCode(scanner.readChar());
+            buffer.write(scanner.readChar());
           }
 
           break;
 
         default:
-          buffer.writeCharCode(scanner.readChar());
+          buffer.write(scanner.readChar());
           break;
         }
       }
