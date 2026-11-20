@@ -3174,6 +3174,12 @@ namespace Sass {
           value = withoutSlash3(value);
           compiler.varRoot.setVariable({ vidx, 0 }, key, false);
           compiler.varRoot.setVariable({ vidx, 1 }, value, false);
+          // Like dart-sass, variables beyond the key/value pair are null
+          // (they were left unset, failing with "Undefined variable")
+          for (size_t j = 2, K = variables.size(); j < K; ++j) {
+            compiler.varRoot.setVariable({ vidx, (uint32_t)j },
+              SASS_MEMORY_NEW(Null, expr->pstate()), false);
+          }
         }
         ValueObj val = acceptChildren(e);
         if (val) return val.detach();
