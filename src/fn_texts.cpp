@@ -209,11 +209,10 @@ namespace Sass {
               sass::string(begin + start, begin + found), quoted));
             start = found + delim.size();
           }
-          if (start != text.size()) {
-            results.push_back(SASS_MEMORY_NEW(String, pstate,
-              sass::string(begin + start, text.end()), quoted));
-
-          }
+          // Always add the rest, even if empty (like dart-sass),
+          // e.g. splitting "a,b," by "," returns ["a", "b", ""]
+          results.push_back(SASS_MEMORY_NEW(String, pstate,
+            sass::string(begin + start, text.end()), quoted));
         }
         return SASS_MEMORY_NEW(List, pstate,
           std::move(results), SASS_COMMA, true);
