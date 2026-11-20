@@ -705,6 +705,8 @@ namespace Sass {
     if ((op == mul || op == div) && l_units + r_units > SassMaxNumberUnits) {
       sass::sstream msg;
       msg << "Number has too many units (more than " << SassMaxNumberUnits << ").";
+      // The exception doesn't use `pstate`, the frame adds the location
+      CallStackFrame csf(logger, pstate);
       throw Exception::SassScriptException(msg.str(), logger, pstate);
     }
 
