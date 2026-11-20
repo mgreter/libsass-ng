@@ -78,7 +78,7 @@ extern "C" {
 
   // Getters and setters for Sass_String (UB if `sass_value_is_boolean` is false)
   const char* ADDCALL sass_string_get_value(struct SassValue* string) { return getString(string)->value().c_str(); }
-  void ADDCALL sass_string_set_value(struct SassValue* string, char* value) { getString(string)->value(value); }
+  void ADDCALL sass_string_set_value(struct SassValue* string, const char* value) { getString(string)->value(value); }
   bool ADDCALL sass_string_is_quoted(struct SassValue* string) { return getString(string)->hasQuotes(); }
   void ADDCALL sass_string_set_quoted(struct SassValue* string, bool quoted) { getString(string)->hasQuotes(quoted); }
 

@@ -278,7 +278,7 @@ namespace Sass {
     // @param pstate SourceSpan where import occurred (parent context)
     // @param rule The backing ImportRule that is added to the document
     /////////////////////////////////////////////////////////////////////////
-    bool callCustomHeaders(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule)
+    bool callCustomHeaders(const sass::string& imp_path, const SourceSpan& pstate, ImportRule* rule)
     {
       return callCustomLoader(imp_path, pstate, rule, cHeaders, false);
     };
@@ -288,7 +288,7 @@ namespace Sass {
     // @param pstate SourceSpan where import occurred (parent context)
     // @param rule The backing ImportRule that is added to the document
     /////////////////////////////////////////////////////////////////////////
-    bool callCustomImporters(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule)
+    bool callCustomImporters(const sass::string& imp_path, const SourceSpan& pstate, ImportRule* rule)
     {
       return callCustomLoader(imp_path, pstate, rule, cImporters, true);
     };
@@ -298,7 +298,7 @@ namespace Sass {
     Stylesheet* registerImport(ImportObj import);
 
     // Called by parserStylesheet on the very first parse call
-    void applyCustomHeaders(StatementVector& root, SourceSpan pstate);
+    void applyCustomHeaders(StatementVector& root, const SourceSpan& pstate);
 
   protected:
 
@@ -319,7 +319,7 @@ namespace Sass {
     // @param importers Array of custom importers/headers to go through
     // @param singleton Whether to use all importers or only first successful
     /////////////////////////////////////////////////////////////////////////
-    bool callCustomLoader(const sass::string& imp_path, SourceSpan& pstate, ImportRule* rule,
+    bool callCustomLoader(const sass::string& imp_path, const SourceSpan& pstate, ImportRule* rule,
       const sass::vector<struct SassImporter*>& importers, bool singletone = true);
 
     public:

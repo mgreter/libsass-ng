@@ -32,7 +32,7 @@ namespace Sass {
   // or at the end of a list of statements. If the [name] of the parent
   // rule is passed, it's used for error reporting. This consumes
   // whitespace, but nothing else, including comments.
-  void ScssParser::expectStatementSeparator(sass::string name)
+  void ScssParser::expectStatementSeparator(const sass::string& name)
   {
     scanWhitespaceWithoutComments(true);
     if (scanner.isDone()) return;

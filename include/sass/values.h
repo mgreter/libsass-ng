@@ -144,7 +144,7 @@ extern "C" {
 
   // Getters and setters for Sass_String
   ADDAPI const char* ADDCALL sass_string_get_value(struct SassValue* v);
-  ADDAPI void ADDCALL sass_string_set_value(struct SassValue* v, char* value);
+  ADDAPI void ADDCALL sass_string_set_value(struct SassValue* v, const char* value);
   ADDAPI bool ADDCALL sass_string_is_quoted(struct SassValue* v);
   ADDAPI void ADDCALL sass_string_set_quoted(struct SassValue* v, bool quoted);
 

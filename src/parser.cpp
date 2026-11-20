@@ -695,14 +695,14 @@ namespace Sass {
   // EO scanIdentifier
 
   // Consumes an identifier if its name exactly matches [text].
-  bool Parser::scanIdentifier(sass::string text, bool sensitive)
+  bool Parser::scanIdentifier(const sass::string& text, bool sensitive)
   {
     return scanIdentifier(text.c_str(), sensitive);
   }
   // EO scanIdentifier
 
   // Consumes an identifier and asserts that its name exactly matches [text].
-  void Parser::expectIdentifier(const char* text, sass::string name, bool sensitive)
+  void Parser::expectIdentifier(const char* text, const sass::string& name, bool sensitive)
   {
     Offset start(scanner.offset);
     for (uint8_t i = 0; text[i]; i++) {
@@ -717,7 +717,7 @@ namespace Sass {
   // EO expectIdentifier
   
   // Throws a parser error associated with [pstate].
-  void Parser::error(sass::string message, SourceSpan pstate)
+  void Parser::error(const sass::string& message, const SourceSpan& pstate)
   {
     CallStackFrame frame(compiler, BackTrace(pstate));
     throw Exception::ParserException(compiler, message);

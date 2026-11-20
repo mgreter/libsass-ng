@@ -40,7 +40,7 @@ namespace Sass {
 
     virtual ~ColorSpace() {}
 
-    ColorSpace(const sass::string name, SassColorSpace space, const ColorChannel* channels, int channelSize = 3)
+    ColorSpace(const sass::string& name, SassColorSpace space, const ColorChannel* channels, int channelSize = 3)
       : name_(name), space_(space), _channelSize(channelSize), _channels(channels)
     {
       // std::cerr << "init colorspace " << name << " " << this << "\n";

@@ -66,11 +66,11 @@ namespace Sass {
     // helper function to resolve a filename
     // searching without variations in all paths
     // sass::string find_file(const sass::string& file, const sass::string& CWD, struct SassCompilerCpp* options);
-    sass::string find_file(const sass::string& file, const sass::string& CWD, const StringVector paths, sass::cachemap::str<sass::string, bool>& cache);
+    sass::string find_file(const sass::string& file, const sass::string& CWD, const StringVector& paths, sass::cachemap::str<sass::string, bool>& cache);
 
     // helper function to resolve a include filename
     // this has the original resolve logic for sass include
-    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector paths, bool forImport, sass::cachemap::str<sass::string, bool>& cache);
+    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector& paths, bool forImport, sass::cachemap::str<sass::string, bool>& cache);
 
     // split a path string delimited by semicolons or colons (OS dependent)
     // StringVector split_path_list(sass::string paths);

@@ -85,7 +85,7 @@ namespace Sass {
     append_string(node);
   }
 
-  void Inspect::visitBlockStatements(CssNodeVector children)
+  void Inspect::visitBlockStatements(const CssNodeVector& children)
   {
     append_scope_opener();
     for (CssNode* stmt : children) {

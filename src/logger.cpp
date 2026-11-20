@@ -186,7 +186,7 @@ namespace Sass {
 
   // Format and print source-span
   void Logger::printSourceSpan(
-    SourceSpan pstate,
+    const SourceSpan& pstate,
     sass::ostream& stream,
     bool unicode)
   {
@@ -585,8 +585,8 @@ namespace Sass {
   // EO splitLine
 
   // Print `amount` of `traces` to output stream `os`.
-  void Logger::writeStackTraces(sass::ostream& os, StackTraces traces,
-    sass::string indent, bool showPos, size_t amount)
+  void Logger::writeStackTraces(sass::ostream& os, const StackTraces& traces,
+    const sass::string& indent, bool showPos, size_t amount)
   {
     sass::sstream strm;
 

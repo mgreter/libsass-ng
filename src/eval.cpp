@@ -65,7 +65,7 @@ namespace Sass {
 
   // Helper function for the division
   Value* Eval::doDivision(Value* left, Value* right,
-    BinaryOpExpression* node, Logger& logger, SourceSpan pstate) const
+    BinaryOpExpression* node, Logger& logger, const SourceSpan& pstate) const
   {
     // bool allowSlash = node->allowsSlash();
     ValueObj result = left->dividedBy(right, logger, pstate);
@@ -889,7 +889,7 @@ namespace Sass {
   /// If [trim] is `true`, removes whitespace around the result.
   /// If [warnForColor] is `true`, this will emit a warning for
   /// any named color values passed into the interpolation.
-  sass::string Eval::acceptInterpolation(InterpolationObj interpolation, bool warnForColor, bool trim)
+  sass::string Eval::acceptInterpolation(const InterpolationObj& interpolation, bool warnForColor, bool trim)
   {
     // Needed in loop
     ValueObj value;
@@ -955,7 +955,7 @@ namespace Sass {
   /// If [trim] is `true`, removes whitespace around the result.
   /// If [warnForColor] is `true`, this will emit a warning for
   /// any named color values passed into the interpolation.
-  SourceData* Eval::interpolationToSource(InterpolationObj interpolation, bool warnForColor, bool trim, bool ws)
+  SourceData* Eval::interpolationToSource(const InterpolationObj& interpolation, bool warnForColor, bool trim, bool ws)
   {
     if (interpolation.isNull()) return nullptr;
     // pstate has 13 with ending
@@ -971,7 +971,7 @@ namespace Sass {
   /// If [trim] is `true`, removes whitespace around the result.
   /// If [warnForColor] is `true`, this will emit a warning for
   /// any named color values passed into the interpolation.
-  sass::string Eval::interpolationToCssString(InterpolationObj interpolation,
+  sass::string Eval::interpolationToCssString(const InterpolationObj& interpolation,
     bool warnForColor, bool trim)
   {
     if (interpolation.isNull()) return str_empty;
@@ -2396,7 +2396,7 @@ namespace Sass {
 
   /// Returns the index of the first node in [statements] that comes after all
 /// static imports.
-  size_t Eval::_indexAfterImports(sass::vector<CssNodeObj> statements) {
+  size_t Eval::_indexAfterImports(const sass::vector<CssNodeObj>& statements) {
     size_t lastImport = -1;
 
     for (size_t i = 0; i < statements.size(); i++) {

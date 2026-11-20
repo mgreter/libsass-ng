@@ -113,12 +113,12 @@ namespace Sass {
     void exposeFwdRule(ForwardRule* rule) const;
     void exposeImpRule1(IncludeImport* rule) const;
 
-    Value* doDivision(Value* left, Value* right, BinaryOpExpression* node, Logger& logger, SourceSpan pstate) const;
+    Value* doDivision(Value* left, Value* right, BinaryOpExpression* node, Logger& logger, const SourceSpan& pstate) const;
 
     inline Number* withoutSlash4(Number* value);
     inline Value* withoutSlash3(Value* value);
 
-    size_t _indexAfterImports(sass::vector<CssNodeObj> statements);
+    size_t _indexAfterImports(const sass::vector<CssNodeObj>& statements);
 
 
     void _visitUpstreamModule(Stylesheet* upstream, CssRoot* css, sass::vector<StylesheetObj>& sorted,
@@ -126,7 +126,7 @@ namespace Sass {
 
     CssRoot* _combineCss(Stylesheet* module, bool clone = false);
     sass::vector<StylesheetObj> _topologicalModules(Stylesheet* root, CssRoot* css, sass::vector<CssNodeObj>& imports, bool clone);
-    void _extendModules(sass::vector<StylesheetObj> sortedModules);
+    void _extendModules(const sass::vector<StylesheetObj>& sortedModules);
 
 
     EnvRefs* pudding(EnvRefs* idxs, bool intoRoot, EnvRefs* modFrame);
@@ -163,7 +163,7 @@ namespace Sass {
 
     sass::vector<WithConfigVar> toWithConfig(Map* withMap);
 
-    void importCssModule(String* url, Map* config, SourceSpan pstate);
+    void importCssModule(String* url, Map* config, const SourceSpan& pstate);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
@@ -340,9 +340,9 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
-    sass::string acceptInterpolation(InterpolationObj interpolation, bool warnForColor, bool trim = false);
-    SourceData* interpolationToSource(InterpolationObj interpolation, bool warnForColor, bool trim = false, bool ws = true);
-    sass::string interpolationToCssString(InterpolationObj interpolation, bool warnForColor, bool trim = false);
+    sass::string acceptInterpolation(const InterpolationObj& interpolation, bool warnForColor, bool trim = false);
+    SourceData* interpolationToSource(const InterpolationObj& interpolation, bool warnForColor, bool trim = false, bool ws = true);
+    sass::string interpolationToCssString(const InterpolationObj& interpolation, bool warnForColor, bool trim = false);
     SelectorListObj interpolationToSelector(Interpolation* interpolation, bool plainCss, bool allowParent = true);
 
     /////////////////////////////////////////////////////////////////////////

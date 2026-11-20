@@ -139,7 +139,7 @@ namespace Sass {
         RefCounted::maxRefCount << "\n";
     }
     static void dumpMemLeaks();
-    RefCounted* trace(sass::string file, size_t line) {
+    RefCounted* trace(const sass::string& file, size_t line) {
       this->file = file;
       this->line = line;
       return this;

@@ -55,8 +55,8 @@ namespace Sass {
     bool fn;
 
     StackTrace(
-      SourceSpan pstate,
-      sass::string name = Strings::empty,
+      const SourceSpan& pstate,
+      const sass::string& name = Strings::empty,
       bool fn = false) :
       pstate(pstate),
       name(name),

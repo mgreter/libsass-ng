@@ -67,12 +67,12 @@ namespace Sass {
     // Value constructor
     WithConfig(
       WithConfig* pwconfig,
-      sass::vector<WithConfigVar> config,
+      const sass::vector<WithConfigVar>& config,
       bool hasConfig = true,
       bool hasShowFilter = false,
       bool hasHideFilter = false,
-      std::set<EnvKey> varFilters = {},
-      std::set<EnvKey> callFilters = {},
+      const std::set<EnvKey>& varFilters = {},
+      const std::set<EnvKey>& callFilters = {},
       const sass::string& prefix = "");
 
     void finalize(Logger& logger);
@@ -931,8 +931,8 @@ namespace Sass {
     AssignRule(
       const SourceSpan& pstate,
       const EnvKey& variable,
-      const sass::string ns,
-      sass::vector<EnvRef> vidxs,
+      const sass::string& ns,
+      const sass::vector<EnvRef>& vidxs,
       Expression* value,
       bool is_default = false,
       bool is_global = false);

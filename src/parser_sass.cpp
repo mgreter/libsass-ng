@@ -50,7 +50,7 @@ namespace Sass {
   //   }
   // }
 
-  void SassParser::expectStatementSeparator(sass::string name)
+  void SassParser::expectStatementSeparator(const sass::string& name)
   {
 
     bool trailingSemicolon = tryTrailingSemicolon();

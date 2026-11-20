@@ -135,7 +135,7 @@ namespace Sass {
   // EO readAtRule
 
   // Helper to declare all forbidden functions
-  static bool isDisallowedFunction(sass::string name)
+  static bool isDisallowedFunction(const sass::string& name)
   {
     return name == str_red
       || name == str_green

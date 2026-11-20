@@ -515,7 +515,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  void Eval::importCssModule(String* url, Map* withMap, SourceSpan pstate)
+  void Eval::importCssModule(String* url, Map* withMap, const SourceSpan& pstate)
   {
 
     bool hasWith = withMap && !withMap->empty();
@@ -671,7 +671,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  void Eval::_extendModules(sass::vector<StylesheetObj> sortedModules)
+  void Eval::_extendModules(const sass::vector<StylesheetObj>& sortedModules)
   {
 
     std::unordered_map<sass::string, sass::vector<ExtensionStoreObj>> downstreamExtensionStores;

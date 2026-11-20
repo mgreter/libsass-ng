@@ -74,7 +74,7 @@ namespace Sass {
     // or at the end of a list of statements. If the [name] of the parent
     // rule is passed, it's used for error reporting. This consumes
     // whitespace, but nothing else, including comments.
-    void expectStatementSeparator(sass::string name) final;
+    void expectStatementSeparator(const sass::string& name) final;
 
     // Whether the scanner is positioned at the end of a statement.
     bool atEndOfStatement() final;

@@ -84,7 +84,7 @@ namespace Sass {
 
   private:
 
-    ColorChannel(sass::string name, bool isPolarAngle, sass::string unit)
+    ColorChannel(const sass::string& name, bool isPolarAngle, const sass::string& unit)
       : name(name), isPolarAngle(isPolarAngle), unit(unit)
     {
     }
@@ -106,15 +106,15 @@ namespace Sass {
       return false;
     }
 
-    static ColorChannel polar(sass::string name, bool isPolarAngle, sass::string unit)
+    static ColorChannel polar(const sass::string& name, bool isPolarAngle, const sass::string& unit)
     {
       ColorChannel channel(name, true, unit);
       return channel;
     }
 
-      static ColorChannel linear(sass::string name, double min, double max,
+      static ColorChannel linear(const sass::string& name, double min, double max,
       bool requiresPercent, bool lowerClamped, bool upperClamped,
-      sass::string unit = "")
+      const sass::string& unit = "")
     {
       ColorChannel channel(name, false, unit);
       channel.min = min;

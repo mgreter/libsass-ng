@@ -33,7 +33,7 @@ namespace Sass {
 
   private:
 
-    sass::vector<sass::string> readMediaLogicSequence2(sass::string op);
+    sass::vector<sass::string> readMediaLogicSequence2(const sass::string& op);
 
     // Consumes a single media query.
     CssMediaQuery* readMediaQuery();

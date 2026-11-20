@@ -38,7 +38,7 @@ namespace Sass {
 
   /// Consumes one or more `<media-in-parens>` expressions separated by
   /// [operator] and returns them.
-  sass::vector<sass::string> MediaQueryParser::readMediaLogicSequence2(sass::string op) {
+  sass::vector<sass::string> MediaQueryParser::readMediaLogicSequence2(const sass::string& op) {
     sass::vector<sass::string> result;
     while (true) {
       result.push_back(readMediaInParens());

@@ -196,7 +196,7 @@ namespace Sass {
 
     // Consumes an identifier if its name exactly matches [text].
     bool scanIdentifier(const char* text, bool sensitive = false);
-    bool scanIdentifier(sass::string text, bool sensitive = false);
+    bool scanIdentifier(const sass::string& text, bool sensitive = false);
 
     // ToDo: make template to ignore return type
     template <typename T, typename X>
@@ -210,10 +210,10 @@ namespace Sass {
     }
 
     // Consumes an identifier and asserts that its name exactly matches [text].
-    void expectIdentifier(const char* text, sass::string name, bool sensitive = false);
+    void expectIdentifier(const char* text, const sass::string& name, bool sensitive = false);
 
     // Throws an error associated with [span].
-    void error(sass::string message, SourceSpan pstate /*, FileSpan span */);
+    void error(const sass::string& message, const SourceSpan& pstate /*, FileSpan span */);
 
   };
 

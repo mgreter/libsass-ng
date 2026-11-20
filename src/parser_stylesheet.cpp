@@ -4083,7 +4083,7 @@ namespace Sass {
   // Consumes one or more `MediaOrInterp` expressions
   // separated by [operator] and writes them to [buffer].
   void StylesheetParser::readMediaLogicSequence(
-    InterpolationBuffer& buffer, sass::string op)
+    InterpolationBuffer& buffer, const sass::string& op)
   {
     //std::cerr << "read media logic sequence\n";
     while (true) {

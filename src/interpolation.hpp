@@ -120,7 +120,7 @@ namespace Sass {
   public:
 
     // Add an interpolation to the buffer. 
-    void addInterpolation(const InterpolationObj schema);
+    void addInterpolation(const InterpolationObj& schema);
 
     void writeCharCode(uint32_t character)
     {
@@ -147,7 +147,7 @@ namespace Sass {
       text.write(str);
     }
 
-    void write(const sass::string& str, SourceSpan pstate)
+    void write(const sass::string& str, const SourceSpan& pstate)
     {
       text.write(str, pstate);
     }
@@ -157,7 +157,7 @@ namespace Sass {
       text.write(std::move(str));
     }
 
-    void write(sass::string&& str, SourceSpan pstate)
+    void write(sass::string&& str, const SourceSpan& pstate)
     {
       text.write(std::move(str), pstate);
     }

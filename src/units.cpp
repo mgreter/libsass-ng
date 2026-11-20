@@ -410,7 +410,7 @@ namespace Sass {
   }
   // EO unit
 
-  sass::string Units::unitSuggestion(const sass::string& name, const sass::string unit) const
+  sass::string Units::unitSuggestion(const sass::string& name, const sass::string& unit) const
   {
     sass::string text;
     size_t iL = numerators.size();
@@ -496,7 +496,7 @@ namespace Sass {
   // EO unit
 
   // Returns true if we only have given numerator
-  bool Units::isOnlyOfUnit(sass::string unit) const
+  bool Units::isOnlyOfUnit(const sass::string& unit) const
   {
     return numerators.size() == 1 &&
       denominators.empty() &&

@@ -24,8 +24,8 @@ namespace Sass {
     bool considerImports = false;
   public:
     ImportRequest(
-      sass::string imp_path,
-      sass::string ctx_path,
+      const sass::string& imp_path,
+      const sass::string& ctx_path,
       bool considerImports) :
       imp_path(File::make_canonical_path(imp_path)),
       ctx_path(File::make_canonical_path(ctx_path)),
@@ -60,7 +60,7 @@ namespace Sass {
   public:
     ResolvedImport(
       const ImportRequest& imp,
-      sass::string abs_path,
+      const sass::string& abs_path,
       SassImportSyntax syntax)
       : ImportRequest(imp),
       abs_path(abs_path),

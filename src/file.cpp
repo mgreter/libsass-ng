@@ -477,7 +477,7 @@ namespace Sass {
     // EO resolve_includes
 
     // Private helper function for find_file
-    static StringVector _find_file(const sass::string& file, const sass::string& CWD, const StringVector paths, sass::cachemap::str<sass::string, bool>& cache)
+    static StringVector _find_file(const sass::string& file, const sass::string& CWD, const StringVector& paths, sass::cachemap::str<sass::string, bool>& cache)
     {
       StringVector includes;
       for (const sass::string& path : paths) {
@@ -490,7 +490,7 @@ namespace Sass {
 
     // helper function to search one file in all include paths
     // this is normally not used internally by libsass (C-API sugar)
-    sass::string find_file(const sass::string& file, const sass::string& CWD, const StringVector paths, sass::cachemap::str<sass::string, bool>& cache)
+    sass::string find_file(const sass::string& file, const sass::string& CWD, const StringVector& paths, sass::cachemap::str<sass::string, bool>& cache)
     {
       if (file.empty()) return file;
       auto res = _find_file(file, CWD, paths, cache);
@@ -498,7 +498,7 @@ namespace Sass {
     }
 
     // helper function to resolve a filename
-    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector paths, bool forImport, sass::cachemap::str<sass::string, bool>& cache)
+    sass::string find_include(const sass::string& file, const sass::string& CWD, const StringVector& paths, bool forImport, sass::cachemap::str<sass::string, bool>& cache)
     {
       // search in every include path for a match
       for (size_t i = 0, S = paths.size(); i < S; ++i)

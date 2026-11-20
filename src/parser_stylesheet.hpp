@@ -117,7 +117,7 @@ namespace Sass {
     // or at the end of a list of statements. If the [name] of the parent
     // rule is passed, it's used for error reporting. This consumes
     // whitespace, but nothing else, including comments.
-    virtual void expectStatementSeparator(sass::string name = "") = 0;
+    virtual void expectStatementSeparator(const sass::string& name = "") = 0;
 
     // Whether the scanner is positioned at the end of a statement.
     virtual bool atEndOfStatement() = 0;
@@ -522,7 +522,7 @@ namespace Sass {
 
     void RediaOrInterp(InterpolationBuffer& buffer);
 
-    void readMediaLogicSequence(InterpolationBuffer& buffer, sass::string op);
+    void readMediaLogicSequence(InterpolationBuffer& buffer, const sass::string& op);
 
     void readMediaOrInterp(InterpolationBuffer& buffer);
 

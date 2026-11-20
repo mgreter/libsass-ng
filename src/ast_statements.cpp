@@ -14,12 +14,12 @@ namespace Sass {
 
   WithConfig::WithConfig(
     WithConfig* pwconfig,
-    sass::vector<WithConfigVar> configs,
+    const sass::vector<WithConfigVar>& configs,
     bool hasConfig,
     bool hasShowFilter,
     bool hasHideFilter,
-    std::set<EnvKey> varFilters,
-    std::set<EnvKey> callFilters,
+    const std::set<EnvKey>& varFilters,
+    const std::set<EnvKey>& callFilters,
     const sass::string& prefix) :
     parent(pwconfig),
     hasConfig(hasConfig),
@@ -626,8 +626,8 @@ namespace Sass {
   AssignRule::AssignRule(
     const SourceSpan& pstate,
     const EnvKey& variable,
-    const sass::string ns,
-    sass::vector<EnvRef> vidxs,
+    const sass::string& ns,
+    const sass::vector<EnvRef>& vidxs,
     Expression* value,
     bool is_default,
     bool is_global) :

@@ -130,7 +130,7 @@ namespace Sass {
 
     // Format and print source-span
     void printSourceSpan(
-      SourceSpan pstate,
+      const SourceSpan& pstate,
       sass::ostream& stream,
       bool unicode = false);
 
@@ -138,8 +138,8 @@ namespace Sass {
 
     // Print `amount` of `traces` to output stream `os`.
     void writeStackTraces(sass::ostream& os,
-													StackTraces traces,
-													sass::string indent = "  ",
+													const StackTraces& traces,
+													const sass::string& indent = "  ",
 													bool showPos = true,
 													size_t showTraces = sass::string::npos);
 

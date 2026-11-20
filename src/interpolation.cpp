@@ -39,7 +39,7 @@ namespace Sass {
   // EO flushText
 
   // Add an interpolation to the buffer. 
-  void InterpolationBuffer::addInterpolation(const InterpolationObj schema)
+  void InterpolationBuffer::addInterpolation(const InterpolationObj& schema)
   {
     if (schema->empty()) return;
 

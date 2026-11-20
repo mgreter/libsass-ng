@@ -123,7 +123,7 @@ namespace Sass {
     // Reset unit without conversion factor
     void unit(const sass::string& unit);
 
-    sass::string unitSuggestion(const sass::string& name, const sass::string unit = "") const;
+    sass::string unitSuggestion(const sass::string& name, const sass::string& unit = "") const;
 
     // Returns true if empty
     bool isUnitless() const;
@@ -143,7 +143,7 @@ namespace Sass {
     const sass::string& unit2() const;
 
     // Returns true if we only have given numerator
-    bool isOnlyOfUnit(sass::string numerator) const;
+    bool isOnlyOfUnit(const sass::string& numerator) const;
 
     // Returns true if valid for css
     bool isValidCssUnit() const;

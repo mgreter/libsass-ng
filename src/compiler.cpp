@@ -422,7 +422,7 @@ namespace Sass {
     ~ImportReleaser() { sass_delete_import(import); }
   };
 
-  bool Compiler::callCustomLoader(const sass::string& imp_path, SourceSpan& pstate,
+  bool Compiler::callCustomLoader(const sass::string& imp_path, const SourceSpan& pstate,
     ImportRule* rule, const sass::vector<struct SassImporter*>& importers, bool singleton)
   {
     // unique counter
@@ -566,7 +566,7 @@ namespace Sass {
   }
   // EO callCustomLoader
 
-  void Compiler::applyCustomHeaders(StatementVector& statements, SourceSpan pstate)
+  void Compiler::applyCustomHeaders(StatementVector& statements, const SourceSpan& pstate)
   {
     // create a custom import to resolve headers
     ImportRuleObj rule = SASS_MEMORY_NEW(ImportRule, pstate);

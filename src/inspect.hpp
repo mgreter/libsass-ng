@@ -52,7 +52,7 @@ namespace Sass {
     Inspect(const OutputOptions& opt);
     // Inspect(Logger& logger, const OutputOptions& opt);
 
-    void visitBlockStatements(CssNodeVector children);
+    void visitBlockStatements(const CssNodeVector& children);
     
     void renderQuotedString(const sass::string& text, uint8_t quotes = 0);
     void renderUnquotedString(const sass::string& text);

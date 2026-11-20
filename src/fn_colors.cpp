@@ -550,7 +550,7 @@ namespace Sass {
     */
 
 
-    static String* _functionRgbString(sass::string name, const Color* color, Value* alpha, const SourceSpan& pstate)
+    static String* _functionRgbString(const sass::string& name, const Color* color, Value* alpha, const SourceSpan& pstate)
     {
       sass::sstream fncall;
       fncall << name << "(";
@@ -567,7 +567,7 @@ namespace Sass {
     }
 
     /// The implementation of the two-argument `rgb()` and `rgba()` functions.
-    static Value* handleTwoArgRgb(sass::string name, ValueVector arguments, const SourceSpan& pstate, Logger& logger, bool strict)
+    static Value* handleTwoArgRgb(const sass::string& name, const ValueVector& arguments, const SourceSpan& pstate, Logger& logger, bool strict)
     {
 
       Value* first = arguments[0];
@@ -858,7 +858,7 @@ namespace Sass {
 
     // This one is now very close to dart sass!!!!
     Value* _parseChannels(const sass::string& fname,
-      Value* input, sass::string name,
+      Value* input, const sass::string& name,
       const SourceSpan& pstate,
       Compiler& compiler,
       const ColorSpace* space = nullptr)
@@ -1545,7 +1545,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       /*******************************************************************/
 
       
-      Color* _colorInSpace(Color* colorUntyped, const String* spaceUntyped, Compiler& compiler, const sass::string fname, bool legacyMissing = true)
+      Color* _colorInSpace(Color* colorUntyped, const String* spaceUntyped, Compiler& compiler, const sass::string& fname, bool legacyMissing = true)
       {
         Color* color = colorUntyped->assertColor2(compiler, "color");
         if (spaceUntyped == nullptr) return color;
@@ -1565,7 +1565,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       /// Throws a [SassScriptException] if either argument isn't the expected type or
       /// if [spaceUntyped] isn't the name of a color space. If [spaceUntyped] is
       /// `sassNull`, it defaults to the color's existing space.
-      Color* _colorInSpace(Compiler& compiler, Value* col, Value* spc, const sass::string fname, bool legacyMissing = true)
+      Color* _colorInSpace(Compiler& compiler, Value* col, Value* spc, const sass::string& fname, bool legacyMissing = true)
       {
         Color* color = col->assertColor2(compiler, Strings::color);
         // std::cerr << "Called color in space " << color->getChannel0() << ", "
