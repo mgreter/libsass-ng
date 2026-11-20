@@ -97,8 +97,10 @@ namespace Sass {
 
     // Check if `a` equals to `b` (with unknown length at compile time)
     // Note: No unicode case sensitivity rules are implemented
+    // Both sides may contain upper case letters (e.g. two media types),
+    // so this must use the symmetric compare, not the `Const` variant.
     bool equalsIgnoreCase(const sass::string& a, const sass::string& b) {
-      return a.size() == b.size() && std::equal(b.begin(), b.end(), a.begin(), _equalsIgnoreCaseConst);
+      return a.size() == b.size() && std::equal(b.begin(), b.end(), a.begin(), _equalsIgnoreCase);
     }
 
     /////////////////////////////////////////////////////////////////////////
