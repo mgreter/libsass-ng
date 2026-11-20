@@ -126,10 +126,13 @@ namespace Sass {
         parent_->bubbleThrough(stopAtMediaRule) : this;
     }
 
-    // Helper function to bubble through parents
+    // Helper function to bubble through style rules (like dart-sass
+    // `through: (node) => node is CssStyleRule`): returns the closest
+    // ancestor-or-self that isn't a style rule. This must check itself,
+    // not its parent, or children of an at-rule escape to the root.
     CssParentNode* bubbleThroughCss()
     {
-      return parent_ && (parent_->isaCssStyleRule() || parent_->isaCssRoot()) ?
+      return parent_ && isaCssStyleRule() ?
         parent_->bubbleThroughCss() : this;
     }
 

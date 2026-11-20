@@ -128,24 +128,13 @@ namespace Sass {
 
     RAII_OBJ(CssParentNode, current, copy);
 
-
-    if (!(!atRootExcludingStyleRule && readStyleRule != nullptr) || inKeyframes || node->name() == "font-face") {
-
-      for (const auto& child : node->elements()) {
-        child->accept(this);
-      }
-
-
-    }
-    else {
-
-      // If we're in a style rule, copy it into the at-rule so that
-      // declarations immediately inside it have somewhere to go.
-      // For example, "a {@foo {b: c}}" should produce "@foo {a {b: c}}".
-      CssStyleRule* qwe = SASS_MEMORY_RESECT(readStyleRule);
-      node->addChildAt(qwe, false);
-      acceptChildrenAt(qwe, node->elements());
-
+    // Like dart-sass, we don't have to check for an unknown at-rule in a
+    // style rule here, because the previous compilation has already bubbled
+    // the at-rule to the root. Nested style rules are resolved against the
+    // current one (e.g. `a { @include meta.load-css(...) }`) when visited.
+    // Note: [node] belongs to the loaded module and must not be modified.
+    for (const auto& child : node->elements()) {
+      child->accept(this);
     }
 
   }
@@ -217,14 +206,27 @@ namespace Sass {
       mergedQueries = parsed;
     }
 
+    // Create a new rule instead of adding [node] itself, since [node]
+    // belongs to the loaded module and its children must be evaluated
+    // in the current context (e.g. nested in the current style rule).
+    CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
+      node->pstate(), current, mergedQueries);
+
     CssParentNode* chroot = current;
     while (BubbleMediaQuery(chroot, uses, bubbleQuery)) {
       if (!chroot->parent()) break;
       chroot = chroot->parent();
     }
 
-    chroot->addChildAt(node, true);
-    
+    chroot->addChildAt(css, true);
+
+    RAII_OBJ(CssParentNode, current, css);
+    RAII_OBJ(CssMediaQueryVector, mediaQueries, mergedQueries);
+
+    // If we're in a style rule, copy it into the media rule so that
+    // declarations immediately inside @media have somewhere to go.
+    acceptChildrenAt(hoistStyleRule(css), node->elements());
+
   }
 
   void Eval::visitCssRoot(CssRoot* css)
@@ -370,11 +372,17 @@ namespace Sass {
 
   }
 
-  void Eval::visitCssSupportsRule(CssSupportsRule* css)
+  void Eval::visitCssSupportsRule(CssSupportsRule* node)
   {
-    for (auto& child : css->elements()) {
-      child->accept(this);
-    }
+    // Like `visitSupportsRule`: add a copy of the rule (bubbling through
+    // style rules) and evaluate the children inside of it. It used to
+    // visit the children only, which dropped the `@supports` wrapper.
+    CssParentNode* chroot = current->bubbleThrough(true);
+    CssSupportsRuleObj copy = SASS_MEMORY_RESECT(node);
+    chroot->addChildAt(copy, false);
+    // If we're in a style rule, copy it into the supports rule so that
+    // declarations immediately inside @supports have somewhere to go.
+    acceptChildrenAt(hoistStyleRule(copy), node->elements());
   }
 
 }

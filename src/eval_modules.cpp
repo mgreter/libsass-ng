@@ -614,6 +614,20 @@ namespace Sass {
     RAII_SELECTOR(selectorStack, nullptr);
     RAII_SELECTOR(originalStack, nullptr);
 
+    // Like dart-sass `_execute`, a module is evaluated with fresh style
+    // state. With `meta.load-css()` inside a style rule, at-rule or nested
+    // declaration, the caller's context must not leak into the module's
+    // own CSS (e.g. the caller's style rule was copied into the module's
+    // at-rules, which its extension store doesn't know about).
+    RAII_PTR(CssStyleRule, readStyleRule, nullptr);
+    RAII_OBJ(CssMediaQueryVector, mediaQueries, nullptr);
+    LocalOption<sass::string> flag_declarationName(declarationName, "");
+    RAII_FLAG(inUnknownAtRule, false);
+    RAII_FLAG(atRootExcludingStyleRule, false);
+    RAII_FLAG(inKeyframes, false);
+    LocalOption<sass::vector<CssImportObj>> flag_outOfOrderImports(
+      _outOfOrderImports, sass::vector<CssImportObj>());
+
     // Create container where to put compiled css
     root->compiled = SASS_MEMORY_NEW(CssRoot,
       root->pstate());
