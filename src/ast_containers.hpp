@@ -439,10 +439,15 @@ namespace Sass {
     size_t hash() const
     {
       if (hash_ == 0) {
-        hash_start(hash_, typeid(Vectorized<V>).hash_code());
+        // Compute into a local and only cache the complete hash, since
+        // children may throw (e.g. too deeply nested values), which
+        // would otherwise leave a partial hash cached for good.
+        size_t hash = 0;
+        hash_start(hash, typeid(Vectorized<V>).hash_code());
         for (auto& child : elements_) {
-          hash_combine(hash_, child->hash());
+          hash_combine(hash, child->hash());
         }
+        hash_ = hash;
       }
       return hash_;
     }
@@ -616,7 +621,10 @@ namespace Sass {
     size_t hash() const
     {
       if (hash_ == 0) {
-        hash_start(hash_, typeid(this).hash_code());
+        // Compute into a local and only cache the complete hash (see
+        // `Vectorized::hash`, children may throw)
+        size_t hash = 0;
+        hash_start(hash, typeid(this).hash_code());
         // Must not depend on insertion order, since maps with the
         // same entries in different order compare equal (Map::operator==).
         // Hash each pair, then combine pairs commutatively (by summing).
@@ -627,7 +635,8 @@ namespace Sass {
           hash_combine(pair, kv.second->hash());
           entries += pair;
         }
-        hash_combine(hash_, entries);
+        hash_combine(hash, entries);
+        hash_ = hash;
       }
       return hash_;
     }

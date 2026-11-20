@@ -1416,8 +1416,11 @@ namespace Sass {
   {
     if (Hashed<ValueObj, ValueObj>::hash_ == 0) {
       VALUE_NESTING_GUARD();
-      hash_start(Value::hash_, typeid(Map).hash_code());
-      hash_combine(Value::hash_, Hashed<ValueObj, ValueObj>::hash());
+      // Only cache the complete hash (children may throw)
+      size_t hash = 0;
+      hash_start(hash, typeid(Map).hash_code());
+      hash_combine(hash, Hashed<ValueObj, ValueObj>::hash());
+      Value::hash_ = hash;
     }
     return Value::hash_;
   }
@@ -1544,10 +1547,13 @@ namespace Sass {
   {
     if (Vectorized<Value>::hash_ == 0) {
       VALUE_NESTING_GUARD();
-      hash_start(Value::hash_, typeid(List).hash_code());
-      hash_combine(Value::hash_, Vectorized<Value>::hash());
-      hash_combine(Value::hash_, separator());
-      hash_combine(Value::hash_, hasBrackets());
+      // Only cache the complete hash (children may throw)
+      size_t hash = 0;
+      hash_start(hash, typeid(List).hash_code());
+      hash_combine(hash, Vectorized<Value>::hash());
+      hash_combine(hash, separator());
+      hash_combine(hash, hasBrackets());
+      Value::hash_ = hash;
     }
     return Value::hash_;
   }
@@ -1616,12 +1622,15 @@ namespace Sass {
   {
     if (Vectorized<Value>::hash_ == 0) {
       VALUE_NESTING_GUARD();
-      hash_start(Value::hash_, typeid(ArgumentList).hash_code());
-      hash_combine(Value::hash_, Vectorized<Value>::hash());
+      // Only cache the complete hash (children may throw)
+      size_t hash = 0;
+      hash_start(hash, typeid(ArgumentList).hash_code());
+      hash_combine(hash, Vectorized<Value>::hash());
       if (_keywords) for (const auto& child : *_keywords) {
-        hash_combine(Value::hash_, child.first.hash());
-        hash_combine(Value::hash_, child.second->hash());
+        hash_combine(hash, child.first.hash());
+        hash_combine(hash, child.second->hash());
       }
+      Value::hash_ = hash;
     }
     return Value::hash_;
   }
