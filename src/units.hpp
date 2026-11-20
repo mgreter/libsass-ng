@@ -140,7 +140,8 @@ namespace Sass {
         && numerators[0] == "%";
     }
 
-    const sass::string& unit2() const;
+    // Units in calc() format ("px * 1em / 1s"), not cached
+    sass::string unit2() const;
 
     // Returns true if we only have given numerator
     bool isOnlyOfUnit(const sass::string& numerator) const;

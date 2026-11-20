@@ -472,26 +472,27 @@ namespace Sass {
   }
   // EO unit
 
-  // Convert units to string
-  const sass::string& Units::unit2() const
+  // Convert units to calc() string (e.g. "px * 1em / 1s")
+  // Not cached: `stringified` is the cache of `unit()`, which
+  // uses a different format ("px*em/s"). Sharing it returned
+  // whichever format was requested first for both functions.
+  sass::string Units::unit2() const
   {
-    if (stringified.empty()) {
-      size_t iL = numerators.size();
-      size_t nL = denominators.size();
-      if (iL > 0) {
-        stringified += numerators[0];
-      }
-      for (size_t i = 1; i < iL; i += 1) {
-        stringified += " * 1";
-        stringified += numerators[i];
-      }
-      for (size_t n = 0; n < nL; n += 1) {
-        stringified += " / 1";
-        stringified += denominators[n];
-      }
+    sass::string text;
+    size_t iL = numerators.size();
+    size_t nL = denominators.size();
+    if (iL > 0) {
+      text += numerators[0];
     }
-
-    return stringified;
+    for (size_t i = 1; i < iL; i += 1) {
+      text += " * 1";
+      text += numerators[i];
+    }
+    for (size_t n = 0; n < nL; n += 1) {
+      text += " / 1";
+      text += denominators[n];
+    }
+    return text;
   }
   // EO unit
 
