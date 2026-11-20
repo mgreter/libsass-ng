@@ -295,7 +295,9 @@ namespace Sass {
       //else std::cerr << "SET SCOPE VARIABLE " << vidx.offset << " to " << value->toString() << "\n";
       if (vidx.idxs->varOffset == NPOS) return;
       ValueObj& slot(varStack[vidx.idxs->varOffset + vidx.offset]);
-      if (slot == nullptr || guarded == false) slot = value;
+      // Like the global/module branches above (and dart-sass), a
+      // guarded `!default` assignment also replaces a `null` value.
+      if (!guarded || !slot || slot->isaNull()) slot = value;
     }
   }
   // EO setVariable
