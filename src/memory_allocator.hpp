@@ -12,7 +12,7 @@
 #include "MurmurHash3.hpp"
 #include "randomize.hpp"
 
-// #include "ankerl/rapidhash.h"
+#include "ankerl/rapidhash.h"
 // #include "ankerl/fast_vector.h"
 
 #include <deque>
@@ -163,16 +163,12 @@ namespace std {
     inline size_t operator()(
       const sass::string& name) const
     {
-      return MurmurHash3(
-          (void*)name.c_str(),
-          (int)name.size(),
-          Sass::getHashSeed());
-      /*
+      // Same seeded 64bit hash as `Sass::hash_string` (32bit MurmurHash3
+      // has seed independent collisions, enabling hash flooding)
       return rapidhash_withSeed(
         (void*)name.c_str(),
         (size_t)name.size(),
         Sass::getHashSeed());
-      */
     }
   };
 }

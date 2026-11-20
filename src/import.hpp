@@ -6,7 +6,7 @@
 
 #include "file.hpp"
 
-#include "MurmurHash3.hpp"
+#include "hashing.hpp"
 
 namespace Sass {
 
@@ -107,18 +107,12 @@ namespace std {
     inline size_t operator()(
       const Sass::ImportRequest& import) const
     {
+      // Same seeded 64bit hash as `Sass::hash_string` (32bit MurmurHash3
+      // has seed independent collisions, enabling hash flooding)
       size_t hash = import.considerImports;
-      Sass::hash_combine(hash,
-        MurmurHash3(
-          (void*)import.base_path.c_str(),
-          (int)import.base_path.size(),
-          Sass::getHashSeed()));
+      Sass::hash_combine(hash, Sass::hash_string(import.base_path));
 
-      Sass::hash_combine(hash,
-        MurmurHash3(
-          (void*)import.imp_path.c_str(),
-          (int)import.imp_path.size(),
-          Sass::getHashSeed()));
+      Sass::hash_combine(hash, Sass::hash_string(import.imp_path));
       return hash;
     }
   };

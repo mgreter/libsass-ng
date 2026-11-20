@@ -5,7 +5,8 @@
 // to get the  __EXTENSIONS__ fix on Solaris.
 #include "capi_sass.hpp"
 
-// #include "ankerl/rapidhash.h"
+#include "randomize.hpp"
+#include "ankerl/rapidhash.h"
 
 namespace Sass {
 
@@ -125,15 +126,12 @@ namespace Sass {
     // Calculate only on demand
     size_t hash() const {
       if (_hash == 0) {
-        /*
+        // Seeded 64bit hash (names come from the stylesheet; 32bit
+        // MurmurHash3 has seed independent collisions, which would
+        // allow hash flooding the environment maps)
         _hash = rapidhash_withSeed(
           (void*)_norm.c_str(),
           (size_t)_norm.size(),
-          getHashSeed());
-        */
-        _hash = MurmurHash3(
-          (void*)_norm.c_str(),
-          (int)_norm.size(),
           getHashSeed());
       }
       return _hash;

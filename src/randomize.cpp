@@ -6,6 +6,9 @@
 #include "capi_sass.hpp"
 
 #include <thread>
+// Always needed (the PRNG below uses std::mt19937)
+#include <random>
+#include <ctime>
 #ifdef USE_WIN_CRYPT
 # ifndef NOMINMAX
 #  define NOMINMAX
@@ -13,9 +16,6 @@
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 # include <wincrypt.h>
-#else
-# include <random>
-# include <ctime>
 #endif
 
 namespace Sass {
@@ -26,6 +26,8 @@ namespace Sass {
   // Read a truly random seed
   // This is probably expensive
   // Meant to seed PRNG hasher
+  // Not needed if a static seed is configured
+  #ifndef SassStaticHashSeed
   static uint32_t readHashSeed()
   {
     // Our hash seed
@@ -38,7 +40,7 @@ namespace Sass {
     else {
       #ifdef SassStaticHashSeed
       seed = SassStaticHashSeed;
-      #elsifdef USE_WIN_CRYPT
+      #elif defined(USE_WIN_CRYPT)
       // Get seed via MS API
       HCRYPTPROV hp = 0;
       CryptAcquireContext(&hp, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
@@ -72,6 +74,7 @@ namespace Sass {
     // Return the seed
     return seed;
   }
+  #endif
   // EO readHashSeed
 
   // Just a static wrapped around random device
@@ -80,7 +83,8 @@ namespace Sass {
   {
     // Optionally use static seed
     #ifdef SassStaticHashSeed
-    return SassStaticHashSeed
+    (void)preset; // unused with a static seed
+    return SassStaticHashSeed;
     #else
     // This should be thread safe
     static uint32_t seed = preset
