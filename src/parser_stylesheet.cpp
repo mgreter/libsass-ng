@@ -3146,9 +3146,9 @@ namespace Sass {
 
     InterpolationBuffer buffer(scanner);
     while (true) {
-      if (!scanner.peekChar(next)) {
-        break;
-      }
+      // End of input is an unterminated string (like dart-sass),
+      // it must not be accepted as if the quote was closed.
+      if (!scanner.peekChar(next)) next = $nul;
       if (next == quote) {
         scanner.readChar();
         break;
@@ -3160,9 +3160,10 @@ namespace Sass {
           scanner.relevantSpan());
       }
       else if (next == $backslash) {
-        if (!scanner.peekChar(second, 1)) {
-          break;
-        }
+        // A backslash at the end of input is passed to
+        // `escapeCharacter`, which returns U+FFFD; the next
+        // iteration then reports the unterminated string.
+        if (!scanner.peekChar(second, 1)) second = $nul;
         if (isNewline(second)) {
           scanner.readChar();
           scanner.readChar();
