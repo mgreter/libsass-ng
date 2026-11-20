@@ -294,23 +294,23 @@ namespace Sass {
       sass::string abs_path = rel2abs(path, CWD, CWD);
       sass::string abs_base = rel2abs(base, CWD, CWD);
 
+      // Urls (a protocol followed by ":/") are returned as they are.
+      // We assume that protocols must have at least two chars to be
+      // valid, to distinguish them from windows drive letters (`C:/`).
       size_t proto = 0;
-      // check if we have a protocol
-      if (path[proto] && Character::isAlphabetic(static_cast<unsigned char>(path[proto]))) {
+      if (proto < path.size() && Character::isAlphabetic(static_cast<unsigned char>(path[proto]))) {
         // skip over all alphanumeric characters
-        while (path[proto] && Character::isAlphanumeric(static_cast<unsigned char>(path[proto++]))) {}
-        // then skip over the mandatory colon
-        if (proto && path[proto] == ':') ++ proto;
+        while (proto < path.size() && Character::isAlphanumeric(static_cast<unsigned char>(path[proto]))) ++proto;
+        // then check for the mandatory colon and slash
+        if (proto >= 2 && proto + 1 < path.size() &&
+          path[proto] == ':' && path[proto + 1] == '/') return path;
       }
-
-      // distinguish between windows absolute paths and valid protocols
-      // we assume that protocols must at least have two chars to be valid
-      if (proto && path[proto++] == '/' && proto > 3) return path;
 
       #ifdef _WIN32
         // absolute link must have a drive letter, and we know that we
         // can only create relative links if both are on the same drive
-        if (abs_base[0] != abs_path[0]) return abs_path;
+        // (drive letters are case insensitive)
+        if (!Character::characterEqualsIgnoreCase(abs_base[0], abs_path[0])) return abs_path;
       #endif
 
       sass::string stripped_uri = "";
@@ -319,7 +319,8 @@ namespace Sass {
       size_t index = 0;
       size_t minSize = std::min(abs_path.size(), abs_base.size());
       for (size_t i = 0; i < minSize; ++i) {
-        #ifdef FS_CASE_SENSITIVITY
+        // Note: `FS_CASE_SENSITIVITY` is always defined (0 or 1)
+        #if FS_CASE_SENSITIVITY
           if (abs_path[i] != abs_base[i]) break;
         #else
           // compare the characters in a case insensitive manner
