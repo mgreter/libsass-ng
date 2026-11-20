@@ -600,51 +600,6 @@ namespace Sass {
       const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
       double a = alpha->assertPercentageOrUnitless(logger, 1.0, Strings::alpha);
       return rgb->changeAlpha(clampLikeCss(a, 0.0, 1.0));
-
-
-
-      // Check if any `calc()` or `var()` are passed
-      if (isVar(arguments[0])) {
-        return getFunctionString(
-          name, pstate, arguments);
-      }
-      else if (isVar(arguments[1])) {
-        if (const Color* first = arguments[0]->isaColor()) {
-        //   ColorRgbaObj rgba = first->toRGBA();
-          return _functionRgbString(name,
-            first, arguments[1], pstate);
-        }
-        else {
-          return getFunctionString(
-            name, pstate, arguments);
-        }
-      }
-      else if (!strict && isSpecialNumber(arguments[1])) {
-        if (const Color* color = arguments[0]->assertColor(logger, Strings::color)) {
-        //   ColorRgbaObj rgba = color->toRGBA();
-          return _functionRgbString(name,
-            color, arguments[1], pstate);
-        }
-      }
-
-      if (arguments[0]->isaColor()) {
-        const Color* color = arguments[0]->assertColor(logger, Strings::color);
-        const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
-        ColorObj copy = SASS_MEMORY_COPY(color);
-        copy->alpha(alpha->assertPercentageOrUnitless(logger, 1.0, Strings::alpha));
-        copy->parsed(false);
-        return copy.detach();
-      }
-
-      // const Color* color = arguments[0]->assertColor(logger, Strings::color);
-      // const Number* alpha = arguments[1]->assertNumber(logger, Strings::alpha);
-      // ColorObj copy = SASS_MEMORY_COPY(color);
-      // copy->a(_percentageOrUnitless(
-      //   alpha, 1.0, "$alpha", logger));
-      // copy->parsed(false);
-      // return copy.detach();
-      std::cerr << "not possible\n";
-      return nullptr;
     }
 
 
@@ -708,11 +663,10 @@ namespace Sass {
       bool clamp = true, bool fromRgbFunction = false)
     {
 
+      // Callers return early for unknown spaces (e.g. `var()`), so this
+      // is an internal error (it used to silently return `rgb(1 1 1)`)
       if (space == nullptr) {
-        std::cerr << "space is nullptr";
-        return SASS_MEMORY_NEW(Color,
-          pstate, ColorSpaces::rgb,
-          1, 1, 1, 1);
+        throw std::logic_error("Internal error: color space is missing");
       }
 
       if (space == &ColorSpaces::hsl) {

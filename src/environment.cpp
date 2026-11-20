@@ -188,19 +188,16 @@ namespace Sass {
   // Get value instance by stack index reference
   // Just converting and returning reference to array offset
 
-  static ValueObj qwe = SASS_MEMORY_NEW(Null, SourceSpan::internal32("null"));
-
   ValueObj& EnvRoot::getVariable(const EnvRef& vidx)
   {
+    // Invalid references are internal errors. Callers assign through the
+    // returned reference, so a shared fallback value could get modified.
     if (!vidx.isValid()) {
-      std::cerr << " Trying to access invalid variable\n";
-      return qwe;
+      throw std::logic_error("Internal error: access to an invalid variable reference");
     }
     if (vidx.idxs == nullptr || vidx.idxs->isInternal53) {
       if (vidx.offset >= intVariables.size()) {
-        std::cerr << " Trying to access non existing variable " << vidx.offset << "\n";
-        return qwe;
-
+        throw std::logic_error("Internal error: access to a non existing variable");
       }
       //const ValueObj& val = intVariables[vidx.offset];
       //if (val == nullptr) std::cerr << "Get variable at " << vidx.offset << " NULL\n";

@@ -64,7 +64,9 @@ namespace Sass {
 
   void ImportedCssVisitor::visitCssKeyframeBlock(CssKeyframeBlock* css)
   {
-    std::cerr << "THIS SHOULD NOT HAPPEN, NO CSS KEY FRAME BLOCKS!!!!\n";
+    // Only visits top-level nodes of a module's CSS, and keyframe blocks
+    // only exist inside `@keyframes` at-rules (dart-sass asserts as well).
+    SASS_ASSERT(false, "visitCssKeyframeBlock() should never be called");
   }
 
   void ImportedCssVisitor::visitCssMediaRule(CssMediaRule* css)

@@ -1128,7 +1128,8 @@ namespace Sass {
         color->space() == ColorSpaces::lch ||
         color->space() == ColorSpaces::oklch)
     {
-      std::cerr << "Wrong color space for writeColorFunction\n";
+      // Callers handle these spaces themselves (dart-sass asserts as well)
+      SASS_ASSERT(false, "Wrong color space for writeColorFunction");
     }
 
     append_string("color(");
@@ -1173,11 +1174,9 @@ namespace Sass {
   void Inspect::visitColor(Color* color)
   {
     
+    // Never null (`isaColor` of a color returns itself)
     auto spaced = color->isaColor();
-    if (spaced == nullptr) {
-      std::cerr << "wrong input for visitColor\n";
-      return;
-    }
+    if (spaced == nullptr) return;
 
 
     // Get the associated color space

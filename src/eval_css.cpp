@@ -180,9 +180,19 @@ namespace Sass {
     }
   }
 
+  // Re-adds an already evaluated keyframe block (e.g. from `meta.load-css`)
+  // under the current parent, like dart-sass and `visitCssAtRule` do.
   void Eval::visitCssKeyframeBlock(CssKeyframeBlock* css)
   {
-    std::cerr << "Not Implemented CssKeyframeBlock\n";
+    // Add a copy without children (bubbles through style rules)
+    CssParentNode* chroot = current->bubbleThrough(true);
+    CssKeyframeBlockObj copy = SASS_MEMORY_RESECT(css);
+    chroot->addChildAt(copy, false);
+    // Visit the children with the copy as the parent
+    RAII_OBJ(CssParentNode, current, copy);
+    for (const auto& child : css->elements()) {
+      child->accept(this);
+    }
   }
 
   void Eval::visitCssMediaRule(CssMediaRule* node)

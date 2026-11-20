@@ -622,7 +622,9 @@ namespace Sass {
     if (numerators.empty() && denominators.size() == 0) {
       return false;
     }
-    std::cerr << "case not implemented\n";
+    // Complex units are not implemented (like in dart-sass); callers
+    // reject them via `isValidCssUnit` before getting here
+    SASS_ASSERT(false, "hasPossiblyCompatibleUnits not implemented for complex units");
     return false;
   }
 

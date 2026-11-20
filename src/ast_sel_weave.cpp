@@ -511,7 +511,9 @@ namespace Sass {
           components2.pop_back(); // consumed
         }
         else {
-          std::cerr << "The container or combinator was empty!!!???\n";
+          // Can't happen (a combinator implies a component). Without
+          // consuming anything the recursion below would never end.
+          return false;
         }
         // std::cerr << "Merge case 1\n";
       }
@@ -601,7 +603,8 @@ namespace Sass {
 
         }
         else {
-          std::cerr << "The container or combinator was empty!!!???\n";
+          // Can't happen (see above), avoid endless recursion
+          return false;
         }
 
 

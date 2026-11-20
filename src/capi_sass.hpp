@@ -67,6 +67,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <cmath>
+#include <cassert>
 #include <stdexcept>
 
 // Include C-API headers

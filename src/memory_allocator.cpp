@@ -66,8 +66,11 @@ namespace Sass {
     // ToDo: check if condition is ever hit
     if (pool == nullptr || allocations == 0)
     {
-      std::cerr << "Dealloc out of sync\n";
-      return; }
+      // Leaking is the safe choice here; deallocation must not throw
+      // and writing to stderr may itself allocate (e.g. at shutdown)
+      SASS_ASSERT(false, "Dealloc out of sync");
+      return;
+    }
 
     #endif
 
