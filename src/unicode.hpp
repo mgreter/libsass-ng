@@ -24,6 +24,20 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
+    // Advances [it] by up to [count] code points, but never past [end].
+    // Unlike `utf8::advance` it doesn't throw if the text is too short
+    // (positions beyond the end map to the end) or invalid utf8.
+    template <typename octet_iterator>
+    inline void advance(octet_iterator& it, size_t count, const octet_iterator& end)
+    {
+      while (count > 0 && it != end) {
+        // Skip the lead byte and all its continuation bytes
+        ++it;
+        while (it != end && (static_cast<uint8_t>(*it) & 0xC0) == 0x80) ++it;
+        --count;
+      }
+    }
+
     // Return number of code points in utf8 string up to bytes offset.
     size_t codePointCount(const sass::string& utf8, size_t bytes);
 

@@ -69,25 +69,15 @@ namespace Sass {
       size_t len = 0;
       lfs.emplace_back(len);
       const char* data = content();
+      // Line breaks are LF, CRLF and a CR not followed by LF, like in
+      // dart-sass and the scanner (`StringScanner::consumedChar`). An
+      // LF followed by CR is two line breaks (the CR starts a new one).
       while (data[len] != 0) {
-        // is a carriage return?
-        if (data[len] == $cr) {
-          if (data[len + 1] == $lf) {
-            lfs.emplace_back(len + 2);
-            ++len; // advance twice
-          }
-          else {
-            lfs.emplace_back(len + 1);
-          }
+        if (data[len] == $lf) {
+          lfs.emplace_back(len + 1);
         }
-        else if (data[len] == $lf) {
-          if (data[len + 1] == $cr) {
-            lfs.emplace_back(len + 2);
-            ++len; // advance twice
-          }
-          else {
-            lfs.emplace_back(len + 1);
-          }
+        else if (data[len] == $cr && data[len + 1] != $lf) {
+          lfs.emplace_back(len + 1);
         }
         ++len;
       }

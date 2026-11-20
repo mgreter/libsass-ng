@@ -68,15 +68,24 @@ namespace Sass {
 
   // Called whenever a character is consumed.
   // Used to update scanner line/column position.
-  void StringScanner::consumedChar(uint8_t character)
+  void StringScanner::consumedChar(uint8_t character, uint8_t next)
   {
     switch (character) {
     case $space:
     case $tab:
     case $vt:
     case $ff:
-    case $cr:
       offset.column += 1;
+      break;
+    case $cr:
+      // Like dart-sass (and `SourceWithPath::countLines`), a CR not
+      // followed by LF is a line break; CRLF breaks once at the LF.
+      if (next == $lf) {
+        offset.column += 1;
+        break;
+      }
+      offset.line += 1;
+      offset.column = 0;
       break;
     case $lf:
       offset.line += 1;
@@ -104,7 +113,7 @@ namespace Sass {
   {
     if (isDone()) fail("more input");
     uint8_t ascii = *position;
-    consumedChar(ascii);
+    consumedChar(ascii, position + 1 < endpos ? position[1] : 0);
     position += 1;
     return ascii;
   }
@@ -164,7 +173,7 @@ namespace Sass {
     if (isDone()) return false;
     uint8_t ascii = *position;
     if (character != ascii) return false;
-    consumedChar(character);
+    consumedChar(character, position + 1 < endpos ? position[1] : 0);
     position += 1;
     return true;
   }
@@ -203,7 +212,7 @@ namespace Sass {
       if (isDone()) return false;
       uint8_t ascii = *cur;
       if (ascii != code) return false;
-      consumedChar(ascii);
+      consumedChar(ascii, cur + 1 < endpos ? cur[1] : 0);
       cur += 1;
     }
     position = cur;

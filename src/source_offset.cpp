@@ -33,9 +33,7 @@ namespace Sass {
   // Will use `plus` internally on all chars
   Offset::Offset(const sass::string& text)
   {
-    for (uint8_t character : text) {
-      plus(character);
-    }
+    plus(text);
   }
 
   // Create an Offset from the given char star
@@ -44,12 +42,14 @@ namespace Sass {
   {
     if (end == nullptr) {
       while (*text != 0) {
-        plus(*text++);
+        plus(text[0], text[1]);
+        text += 1;
       }
     }
     else {
       while (text < end) {
-        plus(*text++);
+        plus(text[0], text + 1 < end ? text[1] : 0);
+        text += 1;
       }
     }
   }
@@ -96,18 +96,30 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Append [character] to increment offset
-  void Offset::plus(uint8_t character)
+  // [next] is the following character (0 at the end),
+  // needed to count CRLF as a single line break.
+  void Offset::plus(uint8_t character, uint8_t next)
   {
     switch (character) {
     case $lf:
       line += 1;
       column = 0;
       break;
+    case $cr:
+      // Like dart-sass (and `SourceWithPath::countLines`), a CR not
+      // followed by LF is a line break; CRLF breaks once at the LF.
+      if (next == $lf) {
+        column += 1;
+      }
+      else {
+        line += 1;
+        column = 0;
+      }
+      break;
     case $space:
     case $tab:
     case $vt:
     case $ff:
-    case $cr:
       column += 1;
       break;
     default:
@@ -126,8 +138,8 @@ namespace Sass {
   // Append [text] to increment offset
   void Offset::plus(const sass::string& text)
   {
-    for (uint8_t character : text) {
-      plus(character);
+    for (size_t i = 0; i < text.size(); i += 1) {
+      plus(text[i], i + 1 < text.size() ? text[i + 1] : 0);
     }
   }
   // EO Offset::plus

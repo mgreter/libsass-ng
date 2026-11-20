@@ -45,7 +45,7 @@ namespace Sass {
     // Return the byte offset at a code point position
     size_t byteOffsetAtPosition(const sass::string& utf8, size_t position) {
       sass::string::const_iterator it = utf8.begin();
-      utf8::advance(it, position, utf8.end());
+      advance(it, position, utf8.end());
       return std::distance(utf8.begin(), it);
     }
     // EO byteOffsetAtPosition
@@ -60,7 +60,7 @@ namespace Sass {
       // Get initial byte position
       auto first = utf8.begin();
       // Advance to utf8 position
-      utf8::advance(first,
+      advance(first,
         start, utf8.end());
       // Begin to find end position
       auto last = first;
@@ -70,7 +70,7 @@ namespace Sass {
       }
       // Or advance given length in utf8
       else {
-        utf8::advance(last,
+        advance(last,
           len, utf8.end());
       }
       // Return first to last
@@ -90,7 +90,7 @@ namespace Sass {
       // Get initial byte position
       auto first = text.begin();
       // Advance to utf8 position
-      utf8::advance(first,
+      advance(first,
         start, text.end());
       // Begin to find end position
       auto last = first;
@@ -100,7 +100,7 @@ namespace Sass {
       }
       // Or advance given length in utf8
       else {
-        utf8::advance(last,
+        advance(last,
           len, text.end());
       }
       // Now replace via byte positions

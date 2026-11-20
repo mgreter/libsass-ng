@@ -65,7 +65,9 @@ namespace Sass {
 
     // Called whenever a character is consumed.
     // Used to update scanner line/column position.
-    void consumedChar(uint8_t character);
+    // [next] is the following character (0 at the end),
+    // needed to count CRLF as a single line break.
+    void consumedChar(uint8_t character, uint8_t next = 0);
 
     // Consumes a single character and returns its character
     // code. This throws a [FormatException] if the string has

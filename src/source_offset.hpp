@@ -53,7 +53,8 @@ namespace Sass {
     static Offset distance(const Offset& start, const Offset& end);
 
     // Append [character] to increment offset
-    void plus(uint8_t character);
+    // [next] is the following character (0 at the end)
+    void plus(uint8_t character, uint8_t next = 0);
 
     // Append [text] to increment offset
     void plus(const sass::string& text);

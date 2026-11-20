@@ -8,6 +8,7 @@
 #include "source.hpp"
 #include "character.hpp"
 #include "utf8/checked.h"
+#include "unicode.hpp"
 #include "string_utils.hpp"
 
 namespace Sass {
@@ -269,7 +270,7 @@ namespace Sass {
 
             // Print the initial code line
             auto line_beg = lines[i].begin();
-            utf8::advance(line_beg, beg.column, lines[i].end());
+            Unicode::advance(line_beg, beg.column, lines[i].end());
             lines[i].insert(line_beg - lines[i].begin(), getTerm(Terminal::red));
             stream << "  " << lines[i] << getTerm(Terminal::reset) << STRMLF;
 
@@ -309,7 +310,7 @@ namespace Sass {
 
             // Print the final code line
             auto line_beg = lines[i].begin();
-            utf8::advance(line_beg, end.column, lines[i].end());
+            Unicode::advance(line_beg, end.column, lines[i].end());
             lines[i].insert(line_beg - lines[i].begin(), getTerm(Terminal::reset));
             stream << getTerm(Terminal::red) << middle << ' ' << lines[i] << STRMLF;
 
@@ -484,16 +485,21 @@ namespace Sass {
 
     // Get the sizes (characters) for each part
     size_t line_len = utf8::distance(line_beg, line_end);
+    // Clamp the highlight to the actual line, so a span that
+    // does not fit (e.g. from inconsistent line counting) can
+    // never underflow `rhs_len` or advance past the line end.
+    if (lhs_len > line_len) lhs_len = line_len;
+    if (mid_len > line_len - lhs_len) mid_len = line_len - lhs_len;
     size_t rhs_len = line_len - lhs_len - mid_len;
 
     // Prepare iterators for left side of highlighted string
     sass::string::iterator lhs_beg = line.begin();
     sass::string::iterator lhs_end = lhs_beg;
-    utf8::advance(lhs_end, lhs_len, line_end);
+    Unicode::advance(lhs_end, lhs_len, line_end);
     // Prepare iterators for right side of highlighted string
     sass::string::iterator rhs_beg = lhs_end;
     sass::string::iterator rhs_end = line.end();
-    utf8::advance(rhs_beg, mid_len, line_end);
+    Unicode::advance(rhs_beg, mid_len, line_end);
 
     // Create substring of each part
     lhs.append(lhs_beg, lhs_end);
@@ -526,9 +532,9 @@ namespace Sass {
       // Prepare iterators for later substring operation
       auto lhs_start = mid.begin(), rhs_stop = mid.end();
       sass::string::iterator lhs_stop = lhs_start;
-      utf8::advance(lhs_stop, lhs_size, rhs_stop);
+      Unicode::advance(lhs_stop, lhs_size, rhs_stop);
       sass::string::iterator rhs_start = lhs_stop;
-      utf8::advance(rhs_start, shorten, rhs_stop);
+      Unicode::advance(rhs_start, shorten, rhs_stop);
       // Recreate shortened middle (highlight) part
       mid = sass::string(lhs_start, lhs_stop) +
         ellipsis + sass::string(rhs_start, rhs_stop);
@@ -565,7 +571,7 @@ namespace Sass {
     if (min_left < lhs_len) {
       min_left = min_left - ellipsis_len;
       auto beg = lhs.begin(), end = lhs.end();
-      utf8::advance(beg, lhs_len - min_left, end);
+      Unicode::advance(beg, lhs_len - min_left, end);
       lhs = sass::string(beg, end);
       StringUtils::makeLeftTrimmed(lhs);
       lhs = ellipsis + lhs;
@@ -575,7 +581,7 @@ namespace Sass {
     if (min_right < rhs_len) {
       min_right = min_right - ellipsis_len;
       auto beg = rhs.begin(), end = rhs.begin();
-      utf8::advance(end, min_right, rhs.end());
+      Unicode::advance(end, min_right, rhs.end());
       rhs = sass::string(beg, end);
       StringUtils::makeRightTrimmed(rhs);
       rhs = rhs + ellipsis;
