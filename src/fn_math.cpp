@@ -286,9 +286,11 @@ namespace Sass {
         if (n1->isUnitless() || n2->isUnitless()) {
           return SASS_MEMORY_NEW(Boolean, pstate, true);
         }
-        // normalize into main units
-        n1->normalize(); n2->normalize();
-        Units& lhs_unit = *n1, & rhs_unit = *n2;
+        // Normalize copies of the units into main units. Normalizing the
+        // numbers themselves would modify the caller's values (e.g. a
+        // variable `$a: 1in` became `96px` after the call).
+        Units lhs_unit(*n1), rhs_unit(*n2);
+        lhs_unit.normalize(); rhs_unit.normalize();
         bool is_comparable = (lhs_unit == rhs_unit);
         return SASS_MEMORY_NEW(Boolean, pstate, is_comparable);
       }
