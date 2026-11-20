@@ -61,7 +61,10 @@ namespace Sass {
     // Keep cache of resolved import filenames
     // Key is a pair of previous + import path
     // Used mainly in `find_includes` method
-    sass::cachemap::stl<ImportRequest, sass::vector<ResolvedImport>> resolveCache;
+    // Indexed by `forImport`, since `@import` also finds import-only
+    // files (`*.import.scss`) while `@use`/`@forward` must not, so the
+    // same request can resolve to different files.
+    sass::cachemap::stl<ImportRequest, sass::vector<ResolvedImport>> resolveCache[2];
 
   public:
 

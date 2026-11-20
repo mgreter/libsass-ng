@@ -1006,15 +1006,16 @@ namespace Sass {
   // Returns all results (e.g. for ambiguous valid imports)
   const sass::vector<ResolvedImport>& Compiler::findIncludes(const ImportRequest& import, bool forImport)
   {
-    // Try to find cached result first
-    auto it = resolveCache.find(import);
-    if (it != resolveCache.end()) return it->second;
+    // Try to find cached result first (separate cache per mode)
+    auto& cache(resolveCache[forImport ? 1 : 0]);
+    auto it = cache.find(import);
+    if (it != cache.end()) return it->second;
 
     // make sure we resolve against an absolute path
     sass::string base_path(File::rel2abs(import.base_path, ".", PWD));
 
     // first try to resolve the load path relative to the base path
-    sass::vector<ResolvedImport>& vec(resolveCache[import]);
+    sass::vector<ResolvedImport>& vec(cache[import]);
 
     vec = File::resolve_includes(base_path, import.imp_path, PWD, forImport, fileExistsCache);
 
