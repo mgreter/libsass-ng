@@ -9,6 +9,7 @@
 #include "character.hpp"
 #include "exceptions.hpp"
 #include "utf8/checked.h"
+#include <algorithm>
 
 namespace Sass {
 
@@ -207,15 +208,20 @@ namespace Sass {
   // until the end of the match. Returns whether or not [pattern] matched.
   bool StringScanner::scan(const sass::string& pattern)
   {
-    const char* cur = position;
-    for (uint8_t code : pattern) {
-      if (isDone()) return false;
-      uint8_t ascii = *cur;
-      if (ascii != code) return false;
-      consumedChar(ascii, cur + 1 < endpos ? cur[1] : 0);
-      cur += 1;
+    // First check the whole pattern without side effects. This used to
+    // update the line/column offset for every matching character, also
+    // when the pattern only matched partially (e.g. the first `/` of
+    // "//" before `/*`), so later spans were reported a column too far.
+    // It also checked `isDone()` for the start position only, so it
+    // could read at or past `endpos` near the end of the input.
+    size_t len = pattern.size();
+    if (size_t(endpos - position) < len) return false;
+    if (!std::equal(pattern.begin(), pattern.end(), position)) return false;
+    // Pattern matched, now consume it and update the offset
+    for (const char* cur = position; cur < position + len; cur += 1) {
+      consumedChar(*cur, cur + 1 < endpos ? cur[1] : 0);
     }
-    position = cur;
+    position += len;
     return true;
   }
 
