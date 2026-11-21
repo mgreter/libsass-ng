@@ -58,13 +58,17 @@ namespace Sass {
               it.value() = merged;
             }
             else {
-              // Might got an empty list that could be a map
-              List* resultList = kv.second->isaList();
-              if (resultList && resultList->empty()) {
-                // it.value() = kv.second;
-              }
-              else {
-                it.value() = kv.second;
+              // Like `tryMap()` in dart-sass, an empty list counts as an
+              // empty map: merging it into a map (or into another empty
+              // list) keeps the old value. In every other case the value
+              // from `map2` wins. This used to keep the old value for any
+              // empty list, e.g. `(a: 1)` merged with `(a: ())` gave `1`.
+              List* valueList = value->isaList();
+              List* oldList = it->second->isaList();
+              bool valueIsEmptyList = valueList && valueList->empty();
+              bool oldIsMapLike = resultMap || (oldList && oldList->empty());
+              if (!(valueIsEmptyList && oldIsMapLike)) {
+                it.value() = value;
               }
             }
           }
