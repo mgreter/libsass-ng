@@ -202,7 +202,8 @@ namespace Sass {
 
     // Look for all possible filename variants (e.g. partials)
     // Returns all results (e.g. for ambiguous but valid imports)
-    const sass::vector<ResolvedImport>& findIncludes(const ImportRequest& import, bool forImport);
+    // Returns a copy, since the cache may move its entries on insert
+    sass::vector<ResolvedImport> findIncludes(const ImportRequest& import, bool forImport);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

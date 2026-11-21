@@ -516,7 +516,7 @@ namespace Sass {
               ImportRequest request(path, ctx_path, false);
               // Search for valid imports (e.g. partials) on the file-system
               // Returns multiple valid results for ambiguous import path
-              const sass::vector<ResolvedImport>& resolved(findIncludes(request, true));
+              sass::vector<ResolvedImport> resolved(findIncludes(request, true));
               // Error if no file to import was found
               if (resolved.empty()) {
                 BackTraces& traces = *this;
@@ -1004,7 +1004,11 @@ namespace Sass {
 
   // Look for all possible filename variants (e.g. partials)
   // Returns all results (e.g. for ambiguous valid imports)
-  const sass::vector<ResolvedImport>& Compiler::findIncludes(const ImportRequest& import, bool forImport)
+  // Returns a copy: the cache is an open addressing hash map, so any later
+  // insert can move its entries. A returned reference was used after
+  // nested imports had been resolved (custom importer returning a path),
+  // which read freed memory and crashed.
+  sass::vector<ResolvedImport> Compiler::findIncludes(const ImportRequest& import, bool forImport)
   {
     // Try to find cached result first (separate cache per mode)
     auto& cache(resolveCache[forImport ? 1 : 0]);
@@ -1015,9 +1019,8 @@ namespace Sass {
     sass::string base_path(File::rel2abs(import.base_path, ".", PWD));
 
     // first try to resolve the load path relative to the base path
-    sass::vector<ResolvedImport>& vec(cache[import]);
-
-    vec = File::resolve_includes(base_path, import.imp_path, PWD, forImport, fileExistsCache);
+    sass::vector<ResolvedImport> vec(File::resolve_includes(
+      base_path, import.imp_path, PWD, forImport, fileExistsCache));
 
     // then search in every include path (but only if nothing found yet)
     for (size_t i = 0, S = includePaths.size(); vec.size() == 0 && i < S; ++i)
@@ -1026,7 +1029,8 @@ namespace Sass {
         includePaths[i], import.imp_path, PWD, forImport, fileExistsCache));
       vec.insert(vec.end(), resolved.begin(), resolved.end());
     }
-    // return vector
+    // Store in the cache and return a copy
+    cache[import] = vec;
     return vec;
   }
 
