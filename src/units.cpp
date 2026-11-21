@@ -99,32 +99,36 @@ namespace Sass {
     }
   };
 
-  // Return unit type enum from unit string
+  // Return unit type enum from unit string. Units are case-sensitive,
+  // like in dart-sass (its conversion table uses these exact spellings,
+  // e.g. `Hz` and `kHz`). Other spellings (`PX`, `hz`) are unknown units.
+  // This used to ignore case, so `1px + 1PX` converted while `1px == 1PX`,
+  // `1px < 2PX` and `math.compatible(1px, 1PX)` treated them as different.
   UnitType string_to_unit(const sass::string& s)
   {
     // size units
-    if      (StringUtils::equalsIgnoreCase(s, "px", 2))   return UnitType::PX;
-    else if (StringUtils::equalsIgnoreCase(s, "pt", 2))   return UnitType::PT;
-    else if (StringUtils::equalsIgnoreCase(s, "pc", 2))   return UnitType::PC;
-    else if (StringUtils::equalsIgnoreCase(s, "mm", 2))   return UnitType::MM;
-    else if (StringUtils::equalsIgnoreCase(s, "cm", 2))   return UnitType::CM;
-    else if (StringUtils::equalsIgnoreCase(s, "in", 2))   return UnitType::INCH;
-    else if (StringUtils::equalsIgnoreCase(s, "q", 1))    return UnitType::QMM;
+    if      (s == "px")   return UnitType::PX;
+    else if (s == "pt")   return UnitType::PT;
+    else if (s == "pc")   return UnitType::PC;
+    else if (s == "mm")   return UnitType::MM;
+    else if (s == "cm")   return UnitType::CM;
+    else if (s == "in")   return UnitType::INCH;
+    else if (s == "q")    return UnitType::QMM;
     // time units
-    else if (StringUtils::equalsIgnoreCase(s, "s", 1))    return UnitType::SEC;
-    else if (StringUtils::equalsIgnoreCase(s, "ms", 2))   return UnitType::MSEC;
+    else if (s == "s")    return UnitType::SEC;
+    else if (s == "ms")   return UnitType::MSEC;
     // angle units
-    else if (StringUtils::equalsIgnoreCase(s, "deg", 3))  return UnitType::DEG;
-    else if (StringUtils::equalsIgnoreCase(s, "grad", 4)) return UnitType::GRAD;
-    else if (StringUtils::equalsIgnoreCase(s, "rad", 3))  return UnitType::RAD;
-    else if (StringUtils::equalsIgnoreCase(s, "turn", 4)) return UnitType::TURN;
+    else if (s == "deg")  return UnitType::DEG;
+    else if (s == "grad") return UnitType::GRAD;
+    else if (s == "rad")  return UnitType::RAD;
+    else if (s == "turn") return UnitType::TURN;
     // frequency units
-    else if (StringUtils::equalsIgnoreCase(s, "hz", 2))   return UnitType::HERTZ;
-    else if (StringUtils::equalsIgnoreCase(s, "khz", 3))  return UnitType::KHERTZ;
+    else if (s == "Hz")   return UnitType::HERTZ;
+    else if (s == "kHz")  return UnitType::KHERTZ;
     // resolutions units
-    else if (StringUtils::equalsIgnoreCase(s, "dpi", 3))  return UnitType::DPI;
-    else if (StringUtils::equalsIgnoreCase(s, "dpcm", 4)) return UnitType::DPCM;
-    else if (StringUtils::equalsIgnoreCase(s, "dppx", 4)) return UnitType::DPPX;
+    else if (s == "dpi")  return UnitType::DPI;
+    else if (s == "dpcm") return UnitType::DPCM;
+    else if (s == "dppx") return UnitType::DPPX;
     // for unknown units
     else return UnitType::UNKNOWN;
   }
