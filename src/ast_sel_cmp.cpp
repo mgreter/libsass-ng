@@ -213,6 +213,12 @@ namespace Sass {
       for (const auto& combinator : combinators_) {
         hash_combine(hash_, combinator->hash());
       }
+      // Include the compound selector (`operator==` compares it too).
+      // It used to be left out, so all complex selectors with the same
+      // combinators hashed the same (e.g. `.a`, `.b` and `div`), which
+      // made hash maps keyed by selectors (e.g. the extensions of a
+      // target in the extender) degrade into linear lists.
+      if (selector_) hash_combine(hash_, selector_->hash());
     }
     return hash_;
   }
