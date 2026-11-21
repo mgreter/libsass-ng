@@ -1265,10 +1265,15 @@ namespace Sass {
             // Append to results
 
             parent = parent->withAdditionalCombinators(tails);
-            prefixes.insert(prefixes.end(),
+            // Our prefixes plus this parent's leading combinators.
+            // Use a copy per parent: appending to `prefixes` itself
+            // leaked the combinators of one parent into the next one
+            // (e.g. `&.e` in `> .c, .c` resolved to `> .c.e, > .c.e`).
+            SelectorCombinatorVector leads(prefixes);
+            leads.insert(leads.end(),
               parent->leadingCombinators().begin(),
               parent->leadingCombinators().end());
-            parent->leadingCombinators(prefixes);
+            parent->leadingCombinators(std::move(leads));
 
             rv.emplace_back(parent);
           }
