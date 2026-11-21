@@ -796,7 +796,9 @@ namespace Sass {
     // The parsers return a stylesheet or throw. Check anyway, since all
     // callers use the result and a null entry must never get cached.
     if (stylesheet.isNull()) {
-      throw std::runtime_error("Parser returned no stylesheet for " + abs_path);
+      // `sass::string` may use our custom allocator (SASS_CUSTOM_ALLOCATOR),
+      // so convert it; `std::runtime_error` only accepts a `std::string`.
+      throw std::runtime_error(std::string("Parser returned no stylesheet for ") + abs_path.c_str());
     }
 
     // for (auto& qwe : stylesheet->modimps) {
