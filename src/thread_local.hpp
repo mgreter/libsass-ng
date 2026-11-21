@@ -8,7 +8,15 @@
 #include <functional>
 #include <memory> //default_delete
 #include <thread>
+#include <system_error> // std::system_error (FLS), was only included via <iostream>
 #include "memory_config.hpp"
+// The upstream code logs every per-thread allocation and destruction to
+// `std::clog` unless `TLS_NO_DEBUG` is defined, which LibSass never did.
+// A library must not write to the host's stderr, so the debug output is
+// off by default now; define `TLS_DEBUG` to get it back for debugging.
+#if !defined(TLS_DEBUG) && !defined(TLS_NO_DEBUG)
+#define TLS_NO_DEBUG
+#endif
 #ifndef TLS_NO_DEBUG
 #include <iostream>
 #endif
