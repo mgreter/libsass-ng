@@ -20,29 +20,30 @@ extern "C" {
   // Create import entry by reading from `stdin`.
   struct SassImport* ADDCALL sass_make_stdin_import(const char* path)
   {
-    std::istreambuf_iterator<char> begin(std::cin), end;
-    sass::string text(begin, end); // consume everything
-    Import* import = SASS_MEMORY_NEW(Import,
-      SASS_MEMORY_NEW(SourceString,
-        path ? path : "stream://stdin",
-        std::move(text)),
-      SASS_IMPORT_AUTO);
-    import->refcount += 1;
-    return import->wrap();
+    return capiGuard<struct SassImport*>(__func__, nullptr, [&]() {
+      std::istreambuf_iterator<char> begin(std::cin), end;
+      sass::string text(begin, end); // consume everything
+      Import* import = SASS_MEMORY_NEW(Import,
+        SASS_MEMORY_NEW(SourceString,
+          path ? path : "stream://stdin",
+          std::move(text)),
+        SASS_IMPORT_AUTO);
+      import->refcount += 1;
+      return import->wrap(); });
   }
   // EO sass_make_stdin_import
 
   // Create import entry to load the passed input path.
   struct SassImport* ADDCALL sass_make_file_import(const char* imp_path)
   {
-    /// sass::string abs_path(imp_path);
-    Import* loaded = SASS_MEMORY_NEW(Import,
-      SASS_MEMORY_NEW(SourceFile,
-        imp_path, imp_path,
-        nullptr, nullptr),
-      SASS_IMPORT_AUTO);
-    loaded->refcount += 1;
-    return loaded->wrap();
+    return capiGuard<struct SassImport*>(__func__, nullptr, [&]() {
+      Import* loaded = SASS_MEMORY_NEW(Import,
+        SASS_MEMORY_NEW(SourceFile,
+          imp_path, imp_path,
+          nullptr, nullptr),
+        SASS_IMPORT_AUTO);
+      loaded->refcount += 1;
+      return loaded->wrap(); });
   }
   // EO sass_make_file_import
 
@@ -51,15 +52,16 @@ extern "C" {
   // passed memory (string literals and borrowed buffers are fine).
   struct SassImport* ADDCALL sass_make_content_import(const char* content, const char* path)
   {
-    Import* loaded = SASS_MEMORY_NEW(Import,
-      SASS_MEMORY_NEW(SourceString,
-        path ? path : "stream://stdin",
-        path ? path : "stream://stdin",
-        content ? content : "",
-        ""),
-      SASS_IMPORT_AUTO);
-    loaded->refcount += 1;
-    return loaded->wrap();
+    return capiGuard<struct SassImport*>(__func__, nullptr, [&]() {
+      Import* loaded = SASS_MEMORY_NEW(Import,
+        SASS_MEMORY_NEW(SourceString,
+          path ? path : "stream://stdin",
+          path ? path : "stream://stdin",
+          content ? content : "",
+          ""),
+        SASS_IMPORT_AUTO);
+      loaded->refcount += 1;
+      return loaded->wrap(); });
   }
   // EO sass_make_content_import
 
@@ -69,17 +71,19 @@ extern "C" {
   struct SassImport* ADDCALL sass_make_import(const char* imp_path, const char* abs_path,
     char* source, char* srcmap, enum SassImportSyntax format)
   {
-    Import* import =
-      SASS_MEMORY_NEW(Import,
-        SASS_MEMORY_NEW(SourceFile,
-          imp_path, abs_path,
-          source ? source : 0,
-          srcmap ? srcmap : 0),
-        format);
-    // Use reference counter
-    import->refcount += 1;
-    // Create the shared source object
-    return Import::wrap(import);
+    // Note: if this fails (returns NULL), source and srcmap may leak
+    return capiGuard<struct SassImport*>(__func__, nullptr, [&]() {
+      Import* import =
+        SASS_MEMORY_NEW(Import,
+          SASS_MEMORY_NEW(SourceFile,
+            imp_path, abs_path,
+            source ? source : 0,
+            srcmap ? srcmap : 0),
+          format);
+      // Use reference counter
+      import->refcount += 1;
+      // Create the shared source object
+      return Import::wrap(import); });
   }
   // EO sass_make_import
 
@@ -146,7 +150,8 @@ extern "C" {
   // Create new list container for imports.
   struct SassImportList* ADDCALL sass_make_import_list()
   {
-    return new SassImportList;
+    return capiGuard<struct SassImportList*>(__func__, nullptr,
+      [&]() { return new SassImportList; });
   }
 
   // Release memory of list container and all children.
@@ -184,7 +189,12 @@ extern "C" {
   void ADDCALL sass_import_list_push(struct SassImportList* list, struct SassImport* import)
   {
     if (list == nullptr) return;
-    if (import) list->push_back(import);
+    if (import == nullptr) return;
+    capiGuardVoid(__func__, [&]() {
+      // The list takes over the reference, release it if that fails
+      try { list->push_back(import); }
+      catch (...) { sass_delete_import(import); throw; }
+    });
   }
 
   // Append additional import to the list container and takes ownership of the import.

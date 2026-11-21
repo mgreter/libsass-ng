@@ -368,7 +368,9 @@ extern "C" {
   // Create a new LibSass compiler context
   struct SassCompiler* ADDCALL sass_make_compiler()
   {
-    return Compiler::wrap(new Compiler());
+    // Returns NULL if the compiler could not be created
+    return capiGuard<struct SassCompiler*>(__func__, nullptr,
+      [&]() { return Compiler::wrap(new Compiler()); });
   }
 
   // Release all memory allocated with the compiler
@@ -480,7 +482,8 @@ extern "C" {
   // Note: With the adaption of Sass Modules this might be completely replaced in the future.
   void ADDCALL sass_compiler_add_custom_header(struct SassCompiler* compiler, struct SassImporter* header)
   {
-    Compiler::unwrap(compiler).addCustomHeader(header);
+    capiGuardVoid(__func__, [&]() {
+      Compiler::unwrap(compiler).addCustomHeader(header); });
   }
 
   // Add a custom importer that will be executed when a sass `@import` rule is found.
@@ -489,7 +492,8 @@ extern "C" {
   // Note: The importer will not be called for regular css `@import url()` rules.
   void ADDCALL sass_compiler_add_custom_importer(struct SassCompiler* compiler, struct SassImporter* importer)
   {
-    Compiler::unwrap(compiler).addCustomImporter(importer);
+    capiGuardVoid(__func__, [&]() {
+      Compiler::unwrap(compiler).addCustomImporter(importer); });
   }
 
   // Add a custom function that will be executed when the corresponding function call is
@@ -576,7 +580,8 @@ extern "C" {
   // Note: LibSass does not write the file, implementers should write to this path.
   void ADDCALL sass_compiler_set_output_path(struct SassCompiler* compiler, const char* output_path)
   {
-    Compiler::unwrap(compiler).output_path = output_path ? output_path : "stream://stdout";
+    capiGuardVoid(__func__, [&]() {
+      Compiler::unwrap(compiler).output_path = output_path ? output_path : "stream://stdout"; });
   }
 
   // Getter for option to suppress anything being printed on stderr (quiet mode)
@@ -651,7 +656,8 @@ extern "C" {
   // Note: LibSass does not write the file, implementers should write to this path.
   void ADDCALL sass_compiler_set_srcmap_path(struct SassCompiler* compiler, const char* path)
   {
-    Compiler::unwrap(compiler).mapopt.path = path ? path : "";
+    capiGuardVoid(__func__, [&]() {
+      Compiler::unwrap(compiler).mapopt.path = path ? path : ""; });
   }
 
   // Getter for source-map path (where to store the source-mapping).
@@ -668,7 +674,8 @@ extern "C" {
   // Note: if not given, no root attribute will be added to the srcmap info object.
   void ADDCALL sass_compiler_set_srcmap_root(struct SassCompiler* compiler, const char* root)
   {
-    Compiler::unwrap(compiler).mapopt.root = root ? root : "";
+    capiGuardVoid(__func__, [&]() {
+      Compiler::unwrap(compiler).mapopt.root = root ? root : ""; });
   }
 
   // Setter for source-map file-url option (renders urls in srcmap as `file://` urls)

@@ -2,6 +2,7 @@
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
 #include "capi_importer.hpp"
+#include "capi_guard.hpp"
 
 extern "C" {
 
@@ -18,12 +19,13 @@ extern "C" {
   struct SassImporter* ADDCALL sass_make_importer(SassImporterLambda lambda, double priority, void* cookie)
   {
     if (lambda == nullptr) return nullptr;
-    struct SassImporter* importer = new SassImporter{};
-    if (importer == nullptr) return nullptr;
-    importer->lambda = lambda;
-    importer->priority = priority;
-    importer->cookie = cookie;
-    return importer;
+    // Returns NULL if the importer could not be created
+    return capiGuard<struct SassImporter*>(__func__, nullptr, [&]() {
+      struct SassImporter* importer = new SassImporter{};
+      importer->lambda = lambda;
+      importer->priority = priority;
+      importer->cookie = cookie;
+      return importer; });
   }
 
   // Deallocate the importer and release memory

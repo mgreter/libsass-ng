@@ -549,6 +549,8 @@ namespace Sass {
 
     // Clone all items in-place
     Map* cloneChildren(SASS_MEMORY_ARGS_VOID) final {
+      // Recursive, limit depth (e.g. deeply nested values from the C-API)
+      VALUE_NESTING_GUARD();
       for (auto it = Hashed::begin(); it != Hashed::end(); ++it) {
         it.value() = it.value()->copy(SASS_MEMORY_PARAMS_VOID);
         it.value()->cloneChildren(SASS_MEMORY_PARAMS_VOID);
@@ -651,6 +653,8 @@ namespace Sass {
 
     // Clone all items in-place
     List* cloneChildren(SASS_MEMORY_ARGS_VOID) override {
+      // Recursive, limit depth (e.g. deeply nested values from the C-API)
+      VALUE_NESTING_GUARD();
       for (ValueObj& entry : elements_) {
         entry = entry->copy(SASS_MEMORY_PARAMS_VOID);
         entry->cloneChildren(SASS_MEMORY_PARAMS_VOID);

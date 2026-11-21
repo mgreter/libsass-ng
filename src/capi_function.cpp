@@ -2,6 +2,8 @@
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
 #include "capi_function.hpp"
+#include "capi_guard.hpp"
+#include <memory>
 
 extern "C" {
 
@@ -19,12 +21,14 @@ extern "C" {
   {
     if (lambda == nullptr) return nullptr;
     if (signature == nullptr) return nullptr;
-    struct SassFunction* function = new SassFunction{};
-    if (function == nullptr) return nullptr;
-    function->lambda = lambda;
-    function->signature = signature;
-    function->cookie = cookie;
-    return function;
+    // Returns NULL if the function could not be created (`new` and the
+    // signature copy may throw, which must not escape into C callers)
+    return capiGuard<struct SassFunction*>(__func__, nullptr, [&]() {
+      std::unique_ptr<SassFunction> function(new SassFunction{});
+      function->lambda = lambda;
+      function->signature = signature;
+      function->cookie = cookie;
+      return function.release(); });
   }
 
   // Deallocate custom function and release memory
