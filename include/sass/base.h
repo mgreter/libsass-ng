@@ -101,12 +101,14 @@ extern "C" {
   // Make sure to release to acquired memory at some later point via
   // `sass_free_memory`. You need to go through my utility function in
   // case your code and my main program don't use the same memory manager.
+  // Returns NULL if the memory could not be allocated (like `malloc`).
   ADDAPI void* ADDCALL sass_alloc_memory(size_t size);
 
   // Allocate a memory block on the heap and copy [string] into it.
   // Make sure to release to acquired memory at some later point via
   // `sass_free_memory`. You need to go through my utility function in
   // case your code and my main program don't use the same memory manager.
+  // Returns NULL if [str] is NULL or the memory could not be allocated.
   ADDAPI char* ADDCALL sass_copy_c_string(const char* str);
 
   // Deallocate libsass heap memory

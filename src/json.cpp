@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <new>
 #include <cstring>
 
 #if defined(_MSC_VER) && _MSC_VER < 1900
@@ -48,9 +49,11 @@
 extern "C" int snprintf(char *, size_t, const char *, ...);
 #endif
 
+// Throw instead of terminating the host process (this used to print
+// "Out of memory." and call `exit`). Callers are C++ code that either
+// runs inside a compilation (reported as an error) or in `capiGuard`.
 #define out_of_memory() do {                    \
-    fprintf(stderr, "Out of memory.\n");    \
-    exit(EXIT_FAILURE);                     \
+    throw std::bad_alloc();                 \
   } while (0)
 
 /* Sadly, strdup is not portable. */

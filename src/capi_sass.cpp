@@ -54,14 +54,15 @@ extern "C" {
   // `sass_free_memory`. You need to go through this utility function in
   // case your code and LibSass use different memory manager implementations.
   // See https://stackoverflow.com/questions/1518711/how-does-free-know-how-much-to-free
+  // Returns NULL if the memory could not be allocated, like `malloc`.
+  // A library must never terminate the host process; this used to print
+  // "Out of memory." and call `exit(EXIT_FAILURE)`. It is a C API, so it
+  // must not throw either (internal callers check for NULL).
   void* ADDCALL sass_alloc_memory(size_t size)
   {
-    void* ptr = malloc(size);
-    if (ptr == NULL) {
-      std::cerr << "Out of memory.\n";
-      exit(EXIT_FAILURE);
-    }
-    return ptr;
+    // Request at least one byte, so NULL always means failure
+    // (`malloc(0)` may return NULL or a unique pointer).
+    return malloc(size ? size : 1);
   }
 
   // Allocate a new memory block and copy the passed string into it.
@@ -74,6 +75,8 @@ extern "C" {
     if (string == nullptr) return nullptr;
     size_t len = ::strlen(string) + 1;
     char* cpy = (char*)sass_alloc_memory(len);
+    // Pass on allocation failures (NULL)
+    if (cpy == nullptr) return nullptr;
     ::memcpy(cpy, string, len);
     return cpy;
   }

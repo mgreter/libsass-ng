@@ -24,6 +24,7 @@
 #endif
 
 #include <sys/stat.h>
+#include <new>
 #include "import.hpp"
 #include "sources.hpp"
 #include "unicode.hpp"
@@ -547,6 +548,8 @@ namespace Sass {
         DWORD dwFileLength = DWORD(fileSize.QuadPart);
         // allocate an extra byte for the null terminator
         contents = (char*) sass_alloc_memory(size_t(dwFileLength) + 1);
+        // Reported as a memory error by the compiler (the handle is closed)
+        if (contents == nullptr) throw std::bad_alloc();
         // Must read the whole file (otherwise contents is partially uninitialized)
         if (!ReadFile(hFile, contents, dwFileLength, &dwBytes, NULL) || dwBytes != dwFileLength) {
           sass_free_memory(contents);
@@ -569,6 +572,11 @@ namespace Sass {
         }
         const std::size_t size = st.st_size;
         char* contents = static_cast<char*>(sass_alloc_memory(size + 1));
+        // Reported as a memory error by the compiler
+        if (contents == nullptr) {
+          std::fclose(fd);
+          throw std::bad_alloc();
+        }
         if (std::fread(static_cast<void*>(contents), 1, size, fd) != size) {
           sass_free_memory(contents);
           std::fclose(fd);

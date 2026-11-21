@@ -6,6 +6,7 @@
 #include "parser_stylesheet.hpp"
 
 #include <cstring>
+#include <new>
 #include "compiler.hpp"
 #include "charcode.hpp"
 #include "character.hpp"
@@ -2940,6 +2941,7 @@ namespace Sass {
         // substitution is required. perform the substitution on a exposing
         // of the string. This is slower but it is thread safe.
         char* copy = sass_copy_c_string(str);
+        if (copy == nullptr) throw std::bad_alloc();
         *(copy + (found - str)) = separator;
         double res = strtod(copy, NULL);
         free(copy);
