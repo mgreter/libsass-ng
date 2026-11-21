@@ -221,16 +221,21 @@ namespace Sass {
       while((pos = path.length()) > 1 && path[pos - 2] == '/' && path[pos - 1] == '.') path.erase(pos - 2);
 
       size_t proto = 0;
-      // check if we have a protocol
-      if (path[proto] && Character::isAlphabetic(path[proto])) {
+      // check if we have a protocol (a scheme followed by a colon). Like
+      // in `abs2rel`, it needs at least two chars to tell it apart from a
+      // windows drive letter (`C:/`). This used to post-increment past the
+      // first non-alphanumeric char (and past the first char after the
+      // slashes), so e.g. `a//b` was not collapsed and `C://x` was kept.
+      if (proto < path.size() && Character::isAlphabetic(path[proto])) {
         // skip over all alphanumeric characters
-        while (path[proto] && Character::isAlphanumeric(path[proto++])) {}
+        while (proto < path.size() && Character::isAlphanumeric(path[proto])) ++proto;
         // then skip over the mandatory colon
-        if (proto && path[proto] == ':') ++ proto;
+        if (proto >= 2 && proto < path.size() && path[proto] == ':') ++proto;
+        else proto = 0; // not a protocol
       }
 
-      // then skip over start slashes
-      while (path[proto++] == '/') {}
+      // then skip over start slashes (kept, e.g. `file:///` or `//server`)
+      while (proto < path.size() && path[proto] == '/') ++proto;
 
       pos = proto; // collapse multiple delimiters into a single one
       while((pos = path.find("//", pos)) != sass::string::npos) path.erase(pos, 1);
