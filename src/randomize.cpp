@@ -9,6 +9,8 @@
 // Always needed (the PRNG below uses std::mt19937)
 #include <random>
 #include <ctime>
+#include <atomic>
+#include <mutex>
 #ifdef USE_WIN_CRYPT
 # ifndef NOMINMAX
 #  define NOMINMAX
@@ -86,52 +88,70 @@ namespace Sass {
     (void)preset; // unused with a static seed
     return SassStaticHashSeed;
     #else
-    // This should be thread safe
-    static uint32_t seed = preset
-      ? *preset : readHashSeed();
-    if (preset) seed = *preset;
-    return seed; // thread static
+    // Initialization of a function local static is thread safe. The value
+    // is atomic, since a preset (e.g. from a plugin) may overwrite it while
+    // other threads read it (relaxed is enough, it's a single value).
+    static std::atomic<uint32_t> seed(preset
+      ? *preset : readHashSeed());
+    if (preset) seed.store(*preset, std::memory_order_relaxed);
+    return seed.load(std::memory_order_relaxed);
     #endif
   }
   // EO getHashSeed
 
   // Random number generator only needed in eval phase
-  // This makes it safe to reset the hash seed before
+  // This makes it safe to reset the hash seed before.
+  // There is one generator for the whole process (seeded once), which
+  // keeps the sequence reproducible for a given seed. Threads compiling
+  // at the same time share it, so every use must hold `getRngMutex()`:
+  // `std::mt19937` changes its state on every call (unsynchronized use
+  // was a data race, e.g. `unique-id()` returned duplicates).
   static std::mt19937& getRng()
   {
-    // Lets hope this is indeed thread safe (seed once)
     static std::mt19937 rng(getHashSeed());
-    return rng; // static twister per thread
+    return rng;
   }
   // EO getRng
+
+  // Allocated once and never destroyed (no static destruction order)
+  static std::mutex& getRngMutex()
+  {
+    static std::mutex* mutex = new std::mutex();
+    return *mutex;
+  }
+  // EO getRngMutex
 
   // Create a random `int` between [low] and [high]
   int getRandomInt(int low, int high)
   {
-    static std::uniform_int_distribution<int> urd;
-    return urd(getRng(), decltype(urd)::param_type{ low, high });
+    std::uniform_int_distribution<int> urd(low, high);
+    std::lock_guard<std::mutex> lock(getRngMutex());
+    return urd(getRng());
   }
   // EO getRandomInt
 
   // Create a random `float` between [low] and [high]
   float getRandomFloat(float low, float high)
   {
-    static std::uniform_real_distribution<float> urd;
-    return urd(getRng(), decltype(urd)::param_type{ low, high });
+    std::uniform_real_distribution<float> urd(low, high);
+    std::lock_guard<std::mutex> lock(getRngMutex());
+    return urd(getRng());
   }
   // EO getRandomFloat
 
   // Create a random `double` between [low] and [high]
   double getRandomDouble(double low, double high)
   {
-    static std::uniform_real_distribution<double> urd;
-    return urd(getRng(), decltype(urd)::param_type{ low, high });
+    std::uniform_real_distribution<double> urd(low, high);
+    std::lock_guard<std::mutex> lock(getRngMutex());
+    return urd(getRng());
   }
   // EO getRandomDouble
 
   // Get full 32bit random data
   uint32_t getRandomUint32()
   {
+    std::lock_guard<std::mutex> lock(getRngMutex());
     return getRng()();
   }
   // EO getRandomUint32
