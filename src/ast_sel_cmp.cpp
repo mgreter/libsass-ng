@@ -65,14 +65,25 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Like dart-sass, two complex selectors are only equal if both their
+  // leading combinators and their components are equal. The leading
+  // combinators used to be ignored, so e.g. `> .c` and `.c` were equal.
   bool ComplexSelector::operator==(const ComplexSelector& rhs) const
   {
     if (&rhs == this) return true;
     if (size() != rhs.size()) return false;
+    if (leadingCombinators_.size() !=
+      rhs.leadingCombinators_.size()) return false;
     #ifndef SASS_FORCE_CMP_HASH
     if (hashed() != 0 && rhs.hashed() != 0)
     #endif
       if (hash() != rhs.hash()) return false;
+    // Compare leading combinators by value
+    if (!std::equal(
+      leadingCombinators_.begin(),
+      leadingCombinators_.end(),
+      rhs.leadingCombinators_.begin(),
+      ObjEqualityFn<SelectorCombinatorObj>)) return false;
     // Compare the whole list by ptr value
     return std::equal(
       begin(), end(), rhs.begin(),
@@ -83,6 +94,15 @@ namespace Sass {
   {
     // Do simple pointer compare first
     if (&rhs == this) return false;
+    // Order by leading combinators first
+    if (std::lexicographical_compare(
+      leadingCombinators_.begin(), leadingCombinators_.end(),
+      rhs.leadingCombinators_.begin(), rhs.leadingCombinators_.end(),
+      ObjLessThanFn<SelectorCombinatorObj>)) return true;
+    if (std::lexicographical_compare(
+      rhs.leadingCombinators_.begin(), rhs.leadingCombinators_.end(),
+      leadingCombinators_.begin(), leadingCombinators_.end(),
+      ObjLessThanFn<SelectorCombinatorObj>)) return false;
     // Compare the whole list by ptr value
     return std::lexicographical_compare(
       begin(), end(), rhs.begin(), rhs.end(),
@@ -93,6 +113,9 @@ namespace Sass {
   {
     if (Selector::hash_ == 0) {
       hash_start(Selector::hash_, typeid(this).hash_code());
+      for (const auto& combinator : leadingCombinators_) {
+        hash_combine(Selector::hash_, combinator->hash());
+      }
       hash_combine(Selector::hash_, Vectorized<CplxSelComponent>::hash());
     }
     return Selector::hash_;

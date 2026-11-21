@@ -729,7 +729,16 @@ namespace Sass {
     // line break after the selector?
     ADD_CONSTREF(bool, hasLineBreak);
 
-    ADD_CONSTREF(SelectorCombinatorVector, leadingCombinators);
+  protected:
+    SelectorCombinatorVector leadingCombinators_;
+  public:
+    const SelectorCombinatorVector& leadingCombinators() const { return leadingCombinators_; }
+    // The leading combinators are part of `hash()` and `==`,
+    // so changing them must invalidate the cached hash value.
+    void leadingCombinators(SelectorCombinatorVector&& combinators)
+    { leadingCombinators_ = std::move(combinators); Selector::hash_ = 0; }
+    void leadingCombinators(const SelectorCombinatorVector& combinators)
+    { leadingCombinators_ = combinators; Selector::hash_ = 0; }
 
     // Calculate specificity only once
     mutable unsigned long specificity_ = 0xFFFFFFFF;
