@@ -144,8 +144,10 @@ namespace Sass {
         auto number = arguments[0]->assertNumber(compiler, Strings::number);
         number->assertNumberStrictWithoutUnit(compiler, Strings::number);
 
-        return SASS_MEMORY_NEW(String, pstate,
-          std::signbit(number->value()) ? "-0.0" : "0.0");
+        // Same rules as the CSS `sign()` calculation (`calc_sign`):
+        // -1 or 1, while 0, -0 and NaN are returned unchanged. It used
+        // to return the string "0.0" or "-0.0" for every input.
+        return SASS_MEMORY_NEW(Number, pstate, number->sign());
       }
 
       static BUILT_IN_FN(fnLog)
