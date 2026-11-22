@@ -25,9 +25,10 @@ namespace Sass {
       return true;
     }
     else {
+      // Like dart-sass `any`: check all components (not just the first)
       for (const auto& component : elements) {
         if (component->combinators().size() > 1) return true;
-        return component->selector()->accept(this);
+        if (component->selector()->accept(this)) return true;
       }
     }
     return false;
@@ -44,8 +45,9 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  const IsBogusVisitor IsBogusVisitorStrict(false);
-  const IsBogusVisitor IsBogusVisitorLenient(true);
+  // Strict includes leading combinators (like `isBogusStrict`)
+  const IsBogusVisitor IsBogusVisitorStrict(true);
+  const IsBogusVisitor IsBogusVisitorLenient(false);
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

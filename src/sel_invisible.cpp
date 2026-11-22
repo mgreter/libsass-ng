@@ -41,7 +41,7 @@ namespace Sass {
   {
     if (const auto& selector = pseudo->selector()) {
       if (pseudo->name() != "not") return selector->accept(this); 
-      else return includeBogus && selector->isBogusLenient();
+      else return includeBogus && selector->isBogusStrict();
     }
     return false;
   }

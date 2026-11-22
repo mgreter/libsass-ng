@@ -22,7 +22,8 @@ namespace Sass {
 
   bool IsUselessVisitor::visitPseudoSelector(PseudoSelector* pseudo)
   {
-    return pseudo->isBogusLenient();
+    // Like dart-sass `isBogus` (including leading combinators)
+    return pseudo->isBogusStrict();
   }
 
   /////////////////////////////////////////////////////////////////////////
