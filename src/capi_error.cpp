@@ -141,7 +141,14 @@ void SassError::writeCss(std::ostream& css) const
   auto cur = content.begin();
   auto end = content.end();
   while (cur != end) {
-    uint32_t cp = utf8::next(cur, end);
+    uint32_t cp = 0;
+    // Messages may contain invalid utf8 (e.g. from a custom function
+    // error). Write U+FFFD for an offending byte instead of throwing:
+    // throwing here left the error css file truncated inside the string
+    // and replaced the original error with "Invalid UTF-8".
+    // `utf8::next` restores the iterator on failure, so skip one byte.
+    try { cp = utf8::next(cur, end); }
+    catch (const utf8::exception&) { cp = 0xFFFD; ++cur; }
     if (cp >= 0x20 && cp < 0x7F) {
       // Just pass the char
       css << (char)cp;
