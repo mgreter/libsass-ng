@@ -44,7 +44,7 @@ namespace Sass {
             index, compiler, "n");
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (eval.assigne && eval.assigne->ptr() == input && input->refcount < SassAssignableRefCount) {
+        if (eval.assignedValue() == input && input->refcount < SassAssignableRefCount) {
           if (List* lst = input->isaList()) {
             lst->set(idx, arguments[2]);
             return lst;
@@ -106,7 +106,7 @@ namespace Sass {
         // Only valid if the assigned variable holds the first list, and
         // never when joining a list with itself (would insert own range).
         // Arglists are excluded, as the result must be a plain list.
-        if (eval.assigne && eval.assigne->ptr() == list1 && list1 != list2 &&
+        if (eval.assignedValue() == list1 && list1 != list2 &&
           list1->refcount < SassAssignableRefCount && !list1->isaArgumentList()) {
           if (List* lst = list1->isaList()) {
             lst->separator(separator);
@@ -155,7 +155,7 @@ namespace Sass {
         }
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (eval.assigne && eval.assigne->ptr() == list && list->refcount < SassAssignableRefCount) {
+        if (eval.assignedValue() == list && list->refcount < SassAssignableRefCount) {
           if (List* lst = list->isaList()) {
             lst->separator(separator);
             lst->append(value);

@@ -3381,6 +3381,12 @@ namespace Sass {
   /*#####################################################################*/
 
 
+  // Value of the variable currently being assigned (or nullptr)
+  Value* Eval::assignedValue() const
+  {
+    return compiler.varRoot.getSlotValue(assigne);
+  }
+
   Value* Eval::visitAssignRule(AssignRule* a)
   {
     //std::cerr << "visitAssignRule " << a->variable().norm() << "\n";
@@ -3388,11 +3394,11 @@ namespace Sass {
     // This should potentially increase performance, but real-time
     // profiling only show a very minor increase (but keep anyway).
     if (a->vidx().isValid()) {
-      assigne = &compiler.varRoot.getVariable(a->vidx());
+      assigne = compiler.varRoot.getVariableSlot(a->vidx());
       ValueObj result = a->value()->accept(this);
       compiler.varRoot.setVariable(a->vidx(),
         result, a->is_default());
-      assigne = nullptr;
+      assigne = EnvRoot::VarSlot();
       return nullptr;
     }
 
@@ -3522,14 +3528,14 @@ namespace Sass {
       }
     //  std::cerr << "FOUND VARIABLE " << a->vidx().offset << "\n";
       //exit(1);
-      assigne = &compiler.varRoot.getVariable(a->vidx());
+      assigne = compiler.varRoot.getVariableSlot(a->vidx());
       if (!result) result = a->value()->accept(this);
       if (result) result = withoutSlash3(result);
       compiler.varRoot.setVariable(
         a->vidx(),
         result,
         a->is_default());
-      assigne = nullptr;
+      assigne = EnvRoot::VarSlot();
 
     }
     else {

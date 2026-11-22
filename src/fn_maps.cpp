@@ -252,7 +252,7 @@ namespace Sass {
         // We assign to ourself, so we can optimize this
         // This can shave off a few percent of run-time
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (eval.assigne && eval.assigne->ptr() == map1.ptr()) {
+        if (eval.assignedValue() == map1.ptr()) {
           if (map1->refcount < SassAssignableRefCount + 1) {
             for (auto& kv : map2->elements()) {
               map1->insertOrSet(kv); }
@@ -340,7 +340,7 @@ namespace Sass {
         MapObj map = arguments[0]->assertMap(compiler, Strings::map);
 
         #ifdef SASS_OPTIMIZE_SELF_ASSIGN
-        if (eval.assigne && eval.assigne->ptr() == map.ptr() && map->refcount < SassAssignableRefCount + 1) {
+        if (eval.assignedValue() == map.ptr() && map->refcount < SassAssignableRefCount + 1) {
           map->erase(arguments[1], arguments[1]->hash());
           for (const auto& key : arguments[2]->start()) {
             map->erase(key, key->hash());

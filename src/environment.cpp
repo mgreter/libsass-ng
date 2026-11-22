@@ -261,6 +261,23 @@ namespace Sass {
     }
   }
 
+  EnvRoot::VarSlot EnvRoot::getVariableSlot(const EnvRef& vidx) const
+  {
+    VarSlot slot;
+    if (!vidx.isValid()) return slot;
+    slot.internal = vidx.idxs == nullptr || vidx.idxs->isInternal53;
+    slot.index = slot.internal ? vidx.offset
+      : vidx.idxs->varOffset + vidx.offset;
+    return slot;
+  }
+
+  Value* EnvRoot::getSlotValue(const VarSlot& slot) const
+  {
+    const auto& stack = slot.internal ? intVariables : varStack;
+    if (slot.index >= stack.size()) return nullptr;
+    return stack[slot.index].ptr();
+  }
+
   // Get function instance by stack index reference
   // Just converting and returning reference to array offset
   ValueObj& EnvRoot::getModVar(const uint32_t offset)

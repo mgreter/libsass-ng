@@ -31,7 +31,12 @@ namespace Sass {
 
     // A pointer to the slot where we will assign to
     // Used to optimize self-assignments in functions
-    ValueObj* assigne = nullptr;
+    // Slot of the variable currently being assigned (to allow functions
+    // like `append` to modify its value in place if it isn't shared).
+    EnvRoot::VarSlot assigne;
+
+    // Value of the variable currently being assigned (or nullptr)
+    Value* assignedValue() const;
 
     // Base references
     Logger& logger;

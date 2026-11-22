@@ -356,6 +356,20 @@ namespace Sass {
     // Get value instance by stack index reference
     // Just converting and returning reference to array offset
     ValueObj& getVariable(const EnvRef& vidx);
+
+    // Stable location of a variable value, which survives reallocations
+    // of the variable stack (unlike a pointer or reference into it) and
+    // doesn't follow later frames of the same scope (unlike an EnvRef).
+    struct VarSlot {
+      bool internal = false;
+      size_t index = NPOS;
+    };
+
+    // Get the current slot of the variable referenced by [vidx]
+    VarSlot getVariableSlot(const EnvRef& vidx) const;
+
+    // Get the value in [slot] (nullptr if it doesn't exist anymore)
+    Value* getSlotValue(const VarSlot& slot) const;
     ValueObj& getModVar(const uint32_t offset);
 
     // Get function instance by stack index reference
