@@ -59,12 +59,80 @@ namespace Sass {
     return fraction > static_cast<size_t>(precision);
   }
 
+  // Formats a large number (|nr| >= 1e6) like dart-sass: take the shortest
+  // decimal representation that converts back to the same double, then
+  // round it to [precision] fractional digits. Printing it with "%.10f"
+  // shows digits beyond what a double can represent (e.g. we printed
+  // "6530020637.921538353" instead of "6530020637.921538").
+  static sass::string formatLargeNumber(double nr, int precision, double epsilon)
+  {
+    char buf[64];
+    // Like dart-sass (`fuzzyAsInt` and `int.toString`), (fuzzy) integers
+    // that fit into a 64-bit integer are written with all their digits.
+    if (std::fabs(nr) < 9223372036854775808.0) {
+      double rounded = std::round(nr);
+      if (fuzzyEquals(nr, rounded, epsilon)) {
+        snprintf(buf, sizeof(buf), "%.0f", rounded);
+        return sass::string(buf);
+      }
+    }
+    for (int digits = 0; digits < 17; digits++) {
+      snprintf(buf, sizeof(buf), "%.*e", digits, nr);
+      if (strtod(buf, nullptr) == nr) break;
+    }
+    // Collect the significant digits and the exponent
+    // (skipping the locale dependent decimal separator)
+    sass::string sig;
+    int exponent = 0;
+    bool negative = false;
+    const char* chr = buf;
+    if (*chr == '-') { negative = true; ++chr; }
+    for (; *chr && *chr != 'e' && *chr != 'E'; ++chr) {
+      if (*chr >= '0' && *chr <= '9') sig += *chr;
+    }
+    if (*chr) exponent = atoi(chr + 1);
+    // The integer part has exponent + 1 digits (exponent >= 6 here)
+    size_t intLen = static_cast<size_t>(exponent) + 1;
+    if (sig.size() < intLen) sig.append(intLen - sig.size(), '0');
+    sass::string integer(sig.substr(0, intLen));
+    sass::string fraction(sig.substr(intLen));
+    // Round half up in decimal, like dart-sass's `_writeRounded`
+    size_t keep = static_cast<size_t>(precision);
+    if (fraction.size() > keep) {
+      bool roundUp = fraction[keep] >= '5';
+      fraction.resize(keep);
+      for (size_t i = fraction.size(); roundUp && i > 0; --i) {
+        if (fraction[i - 1] == '9') fraction[i - 1] = '0';
+        else { fraction[i - 1]++; roundUp = false; }
+      }
+      for (size_t i = integer.size(); roundUp && i > 0; --i) {
+        if (integer[i - 1] == '9') integer[i - 1] = '0';
+        else { integer[i - 1]++; roundUp = false; }
+      }
+      if (roundUp) integer.insert(integer.begin(), '1');
+    }
+    while (!fraction.empty() && fraction.back() == '0') fraction.pop_back();
+    sass::string rv;
+    if (negative) rv += '-';
+    rv += integer;
+    if (!fraction.empty()) {
+      rv += '.';
+      rv += fraction;
+    }
+    return rv;
+  }
+
   // Format a number with the configured precision and strip trailing
   // zeros of the fractional part. Zeros are only removed after a decimal
   // point (otherwise precision 0 turned "10" into "1"), and we never move
-  // before the start of the buffer (previously "0" read uf[-1]).
+  // before the start of the buffer (previously "0" read uf[-1]).
   static sass::string formatNumber(double nr, const OutputOptions& outopt)
   {
+    // Large numbers would show binary noise with "%.10f". Not if a precision
+    // beyond what a double can hold was requested (which wants all digits).
+    if (std::isfinite(nr) && std::fabs(nr) >= 1e6 && outopt.precision <= 17) {
+      return formatLargeNumber(nr, outopt.precision, outopt.epsilon);
+    }
     // Avoid streams (precision is clamped, so the result always fits)
     char buf[1024];
     int len = snprintf(buf, sizeof(buf), outopt.nr_sprintf, nr);

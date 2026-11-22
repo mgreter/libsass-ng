@@ -2884,22 +2884,31 @@ namespace Sass {
   }
   // EO readUnaryOpExpression
 
+  // Locale unspecific strtod function (defined below)
+  static double sass_strtod(const char* str);
+
   // Consumes a number value.
   Number* StylesheetParser::readNumberValue()
   {
     StringScannerState start = scanner.state();
     uint8_t first = scanner.peekChar();
 
-    double sign = first == $minus ? -1 : 1;
     if (first == $plus || first == $minus) scanner.readChar();
 
-    double number = scanner.peekChar() == $dot ? 0.0 : naturalNumber();
+    if (scanner.peekChar() != $dot) naturalNumber();
 
     // Don't complain about a dot after a number unless the number
     // starts with a dot. We don't allow a plain ".", but we need
     // to allow "1." so that "1..." will work as a rest argument.
-    number += tryDecimal(scanner.position != start.position);
-    number *= tryExponent();
+    tryDecimal(scanner.position != start.position);
+    tryExponent();
+
+    // Like dart-sass, parse the whole number at once, which is correctly
+    // rounded. Composing it from its integer, decimal and exponent parts
+    // accumulated rounding errors (e.g. `123456789012345678` and `1e300`
+    // were off by several units in the last place).
+    sass::string text(scanner.substring(start.position));
+    double number = sass_strtod(text.c_str());
 
     sass::string unit;
     if (scanner.scanChar($percent)) {
@@ -2912,7 +2921,7 @@ namespace Sass {
     }
 
     auto pstate(scanner.relevantSpanFrom(start.offset));
-    return SASS_MEMORY_NEW(Number, pstate, sign * number, unit);
+    return SASS_MEMORY_NEW(Number, pstate, number, unit);
   }
 
   Number* StylesheetParser::readSingleNumber()
