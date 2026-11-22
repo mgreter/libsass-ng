@@ -48,6 +48,11 @@ namespace Sass {
     // a trailing comma for lists with a single item.
     bool inspect;
 
+    // Set while emitting the selector argument of a pseudo
+    // selector (e.g. `:not(.a)`), which must not get the
+    // leading indentation of the outer selector list again.
+    bool in_pseudo_selector;
+
     // We should probably pass an emitter, so we can switch implementation?
     Inspect(const OutputOptions& opt);
     // Inspect(Logger& logger, const OutputOptions& opt);

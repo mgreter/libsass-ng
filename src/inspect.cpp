@@ -89,7 +89,8 @@ namespace Sass {
   }
 
   Inspect::Inspect(const OutputOptions& outopt)
-    : Emitter(outopt), quotes(true), inspect(false)
+    : Emitter(outopt), quotes(true), inspect(false),
+      in_pseudo_selector(false)
   {
   }
 
@@ -693,10 +694,13 @@ namespace Sass {
           }
         }
         bool was_comma_array = in_comma_array;
+        bool was_in_pseudo = in_pseudo_selector;
         in_comma_array = false;
+        in_pseudo_selector = true;
         if (pseudo->selector()) {
           visitSelectorList(pseudo->selector());
         }
+        in_pseudo_selector = was_in_pseudo;
         in_comma_array = was_comma_array;
         scheduled_space = 0;
         append_string(")");
@@ -724,7 +728,11 @@ namespace Sass {
 
       if (list->get(i) == nullptr) continue;
       if (!inspect && list->get(i)->isInvisible()) continue;
-      if (first) append_indentation();
+      if (first) {
+        // The opening parenthesis of a pseudo selector
+        // already follows the indented outer selector.
+        if (!in_pseudo_selector) append_indentation();
+      }
       else {
         scheduled_space = 0;
         append_comma_separator();
