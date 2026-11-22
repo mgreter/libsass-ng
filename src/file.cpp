@@ -159,6 +159,30 @@ namespace Sass {
     }
     // EO is_absolute_path
 
+    // Expand 8.3 short names (see declaration)
+    sass::string get_long_path(const sass::string& path)
+    {
+      #ifdef _WIN32
+        try {
+          sass::wstring wpath(Unicode::utf8to16(path));
+          DWORD size = GetLongPathNameW(wpath.c_str(), NULL, 0);
+          if (size == 0) return path;
+          std::unique_ptr<wchar_t[]> resolved{ new wchar_t[size] };
+          DWORD rv = GetLongPathNameW(wpath.c_str(), resolved.get(), size);
+          if (rv == 0 || rv >= size) return path;
+          sass::string longpath(Unicode::utf16to8(resolved.get()));
+          std::replace(longpath.begin(), longpath.end(), '\\', '/');
+          return longpath;
+        }
+        catch (utf8::invalid_utf8&) {
+          return path;
+        }
+      #else
+        return path;
+      #endif
+    }
+    // EO get_long_path
+
     // helper function to find the last directory separator
     inline static size_t find_last_folder_separator(const sass::string& path, size_t limit = sass::string::npos)
     {

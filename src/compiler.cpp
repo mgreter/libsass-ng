@@ -1037,7 +1037,12 @@ namespace Sass {
       StringUtils::split(paths, PATH_SEP, true);
     for (sass::string& path : split) {
       if (path.empty()) continue;
-      includePaths.emplace_back(asFolderPath(path));
+      sass::string folder(asFolderPath(path));
+      // Use the same path for the same folder (see findIncludes)
+      if (File::is_absolute_path(folder)) {
+        folder = asFolderPath(File::get_long_path(folder));
+      }
+      includePaths.emplace_back(folder);
     }
   }
   // EO addIncludePaths
@@ -1146,8 +1151,12 @@ namespace Sass {
     // then search in every include path (but only if nothing found yet)
     for (size_t i = 0, S = includePaths.size(); vec.size() == 0 && i < S; ++i)
     {
+      // Resolve relative include paths against the working directory, like
+      // the base path, so the same file always gets the same absolute path
+      // (otherwise e.g. `-I inc` loaded `inc/_m.scss` as another module).
+      sass::string include_path(File::rel2abs(includePaths[i], ".", PWD));
       sass::vector<ResolvedImport> resolved(File::resolve_includes(
-        includePaths[i], import.imp_path, PWD, forImport, fileExistsCache));
+        include_path, import.imp_path, PWD, forImport, fileExistsCache));
       vec.insert(vec.end(), resolved.begin(), resolved.end());
     }
     // Store in the cache and return a copy

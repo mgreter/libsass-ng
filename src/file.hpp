@@ -41,6 +41,10 @@ namespace Sass {
     // return if given path is absolute
     // works with *nix and windows paths
     bool is_absolute_path(const sass::string& path);
+    // Expand 8.3 short names of an existing absolute path on Windows
+    // (e.g. `C:/PROGRA~1/x` to `C:/Program Files/x`), so the same file
+    // gets the same path. Returns the path unchanged on failure or POSIX.
+    sass::string get_long_path(const sass::string& path);
 
     // return only the directory part of path
     sass::string dir_name(const sass::string& path);
