@@ -669,6 +669,8 @@ namespace Sass {
 
     WithConfig configs(wconfig,
       toWithConfig(withMap), hasWith);
+    // Only uses its own `$with` config
+    configs.isolated = true;
     RAII_PTR(WithConfig, wconfig, &configs);
 
     sass::string prev(pstate.getAbsPath());

@@ -57,6 +57,9 @@ namespace Sass {
     bool hasHideFilter = false;
     // Set for `@forward` rules, which pass outer configs through
     bool isForward = false;
+    // Set for `@use` and `meta.load-css()`, which only use their
+    // own `with` config (dart-sass passes an empty one otherwise)
+    bool isolated = false;
 
     std::set<EnvKey> varFilters;
     std::set<EnvKey> callFilters;

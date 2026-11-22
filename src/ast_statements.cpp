@@ -84,6 +84,8 @@ namespace Sass {
         sass::string prefix = withcfg->prefix;
         key = EnvKey(prefix + key.orig());
       }
+      // Only `@forward` and imports pass outer configs
+      if (withcfg->isolated) break;
       withcfg = withcfg->parent;
     }
     // Since we found no unguarded value we can assume
@@ -114,6 +116,8 @@ namespace Sass {
         sass::string prefix = withcfg->prefix;
         key = EnvKey(prefix + key.orig());
       }
+      // Only `@forward` and imports pass outer configs
+      if (withcfg->isolated) break;
       withcfg = withcfg->parent;
     }
     return guarded;
@@ -592,7 +596,9 @@ namespace Sass {
       prev, url, pwconfig,
       std::move(config),
       hasLocalWith)
-  {}
+  {
+    isolated = true;
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
