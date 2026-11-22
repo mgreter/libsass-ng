@@ -817,6 +817,41 @@ namespace Sass {
   }
   // EO addExtensions (checked/new)
 
+  // Cheap pre-check for `extendComplex`: returns false if [complex] can't be
+  // extended by [extensions], i.e. none of its simple selectors is a target
+  // and it has no selector pseudos (like `:is(...)`, which are extended
+  // recursively via `extendPseudo`). `extendComplex` returns an empty result
+  // in that case too, but only after walking all compounds and simples
+  // through `extendCompound` and `extendSimple`. When many selectors extend
+  // the same target, the target's selector list grows with every `@extend`
+  // and almost none of its items contain the target, so this was most of
+  // the work (lookup is the same as in `extendWithoutPseudo`).
+  // [targetHashes] are the (cached) hashes of the keys in [extensions].
+  // Equal selectors have equal hashes, so only a matching hash needs the
+  // real lookup (comparing selectors is much more expensive than this).
+  static bool mayExtendComplex(
+    const ComplexSelector* complex,
+    const ExtSelExtMap& extensions,
+    const sass::vector<size_t>& targetHashes)
+  {
+    for (const CplxSelComponentObj& component : complex->elements()) {
+      const CompoundSelector* compound = component->selector();
+      if (compound == nullptr) continue;
+      for (const SimpleSelectorObj& simple : compound->elements()) {
+        if (const PseudoSelector* pseudo = simple->isaPseudoSelector()) {
+          if (pseudo->selector()) return true;
+        }
+        const size_t hash = simple->hash();
+        for (size_t targetHash : targetHashes) {
+          if (hash != targetHash) continue;
+          if (extensions.find(simple) != extensions.end()) return true;
+          break;
+        }
+      }
+    }
+    return false;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   // Extends [list] using [extensions].
   /////////////////////////////////////////////////////////////////////////
@@ -825,6 +860,12 @@ namespace Sass {
     const ExtSelExtMap& extensions, // Move?
     CssMediaQueryVector* mqContext)
   {
+    // Hashes of all targets for the cheap pre-check
+    sass::vector<size_t> targetHashes;
+    targetHashes.reserve(extensions.size());
+    for (const auto& kv : extensions) {
+      targetHashes.push_back(kv.first->hash());
+    }
     // This could be written more simply using [List.map], but we want to
     // avoid any allocations in the common case where no extends apply.
     ComplexSelectors results;
@@ -833,8 +874,11 @@ namespace Sass {
       const ComplexSelectorObj& complex = *cur;
 
       // std::cerr << " - extended in " << complex->toString() << "\n";
-      ComplexSelectors extended = extendComplex(
-        complex, extensions, mqContext);
+      // Skip the full extension if no target can match (same result)
+      ComplexSelectors extended;
+      if (mayExtendComplex(complex, extensions, targetHashes)) {
+        extended = extendComplex(complex, extensions, mqContext);
+      }
       // std::cerr << " + extended out " << VecToString2(extended) << "\n";
 
       if (extended.empty()) {
