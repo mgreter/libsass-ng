@@ -5,6 +5,7 @@
 
 #include <iomanip>
 #include <cstring>
+#include <clocale>
 #include "file.hpp"
 #include "ast_css.hpp"
 #include "charcode.hpp"
@@ -36,6 +37,24 @@ namespace Sass {
     int len = snprintf(buf, sizeof(buf), outopt.nr_sprintf, nr);
     if (len < 0) return sass::string();
     if (len >= int(sizeof(buf))) len = int(sizeof(buf)) - 1;
+    buf[len] = 0;
+    // `snprintf` uses the decimal separator of the current C locale
+    // (LC_NUMERIC), which the host program may have changed (e.g. to a
+    // comma). CSS always needs a dot, otherwise the output is invalid
+    // (e.g. "1,5000000000px", the trimming below only knows the dot).
+    // The separator may have multiple bytes, the parser does the same.
+    const char* separator = localeconv()->decimal_point;
+    if (separator && separator[0] && !(separator[0] == '.' && separator[1] == 0)) {
+      size_t seplen = strlen(separator);
+      if (char* found = strstr(buf, separator)) {
+        *found = '.';
+        if (seplen > 1) {
+          size_t tail = size_t(len) - size_t(found - buf) - seplen;
+          memmove(found + 1, found + seplen, tail + 1); // with terminator
+          len -= int(seplen - 1);
+        }
+      }
+    }
     // Only trim if there is a fractional part
     if (memchr(buf, '.', size_t(len)) != nullptr) {
       char* end = buf + len - 1;
