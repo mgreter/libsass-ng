@@ -781,10 +781,12 @@ namespace Sass {
     acceptNameSpaceSelector(attribute);
     if (!attribute->op().empty()) {
       append_string(attribute->op());
+      // Like dart-sass, an identifier needs a space before the modifier,
+      // a quoted string only an optional one (none when compressed).
       if (attribute->isIdentifier() && !StringUtils::startsWith(attribute->value(), "--", 2)) {
         append_string(attribute->value());
         if (attribute->modifier() != 0) {
-          append_optional_space();
+          append_mandatory_space();
         }
       }
       else {
@@ -793,12 +795,11 @@ namespace Sass {
           append_optional_space();
         }
       }
+      if (attribute->modifier() != 0) {
+        append_char(attribute->modifier());
+      }
     }
     // add_close_mapping(attribute);
-    if (attribute->modifier() != 0) {
-      append_mandatory_space();
-      append_char(attribute->modifier());
-    }
     append_string("]");
   }
 
