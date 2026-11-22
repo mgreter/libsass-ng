@@ -150,6 +150,13 @@ namespace Sass {
     return pscope;
   }
 
+  bool EnvRefs::hoistsVariables() const
+  {
+    const EnvRefs* parent = pscope;
+    while (parent && parent->isImport) parent = parent->pscope;
+    return parent == nullptr || parent->isInternal53;
+  }
+
   // Register new variable on local stack
   // Invoked mostly by stylesheet parser
   EnvRef EnvRefs::createVariable(
@@ -500,6 +507,7 @@ namespace Sass {
   EnvRef EnvRefs::findVarIdx(const EnvKey& named) const
   {
     EnvKey name(named);
+    EnvRef fallback;
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
       for (auto it = current->forwards.rbegin();
@@ -530,7 +538,18 @@ namespace Sass {
         }
       }
       // End of checking forwards
-      if (current->isImport) continue; // MIDSTREAM
+      if (current->isImport) {
+        // Nested imports keep their variables, since the parent scope
+        // already has its slots. Those are only used if no outer scope
+        // has the variable, so assignments still update outer ones.
+        if (!fallback.isValid() && !current->hoistsVariables()) {
+          auto vit = current->varIdxs.find(name);
+          if (vit != current->varIdxs.end()) {
+            fallback = { current, vit->second };
+          }
+        }
+        continue; // MIDSTREAM
+      }
       auto vit = current->varIdxs.find(name);
       if (vit != current->varIdxs.end()) {
         return { current, vit->second }; // SPECED
@@ -538,7 +557,7 @@ namespace Sass {
       if (current->through != "") name =
         EnvKey(current->through + name.norm());
     }
-    return nullidx;
+    return fallback;
   }
   // EO findVarIdx
 
@@ -550,6 +569,7 @@ namespace Sass {
   void EnvRefs::findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& named, bool moduleOnly) const
   {
     EnvKey name(named);
+    sass::vector<EnvRef> fallbacks;
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
       for (auto it = current->forwards.rbegin();
@@ -572,7 +592,16 @@ namespace Sass {
           }
         }
       }
-      if (current->isImport) continue; // MIDSTREAM
+      if (current->isImport) {
+        // See findVarIdx (only used if no outer scope has it)
+        if (!current->hoistsVariables()) {
+          auto vit = current->varIdxs.find(name);
+          if (vit != current->varIdxs.end()) {
+            fallbacks.emplace_back(current, vit->second);
+          }
+        }
+        continue; // MIDSTREAM
+      }
       auto vit = current->varIdxs.find(name);
       if (vit != current->varIdxs.end()) {
         vidxs.emplace_back(current, vit->second);
@@ -582,6 +611,7 @@ namespace Sass {
       // Module root scopes are internal (imports are not)
       if (moduleOnly && current->isInternal53) break;
     }
+    vidxs.insert(vidxs.end(), fallbacks.begin(), fallbacks.end());
     //std::cerr << "-----------------------------------------\n";
   }
   // EO getVariable

@@ -755,25 +755,39 @@ namespace Sass {
   }
   // EO parseSource
 
+  sass::string Compiler::sheetCacheKey(const sass::string& absPath, bool isImport)
+  {
+    // A character that can't be part of a path
+    return isImport ? absPath + "\x01import" : absPath;
+  }
+
   // Parse the import (updates syntax flag if AUTO was set)
   // Results will be stored at `sheets[source->getAbsPath()]`
-  Stylesheet* Compiler::registerImport(ImportObj import)
+  Stylesheet* Compiler::registerImport(ImportObj import, bool isImport)
   {
 
     SassImportSyntax& format(import->syntax);
     const SourceDataObj& source(import->source);
     const sass::string& abs_path(source->getAbsPath());
+    sass::string key(sheetCacheKey(abs_path, isImport));
 
     // ToDo: We don't take format into account
-    auto cached = sheets21.find(abs_path);
+    auto cached = sheets21.find(key);
     if (cached != sheets21.end()) {
       return cached->second;
     }
 
-    // Assign unique index to the source
-    source->setSrcIdx(included_sources.size());
-    // Add source to global include array
-    included_sources.emplace_back(source);
+    // Register the source only once (it may be parsed twice,
+    // as an import and as a module, see sheetCacheKey)
+    size_t srcIdx = source->getSrcIdx();
+    if (srcIdx >= included_sources.size() ||
+      included_sources[srcIdx] != source)
+    {
+      // Assign unique index to the source
+      source->setSrcIdx(included_sources.size());
+      // Add source to global include array
+      included_sources.emplace_back(source);
+    }
 
     // Auto detect input file format
     if (format == SASS_IMPORT_AUTO) {
@@ -812,7 +826,7 @@ namespace Sass {
     sheet54 = stylesheet;
 
     // Put the parsed stylesheet into the map
-    sheets21.insert({ abs_path, stylesheet });
+    sheets21.insert({ key, stylesheet });
 
     stylesheet->extender52 = SASS_MEMORY_NEW(ExtensionStore, ExtensionStore::NORMAL, *this);
 

@@ -301,7 +301,13 @@ namespace Sass {
 
     // Parse the import (updates syntax flag if AUTO was set)
     // Results will be stored at `sheets[source->getAbsPath()]`
-    Stylesheet* registerImport(ImportObj import);
+    // Parse and cache the stylesheet for [import]. Imports and modules are
+    // parsed within different kinds of scopes, so a file that is loaded as
+    // a module and also imported needs two stylesheets (cached separately).
+    Stylesheet* registerImport(ImportObj import, bool isImport = false);
+
+    // Key for [sheets21] (imports are cached separately from modules)
+    static sass::string sheetCacheKey(const sass::string& absPath, bool isImport);
 
     // Called by parserStylesheet on the very first parse call
     void applyCustomHeaders(StatementVector& root, const SourceSpan& pstate);

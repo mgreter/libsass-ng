@@ -3725,7 +3725,8 @@ namespace Sass {
     ImportStackFrame iframe(compiler, loaded);
 
     sass::string abspath(loaded->getAbsPath());
-    auto cached = compiler.sheets21.find(abspath);
+    auto cached = compiler.sheets21.find(
+      Compiler::sheetCacheKey(abspath, isImport));
     if (cached != compiler.sheets21.end()) {
       return cached->second;
     }
@@ -3733,7 +3734,7 @@ namespace Sass {
     // Permeable seems to have minor negative impact!?
     // EnvFrame local(compiler, false, false, isImport); // correct
     EnvFrame local(compiler, false, true, isImport); // correct
-    Stylesheet* sheet = compiler.registerImport(loaded);
+    Stylesheet* sheet = compiler.registerImport(loaded, isImport);
     sheet->idxs = local.idxs;
     sheet->import = loaded;
     return sheet;

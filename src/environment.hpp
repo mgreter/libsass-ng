@@ -129,6 +129,10 @@ namespace Sass {
     EnvRefs* pscope;
 
     const EnvRefs* nextScope() const;
+    // Variables of imports are hoisted into the first non-import
+    // parent scope, but only if that one is internal (e.g. root).
+    // Nested imports (e.g. inside a style rule) keep their own.
+    bool hoistsVariables() const;
 
     // Lexical scope entries
     VidxEnvKeyMap varIdxs;
