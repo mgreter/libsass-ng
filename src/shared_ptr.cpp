@@ -81,6 +81,15 @@ namespace Sass {
     return state == releaseStateGone ? nullptr : state;
   }
 
+  // Create the state of the main thread during static initialization.
+  // Otherwise it is created on the first release, which may only happen
+  // during static destruction (e.g. `Colors::color_table`, if a program
+  // exits without compiling anything). Creating a `thread_local` at that
+  // point is broken with emutls and crashed on exit (e.g. `sassc -v`).
+  // Only compiled with GCC (see SASS_RELEASE_WIN32_TLS)
+  __attribute__((unused)) static const bool releaseStateMainThread =
+    getReleaseState() != nullptr;
+
   // See declaration in header for rationale.
   void RefCounted::release(const RefCounted* obj) noexcept
   {
