@@ -621,7 +621,10 @@ namespace Sass {
           }
         }
 
-        return SASS_MEMORY_NEW(Function, pstate, callable);
+        // Remember if it was looked up without a namespace, so
+        // `call()` behaves like a direct call (see `Function`).
+        bool unqualified = ns == nullptr || ns->value().empty();
+        return SASS_MEMORY_NEW(Function, pstate, callable, unqualified);
 
       }
 
@@ -732,7 +735,7 @@ namespace Sass {
         Function* fn = function->assertFunction(compiler, "function");
         if (fn->cssName().empty()) {
           if (fn->callable() == nullptr) return nullptr;
-          return fn->callable()->execute(eval, invocation, pstate);
+          return fn->callable()->execute(eval, invocation, pstate, fn->global());
         }
         else {
           sass::string strm;

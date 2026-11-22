@@ -1657,21 +1657,26 @@ namespace Sass {
 
   Function::Function(
     const SourceSpan& pstate,
-    CallableObj callable) :
+    CallableObj callable,
+    bool global) :
     Value(pstate),
-    callable_(callable)
+    callable_(callable),
+    global_(global)
   {}
 
   Function::Function(
     const SourceSpan& pstate,
     const sass::string& cssName) :
     Value(pstate),
-    cssName_(cssName)
+    cssName_(cssName),
+    global_(false)
   {}
 
   Function::Function(const Function* ptr) :
     Value(ptr),
-    callable_(ptr->callable_)
+    cssName_(ptr->cssName_),
+    callable_(ptr->callable_),
+    global_(ptr->global_)
   {}
 
   /////////////////////////////////////////////////////////////////////////

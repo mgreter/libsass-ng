@@ -754,12 +754,19 @@ namespace Sass {
     ADD_CONSTREF(sass::string, cssName);
     ADD_CONSTREF(CallableObj, callable);
 
+    // Whether the function was looked up without a namespace. This
+    // is passed on when calling it, as built-in functions behave
+    // differently when called globally (e.g. `lighten()` only exists
+    // as a global function, not in the `sass:color` module).
+    ADD_CONSTREF(bool, global);
+
   public:
 
     // Value constructor
     Function(
       const SourceSpan& pstate,
-      CallableObj callable);
+      CallableObj callable,
+      bool global = false);
 
     // Value constructor
     Function(
