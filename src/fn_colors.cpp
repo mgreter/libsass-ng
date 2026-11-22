@@ -1200,7 +1200,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(fnRgb1arg)
       {
-        return _parseChannels(str_oklab, arguments[0],
+        return _parseChannels(str_rgb, arguments[0],
           "channels", pstate, compiler, &ColorSpaces::rgb);
       }
 
@@ -1244,13 +1244,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(rgba1arg)
       {
-        return _parseChannels(str_rgb, arguments[0],
+        return _parseChannels(str_rgba, arguments[0],
           "channels", pstate, compiler, &ColorSpaces::rgb);
       }
 
       static BUILT_IN_FN(fnRgba1arg)
       {
-        return _parseChannels(str_rgb, arguments[0],
+        return _parseChannels(str_rgba, arguments[0],
           "channels", pstate, compiler, &ColorSpaces::rgb);
       }
 
@@ -1355,14 +1355,14 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
       static BUILT_IN_FN(hsla1arg)
       {
-        auto rv = _parseChannels(str_hsl, arguments[0],
+        auto rv = _parseChannels(str_hsla, arguments[0],
           "channels", pstate, compiler, &ColorSpaces::hsl);
         return rv;
       }
 
       static BUILT_IN_FN(fnHsla1arg)
       {
-        auto rv = _parseChannels(str_hsl, arguments[0],
+        auto rv = _parseChannels(str_hsla, arguments[0],
           "channels", pstate, compiler, &ColorSpaces::hsl);
         return rv;
       }
