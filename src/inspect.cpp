@@ -121,16 +121,17 @@ namespace Sass {
     bool trailing = false;
     for (size_t i = 0, L = children.size(); i < L; ++i) {
       CssNode* child = children[i];
-      bool isVisible = !_IsInvisible(child);
-      if (isVisible && visible == 0) {
+      // Skip invisible children like dart-sass. In compressed
+      // mode this includes those that only contain comments
+      // (`a { /* c */ }`), which would otherwise print `a{}`.
+      if (_IsInvisible(child)) continue;
+      if (visible == 0) {
         trailing = isTrailingComment(child, parent);
       }
       child->accept(this);
       if (specialLinefeeds && i < L - 1) append_special_linefeed();
-      if (isVisible) {
-        trailingPrev = child;
-        visible += 1;
-      }
+      trailingPrev = child;
+      visible += 1;
     }
     trailingPrev = outer;
     // Like dart-sass, write `a { /* c */ }` on one line
