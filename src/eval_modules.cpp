@@ -104,6 +104,46 @@ namespace Sass {
     }
   }
 
+  // Add members of [from] to [to] as seen through the forward [rule]
+  // (with its prefix and show/hide filters applied).
+  template <typename T>
+  static void exposeForwarded(T& to, const T& from,
+    ForwardRule* rule, const std::set<EnvKey>& filters,
+    const sass::string& errprefix, Logger& logger)
+  {
+    if (rule->hasShowFilter || rule->hasHideFilter) {
+      exposeFiltered(to, from, rule->prefix, filters,
+        errprefix, logger, rule->hasShowFilter, true);
+    }
+    else {
+      exposeUnfiltered(to, from, rule->prefix,
+        errprefix, logger, true);
+    }
+  }
+
+  // An import exposes the members forwarded by the imported file to the
+  // importing scope. Returns the scope to look them up, which is a new
+  // view if the forward has a prefix or a show/hide filter. Members of
+  // modules are internal, so their offsets are absolute and stay valid.
+  EnvRefs* Eval::forwardedView(ForwardRule* rule) const
+  {
+    EnvRefs* idxs = rule->module32()->idxs;
+    if (rule->prefix.empty() && !rule->hasShowFilter && !rule->hasHideFilter) {
+      return idxs;
+    }
+    EnvRefs* view = compiler.varRoot.createInternalScope();
+    exposeForwarded(view->varIdxs, idxs->varIdxs, rule, rule->varFilters, "variable named $", logger);
+    exposeForwarded(view->mixIdxs, idxs->mixIdxs, rule, rule->callFilters, "mixin named ", logger);
+    exposeForwarded(view->fnIdxs, idxs->fnIdxs, rule, rule->callFilters, "function named ", logger);
+    // Members the module forwards itself (the filter applies to them too)
+    if (Module* module = idxs->module) {
+      exposeForwarded(view->varIdxs, module->mergedFwdVar, rule, rule->varFilters, "variable named $", logger);
+      exposeForwarded(view->mixIdxs, module->mergedFwdMix, rule, rule->callFilters, "mixin named ", logger);
+      exposeForwarded(view->fnIdxs, module->mergedFwdFn, rule, rule->callFilters, "function named ", logger);
+    }
+    return view;
+  }
+
   /////////////////////////////////////////////////////////////////////////
   // Helpers to compare with configs
   /////////////////////////////////////////////////////////////////////////
@@ -639,7 +679,7 @@ namespace Sass {
       if (rule->module32()->idxs->delayedMerge.size() > 0) {
         for (auto qwe : rule->module32()->idxs->delayedMerge) {
           const auto& scope = compiler.getCurrentScope();
-          scope->forwards.push_back(qwe->module32()->idxs);
+          scope->forwards.push_back(forwardedView(qwe));
           RAII_FLAG(viaImport, true);
           exposeFwdRule(qwe);
         }

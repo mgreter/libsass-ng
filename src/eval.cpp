@@ -2094,14 +2094,7 @@ namespace Sass {
     // Mixin wasn't found and couldn't be executed
     CallStackFrame frame(logger, include->pstate());
 
-    if (!include->midx().isValid()) {
-      // If we reach this point we have an error
-      // Mixin wasn't found and couldn't be executed
-      // CallStackFrame frame(logger, include->pstate());
-      throw Exception::RuntimeException(logger, "Undefined mixin.");
-    }
-
-    // Check if function was requested from a module and if that module actually exists
+    // Check if mixin was requested from a module and if that module actually exists
     if (include->ns().empty() || compiler.envstack.back()->hasNameSpace(include->ns())) {
       throw Exception::RuntimeException(logger, "Undefined mixin.");
     }

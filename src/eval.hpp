@@ -123,6 +123,9 @@ namespace Sass {
 
     void exposeUseRule(UseRule* rule);
     void exposeFwdRule(ForwardRule* rule) const;
+
+    // Scope to find members an import forwards (see forwardedView)
+    EnvRefs* forwardedView(ForwardRule* rule) const;
     void exposeImpRule1(IncludeImport* rule) const;
 
     Value* doDivision(Value* left, Value* right, BinaryOpExpression* node, Logger& logger, const SourceSpan& pstate) const;

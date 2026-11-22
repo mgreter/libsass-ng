@@ -355,6 +355,10 @@ namespace Sass {
 
   public:
 
+    // Create a detached internal scope (only used for lookups),
+    // which is owned (and deleted) by us like all other scopes.
+    EnvRefs* createInternalScope();
+
     // Value constructor
     EnvRoot(Compiler& compiler);
 

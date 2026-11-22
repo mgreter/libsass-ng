@@ -150,6 +150,13 @@ namespace Sass {
     return pscope;
   }
 
+  EnvRefs* EnvRoot::createInternalScope()
+  {
+    EnvRefs* idxs = new EnvRefs(*this, nullptr, false, true, false);
+    scopes57.push_back(idxs);
+    return idxs;
+  }
+
   bool EnvRefs::hoistsVariables() const
   {
     const EnvRefs* parent = pscope;
@@ -660,7 +667,7 @@ namespace Sass {
   {
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
-      if (current->isImport) continue;
+      // Imports may `@use` modules too (only visible within them)
       Module* mod = current->module;
       if (mod == nullptr) continue;
       // Check if the namespace was registered
@@ -685,7 +692,7 @@ namespace Sass {
   {
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
-      if (current->isImport) continue;
+      // Imports may `@use` modules too (only visible within them)
       Module* mod = current->module;
       if (mod == nullptr) continue;
       auto it = mod->moduse.find(ns);
@@ -715,7 +722,7 @@ namespace Sass {
   {
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
-      if (current->isImport) continue;
+      // Imports may `@use` modules too (only visible within them)
       Module* mod = current->module;
       if (mod == nullptr) continue;
       auto it = mod->moduse.find(ns);
@@ -801,7 +808,7 @@ namespace Sass {
   {
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
-      if (current->isImport) continue;
+      // Imports may `@use` modules too (only visible within them)
       Module* mod = current->module;
       if (mod == nullptr) continue;
       // Check if the namespace was registered
