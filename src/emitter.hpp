@@ -49,6 +49,8 @@ namespace Sass {
     public:
       // output strings different in custom css properties
       bool in_custom_property;
+      // source column of the custom property name (re-indentation)
+      size_t custom_property_column;
       // nested list must not have parentheses
       bool in_declaration;
       // nested lists need parentheses

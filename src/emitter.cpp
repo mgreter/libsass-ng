@@ -24,6 +24,7 @@ namespace Sass {
     scheduled_mapping(nullptr),
     close_on_same_line(false),
     in_custom_property(false),
+    custom_property_column(0),
     in_declaration(true),
     separators(),
     in_space_array(false),

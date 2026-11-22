@@ -2952,7 +2952,10 @@ namespace Sass {
 
     // If the value is an empty list, preserve it, because converting
     // it to CSS will throw an error that we want the user to see.
-    if (cssValue != nullptr && (!cssValue->isBlank() || cssValue->lengthAsList() == 0))
+    // Custom properties are allowed to have empty values, per spec
+    // (dart-sass checks the name, so this includes interpolated ones).
+    if (cssValue != nullptr && (!cssValue->isBlank() ||
+      cssValue->lengthAsList() == 0 || StringUtils::startsWith(name, "--", 2)))
     {
       // std::cerr << "[[" << (current->toString()) << "]]\n";
       current = copyParentAfterSibling(current);
@@ -2960,12 +2963,6 @@ namespace Sass {
       current->append(SASS_MEMORY_NEW(CssDeclaration,
         node->pstate(), name, cssValue, was_custom_property));
     }
-    else if (was_custom_property) {
-      CallStackFrame frame(logger, node->value()->pstate());
-      throw Exception::RuntimeException(logger,
-        "Custom property values may not be empty.");
-    }
-
     if (!node->empty()) {
       // copyParentAfterSibling();
       // Now produce the inner declarations

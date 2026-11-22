@@ -27,32 +27,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  // Local helper function to right-trim multi-line text.
-  // Only the last line is right trimmed in an optimized way.
-  // Note: this is merely cosmetic to match dart-sass output.
-  static void trim_trailing_lines(sass::string& text)
-  {
-    auto start = text.begin();
-    auto lastlf = text.end();
-    auto end = lastlf - 1;
-    while (end != start) {
-      if (Character::isNewline(*end)) {
-        lastlf = end;
-        end--;
-      }
-      else if (Character::isWhitespace(*end)) {
-        end--;
-      }
-      else {
-        break;
-      }
-    }
-    if (lastlf != text.end()) {
-      text = sass::string(start, lastlf) + " ";
-    }
-  }
-  // EO string_trim_trailing_lines
-
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
@@ -322,10 +296,33 @@ namespace Sass {
       append_token(folded, s);
     }
     else {
-      sass::string value(s->value());
-      // ToDo: avoid any cleanup
-      trim_trailing_lines(value);
-      append_token(value, s);
+      // Like dart-sass (`_writeReindentedValue`), re-indent multi-line
+      // values relative to the current indentation. The indentation
+      // removed is at most the column of the property name.
+      const sass::string& value(s->value());
+      size_t lf = value.find($lf);
+      if (lf == sass::string::npos) {
+        append_token(value, s);
+        return;
+      }
+      bool content = false;
+      for (size_t i = lf + 1; i < value.size(); i++) {
+        if (!Character::isWhitespace(value[i])) { content = true; break; }
+      }
+      if (!content) {
+        // Only whitespace after the first line: trim it (but not
+        // escaped whitespace) and keep the fact that it existed.
+        size_t end = value.size();
+        while (end > 0 && Character::isWhitespace(value[end - 1])) {
+          if (end >= 2 && value[end - 2] == $backslash) break;
+          end--;
+        }
+        append_token(value.substr(0, end) + " ", s);
+        return;
+      }
+      add_open_mapping(s, true);
+      indent_comment(value, custom_property_column);
+      add_close_mapping(s, true);
     }
   }
   // EO visitString

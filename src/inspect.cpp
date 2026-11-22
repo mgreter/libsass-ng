@@ -540,6 +540,9 @@ namespace Sass {
     RAII_FLAG(in_declaration, true);
     RAII_FLAG(in_custom_property,
       node->wasCustomProperty());
+    // Multi-line values are re-indented relative to the name
+    RAII_SIZE(custom_property_column,
+      node->pstate().getRawColumn());
     // if (output_style() == SASS_STYLE_NESTED)
     //   indentation += node->tabs();
     append_indentation();

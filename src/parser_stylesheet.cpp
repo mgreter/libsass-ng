@@ -503,7 +503,10 @@ namespace Sass {
     // Parse custom properties as declarations no matter what.
     InterpolationObj name = nameBuffer.getInterpolation(beforeColon);
     if (startsWith(name->getInitialPlain(), "--", 2)) {
-      InterpolationObj value(readInterpolatedDeclarationValue(false, false, true, true, false));
+      // Custom properties may be empty (`--a:;`), like in dart-sass
+      InterpolationObj value(atEndOfStatement()
+        ? SASS_MEMORY_NEW(Interpolation, scanner.rawSpan())
+        : readInterpolatedDeclarationValue(false, false, true, true, false));
       expectStatementSeparator("custom property");
       return SASS_MEMORY_NEW(Declaration,
         scanner.relevantSpanFrom(start), name,
