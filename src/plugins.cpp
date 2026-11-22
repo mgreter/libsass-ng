@@ -146,8 +146,9 @@ namespace Sass {
             // the system will report the filenames with wide chars (utf16)
             sass::string entry = Unicode::utf16to8(data.cFileName);
             // check if file ending matches exactly (`*.dll` also matches
-            // e.g. `x.dllx` via its 8.3 short name `X~1.DLL`)
-            if (!StringUtils::endsWith(entry, ".dll", 4)) continue;
+            // e.g. `x.dllx` via its 8.3 short name `X~1.DLL`), but case-
+            // insensitive like the file system (e.g. `plugin.DLL`)
+            if (!StringUtils::endsWithIgnoreCase(entry, ".dll", 4)) continue;
             // load the plugin and increase counter
             if (load_plugin(path + entry)) ++ loaded;
           }
