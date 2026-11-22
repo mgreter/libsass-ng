@@ -28,9 +28,13 @@ namespace Sass {
 
     // Whether this was generated from the last node in a
     // nested Sass tree that got flattened during evaluation.
-    // ADD_CONSTREF(bool, isGroupEnd);
+    // Not copied, like dart-sass `copyWithoutChildren`.
+    bool isGroupEnd_ = false;
 
   public:
+
+    bool isGroupEnd() const { return isGroupEnd_; }
+    void isGroupEnd(bool value) { isGroupEnd_ = value; }
 
     // Value constructor
     CssNode(const SourceSpan& pstate);

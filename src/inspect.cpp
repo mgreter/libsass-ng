@@ -245,7 +245,15 @@ namespace Sass {
       if (visible == 0) {
         trailing = isTrailingComment(child, parent);
       }
+      size_t written = wbuf.buffer.size();
       child->accept(this);
+      // Like dart-sass, only a group end at the root is
+      // followed by a blank line (if it printed anything)
+      if (parent == nullptr && scheduled_linefeed &&
+        output_style() == SASS_STYLE_EXPANDED &&
+        written != wbuf.buffer.size()) {
+        scheduled_linefeed = child->isGroupEnd() ? 2 : 1;
+      }
       if (specialLinefeeds && i < L - 1) append_special_linefeed();
       trailingPrev = child;
       visible += 1;

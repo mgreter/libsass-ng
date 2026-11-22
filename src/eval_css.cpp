@@ -274,6 +274,8 @@ namespace Sass {
 
     // if (css->selector()->toString() == "c") css->fromPlainCss(true);
     bool nest = !plainCss && !current->fromPlainCss22();
+    // Whether we are outside of any style rule
+    bool topLevel = _styleRule() == nullptr;
     // Plain CSS rules with an explicit `&` are kept nested as-is
     if (nest && _styleRule() && css->fromPlainCss22() &&
       containsParentSelector(css->selector())) nest = false;
@@ -394,6 +396,12 @@ namespace Sass {
         }
       }
 
+    }
+
+    // Like dart-sass, mark the end of a top-level group
+    // (a blank line follows it in expanded output)
+    if (topLevel && !current->empty()) {
+      current->last()->isGroupEnd(true);
     }
 
   }

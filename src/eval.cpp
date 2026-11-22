@@ -2267,6 +2267,8 @@ namespace Sass {
     }
     // Regular style rule
     else if (node->interpolation()) {
+      // Whether we are outside of any style rule
+      bool topLevel = _styleRule() == nullptr;
       // Check current importer context
       Import* imp = compiler.import_stack.back();
       // bool plainCss = imp->syntax == SASS_IMPORT_CSS;
@@ -2394,6 +2396,11 @@ namespace Sass {
               });
           }
         }
+      }
+      // Like dart-sass, mark the end of a top-level group
+      // (a blank line follows it in expanded output)
+      if (topLevel && !current->empty()) {
+        current->last()->isGroupEnd(true);
       }
       return rv.detach();
     }
