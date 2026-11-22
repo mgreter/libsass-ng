@@ -579,7 +579,10 @@ namespace Sass {
         // The `<fstream>` header initializes `<locale>` which is buggy in GCC4/5 with static linking.
         // https://www.spinics.net/lists/gcchelp/msg46851.html
         // https://github.com/sass/sassc-ruby/issues/128
-        FILE* fd = std::fopen(path.c_str(), "rb");
+        // Relative paths are relative to the compiler's working directory
+        // (like on Windows), which may differ from the process directory.
+        sass::string abspath(join_paths(CWD, path));
+        FILE* fd = std::fopen(abspath.c_str(), "rb");
         if (fd == nullptr) return nullptr;
         // Query the size of the opened file (avoids a race between
         // checking the path and opening it, if the file is replaced)
