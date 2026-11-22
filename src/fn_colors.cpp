@@ -3207,7 +3207,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         ValueFlatMap* keywords = kwds->keywords();
 
-        if (keywords == nullptr && kwds->empty() == false) {
+        // Like dart-sass, also if keywords were passed
+        if (kwds->empty() == false) {
           throw Exception::SassScriptException(compiler, pstate,
             "Only one positional argument is allowed. All other arguments must "
             "be passed by name.");
