@@ -144,7 +144,7 @@ namespace Sass {
 
     // Compare if the color spaces are not the same
     inline bool operator!=(const ColorSpace& rhs) const {
-      return rhs.space_ == space_; // compare the enum
+      return rhs.space_ != space_; // compare the enum
     }
 
   };

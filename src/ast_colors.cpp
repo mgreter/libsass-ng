@@ -442,48 +442,63 @@ namespace Sass {
     return false;
   }
 
+  // Port of dart-sass `fuzzyEqualsNullable` for (missing) channels
+  static inline bool fuzzyEqualsChannel(
+    const tl::optional<double>& lhs,
+    const tl::optional<double>& rhs)
+  {
+    if (!lhs.has_value() || !rhs.has_value()) {
+      return lhs.has_value() == rhs.has_value();
+    }
+    return fuzzyEqualsNumber(*lhs, *rhs);
+  }
+
+  // Like dart-sass, legacy colors are equal to legacy colors of
+  // other spaces if they are equal once converted to rgb.
   bool Color::operator==(const Color& rhs) const
   {
-    if (!fuzzyEquals(alpha_, rhs.alpha_, sass::epsilon)) return false;
     if (isLegacy()) {
       if (!rhs.isLegacy()) return false;
+      if (!fuzzyEqualsChannel(alpha_, rhs.alpha_)) return false;
       if (space_ == rhs.space_) {
-        return fuzzyEquals(c0_, rhs.c0_, sass::epsilon)
-          &&   fuzzyEquals(c1_, rhs.c1_, sass::epsilon)
-          &&   fuzzyEquals(c2_, rhs.c2_, sass::epsilon);
+        return fuzzyEqualsChannel(c0_, rhs.c0_)
+          && fuzzyEqualsChannel(c1_, rhs.c1_)
+          && fuzzyEqualsChannel(c2_, rhs.c2_);
       }
       ColorObj rgb1 = toSpace(ColorSpaces::rgb, pstate());
       ColorObj rgb2 = rhs.toSpace(ColorSpaces::rgb, rhs.pstate());
-      // std::cerr << "rgb1 " << rgb1->debug() << "\n";
-      // std::cerr << "rgb2 " << rgb2->debug() << "\n";
-      auto rv = fuzzyEquals(rgb1->c0_, rgb2->c0_, sass::epsilon)
-        && fuzzyEquals(rgb1->c1_, rgb2->c1_, sass::epsilon)
-        && fuzzyEquals(rgb1->c2_, rgb2->c2_, sass::epsilon);
-      return rv;
+      return fuzzyEqualsChannel(rgb1->c0_, rgb2->c0_)
+        && fuzzyEqualsChannel(rgb1->c1_, rgb2->c1_)
+        && fuzzyEqualsChannel(rgb1->c2_, rgb2->c2_);
     }
     return space_ == rhs.space_
-      && fuzzyEquals(alpha_, rhs.alpha_, sass::epsilon)
-      && fuzzyEquals(c0_, rhs.c0_, sass::epsilon)
-      && fuzzyEquals(c1_, rhs.c1_, sass::epsilon)
-      && fuzzyEquals(c2_, rhs.c2_, sass::epsilon);
+      && fuzzyEqualsChannel(c0_, rhs.c0_)
+      && fuzzyEqualsChannel(c1_, rhs.c1_)
+      && fuzzyEqualsChannel(c2_, rhs.c2_)
+      && fuzzyEqualsChannel(alpha_, rhs.alpha_);
   }
 
+  // Must be consistent with `operator==`: like dart-sass, legacy colors
+  // hash their rgb channels (missing ones as zero), rounded like numbers.
   size_t Color::hash() const
   {
     if (hash_ == 0) {
-      hash_start(hash_, typeid(Color).hash_code());
-      hash_combine(hash_, std::hash<double>{}(c0_.has_value()));
-      hash_combine(hash_, std::hash<double>{}(c0_.value_or(0)));
-      hash_combine(hash_, std::hash<double>{}(c1_.has_value()));
-      hash_combine(hash_, std::hash<double>{}(c1_.value_or(0)));
-      hash_combine(hash_, std::hash<double>{}(c2_.has_value()));
-      hash_combine(hash_, std::hash<double>{}(c2_.value_or(0)));
-      hash_combine(hash_, std::hash<double>{}(alpha_.has_value()));
-      hash_combine(hash_, std::hash<double>{}(alpha_.value_or(0)));
+      if (isLegacy()) {
+        ColorObj rgb = toSpace(ColorSpaces::rgb, pstate());
+        hash_start(hash_, Number::_fuzzyHash(rgb->c0_.value_or(0)));
+        hash_combine(hash_, Number::_fuzzyHash(rgb->c1_.value_or(0)));
+        hash_combine(hash_, Number::_fuzzyHash(rgb->c2_.value_or(0)));
+      }
+      else {
+        hash_start(hash_, static_cast<size_t>(space_.space()));
+        hash_combine(hash_, Number::_fuzzyHash(c0_.value_or(0)));
+        hash_combine(hash_, Number::_fuzzyHash(c1_.value_or(0)));
+        hash_combine(hash_, Number::_fuzzyHash(c2_.value_or(0)));
+      }
+      hash_combine(hash_, Number::_fuzzyHash(alpha_.value_or(0)));
     }
     return hash_;
   }
-
 
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////
