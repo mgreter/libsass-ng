@@ -209,7 +209,8 @@ namespace Sass {
     // But also for content blocks
     EnvRef createMixin(const EnvKey& name);
 
-    void findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& name) const;
+    // With [moduleOnly], stop at the root scope of the current module
+    void findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& name, bool moduleOnly = false) const;
 
     // Get a mixin associated with the under [name].
     // Will lookup from the last runtime stack scope.

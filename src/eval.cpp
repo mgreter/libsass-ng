@@ -3457,7 +3457,9 @@ namespace Sass {
         if (compiler.envstack.size() > 0) {
           auto noda = compiler.envstack.back();
           //while (noda->isImport) noda = noda->pscope;
-          noda->findVarIdxs(vidxs, a->variable());
+          // Like dart-sass, `!default` only checks variables of the
+          // current module; outer values must come via configuration.
+          noda->findVarIdxs(vidxs, a->variable(), true);
           for (const auto& vidx : vidxs) {
             Value* value = compiler.varRoot.getVariable(vidx);
             //std::cerr << "Check var " << qwe.offset << " - " << asd << "\n";

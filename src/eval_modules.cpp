@@ -149,6 +149,8 @@ namespace Sass {
   static bool HasConfigValue(WithConfig* cfg, EnvKey key)
   {
     while (cfg) {
+      // Implicit configs of imports never cause this error
+      if (!cfg->isForward && !cfg->hasConfig) return false;
       if (cfg->hasHideFilter && cfg->varFilters.count(key.norm())) return false;
       if (cfg->hasShowFilter && !cfg->varFilters.count(key.norm())) return false;
       auto it = cfg->config.find(key);
@@ -183,6 +185,77 @@ namespace Sass {
     if (origin == 0 || origin == sheet->cfgOrigin) return false;
     return CouldHaveBeenConfigured(sheet, cfg);
   }
+
+  // Port of dart-sass `toImplicitConfiguration` for `@import`: if the
+  // imported file forwards modules, the variables visible when the import
+  // starts configure their `!default` variables. The values are put into
+  // the config of the import rule, which is the parent config of the
+  // `@forward` rules in the imported file, and removed again afterwards.
+  class ImplicitConfig
+  {
+    WithConfig* rule;
+    EnvKeyMap<WithConfigVar> previous;
+    bool active = false;
+  public:
+    ImplicitConfig(Compiler& compiler, WithConfig* rule,
+      Stylesheet* sheet, const SourceSpan& pstate) :
+      rule(rule)
+    {
+      // Only needed if the imported file has forwards
+      bool hasForwards = false;
+      for (const auto& statement : sheet->elements()) {
+        if (dynamic_cast<ForwardRule*>(statement.ptr())) {
+          hasForwards = true;
+          break;
+        }
+      }
+      if (!hasForwards) return;
+      EnvKeyMap<WithConfigVar> config;
+      // Inner scopes are visited first and take precedence
+      auto add = [&](const EnvKey& name, const EnvRef& vidx) {
+        if (config.count(name)) return;
+        Value* value = compiler.varRoot.getVariable(vidx);
+        if (value == nullptr || value->isaNull()) return;
+        WithConfigVar& cfgvar = config[name];
+        cfgvar.pstate = pstate;
+        cfgvar.name = name.orig();
+        cfgvar.value33 = value;
+      };
+      // Same visibility rules as `EnvRefs::findVarIdxs`
+      for (const EnvRefs* current = compiler.envstack.back();
+        current; current = current->nextScope())
+      {
+        for (auto it = current->forwards.rbegin();
+          it != current->forwards.rend(); it++)
+        {
+          const EnvRefs* fwds = *it;
+          for (const auto& var : fwds->varIdxs) {
+            if (var.first.isPrivate()) continue;
+            add(var.first, EnvRef(fwds, var.second));
+          }
+          if (Module* mod = fwds->module) {
+            if (!mod->idxs->isImport) {
+              for (const auto& var : mod->mergedFwdVar) {
+                if (var.first.isPrivate()) continue;
+                add(var.first, var.second);
+              }
+            }
+          }
+        }
+        if (current->isImport) continue;
+        for (const auto& var : current->varIdxs) {
+          add(var.first, EnvRef(current, var.second));
+        }
+      }
+      std::swap(previous, rule->config);
+      std::swap(rule->config, config);
+      active = true;
+    }
+    ~ImplicitConfig()
+    {
+      if (active) std::swap(rule->config, previous);
+    }
+  };
 
   static bool SameConfig(WithConfig* a, WithConfig* b)
   {
@@ -529,6 +602,11 @@ namespace Sass {
     BackTrace trace(rule->pstate(), Strings::importRule);
     CallStackFrame cframe(logger, trace);
     if (Stylesheet* root = resolveIncludeImport(rule)) {
+
+      // Like dart-sass, modules forwarded by the imported file are
+      // configured by the variables visible when the import starts.
+      // Must be taken before the import can modify any of them.
+      ImplicitConfig implicit(compiler, rule, root, rule->pstate());
 
       CssRootObj css = SASS_MEMORY_NEW(CssRoot, root->pstate());
       {

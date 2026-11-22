@@ -481,7 +481,7 @@ namespace Sass {
   // Otherwise lookup will be from the last runtime stack scope.
   // We will move up the runtime stack until we either find a 
   // defined variable with a value or run out of parent scopes.
-  void EnvRefs::findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& named) const
+  void EnvRefs::findVarIdxs(sass::vector<EnvRef>& vidxs, const EnvKey& named, bool moduleOnly) const
   {
     EnvKey name(named);
     for (const EnvRefs* current = this; current; current = current->nextScope())
@@ -513,6 +513,8 @@ namespace Sass {
       }
       if (current->through != "") name =
         EnvKey(current->through + name.norm());
+      // Module root scopes are internal (imports are not)
+      if (moduleOnly && current->isInternal53) break;
     }
     //std::cerr << "-----------------------------------------\n";
   }
