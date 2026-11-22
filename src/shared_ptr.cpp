@@ -7,6 +7,18 @@
 
 #include "shared_ptr.hpp"
 
+// See `releaseStateSlot` below (GCC on MinGW uses slow emutls)
+#if defined(__MINGW32__) && defined(__GNUC__) && !defined(__clang__)
+#define SASS_RELEASE_WIN32_TLS
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
+
 #ifdef DEBUG_SHARED_PTR
 #include "debugger.hpp"
 #include <iostream>
@@ -17,18 +29,102 @@
 namespace Sass {
 
   // Queue of objects whose deletion was deferred by `RefCounted::release`.
-  // The queue itself lives on the stack of the outermost release call; this
-  // only points to it, so the thread-local is a trivially destructible POD.
-  // This keeps it valid during static destruction and lets us use native
-  // `thread_local` everywhere (the `THREAD_LOCAL` shim used on MinGW logs
-  // to std::clog and heap-allocates per thread). Uses `std::vector` to stay
-  // independent of the custom allocator.
-  static thread_local std::vector<const RefCounted*>* pendingReleases = nullptr;
+  // Uses `std::vector` to stay independent of the custom allocator.
+  typedef std::vector<const RefCounted*> ReleaseQueue;
+
+  #ifdef SASS_RELEASE_WIN32_TLS
+
+  // GCC on MinGW implements `thread_local` through emutls, so every access
+  // goes through `__emutls_get_address`, `pthread_getspecific` and a spin
+  // lock in winpthreads. `release` runs for every deleted object, which made
+  // this about 6% of the total compile time. Here we keep a pointer to the
+  // per-thread state in a raw Win32 TLS slot instead, so the hot path is a
+  // single `TlsGetValue`. The queue is kept between calls, which also saves
+  // an allocation for every release that cascades.
+
+  struct ReleaseState {
+    ReleaseQueue queue;
+    bool active = false;
+  };
+
+  // Marks a thread whose state was already destroyed (thread exit)
+  static ReleaseState* const releaseStateGone =
+    reinterpret_cast<ReleaseState*>(static_cast<uintptr_t>(1));
+
+  // Allocated on first use (function-local static), so it
+  // is valid even if objects are released during static init.
+  static DWORD releaseStateSlot() noexcept
+  {
+    static const DWORD slot = TlsAlloc();
+    return slot;
+  }
+
+  // Owns the state of one thread. Only touched once per thread, so the
+  // emutls cost doesn't matter. It frees the state when the thread exits
+  // and leaves a marker so late releases fall back to recursive delete.
+  struct ReleaseStateOwner {
+    ReleaseState state;
+    ReleaseStateOwner() noexcept { TlsSetValue(releaseStateSlot(), &state); }
+    ~ReleaseStateOwner() { TlsSetValue(releaseStateSlot(), releaseStateGone); }
+  };
+
+  // Returns nullptr if no state is available (recursive delete)
+  static ReleaseState* getReleaseState() noexcept
+  {
+    const DWORD slot = releaseStateSlot();
+    if (slot == TLS_OUT_OF_INDEXES) return nullptr;
+    ReleaseState* state = static_cast<ReleaseState*>(TlsGetValue(slot));
+    if (state == nullptr) {
+      static thread_local ReleaseStateOwner owner;
+      state = &owner.state;
+    }
+    return state == releaseStateGone ? nullptr : state;
+  }
 
   // See declaration in header for rationale.
   void RefCounted::release(const RefCounted* obj) noexcept
   {
-    std::vector<const RefCounted*>*& pending = pendingReleases;
+    ReleaseState* state = getReleaseState();
+    if (state == nullptr) {
+      delete obj;
+      return;
+    }
+    if (state->active) {
+      try {
+        state->queue.push_back(obj);
+        return;
+      }
+      catch (...) {
+        // Out of memory: fall back to recursive delete
+        delete obj;
+        return;
+      }
+    }
+    state->active = true;
+    delete obj;
+    ReleaseQueue& queue = state->queue;
+    while (!queue.empty()) {
+      const RefCounted* next = queue.back();
+      queue.pop_back();
+      delete next;
+    }
+    // Don't hold on to the memory of a huge cascade
+    if (queue.capacity() > 4096) ReleaseQueue().swap(queue);
+    state->active = false;
+  }
+
+  #else
+
+  // The queue itself lives on the stack of the outermost release call; this
+  // only points to it, so the thread-local is a trivially destructible POD.
+  // This keeps it valid during static destruction and lets us use native
+  // `thread_local` (the `THREAD_LOCAL` shim heap-allocates per thread).
+  static thread_local ReleaseQueue* pendingReleases = nullptr;
+
+  // See declaration in header for rationale.
+  void RefCounted::release(const RefCounted* obj) noexcept
+  {
+    ReleaseQueue*& pending = pendingReleases;
     if (pending != nullptr) {
       try {
         pending->push_back(obj);
@@ -40,7 +136,7 @@ namespace Sass {
         return;
       }
     }
-    std::vector<const RefCounted*> queue;
+    ReleaseQueue queue;
     pending = &queue;
     delete obj;
     while (!queue.empty()) {
@@ -51,6 +147,7 @@ namespace Sass {
     pending = nullptr;
   }
 
+  #endif
   #ifdef DEBUG_SHARED_PTR
   void RefCounted::dumpMemLeaks() {
     if (!all.empty()) {
