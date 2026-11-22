@@ -14,6 +14,7 @@ namespace Sass {
     Module(ptr),
     plainCss(ptr->plainCss),
     hasExtends(ptr->hasExtends),
+    cfgOrigin(ptr->cfgOrigin),
     import(ptr->import)
   {
 

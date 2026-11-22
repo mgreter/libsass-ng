@@ -144,6 +144,46 @@ namespace Sass {
     return true;
   }
 
+  // Whether the configuration chain starting at [cfg] has an unused
+  // value for [key]. Only `@forward` rules pass outer configs through.
+  static bool HasConfigValue(WithConfig* cfg, EnvKey key)
+  {
+    while (cfg) {
+      if (cfg->hasHideFilter && cfg->varFilters.count(key.norm())) return false;
+      if (cfg->hasShowFilter && !cfg->varFilters.count(key.norm())) return false;
+      auto it = cfg->config.find(key);
+      if (it != cfg->config.end() && !it->second.wasAssigned) return true;
+      if (!cfg->isForward) return false;
+      if (!cfg->prefix.empty()) key = EnvKey(cfg->prefix + key.orig());
+      cfg = cfg->parent;
+    }
+    return false;
+  }
+
+  // Port of dart-sass `couldHaveBeenConfigured`: whether any public
+  // variable of [sheet] could be affected by the config at [cfg].
+  static bool CouldHaveBeenConfigured(Stylesheet* sheet, WithConfig* cfg)
+  {
+    for (const auto& var : sheet->idxs->varIdxs) {
+      if (var.first.isPrivate()) continue;
+      if (HasConfigValue(cfg, var.first)) return true;
+    }
+    for (const auto& var : sheet->mergedFwdVar) {
+      if (var.first.isPrivate()) continue;
+      if (HasConfigValue(cfg, var.first)) return true;
+    }
+    return false;
+  }
+
+  // Port of the dart-sass check in `_execute` for modules that are already
+  // loaded: an explicit configuration with another origin is an error if it
+  // could have configured the module (e.g. passed through `@forward`).
+  static bool ConflictsWithConfig(Stylesheet* sheet, WithConfig* cfg, size_t origin)
+  {
+    if (origin == 0 || origin == sheet->cfgOrigin) return false;
+    return CouldHaveBeenConfigured(sheet, cfg);
+  }
+
   static bool SameConfig(WithConfig* a, WithConfig* b)
   {
     if (a == b) return true;
@@ -323,6 +363,10 @@ namespace Sass {
     // Now load (and parse) the module (to eval)
     if (Stylesheet* root = loadModRule(rule))
     {
+      // A `with` creates a new configuration, otherwise
+      // the current configuration is passed through.
+      size_t origin = rule->hasConfig
+        ? ++compiler.cfgSerial : cfgOrigin;
       if (!root->isCompiled)
       {
         root->idxs->through = rule->prefix;
@@ -330,9 +374,16 @@ namespace Sass {
         LocalOption<bool> haswith(compiler.hasWithConfig,
           compiler.hasWithConfig || rule->hasConfig);
         RAII_PTR(WithConfig, wconfig, rule);
+        RAII_SIZE(cfgOrigin, origin);
+        root->cfgOrigin = origin;
         compileModule(root);
         exposeModule(root);
         rule->finalize(compiler);
+      }
+      else if (ConflictsWithConfig(root, rule, origin)) {
+        throw Exception::ParserException(compiler,
+          "This module was already loaded, so it "
+          "can't be configured using \"with\".");
       }
       else if (compiler.hasWithConfig || rule->hasConfig) {
         if (!IsCompatibleConfig(rule, compiler.wconfig99)) {
@@ -355,15 +406,25 @@ namespace Sass {
     // Now load (and parse) the module (to eval)
     if (Stylesheet* root = loadModRule(rule))
     {
+      // Only a `with` creates a (new) configuration
+      size_t origin = rule->hasConfig
+        ? ++compiler.cfgSerial : 0;
       if (!root->isCompiled)
       {
         ImportStackFrame iframe(compiler, root->import);
         LocalOption<bool> haswith(compiler.hasWithConfig,
           compiler.hasWithConfig || rule->hasConfig);
         RAII_PTR(WithConfig, wconfig, rule);
+        RAII_SIZE(cfgOrigin, origin);
+        root->cfgOrigin = origin;
         compileModule(root);
         exposeModule(root);
         rule->finalize(compiler);
+      }
+      else if (ConflictsWithConfig(root, rule, origin)) {
+        throw Exception::ParserException(compiler,
+          "This module was already loaded, so it "
+          "can't be configured using \"with\".");
       }
       else if (rule->hasConfig) {
         if (!SameConfig(rule, compiler.wconfig99)) {
@@ -476,6 +537,8 @@ namespace Sass {
           RAII_PTR(Stylesheet, _stylesheet, root);
           ImportStackFrame iframe(compiler, root->import);
           EnvScope envscope(compiler.varRoot, root->idxs);
+          // Imports only pass implicit configurations
+          RAII_SIZE(cfgOrigin, 0);
           {
             RAII_OBJ(CssParentNode, current, css);
             exposeImpRule1(rule); // May also be outside
@@ -538,6 +601,10 @@ namespace Sass {
         ImportStackFrame iframe(compiler, sheet->import);
         LocalOption<bool> haswith(compiler.hasWithConfig,
           compiler.hasWithConfig || hasWith);
+        // Only a `$with` creates a (new) configuration
+        size_t origin = hasWith ? ++compiler.cfgSerial : 0;
+        RAII_SIZE(cfgOrigin, origin);
+        sheet->cfgOrigin = origin;
         RAII_FLAG(plainCss, true);
         compileModule(sheet);
         wconfig->finalize(compiler);

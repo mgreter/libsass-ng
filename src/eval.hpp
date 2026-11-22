@@ -143,6 +143,9 @@ namespace Sass {
 
     // Whether we're working with plain css.
     bool plainCss = false;
+    // Identity of the current explicit configuration (like the
+    // original of dart-sass `_configuration`), zero if empty.
+    size_t cfgOrigin = 0;
 
     // Whether we're currently executing a mixing.
     bool inMixin = false;

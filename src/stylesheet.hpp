@@ -25,6 +25,9 @@ namespace Sass {
     bool plainCss = false;
 
     bool hasExtends = false;
+    // Identity of the explicit configuration this module was
+    // first compiled with (zero for empty or implicit ones).
+    size_t cfgOrigin = 0;
 
     // Import object through which this module was loaded.
     // It also has the input type (css vs sass) attached

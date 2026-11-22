@@ -71,6 +71,8 @@ namespace Sass {
     // Shared between eval and compiler
     // ToDo: move to appropriate unit
     WithConfig* wconfig99 = nullptr;
+    // Serial to give each explicit configuration an identity
+    size_t cfgSerial = 0;
 
     // Stack of environment frames. New frames are appended
     // when parser encounters a new environment scoping.

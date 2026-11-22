@@ -55,6 +55,8 @@ namespace Sass {
     bool hasConfig = false;
     bool hasShowFilter = false;
     bool hasHideFilter = false;
+    // Set for `@forward` rules, which pass outer configs through
+    bool isForward = false;
 
     std::set<EnvKey> varFilters;
     std::set<EnvKey> callFilters;
