@@ -284,11 +284,24 @@ namespace Sass {
     }
     // EO join_paths
 
+    // Append a slash to mark a directory, unless it already ends with one.
+    // `CWD + "/"` doubled the slash for root directories (`/` became `//`,
+    // which `make_canonical_path` keeps on purpose, e.g. for `//server`).
+    // An empty directory still becomes `/`, like before.
+    static sass::string as_directory(const sass::string& dir)
+    {
+      if (!dir.empty()) {
+        char last = dir[dir.size() - 1];
+        if (last == '/' || last == '\\') return dir;
+      }
+      return dir + "/";
+    }
+
     // create an absolute path by resolving relative paths with cwd
     // Note: differs if path has trainling slash or not (output follows suit)
     sass::string rel2abs(const sass::string& path, const sass::string& base, const sass::string& CWD)
     {
-      return make_canonical_path(join_paths(join_paths(CWD + "/", base + "/"), path));
+      return make_canonical_path(join_paths(join_paths(as_directory(CWD), as_directory(base)), path));
     }
     // EO rel2abs
 
