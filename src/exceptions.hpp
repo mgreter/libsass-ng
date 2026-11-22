@@ -237,6 +237,8 @@ namespace Sass {
     class RecursionLimitError : public Base {
       public:
         RecursionLimitError();
+        // Only reports the given (innermost) traces
+        RecursionLimitError(BackTraces traces);
     };
 
     class EndlessExtendError : public Base {

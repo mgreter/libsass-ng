@@ -163,6 +163,9 @@ namespace Sass {
 
     Eval eval(*this, *this, plainCss);
 
+    // Evaluation may run on another thread than parsing
+    varRoot.setStackLimit();
+
     // debug_ast(root);
     CssRootObj compiled;
     {

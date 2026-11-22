@@ -8,6 +8,14 @@
 #include "exceptions.hpp"
 #include "compiler.hpp"
 
+#include <algorithm>
+#include <cstdint>
+#ifdef _WIN32
+#include <windows.h>
+#elif defined(__APPLE__) || defined(__linux__)
+#include <pthread.h>
+#endif
+
 namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
@@ -50,6 +58,47 @@ namespace Sass {
     // Delete our env
     delete idxs;
   }
+
+  // Determine the lowest stack address of the current thread and keep a
+  // safety margin for the code between two checks (expressions etc.) and
+  // for unwinding. Stays zero (no check) if the platform can't tell us.
+  // ToDo: check if the other fixed runtime limits could use this too,
+  // e.g. NESTING_GUARD / VALUE_NESTING_GUARD (SassMaxNesting) for value
+  // operations, the EnvFrame depth check, or the @extend size limits.
+  void EnvRoot::setStackLimit()
+  {
+    stackLimit = 0;
+    char probe = 0;
+    uintptr_t current = reinterpret_cast<uintptr_t>(&probe);
+    uintptr_t low = 0;
+#if defined(_WIN32)
+    // The allocation base of the region is the end of the reserved stack
+    MEMORY_BASIC_INFORMATION mbi;
+    if (VirtualQuery(&probe, &mbi, sizeof(mbi)) != 0) {
+      low = reinterpret_cast<uintptr_t>(mbi.AllocationBase);
+    }
+#elif defined(__APPLE__)
+    pthread_t self = pthread_self();
+    uintptr_t high = reinterpret_cast<uintptr_t>(pthread_get_stackaddr_np(self));
+    size_t size = pthread_get_stacksize_np(self);
+    if (high > size) low = high - size;
+#elif defined(__linux__)
+    pthread_attr_t attr;
+    if (pthread_getattr_np(pthread_self(), &attr) == 0) {
+      void* addr = nullptr; size_t size = 0;
+      if (pthread_attr_getstack(&attr, &addr, &size) == 0) {
+        low = reinterpret_cast<uintptr_t>(addr);
+      }
+      pthread_attr_destroy(&attr);
+    }
+#endif
+    if (low == 0 || low >= current) return;
+    // Use a quarter of the remaining stack, but at most 256KB
+    uintptr_t margin = std::min<uintptr_t>(
+      (current - low) / 4, 256 * 1024);
+    stackLimit = low + margin;
+  }
+  // EO setStackLimit
 
   // Runtime check to see if we are currently in global scope
 
@@ -758,6 +807,17 @@ namespace Sass {
     oldMixOffset(0),
     oldFnOffset(0)
   {
+
+    // Every function, mixin and content block call creates a scope, so
+    // runtime recursion (e.g. `@function f() { @return f(); }`) is caught
+    // here before the native stack overflows (dart-sass just crashes).
+    char probe = 0;
+    if (reinterpret_cast<uintptr_t>(&probe) < env.stackLimit) {
+      // Only report the innermost call (the full trace is huge)
+      const BackTraces& stack = env.compiler.callStack;
+      if (stack.empty()) throw Exception::RecursionLimitError();
+      throw Exception::RecursionLimitError({ stack.back() });
+    }
 
     // The frame might be fully empty
     // Meaning it no scoped items at all

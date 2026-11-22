@@ -156,6 +156,9 @@ namespace Sass {
     RecursionLimitError::RecursionLimitError()
       : Base(msg_recursion_limit, {}) {}
 
+    RecursionLimitError::RecursionLimitError(BackTraces traces)
+      : Base(msg_recursion_limit, traces) {}
+
     EndlessExtendError::EndlessExtendError(BackTraces traces)
       : Base(def_msg, traces)
     {

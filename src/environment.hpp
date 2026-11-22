@@ -301,6 +301,15 @@ namespace Sass {
     // Root runtime env
     EnvRefs* idxs;
 
+    // Lowest stack address (plus a safety margin) the evaluation may
+    // use on the current thread, zero if unknown (see setStackLimit).
+    uintptr_t stackLimit = 0;
+
+    // Determine [stackLimit] for the current thread. Called before
+    // evaluation, since user defined functions and mixins can recurse
+    // at runtime without a limit, until the native stack overflows.
+    void setStackLimit();
+
   private:
 
     // We work together
