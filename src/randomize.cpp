@@ -42,29 +42,35 @@ namespace Sass {
     else {
       #ifdef SassStaticHashSeed
       seed = SassStaticHashSeed;
-      #elif defined(USE_WIN_CRYPT)
-      // Get seed via MS API
-      HCRYPTPROV hp = 0;
-      CryptAcquireContext(&hp, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-      CryptGenRandom(hp, sizeof(seed), (BYTE*)&seed);
-      CryptReleaseContext(hp, 0);
       #else
-      // Try to get random number from system
-      try {
-        // Get seed via C++11 API
-        std::random_device rd;
-        seed = rd();
+      bool hasSeed = false;
+      #ifdef USE_WIN_CRYPT
+      // Get seed via MS API (if any call fails, use the fallback
+      // below instead of the constant default for a zero seed)
+      HCRYPTPROV hp = 0;
+      if (CryptAcquireContext(&hp, 0, 0, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+        hasSeed = CryptGenRandom(hp, sizeof(seed), (BYTE*)&seed) != FALSE;
+        CryptReleaseContext(hp, 0);
       }
-      // On certain system this can throw since either
-      // underlying hardware or software can be buggy.
-      // https://github.com/sass/libsass/issues/3151
-      catch (std::exception&) {
+      #endif
+      if (!hasSeed) {
+        // Try to get random number from system
+        try {
+          // Get seed via C++11 API
+          std::random_device rd;
+          seed = rd();
+        }
+        // On certain system this can throw since either
+        // underlying hardware or software can be buggy.
+        // https://github.com/sass/libsass/issues/3151
+        catch (std::exception&) {
+        }
+        // Don't trust anyone to be random, so we
+        // add a little entropy of our own.
+        seed ^= std::time(NULL) ^ std::clock() ^
+          std::hash<std::thread::id>{}
+          (std::this_thread::get_id());
       }
-      // Don't trust anyone to be random, so we
-      // add a little entropy of our own.
-      seed ^= std::time(NULL) ^ std::clock() ^
-        std::hash<std::thread::id>{}
-        (std::this_thread::get_id());
       // Return entropy
       #endif
     }
