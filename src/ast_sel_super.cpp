@@ -587,7 +587,9 @@ namespace Sass {
           // bool isEverySuper = true;
           for (size_t i3 = i2; i3 < size_t(rhs_end - rhs_beg) - 1; i3++) {
             const auto& component = *(rhs_beg + i3);
-            if (!_isSupercombinator(combinator1, component->combinators().front())) {
+            // Like dart-sass `firstOrNull`; a descendant combinator has
+            // no combinators and is no subcombinator of `~` (no crash).
+            if (!_isSupercombinator(combinator1, frontOrNull(component->combinators()))) {
               return false;
             }
           }
