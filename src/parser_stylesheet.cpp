@@ -4675,8 +4675,9 @@ namespace Sass {
       return scanner.peekChar(1) != $dot;
     }
     if (character == $exclamation) {
-      if (!scanner.peekChar(next, 1)) {
-      }
+      // Like dart-sass, a `!` at the end of the input counts
+      // (`next` would be uninitialized otherwise)
+      if (!scanner.peekChar(next, 1)) return true;
       return isWhitespace(next)
         || equalsLetterIgnoreCase($i, next);
     }
