@@ -1144,6 +1144,15 @@ namespace Sass {
 
   public:
 
+    // Reset all cached values after the items were changed in place
+    // (used by the extender, see `ExtensionStore::extendListInPlace`)
+    void resetCaches() {
+      maxSpecificity_ = 0xFFFFFFFF;
+      minSpecificity_ = 0xFFFFFFFF;
+      Selector::hash_ = 0;
+      Vectorized<ComplexSelector>::hash_ = 0;
+    }
+
     // Value move constructor
     SelectorList(
       const SourceSpan& pstate,

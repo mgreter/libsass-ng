@@ -648,9 +648,41 @@ namespace Sass {
 //       // std::cerr << "REGGED EXISTING " << selector->inspect() << "\n";
 //      }
 
+      // Fast path: change a big list in place if this box is its only
+      // owner (lists from `extendList` are only referenced by the box; the
+      // original list of a rule is also on the selector stack etc.). Above
+      // 250 items `_trim` returns its input, and lists only grow, so the
+      // result is the same as the copy from `extendList`. This avoids
+      // copying (and re-registering) the whole list on every `@extend`,
+      // which made many extensions of one target quadratic.
+      if (selector->value->refcount == 1 && selector->value->size() > 250) {
+        // Index of the items, so we only look at those that may match
+        BoxIndex& index = boxIndexes[selector];
+        if (index.list != selector->value.ptr()) {
+          index = BoxIndex();
+          index.box = selector;
+          index.list = selector->value.ptr();
+          for (const ComplexSelectorObj& complex : selector->value->elements()) {
+            index.add(complex);
+          }
+        }
+        ComplexSelectors added;
+        if (extendListInPlace(selector->value, newExtensions, mediaContext, index, added)) {
+          // Only the new items need to be registered (the others already
+          // are for this rule, registering is idempotent)
+          SelectorListObj fresh = SASS_MEMORY_NEW(SelectorList,
+            selector->value->pstate(), std::move(added));
+          _registerSelector(fresh, selector);
+        }
+        continue;
+      }
+
       SelectorList* old = selector->value;
 
       selector->value = extendList(selector->value, newExtensions, mediaContext);
+
+      // The box may get a new list, an index for the old one is invalid
+      if (old != selector->value) boxIndexes.erase(selector);
 
       // std::cerr << "[EXT] Box is now [" << selector->value->toString() << "] at box ref {" << selector->dbh() << "}\n";
 
@@ -923,6 +955,145 @@ namespace Sass {
     return rv;
   }
   // EO extendList (review)
+
+  /////////////////////////////////////////////////////////////////////////
+  // Add [complex] to the index (see `ExtensionStore::BoxIndex`).
+  /////////////////////////////////////////////////////////////////////////
+  void ExtensionStore::BoxIndex::add(const ComplexSelector* complex)
+  {
+    bool hasPseudo = false;
+    for (const CplxSelComponentObj& component : complex->elements()) {
+      const CompoundSelector* compound = component->selector();
+      if (compound == nullptr) continue;
+      for (const SimpleSelectorObj& simple : compound->elements()) {
+        if (const PseudoSelector* pseudo = simple->isaPseudoSelector()) {
+          if (pseudo->selector()) hasPseudo = true;
+        }
+        sass::vector<const ComplexSelector*>& items(byHash[simple->hash()]);
+        if (items.empty() || items.back() != complex) items.push_back(complex);
+      }
+    }
+    if (hasPseudo) withPseudo.push_back(complex);
+  }
+  // EO BoxIndex::add
+
+  /////////////////////////////////////////////////////////////////////////
+  // Remove [complex] from the index (once it is no longer in the list),
+  // otherwise replaced items would accumulate as candidates.
+  /////////////////////////////////////////////////////////////////////////
+  void ExtensionStore::BoxIndex::remove(const ComplexSelector* complex)
+  {
+    for (const CplxSelComponentObj& component : complex->elements()) {
+      const CompoundSelector* compound = component->selector();
+      if (compound == nullptr) continue;
+      for (const SimpleSelectorObj& simple : compound->elements()) {
+        auto it = byHash.find(simple->hash());
+        if (it == byHash.end()) continue;
+        sass::vector<const ComplexSelector*>& items(it->second);
+        items.erase(std::remove(items.begin(), items.end(), complex), items.end());
+        if (items.empty()) byHash.erase(it);
+      }
+    }
+    withPseudo.erase(std::remove(withPseudo.begin(),
+      withPseudo.end(), complex), withPseudo.end());
+  }
+  // EO BoxIndex::remove
+
+  /////////////////////////////////////////////////////////////////////////
+  // Same result as `extendList`, but replaces the extended items of [list]
+  // in place instead of copying all items into a new list, and only looks
+  // at the items [index] lists for the targets. The new complex selectors
+  // are appended to [added] and to [index]. The caller must ensure that it
+  // is the only owner of [list] and that `_trim` would not change the
+  // result (it doesn't above 250 items).
+  /////////////////////////////////////////////////////////////////////////
+  bool ExtensionStore::extendListInPlace(
+    SelectorList* list,
+    const ExtSelExtMap& extensions,
+    CssMediaQueryVector* mqContext,
+    BoxIndex& index,
+    ComplexSelectors& added)
+  {
+    // Hashes of all targets for the cheap pre-check
+    sass::vector<size_t> targetHashes;
+    targetHashes.reserve(extensions.size());
+    for (const auto& kv : extensions) {
+      targetHashes.push_back(kv.first->hash());
+    }
+    // Items that may contain a target (or a selector pseudo)
+    sass::vector<const ComplexSelector*> candidates(
+      index.withPseudo.begin(), index.withPseudo.end());
+    for (size_t hash : targetHashes) {
+      auto it = index.byHash.find(hash);
+      if (it == index.byHash.end()) continue;
+      candidates.insert(candidates.end(),
+        it->second.begin(), it->second.end());
+    }
+    if (candidates.empty()) return false;
+    std::sort(candidates.begin(), candidates.end());
+    candidates.erase(std::unique(candidates.begin(),
+      candidates.end()), candidates.end());
+    // Positions of all their occurrences (the same object may be in the
+    // list more than once), in list order like `extendList` processes them
+    ComplexSelectors& items(list->elements());
+    sass::vector<size_t> positions;
+    for (size_t i = 0; i < items.size(); i += 1) {
+      if (std::binary_search(candidates.begin(),
+        candidates.end(), items[i].ptr())) {
+        positions.push_back(i);
+      }
+    }
+    // Extend them, `offset` accounts for the items inserted so far
+    bool changed = false;
+    size_t offset = 0;
+    // Items that were replaced (kept alive until removed from the index)
+    ComplexSelectors replaced;
+    for (size_t pos : positions) {
+      size_t i = pos + offset;
+      if (!mayExtendComplex(items[i], extensions, targetHashes)) continue;
+      // Keep it alive while we replace it
+      ComplexSelectorObj complex = items[i];
+      ComplexSelectors extended = extendComplex(
+        complex, extensions, mqContext);
+      if (extended.empty()) continue;
+      changed = true;
+      replaced.push_back(complex);
+      // Replace the item with its extensions (same order as `extendList`)
+      for (const ComplexSelectorObj& item : extended) index.add(item);
+      added.insert(added.end(), extended.begin(), extended.end());
+      items[i] = extended[0];
+      items.insert(items.begin() + i + 1,
+        std::make_move_iterator(extended.begin() + 1),
+        std::make_move_iterator(extended.end()));
+      offset += extended.size() - 1;
+      // Same check as `extendList` (prefix plus the extended items)
+      assertSelectorListLimit(i + extended.size(), *traces, list->pstate());
+    }
+    // Remove replaced items from the index. All occurrences of an object
+    // are processed in this pass with the same result, so an item is no
+    // longer in the list unless an extension produced it again.
+    if (!replaced.empty()) {
+      sass::vector<const ComplexSelector*> kept;
+      kept.reserve(added.size());
+      for (const ComplexSelectorObj& item : added) kept.push_back(item.ptr());
+      std::sort(kept.begin(), kept.end());
+      std::sort(replaced.begin(), replaced.end(),
+        [](const ComplexSelectorObj& a, const ComplexSelectorObj& b) {
+          return a.ptr() < b.ptr(); });
+      const ComplexSelector* last = nullptr;
+      for (const ComplexSelectorObj& item : replaced) {
+        if (item.ptr() == last) continue;
+        last = item.ptr();
+        if (!std::binary_search(kept.begin(), kept.end(), last)) {
+          index.remove(last);
+        }
+      }
+    }
+    // Cached hash and specificity are now outdated
+    if (changed) list->resetCaches();
+    return changed;
+  }
+  // EO extendListInPlace
 
   /////////////////////////////////////////////////////////////////////////
   // Extends [complex] using [extensions], and

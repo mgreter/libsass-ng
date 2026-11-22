@@ -12,6 +12,7 @@
 #include "backtrace.hpp"
 #include "comparators.hpp"
 #include "containers.hpp"
+#include <unordered_map>
 
 
 // #include "ankerl/unordered_dense.h"
@@ -82,6 +83,24 @@ namespace Sass {
     // contain them.This is used to find which rules an `@extend` applies to.
     /////////////////////////////////////////////////////////////////////////
     ExtSelMap selectors54; // _selectors
+
+    /////////////////////////////////////////////////////////////////////////
+    // Index for `extendListInPlace` (big selector lists only). Maps the hash
+    // of every simple selector in the box's list to the complex selectors
+    // that contain it, plus all complex selectors with selector pseudos
+    // (always candidates, extended recursively). Candidates may be stale
+    // or collide (they are fully checked), but every item that can match
+    // a target must be listed. Dropped whenever the box gets a new list.
+    /////////////////////////////////////////////////////////////////////////
+    struct BoxIndex {
+      ModifiableBoxObj box; // keeps the box (and thus the key) alive
+      const SelectorList* list = nullptr; // list the index belongs to
+      std::unordered_map<size_t, sass::vector<const ComplexSelector*>> byHash;
+      sass::vector<const ComplexSelector*> withPseudo;
+      void add(const ComplexSelector* complex);
+      void remove(const ComplexSelector* complex);
+    };
+    std::unordered_map<const ModifiableBox*, BoxIndex> boxIndexes;
 
     /////////////////////////////////////////////////////////////////////////
     // A map from all extended simple selectors
@@ -292,6 +311,19 @@ namespace Sass {
       const SelectorListObj& list,
       const ExtSelExtMap& extensions,
       CssMediaQueryVector* mediaContext);
+
+    /////////////////////////////////////////////////////////////////////////
+    // Same as `extendList`, but changes [list] in place and appends the
+    // complex selectors produced by extensions to [added]. Returns whether
+    // anything was extended. Only valid if the caller is the only owner of
+    // [list] and the result would not be trimmed (see the caller).
+    /////////////////////////////////////////////////////////////////////////
+    bool extendListInPlace(
+      SelectorList* list,
+      const ExtSelExtMap& extensions,
+      CssMediaQueryVector* mediaContext,
+      BoxIndex& index,
+      ComplexSelectors& added);
 
     /////////////////////////////////////////////////////////////////////////
     // Extends [complex] using [extensions], and
