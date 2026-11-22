@@ -1201,14 +1201,21 @@ namespace Sass {
         ? "*" : readIdentifier();
     }
 
-    // Check if name is valid identifier
-    if (url.empty() || isDigit(url[0])) {
+    // Like dart-sass, the default namespace is the last path segment of the
+    // url (e.g. `math` for `sass:math`), without a leading underscore and
+    // everything after the first dot. It must be a valid Sass identifier.
+    size_t sep = url.find_last_of("/\\:");
+    sass::string ns(sep == NPOS ? url : url.substr(sep + 1));
+    if (!ns.empty() && ns[0] == '_') ns.erase(0, 1);
+    size_t dot = ns.find('.');
+    if (dot != NPOS) ns.erase(dot);
+    if (!isIdentifier(ns)) {
       SourceSpan pstate(scanner.relevantSpanFrom(start));
       CallStackFrame csf(compiler, pstate);
-      throw Exception::InvalidDefaultNamespace(compiler, url);
+      throw Exception::InvalidDefaultNamespace(compiler, ns);
     }
 
-    return "";
+    return ns;
   }
 
   bool StylesheetParser::readWithConfiguration(
@@ -3282,6 +3289,12 @@ namespace Sass {
           scanner.relevantSpanFrom(beforeName), identifier);
       }
       scanner.readChar();
+
+      // Like dart-sass, check this before the member (also for variables)
+      if (plain.empty()) {
+        error("Interpolation isn't allowed in namespaces.",
+          identifier->pstate());
+      }
 
       if (scanner.peekChar() == $dollar) {
         sass::string name(variableName());
