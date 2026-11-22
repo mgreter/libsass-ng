@@ -132,6 +132,10 @@ namespace Sass {
     // from before the corresponding `@if` was parsed.
     virtual bool scanElse(size_t ifIndentation) = 0;
 
+    // The indentation level of the current line (always zero for SCSS,
+    // like dart-sass `currentIndentation`). Needed for `@else` checks.
+    virtual size_t getCurrentIndentation() const { return 0; }
+
     // Consumes a block of child statements. Unlike most production consumers,
     // this does *not* consume trailing whitespace. This is necessary to ensure
     // that the source span for the parent rule doesn't cover whitespace after the rule.

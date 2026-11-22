@@ -1127,9 +1127,9 @@ namespace Sass {
   // ToDo: dart-sass stores all else ifs in the same object, smart ...
   IfRule* StylesheetParser::readIfRule(Offset start, Statement* (StylesheetParser::* child)())
   {
-    // var ifIndentation = currentIndentation;
+    // Like dart-sass, `@else` must have the same indentation as `@if`.
+    size_t ifIndentation = getCurrentIndentation();
     scanWhitespace(true);
-    size_t ifIndentation = 0;
     RAII_FLAG(inControlDirective, true);
     ExpressionObj predicate = readExpression();
 

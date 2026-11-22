@@ -93,6 +93,9 @@ namespace Sass {
     // from before the corresponding `@if` was parsed.
     bool scanElse(size_t ifIndentation) final;
 
+    // The indentation level of the current line
+    size_t getCurrentIndentation() const final { return currentIndentation; }
+
     // Consumes a block of child statements. Unlike most production consumers,
     // this does *not* consume trailing whitespace. This is necessary to ensure
     // that the source span for the parent rule doesn't cover whitespace after the rule.
