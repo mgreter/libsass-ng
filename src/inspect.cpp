@@ -26,6 +26,39 @@ namespace Sass {
     append_string(PrintNumber(nr, outopt));
   }
 
+  // Number of fractional digits of the shortest plain decimal form of
+  // a number between -1 and 1 (e.g. 2 for "-0.25") that converts back
+  // to the same double. This corresponds to `number.toString()` in
+  // dart-sass (after removing any exponent), which decides how it is
+  // written in compressed mode (see `formatNumber`).
+  static size_t shortestFractionDigits(double nr)
+  {
+    char buf[64];
+    for (int digits = 0; digits < 17; digits++) {
+      snprintf(buf, sizeof(buf), "%.*e", digits, nr);
+      if (strtod(buf, nullptr) != nr) continue;
+      const char* exp = strchr(buf, 'e');
+      int exponent = exp ? atoi(exp + 1) : 0;
+      // Zeros after the point plus significant digits
+      return (exponent < 0 ? -exponent - 1 : 0) + (digits + 1);
+    }
+    return sizeof(buf);
+  }
+
+  // Whether dart-sass omits the zero before the decimal point of a number
+  // between -1 and 1 in compressed mode. Its `_writeNumber` writes numbers
+  // that are shorter than precision + 2 directly, only stripping a leading
+  // `0` (so `-0.25` is kept). Longer numbers go through `_writeRounded`,
+  // which writes them unchanged if no rounding is needed (keeping the
+  // zero, e.g. `0.1234567891`) and otherwise strips it after the minus.
+  static bool omitLeadingZero(double nr, int precision)
+  {
+    size_t fraction = shortestFractionDigits(nr);
+    size_t length = (nr < 0 ? 3 : 2) + fraction;
+    if (length < static_cast<size_t>(precision) + 2) return nr >= 0;
+    return fraction > static_cast<size_t>(precision);
+  }
+
   // Format a number with the configured precision and strip trailing
   // zeros of the fractional part. Zeros are only removed after a decimal
   // point (otherwise precision 0 turned "10" into "1"), and we never move
@@ -66,6 +99,22 @@ namespace Sass {
     // Some final cosmetics
     if (buf[0] == '-' && buf[1] == '0' && buf[2] == 0) {
       buf[0] = '0'; buf[1] = 0;
+    }
+    // Compressed output omits the zero before the decimal point,
+    // exactly like dart-sass. Only real output can be compressed,
+    // values converted to strings (e.g. `#{0.5}`) never are.
+    if (outopt.output_style == SASS_STYLE_COMPRESSED) {
+      if (buf[0] == '0' && buf[1] == '.') {
+        if (omitLeadingZero(nr, outopt.precision)) {
+          return sass::string(buf + 1);
+        }
+      }
+      else if (buf[0] == '-' && buf[1] == '0' && buf[2] == '.') {
+        if (omitLeadingZero(nr, outopt.precision)) {
+          buf[1] = '-';
+          return sass::string(buf + 1);
+        }
+      }
     }
     return sass::string(buf);
   }
@@ -1080,6 +1129,37 @@ namespace Sass {
     write_char(hexCharFor(color & 0xF));
   }
 
+  // Writes an opaque rgb color with integer channels in its shortest form
+  // (name, short hex or hex) and returns true, or returns false if it can't
+  // be written as hex. Port of `_tryIntegerRgb` in dart-sass (compressed).
+  bool Inspect::_tryIntegerRgb(const Color* rgb)
+  {
+    if (!_canUseHexForColor(rgb)) return false;
+    int red = (int)std::round(rgb->getChannel0());
+    int green = (int)std::round(rgb->getChannel1());
+    int blue = (int)std::round(rgb->getChannel2());
+    auto symmetrical = [](int c) { return (c & 0xF) == (c >> 4); };
+    bool shortHex = symmetrical(red) && symmetrical(green) && symmetrical(blue);
+    const char* name = color_to_name(red * 0x10000 + green * 0x100 + blue);
+    flush_schedules();
+    if (name != nullptr && strlen(name) <= (shortHex ? 4u : 7u)) {
+      write_string(name);
+    }
+    else if (shortHex) {
+      write_char('#');
+      write_char(hexCharFor(red & 0xF));
+      write_char(hexCharFor(green & 0xF));
+      write_char(hexCharFor(blue & 0xF));
+    }
+    else {
+      write_char('#');
+      _writeHexComponent(red);
+      _writeHexComponent(green);
+      _writeHexComponent(blue);
+    }
+    return true;
+  }
+
   void Inspect::_writeLegacyColor(Color* color)
   {
 
@@ -1104,15 +1184,47 @@ namespace Sass {
       return;
     }
 
+    // In compressed mode, emit colors in the shortest representation
+    // possible, exactly like dart-sass (`_writeLegacyColor`).
+    if (outopt.output_style == SASS_STYLE_COMPRESSED && !inspect) {
+      ColorObj rgb = color->toSpace(ColorSpaces::rgb, color->pstate());
+      if (opaque && _tryIntegerRgb(rgb)) return;
+      sass::string red(PrintNumber(rgb->getChannel0(), outopt));
+      sass::string green(PrintNumber(rgb->getChannel1(), outopt));
+      sass::string blue(PrintNumber(rgb->getChannel2(), outopt));
+      ColorObj hsl = color->toSpace(ColorSpaces::hsl, color->pstate());
+      sass::string hue(PrintNumber(hsl->getChannel0(), outopt));
+      sass::string saturation(PrintNumber(hsl->getChannel1(), outopt));
+      sass::string lightness(PrintNumber(hsl->getChannel2(), outopt));
+      sass::string css;
+      // Add two characters for HSL for the %s on saturation and lightness
+      if (red.size() + green.size() + blue.size() <=
+        hue.size() + saturation.size() + lightness.size() + 2) {
+        css += opaque ? "rgb(" : "rgba(";
+        css += red; css += ','; css += green; css += ','; css += blue;
+      }
+      else {
+        css += opaque ? "hsl(" : "hsla(";
+        css += hue; css += ','; css += saturation;
+        css += "%,"; css += lightness; css += '%';
+      }
+      if (!opaque) {
+        css += ',';
+        css += PrintNumber(color->alpha().value_or(1), outopt);
+      }
+      css += ')';
+      flush_schedules();
+      append_token(css, color);
+      return;
+    }
+
     if (color->space() == ColorSpaces::hsl) {
       _writeHsl(color);
       return;
     }
-    else if (outopt.output_style == SASS_STYLE_COMPRESSED) {
-      if (color->space() == ColorSpaces::hwb) {
-        _writeHwb(color);
-        return;
-      }
+    else if (inspect && color->space() == ColorSpaces::hwb) {
+      _writeHwb(color);
+      return;
     }
 
     // Maybe force format to rgb or use original
@@ -1306,8 +1418,8 @@ namespace Sass {
       append_optional_space();
       append_string("100%");
       append_comma_separator();
-      append_string("black");
-      // _buffer.write(_isCompressed ? 'red' : 'black');
+      // Like dart-sass, use the shorter name when compressed
+      append_string(isCompressed() ? "red" : "black");
       append_string(")");
     }
 
@@ -1324,7 +1436,8 @@ namespace Sass {
       if (spaced->isChannel0Missing()) {
         append_string("none");
       }
-      else if (space._channels[0].isLinear) {
+      // dart-sass writes the raw channel (no percent) when compressed
+      else if (space._channels[0].isLinear && !isCompressed()) {
         double max = space._channels[0].max;
         append_string(PrintChannel(spaced->getChannel0() * 100 / max, outopt));
         write_string("%");
@@ -1337,7 +1450,8 @@ namespace Sass {
       append_mandatory_space();
 
       bool polar = space._channels[2].isPolarAngle;
-      write_channel(spaced->getChannel2OrNull(), polar ? "deg" : nullptr);
+      write_channel(spaced->getChannel2OrNull(),
+        polar && !isCompressed() ? "deg" : nullptr);
 
       _maybeWriteSlashAlpha(spaced);
 
@@ -1501,8 +1615,12 @@ namespace Sass {
       _writeCalculationValue(op->left());
       if (pl) append_string(")");
 
-      // ToDo: compress white-space
-      append_optional_space();
+      // CSS requires whitespace around `+` and `-` in calculations,
+      // so only `*` and `/` may lose it in compressed mode (dart-sass:
+      // `!_isCompressed || operator.precedence == 1`).
+      bool additive = op->op() == ADD || op->op() == SUB;
+      if (additive) append_mandatory_space();
+      else append_optional_space();
       switch (op->op()) {
         case ADD: append_string("+"); break;
         case SUB: append_string("-"); break;
@@ -1510,7 +1628,8 @@ namespace Sass {
         case DIV: append_string("/"); break;
         default: break;
       }
-      append_optional_space();
+      if (additive) append_mandatory_space();
+      else append_optional_space();
 
       bool pr = rcalc != nullptr && _parenthesizeCalculationRhs(op->op(), rcalc->op());
       pr |= op->op() == DIV && _parenthesizeCalculationRhsDiv(op->right());

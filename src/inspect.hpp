@@ -104,6 +104,7 @@ namespace Sass {
 
     bool _canUseHexForChannel(double channel);
     bool _canUseHexForColor(const Color* rgb);
+    bool _tryIntegerRgb(const Color* rgb);
 
     virtual void _writeHsl(Color* color);
     virtual void _writeHwb(Color* color);
