@@ -346,6 +346,22 @@ namespace Sass {
       selector_ != nullptr; // && !selector_->empty();
   }
 
+  // Like dart-sass (https://drafts.csswg.org/selectors/#specificity-rules)
+  unsigned long PseudoSelector::specificity() const
+  {
+    if (isPseudoElement()) return Constants::Specificity::Element;
+    if (selector_.isNull() || selector_->empty()) return Constants::Specificity::Pseudo;
+    if (normalized_ == "where") return 0;
+    if (normalized_ == "is" || normalized_ == "not" ||
+      normalized_ == "has" || normalized_ == "matches") {
+      return selector_->maxSpecificity();
+    }
+    if (normalized_ == "nth-child" || normalized_ == "nth-last-child") {
+      return Constants::Specificity::Pseudo + selector_->maxSpecificity();
+    }
+    return Constants::Specificity::Pseudo;
+  }
+
   PseudoSelector* PseudoSelector::withSelector(SelectorList* selector) const
   {
     PseudoSelector* pseudo = SASS_MEMORY_COPY(this);
@@ -757,12 +773,14 @@ namespace Sass {
   unsigned long SelectorList::minSpecificity() const
   {
     if (minSpecificity_ == 0xFFFFFFFF) {
-      minSpecificity_ = 0;
+      // Wrote into the max cache and started at zero before
+      unsigned long specificity = 0xFFFFFFFE;
       for (const auto& complex : elements()) {
-        maxSpecificity_ = std::min(
+        specificity = std::min(
           complex->minSpecificity(),
-          maxSpecificity_);
+          specificity);
       }
+      minSpecificity_ = empty() ? 0 : specificity;
     }
     return minSpecificity_;
   }

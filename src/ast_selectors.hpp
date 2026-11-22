@@ -683,11 +683,8 @@ namespace Sass {
     PseudoSelector* withSelector(SelectorList* selector) const;
 
     // Implement specialized specificity function
-    unsigned long specificity() const override {
-      return isPseudoElement()
-        ? Constants::Specificity::Element
-        : Constants::Specificity::Pseudo;
-    }
+    // Takes the selector argument into account
+    unsigned long specificity() const override;
 
     // Unify Pseudo selector with multiple simple selectors
     // CompoundSelector* unifyWith(CompoundSelector*);
