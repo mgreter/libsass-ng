@@ -304,6 +304,23 @@ namespace Sass {
     if (!in_custom_property) {
       Inspect::visitString(s);
     }
+    else if (output_style() == SASS_STYLE_COMPRESSED) {
+      // Like dart-sass (`_writeFoldedValue`), replace every line
+      // feed and the whitespace following it with a single space.
+      const sass::string& value(s->value());
+      sass::string folded;
+      folded.reserve(value.size());
+      for (size_t i = 0; i < value.size(); i++) {
+        if (value[i] != $lf) {
+          folded += value[i];
+          continue;
+        }
+        folded += ' ';
+        while (i + 1 < value.size() &&
+          Character::isWhitespace(value[i + 1])) i++;
+      }
+      append_token(folded, s);
+    }
     else {
       sass::string value(s->value());
       // ToDo: avoid any cleanup
