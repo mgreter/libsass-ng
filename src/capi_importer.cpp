@@ -43,7 +43,7 @@ extern "C" {
     return importer->lambda;
   }
 
-  // Getter for importer priority (lowest priority is invoked first)
+  // Getter for importer priority (highest priority is invoked first)
   double ADDCALL sass_importer_get_priority(struct SassImporter* importer)
   {
     return importer->priority;

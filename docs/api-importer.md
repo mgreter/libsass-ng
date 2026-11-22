@@ -87,7 +87,7 @@ void sass_delete_importer(struct SassImporter* cb);
 // Getter for importer lambda function (the one being actually invoked)
 SassImporterLambda sass_importer_get_lambda(struct SassImporter* cb);
 
-// Getter for importer priority (lowest priority is invoked first)
+// Getter for importer priority (highest priority is invoked first)
 double sass_importer_get_priority(struct SassImporter* cb);
 
 // Getter for arbitrary cookie (used by implementers to store stuff)

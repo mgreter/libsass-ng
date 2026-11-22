@@ -26,6 +26,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Helper function to sort header and importer arrays by priorities
+  // (descending, so the importer with the highest priority is invoked first)
   static inline bool cmpImporterPrio(struct SassImporter* i, struct SassImporter* j)
   {
     return sass_importer_get_priority(i) > sass_importer_get_priority(j);
