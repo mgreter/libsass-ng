@@ -472,6 +472,10 @@ namespace Sass {
         joinIt = true;
       }
     }
+    // Like dart-sass, always write the space before the block, even
+    // if the queries end with the terminating space of an escape
+    // (`@media screen\9  {`); the scope opener then adds no other.
+    if (!isCompressed()) append_char($space);
     visitBlockStatements(node, node->elements());
   }
   // EO visitCssMediaRule
@@ -500,6 +504,9 @@ namespace Sass {
 
     // scheduled_crutch = s;
     if (s) visitSelectorList(s);
+    // Like dart-sass, always write the space before the block, even
+    // if the selector ends with the terminating space of an escape.
+    if (s && !s->empty() && !isCompressed()) append_char($space);
     append_scope_opener(node);
 
     close_on_same_line = acceptCssChildren(node, node->elements());
