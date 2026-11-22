@@ -610,7 +610,10 @@ namespace Sass {
     if (index == 0) throw Exception::SassScriptException(
       "List index may not be 0.", logger, sassIndex->pstate(), name);
     size_t size = lengthAsList();
-    if (size < size_t(std::abs(index))) {
+    // Magnitude without `std::abs` (undefined for INT64_MIN)
+    uint64_t magnitude = index < 0
+      ? uint64_t(0) - uint64_t(index) : uint64_t(index);
+    if (uint64_t(size) < magnitude) {
       sass::sstream strm;
       strm << "Invalid index " << index << " for a list ";
       strm << "with " << size << " elements.";

@@ -944,6 +944,10 @@ namespace Sass {
   int64_t Number::assertInt(Logger& logger, const sass::string& name) const
   {
     if (fuzzyIsInt(value_, logger.epsilon)) {
+      // Like the Dart VM, saturate instead of overflowing (`llround`
+      // is undefined for values outside of the int64 range).
+      if (value_ >= 9223372036854775807.0) return INT64_MAX;
+      if (value_ <= -9223372036854775808.0) return INT64_MIN;
       return static_cast<int64_t>(std::llround(value_));
     }
     SourceSpan span(this->pstate());
