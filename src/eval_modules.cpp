@@ -667,8 +667,10 @@ namespace Sass {
       return;
     }
 
-    WithConfig configs(wconfig,
-      toWithConfig(withMap), hasWith);
+    // Owned by the evaluator (see `loadCssConfigs`)
+    loadCssConfigs.emplace_back(new WithConfig(wconfig,
+      toWithConfig(withMap), hasWith));
+    WithConfig& configs = *loadCssConfigs.back();
     // Only uses its own `$with` config
     configs.isolated = true;
     RAII_PTR(WithConfig, wconfig, &configs);

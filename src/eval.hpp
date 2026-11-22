@@ -13,6 +13,7 @@
 #include "ast_supports.hpp"
 #include "ast_callables.hpp"
 #include "calc_names.hpp"
+#include <memory>
 
 namespace Sass {
 
@@ -34,6 +35,12 @@ namespace Sass {
     // Slot of the variable currently being assigned (to allow functions
     // like `append` to modify its value in place if it isn't shared).
     EnvRoot::VarSlot assigne;
+
+    // Configs of `meta.load-css()` calls. Rules parsed while loading the
+    // module keep a pointer to it as their parent config, and the parsed
+    // module is cached and may be evaluated again (e.g. via `@import`),
+    // so it must live as long as the evaluation (not on the stack).
+    sass::vector<std::unique_ptr<WithConfig>> loadCssConfigs;
 
     // Value of the variable currently being assigned (or nullptr)
     Value* assignedValue() const;
