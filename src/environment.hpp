@@ -149,6 +149,10 @@ namespace Sass {
     // possibility to hoist forwarded entities at any lexical scope.
     // All @use as "*" do not get exposed to the parent scope though.
     sass::vector<EnvRefs*> forwards;
+    // Scopes of imports nested in this (non-internal) scope. Their variables
+    // are visible in this scope once the import was evaluated (e.g. for
+    // `a {@import "x"; b: $x}`), since we can't add them to this scope.
+    sass::vector<EnvRefs*> imports;
 
     // Required
     sass::vector<ForwardRule*> delayedMerge;

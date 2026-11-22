@@ -3726,7 +3726,7 @@ namespace Sass {
 
     sass::string abspath(loaded->getAbsPath());
     auto cached = compiler.sheets21.find(
-      Compiler::sheetCacheKey(abspath, isImport));
+      compiler.sheetCacheKey(abspath, isImport));
     if (cached != compiler.sheets21.end()) {
       return cached->second;
     }

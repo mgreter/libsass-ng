@@ -306,8 +306,9 @@ namespace Sass {
     // a module and also imported needs two stylesheets (cached separately).
     Stylesheet* registerImport(ImportObj import, bool isImport = false);
 
-    // Key for [sheets21] (imports are cached separately from modules)
-    static sass::string sheetCacheKey(const sass::string& absPath, bool isImport);
+    // Key for [sheets21] (imports are cached separately from modules,
+    // and nested imports separately for each scope they are nested in)
+    sass::string sheetCacheKey(const sass::string& absPath, bool isImport) const;
 
     // Called by parserStylesheet on the very first parse call
     void applyCustomHeaders(StatementVector& root, const SourceSpan& pstate);

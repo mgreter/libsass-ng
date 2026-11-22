@@ -510,6 +510,11 @@ namespace Sass {
     EnvRef fallback;
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
+      // Like dart-sass, a variable only found in the root (or module)
+      // scope is not assigned by nested imports (they create a local one).
+      if (fallback.isValid() && current->isInternal53 && !current->isImport) {
+        return fallback;
+      }
       for (auto it = current->forwards.rbegin();
         it != current->forwards.rend(); it++)
       {
@@ -540,8 +545,8 @@ namespace Sass {
       // End of checking forwards
       if (current->isImport) {
         // Nested imports keep their variables, since the parent scope
-        // already has its slots. Those are only used if no outer scope
-        // has the variable, so assignments still update outer ones.
+        // already has its slots. Those are only used if no local outer
+        // scope has the variable, so assignments still update those.
         if (!fallback.isValid() && !current->hoistsVariables()) {
           auto vit = current->varIdxs.find(name);
           if (vit != current->varIdxs.end()) {
@@ -553,6 +558,12 @@ namespace Sass {
       auto vit = current->varIdxs.find(name);
       if (vit != current->varIdxs.end()) {
         return { current, vit->second }; // SPECED
+      }
+      for (const EnvRefs* imported : current->imports) {
+        auto iit = imported->varIdxs.find(name);
+        if (iit != imported->varIdxs.end()) {
+          return { imported, iit->second };
+        }
       }
       if (current->through != "") name =
         EnvKey(current->through + name.norm());
@@ -572,6 +583,11 @@ namespace Sass {
     sass::vector<EnvRef> fallbacks;
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
+      // See findVarIdx (preferred over the root or module scope)
+      if (!fallbacks.empty() && current->isInternal53 && !current->isImport) {
+        vidxs.insert(vidxs.end(), fallbacks.begin(), fallbacks.end());
+        fallbacks.clear();
+      }
       for (auto it = current->forwards.rbegin();
         it != current->forwards.rend(); it++)
       {
@@ -593,7 +609,7 @@ namespace Sass {
         }
       }
       if (current->isImport) {
-        // See findVarIdx (only used if no outer scope has it)
+        // See findVarIdx (only used if no local outer scope has it)
         if (!current->hoistsVariables()) {
           auto vit = current->varIdxs.find(name);
           if (vit != current->varIdxs.end()) {
@@ -605,6 +621,12 @@ namespace Sass {
       auto vit = current->varIdxs.find(name);
       if (vit != current->varIdxs.end()) {
         vidxs.emplace_back(current, vit->second);
+      }
+      for (const EnvRefs* imported : current->imports) {
+        auto iit = imported->varIdxs.find(name);
+        if (iit != imported->varIdxs.end()) {
+          vidxs.emplace_back(imported, iit->second);
+        }
       }
       if (current->through != "") name =
         EnvKey(current->through + name.norm());

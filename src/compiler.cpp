@@ -755,10 +755,23 @@ namespace Sass {
   }
   // EO parseSource
 
-  sass::string Compiler::sheetCacheKey(const sass::string& absPath, bool isImport)
+  sass::string Compiler::sheetCacheKey(const sass::string& absPath, bool isImport) const
   {
+    if (!isImport) return absPath;
     // A character that can't be part of a path
-    return isImport ? absPath + "\x01import" : absPath;
+    sass::string key(absPath + "\x01import");
+    // Find the scope the import is nested in (skip imports)
+    const EnvRefs* parent = envstack.empty() ? nullptr : envstack.back();
+    while (parent && parent->isImport) parent = parent->pscope;
+    // Root imports are shared, but a nested import resolves its variables
+    // against its parent scope (and caches those references in the AST).
+    // Therefore each nesting scope needs its own parsed stylesheet.
+    if (parent && !parent->isInternal53) {
+      sass::sstream strm;
+      strm << "\x01" << static_cast<const void*>(parent);
+      key += strm.str();
+    }
+    return key;
   }
 
   // Parse the import (updates syntax flag if AUTO was set)

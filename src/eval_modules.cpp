@@ -552,6 +552,12 @@ namespace Sass {
 
       EnvRefs* cidxs = rule->root47()->idxs;
 
+      // Expose variables of the nested import to this scope
+      auto& imports = pframe->imports;
+      if (std::find(imports.begin(), imports.end(), cidxs) == imports.end()) {
+        imports.push_back(cidxs);
+      }
+
       /*
 
       // Merge it up through all imports
