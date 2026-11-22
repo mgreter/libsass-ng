@@ -255,114 +255,68 @@ namespace Sass {
     return text;
   }*/
 
-  // append some text or token to the buffer
-  // comments indent also depend on where original
-  // opener of the comment was in the original file
-  void Emitter::indent_comment(const sass::string& text)
+  // Append a (multi-line) comment, re-indented like dart-sass does
+  // (`_minimumIndentation` and `_writeWithIndent` in serialize.dart):
+  // the first line is written as-is. From all following lines we remove
+  // the smallest indentation of any non-blank line (but never more than
+  // the column the comment started at in the source) and prefix them
+  // with the current output indentation. Blank lines are kept as such.
+  void Emitter::indent_comment(const sass::string& text, size_t column)
   {
-    // write space/lf
-    flush_schedules();
-    if (text.empty() == false)
-      parentheses_opened = false;
-    // add to buffer
-
-
-
-
-    size_t minIndent = std::numeric_limits<size_t>::max(),
-      curIndent = 0, i = 0;
-    while (i < text.size()) {
-      if (Character::isNewline(text[i++])) {
-        while (Character::isNewline(text[i++])) {}
-        curIndent = i; // store current position
-        while (Character::isSpaceOrTab(text[i++])) {}
-        if (!Character::isNewline(text[i - 1])) {
-          // std::cerr << "line has indent " << i - curIndent << "\n";
-          minIndent = std::min(minIndent, i - curIndent - 1);
-        }
-      }
+    const size_t size = text.size();
+    // Find the end of the first line
+    size_t i = text.find('\n');
+    if (i == sass::string::npos) {
+      append_string(text);
+      return;
     }
-
-    bool firstLine = true;
-    bool startLine = true;
-    i = 0; sass::string cleaned;
-
-    while (i < text.size()) {
-      if (Character::isNewline(text[i++])) {
-        firstLine = false;
-        startLine = true;
-        wbuf.buffer += text[i - 1];
-        while (Character::isNewline(text[i++])) {
-          wbuf.buffer += text[i - 1];
-        }
-        curIndent = 0;
-        if (startLine) {
-          // wbuf.buffer += '#';
-          startLine = false;
-          append_indentation();
-          if (Character::isSpaceOrTab(text[i - 1])) {
-            while (Character::isSpaceOrTab(text[i - 1])) {
-              curIndent++;
-              if (curIndent > minIndent) {
-                wbuf.buffer += ' ';
-              }
-              i++;
-            }
-          }
-        }
-
-        if (!Character::isNewline(text[i - 1])) {
-          wbuf.buffer += text[i - 1];
-        }
-        else {
-          wbuf.buffer += text[i - 1];
-        }
-      }
-      else if (firstLine) {
-        wbuf.buffer += text[i - 1];
-      }
-      else {
-        curIndent = 0;
-        if (startLine) {
-          // wbuf.buffer += '#';
-          startLine = false;
-          if (Character::isSpaceOrTab(text[i - 1])) {
-            append_indentation();
-            while (Character::isSpaceOrTab(text[i - 1])) {
-              curIndent++;
-              if (curIndent > minIndent) {
-                wbuf.buffer += ' ';
-              }
-              i++;
-              // wbuf.buffer += '=';
-            }
-          }
-        }
-        else {
-          startLine = false;
-          wbuf.buffer += text[i - 1];
-        }
-      }
+    // Get minimum indentation of all non-blank following lines
+    size_t minIndent = sass::string::npos;
+    for (size_t pos = i + 1; pos < size;) {
+      size_t start = pos;
+      while (pos < size && Character::isSpaceOrTab(text[pos])) ++pos;
+      if (pos == size) break;
+      if (text[pos] == '\n') { ++pos; continue; }
+      minIndent = std::min(minIndent, pos - start);
+      pos = text.find('\n', pos);
+      if (pos == sass::string::npos) break;
+      ++pos;
     }
-
-    // std::cerr << " min indent is " << minIndent << "\n";
-    // // ignore first line
-    // // remove indentation from comment as much as possible
-    // std::cerr << "=============\n";
-    // std::cerr << text << "\n";
-    // std::cerr << "=============\n";
-    // std::cerr << cleaned << "\n";
-    // std::cerr << "=============\n";
-
-
-
-
-
-
-
-    // wbuf.buffer.append(text);
-    // account for data in source-maps
-    if (wbuf.srcmap) wbuf.srcmap->append(Offset(text));
+    // Only whitespace after the first line (can't happen for
+    // a comment, which ends with `*/`): write it unchanged.
+    if (minIndent == sass::string::npos) {
+      append_string(text);
+      return;
+    }
+    minIndent = std::min(minIndent, column);
+    // Write the first line as-is
+    append_string(text.substr(0, i));
+    ++i; // skip over the line-feed
+    while (true) {
+      // Skip whitespace, counting blank lines
+      size_t lineStart = i, newlines = 1;
+      while (true) {
+        if (i == size) {
+          // Only whitespace left, but keep the fact
+          append_string(" ");
+          return;
+        }
+        uint8_t chr = text[i++];
+        if (Character::isSpaceOrTab(chr)) continue;
+        if (chr == '\n') { lineStart = i; ++newlines; continue; }
+        break;
+      }
+      append_string(outopt.linefeed, newlines);
+      append_indentation();
+      size_t lineEnd = text.find('\n', i);
+      if (lineEnd == sass::string::npos) {
+        append_string(text.substr(lineStart + minIndent));
+        return;
+      }
+      append_string(text.substr(lineStart + minIndent,
+        lineEnd - lineStart - minIndent));
+      i = lineEnd + 1;
+    }
   }
 
   // append some text or token to the buffer

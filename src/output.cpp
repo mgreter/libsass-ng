@@ -169,7 +169,13 @@ namespace Sass {
       }
 //      
 
-      indent_comment(comment->text());
+      // Like dart-sass, continuation lines of trailing
+      // comments are not prefixed with the indentation.
+      size_t outer = indentation;
+      if (comment->isNewline() == false) indentation = 0;
+      indent_comment(comment->text(),
+        comment->pstate().getRawColumn());
+      indentation = outer;
       if (indentation == 0) {
         append_mandatory_linefeed();
       }
