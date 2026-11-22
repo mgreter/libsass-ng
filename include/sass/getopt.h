@@ -81,8 +81,14 @@ extern "C" {
     const bool boolean,
     // Name of required argument
     const char* argument,
-    // Make argument optional
+    // Make argument optional. An optional argument is given either via
+    // `--name=value`, or as the next item if that is not an option (for
+    // enums only if it is a valid enum, otherwise it's a regular argument).
     const bool optional,
+    // Value passed to the callback if the optional argument is omitted
+    // (an enum name for enum options). If NULL, a zeroed value is passed
+    // (enum id 0 or a NULL string). Ignored for required arguments.
+    const char* default_value,
     // Arguments must be one of this enum
     const struct SassGetOptEnum* enums,
     // Callback function, where we pass back the given option value

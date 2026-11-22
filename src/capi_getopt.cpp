@@ -61,6 +61,8 @@ public:
   const bool boolean = false;
   const char* argument = nullptr;
   const bool optional = false;
+  // Used if an optional argument is omitted
+  const char* defval = nullptr;
   const struct SassGetOptEnum* enums;
   void (*cb) (struct SassGetOpt* getopt, union SassOptionValue value);
   SassOption(
@@ -70,6 +72,7 @@ public:
     const bool boolean = false,
     const char* argument = nullptr,
     const bool optional = false,
+    const char* defval = nullptr,
     const struct SassGetOptEnum* enums = nullptr,
     void (*cb) (struct SassGetOpt* getopt, union SassOptionValue value) = nullptr
   ) :
@@ -79,6 +82,7 @@ public:
     boolean(boolean),
     argument(argument),
     optional(optional),
+    defval(defval),
     enums(enums),
     cb(cb)
   {}
@@ -310,7 +314,16 @@ void getopt_print_help(struct SassGetOpt* getopt, std::ostream& stream)
       stream << toSentence(names, "or",
         getopt->compiler.getTerm(Terminal::yellow),
         getopt->compiler.getTerm(Terminal::reset),
-      '\'') << "\n";
+      '\'');
+      // Value used if the optional argument is omitted
+      if (option.optional && option.defval) {
+        stream << " (default ";
+        stream << getopt->compiler.getTerm(Terminal::yellow);
+        stream << "'" << option.defval << "'";
+        stream << getopt->compiler.getTerm(Terminal::reset);
+        stream << ")";
+      }
+      stream << "\n";
     }
   }
 }
@@ -403,10 +416,49 @@ static void getopt_check_and_consume_arguments(struct SassGetOpt* getopt)
 
 }
 
+// Find the enum with the exact name (case-insensitive)
+static const struct SassGetOptEnum* find_option_enum(
+  const struct SassGetOptEnum* enums, const char* name)
+{
+  while (name && enums && enums->string) {
+    if (StringUtils::equalsIgnoreCase(enums->string, sass::string(name))) {
+      return enums;
+    }
+    enums += 1;
+  }
+  return nullptr;
+}
+
+// Invoke the pending option with its default value, since
+// its optional argument was omitted (a zeroed value if the
+// option has no default, e.g. enum id 0 or a NULL string).
+static void getopt_apply_default(struct SassGetOpt* getopt)
+{
+  const SassOption* option = getopt->needsArgument;
+  getopt->needsArgumentWasShort = false;
+  getopt->needsArgument = nullptr;
+  union SassOptionValue result {};
+  if (option->enums) {
+    // Validated when registering the option
+    if (auto match = find_option_enum(option->enums, option->defval)) {
+      result.integer = match->enumid;
+    }
+  }
+  else {
+    result.string = option->defval;
+  }
+  option->cb(getopt, result);
+}
+
 // Check for pending required option
 static void getopt_check_required_option(struct SassGetOpt* getopt)
 {
   if (getopt->compiler.state) return;
+  // Optional argument was omitted
+  if (getopt->needsArgument && getopt->needsArgument->optional) {
+    getopt_apply_default(getopt);
+    return;
+  }
   // Expected argument, error
   if (getopt->needsArgument) {
     sass::sstream strm;
@@ -519,6 +571,16 @@ static void getopt_parse(struct SassGetOpt* getopt, const char* value)
     if (getopt->needsArgument->enums) {
       auto matches = find_options_enum(
         getopt->needsArgument->enums, arg);
+      // An optional argument only consumes a separate value if it is
+      // valid, otherwise it was omitted and this is a regular argument
+      if (matches.size() == 0 && getopt->needsArgument->optional
+        && getopt->wasAssignment.empty())
+      {
+        getopt_apply_default(getopt);
+        if (getopt->compiler.state) return;
+        getopt->args.push_back(arg);
+        return;
+      }
       if (matches.size() == 0) {
         sass::sstream strm;
         strm << "enum '" << arg << "' is not valid for option '";
@@ -666,14 +728,25 @@ extern "C" {
     const char* argument,
     // Make argument optional
     const bool optional,
+    // Value used if the optional argument is omitted
+    const char* default_value,
     // Arguments must be one of this enum
     const struct SassGetOptEnum* enums,
     // Callback function, where we pass back the given option value
     void (*cb) (struct SassGetOpt* getopt, union SassOptionValue value))
   {
     getopt_guard(getopt->compiler, [&]() {
+      // An enum default must be one of the enums
+      if (default_value && enums && !find_option_enum(enums, default_value)) {
+        sass::sstream strm;
+        strm << "default '" << default_value << "' is not valid for option '--"
+          << (long_name ? long_name : "") << "'";
+        sass::string msg(strm.str());
+        getopt_error(getopt, msg.c_str());
+        return;
+      }
       getopt->options.emplace_back(SassOption{ short_name, long_name,
-        description, boolean, argument, optional, enums, cb });
+        description, boolean, argument, optional, default_value, enums, cb });
     });
   }
   // EO sass_getopt_register_option
@@ -697,21 +770,21 @@ extern "C" {
   void ADDCALL sass_getopt_populate_options(struct SassGetOpt* getopt)
   {
 
-    /* enum: style */ sass_getopt_register_option(getopt, 't', "style", "Set output style (nested, expanded, compact or compressed).", false, "STYLE", false, style_options, getopt_set_output_style);
-    /* enum: format */ sass_getopt_register_option(getopt, 'f', "format", "Set explicit input syntax (scss, sass, css or auto).", false, "SYNTAX", true, format_options, getopt_set_input_format);
-    /* path */ sass_getopt_register_option(getopt, 'I', "include-path", "Add include path to look for imports.", false, "PATH", false, nullptr, getopt_add_include_path);
-    /* path */ sass_getopt_register_option(getopt, '\0', "load-path", "Add include path to look for imports.", false, "PATH", false, nullptr, getopt_add_include_path);
-    /* path */ sass_getopt_register_option(getopt, 'P', "plugin-path", "Add plugin path to auto load plugins.", false, "PATH", false, nullptr, getopt_load_plugins);
-    /* enum: mode */ sass_getopt_register_option(getopt, 'm', "sourcemap", "Set how to create and emit source mappings.", false, "TYPE", true, srcmap_options, getopt_set_srcmap_mode);
-    /* bool */ sass_getopt_register_option(getopt, '\0', "sourcemap-file-urls", "Emit absolute file:// urls in includes array.", true, nullptr, true, nullptr, getopt_set_srcmap_file_urls);
-    /* bool */ sass_getopt_register_option(getopt, 'C', "sourcemap-contents", "Embed contents of imported files in source map.", true, nullptr, true, nullptr, getopt_set_srcmap_contents);
-    /* path */ sass_getopt_register_option(getopt, 'M', "sourcemap-path", "Set path where source map file is saved.", false, "PATH", false, nullptr, getopt_set_srcmap_path);
-    /* int */ sass_getopt_register_option(getopt, 'p', "precision", "Set floating-point precision for numbers.", false, "{0-12}", false, nullptr, getopt_set_precision);
-    /* bool */ // sass_getopt_register_option(getopt, '\0', "unicode", "Enable or disable unicode in generated css output.", true, nullptr, false, nullptr, getopt_set_unicode);
-    /* bool */ sass_getopt_register_option(getopt, 'l', "line-comments", "Emit comments showing original line numbers.", true, nullptr, false, nullptr, cli_sass_compiler_set_line_numbers);
-    /* bool */ sass_getopt_register_option(getopt, '\0', "term-unicode", "Enable or disable terminal unicode output.", true, nullptr, false, nullptr, getopt_set_term_unicode);
-    /* bool */ sass_getopt_register_option(getopt, '\0', "term-colors", "Enable or disable terminal ANSI color output.", true, nullptr, false, nullptr, getopt_set_term_colors);
-    /* bool */ sass_getopt_register_option(getopt, '\0', "quiet", "Do not print any warnings to stderr.", false, nullptr, false, nullptr, getopt_set_suppress_stderr);
+    /* enum: style */ sass_getopt_register_option(getopt, 't', "style", "Set output style (nested, expanded, compact or compressed).", false, "STYLE", false, nullptr, style_options, getopt_set_output_style);
+    /* enum: format */ sass_getopt_register_option(getopt, 'f', "format", "Set explicit input syntax (scss, sass, css or auto).", false, "SYNTAX", true, "auto", format_options, getopt_set_input_format);
+    /* path */ sass_getopt_register_option(getopt, 'I', "include-path", "Add include path to look for imports.", false, "PATH", false, nullptr, nullptr, getopt_add_include_path);
+    /* path */ sass_getopt_register_option(getopt, '\0', "load-path", "Add include path to look for imports.", false, "PATH", false, nullptr, nullptr, getopt_add_include_path);
+    /* path */ sass_getopt_register_option(getopt, 'P', "plugin-path", "Add plugin path to auto load plugins.", false, "PATH", false, nullptr, nullptr, getopt_load_plugins);
+    /* enum: mode */ sass_getopt_register_option(getopt, 'm', "sourcemap", "Set how to create and emit source mappings.", false, "TYPE", true, "create", srcmap_options, getopt_set_srcmap_mode);
+    /* bool */ sass_getopt_register_option(getopt, '\0', "sourcemap-file-urls", "Emit absolute file:// urls in includes array.", true, nullptr, true, nullptr, nullptr, getopt_set_srcmap_file_urls);
+    /* bool */ sass_getopt_register_option(getopt, 'C', "sourcemap-contents", "Embed contents of imported files in source map.", true, nullptr, true, nullptr, nullptr, getopt_set_srcmap_contents);
+    /* path */ sass_getopt_register_option(getopt, 'M', "sourcemap-path", "Set path where source map file is saved.", false, "PATH", false, nullptr, nullptr, getopt_set_srcmap_path);
+    /* int */ sass_getopt_register_option(getopt, 'p', "precision", "Set floating-point precision for numbers.", false, "{0-12}", false, nullptr, nullptr, getopt_set_precision);
+    /* bool */ // sass_getopt_register_option(getopt, '\0', "unicode", "Enable or disable unicode in generated css output.", true, nullptr, false, nullptr, nullptr, getopt_set_unicode);
+    /* bool */ sass_getopt_register_option(getopt, 'l', "line-comments", "Emit comments showing original line numbers.", true, nullptr, false, nullptr, nullptr, cli_sass_compiler_set_line_numbers);
+    /* bool */ sass_getopt_register_option(getopt, '\0', "term-unicode", "Enable or disable terminal unicode output.", true, nullptr, false, nullptr, nullptr, getopt_set_term_unicode);
+    /* bool */ sass_getopt_register_option(getopt, '\0', "term-colors", "Enable or disable terminal ANSI color output.", true, nullptr, false, nullptr, nullptr, getopt_set_term_colors);
+    /* bool */ sass_getopt_register_option(getopt, '\0', "quiet", "Do not print any warnings to stderr.", false, nullptr, false, nullptr, nullptr, getopt_set_suppress_stderr);
 
   }
   // EO sass_getopt_populate_options
