@@ -43,6 +43,8 @@ namespace Sass {
       bool force_next_mapping;
       bool scheduled_delimiter;
       const AstNode* scheduled_mapping;
+      // Close the next scope on the same line (e.g. `a { /* c */ }`)
+      bool close_on_same_line;
 
     public:
       // output strings different in custom css properties

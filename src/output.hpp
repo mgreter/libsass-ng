@@ -37,9 +37,11 @@ namespace Sass {
     // The comments we queued up so far
     // Flush/process once we know what to do
     sass::vector<CssCommentObj> comments;
+    // Whether each queued comment is a trailing comment
+    sass::vector<bool> commentsTrailing;
 
     // Helper function to append comment to output
-    void printCssComment(CssComment* comment);
+    void printCssComment(CssComment* comment, bool trailing);
 
     // Flushes all queued comments to output
     // Also resets and clears the queue
@@ -62,6 +64,7 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 
+    void visitCssRoot(CssRoot*) override;
     void visitCssImport(CssImport*) override;
     void visitCssComment(CssComment*) override;
     void visitCssMediaRule(CssMediaRule*) override;

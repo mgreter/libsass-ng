@@ -22,6 +22,7 @@ namespace Sass {
     force_next_mapping(false),
     scheduled_delimiter(false),
     scheduled_mapping(nullptr),
+    close_on_same_line(false),
     in_custom_property(false),
     in_declaration(true),
     separators(),
@@ -514,7 +515,7 @@ namespace Sass {
     else {
       if (output_style() == SASS_STYLE_COMPRESSED)
         scheduled_delimiter = false;
-      if (output_style() == SASS_STYLE_EXPANDED) {
+      if (output_style() == SASS_STYLE_EXPANDED && !close_on_same_line) {
         append_optional_linefeed();
         append_indentation();
       }
@@ -522,6 +523,7 @@ namespace Sass {
         append_optional_space();
       }
     }
+    close_on_same_line = false;
 
     append_char('}');
     if (node) {

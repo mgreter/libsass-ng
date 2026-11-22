@@ -90,7 +90,7 @@ namespace Sass {
 
   Inspect::Inspect(const OutputOptions& outopt)
     : Emitter(outopt), quotes(true), inspect(false),
-      in_pseudo_selector(false)
+      in_pseudo_selector(false), trailingPrev(nullptr)
   {
   }
 
@@ -105,13 +105,76 @@ namespace Sass {
     append_string(node);
   }
 
-  void Inspect::visitBlockStatements(const CssNodeVector& children)
+  void Inspect::visitBlockStatements(CssNode* parent, const CssNodeVector& children)
   {
     append_scope_opener();
-    for (CssNode* stmt : children) {
-      stmt->accept(this);
-    }
+    close_on_same_line = acceptCssChildren(parent, children);
     append_scope_closer();
+  }
+
+  bool Inspect::acceptCssChildren(CssNode* parent,
+    const CssNodeVector& children, bool specialLinefeeds)
+  {
+    CssNode* outer = trailingPrev;
+    trailingPrev = parent;
+    size_t visible = 0;
+    bool trailing = false;
+    for (size_t i = 0, L = children.size(); i < L; ++i) {
+      CssNode* child = children[i];
+      bool isVisible = !_IsInvisible(child);
+      if (isVisible && visible == 0) {
+        trailing = isTrailingComment(child, parent);
+      }
+      child->accept(this);
+      if (specialLinefeeds && i < L - 1) append_special_linefeed();
+      if (isVisible) {
+        trailingPrev = child;
+        visible += 1;
+      }
+    }
+    trailingPrev = outer;
+    // Like dart-sass, write `a { /* c */ }` on one line
+    return visible == 1 && trailing;
+  }
+
+  // Port of `_isTrailingComment` in dart-sass (serialize.dart)
+  bool Inspect::isTrailingComment(CssNode* node, CssNode* previous)
+  {
+    if (output_style() == SASS_STYLE_COMPRESSED) return false;
+    if (previous == nullptr || node->isaCssComment() == nullptr) return false;
+    const SourceSpan& cur = node->pstate();
+    const SourceSpan& prev = previous->pstate();
+    SourceData* source = cur.getSource();
+    if (source == nullptr || prev.getSource() == nullptr) return false;
+    // Must come from the same file (e.g. not a declaration from a mixin)
+    const char* curPath = source->getAbsPath();
+    const char* prevPath = prev.getSource()->getAbsPath();
+    if (source != prev.getSource() && (curPath == nullptr ||
+      prevPath == nullptr || strcmp(curPath, prevPath) != 0)) return false;
+    const Offset& start = cur.position;
+    const Offset& prevStart = prev.position;
+    Offset prevEnd = prev.position + prev.span;
+    Offset curEnd = cur.position + cur.span;
+    auto before = [](const Offset& a, const Offset& b) {
+      return a.line < b.line || (a.line == b.line && a.column < b.column);
+    };
+    // Node must start after previous; e.g. imports can produce the
+    // same node twice in a row (dart-sass: `searchFrom < 0`).
+    if (!before(prevStart, start)) return false;
+    // If previous doesn't contain us, compare with its last line
+    if (before(prevEnd, curEnd)) {
+      return start.line == prevEnd.line;
+    }
+    // Otherwise we are its first child and must be on the same line
+    // as its opening brace, which is the last `{` before the comment.
+    // If that brace is on the comment's line, it's in the text before
+    // the comment. If there's no brace at all, dart-sass compares with
+    // the line the parent starts on.
+    sass::string line(source->getLine(start.line));
+    size_t from = start.line == prevStart.line ? prevStart.column : 0;
+    size_t to = std::min(static_cast<size_t>(start.column), line.size());
+    if (from < to && line.find('{', from) < to) return true;
+    return start.line == prevStart.line;
   }
 
   template <typename octet_iterator>
@@ -274,7 +337,7 @@ namespace Sass {
         joinIt = true;
       }
     }
-    visitBlockStatements(node->elements());
+    visitBlockStatements(node, node->elements());
   }
   // EO visitCssMediaRule
 
@@ -304,9 +367,7 @@ namespace Sass {
     if (s) visitSelectorList(s);
     append_scope_opener(node);
 
-    for (size_t i = 0, L = node->size(); i < L; ++i) {
-      node->get(i)->accept(this); // XX
-    }
+    close_on_same_line = acceptCssChildren(node, node->elements());
 
     // if (output_style() == SASS_STYLE_NESTED) {
     //   indentation -= node->tabs();
@@ -345,11 +406,7 @@ namespace Sass {
     }
     append_scope_opener();
 
-    size_t L = rule->size();
-    for (size_t i = 0; i < L; ++i) {
-      rule->get(i)->accept(this);
-      if (i < L - 1) append_special_linefeed();
-    }
+    close_on_same_line = acceptCssChildren(rule, rule->elements(), true);
 
     // if (output_style() == SASS_STYLE_NESTED) {
     //   indentation -= rule->tabs();
@@ -445,10 +502,7 @@ namespace Sass {
   void Inspect::visitCssRoot(CssRoot* block)
   {
     if (_IsInvisible(block)) return;
-    for (const auto& child : block->elements()) {
-      child->accept(this);
-    }
-
+    acceptCssChildren(nullptr, block->elements());
   }
 
   void Inspect::visitCssKeyframeBlock(CssKeyframeBlock* node)
@@ -465,9 +519,7 @@ namespace Sass {
 
     if (!node->isInvisibleCss()) {
       append_scope_opener();
-      for (CssNode* child : node->elements()) {
-        child->accept(this);
-      }
+      close_on_same_line = acceptCssChildren(node, node->elements());
       append_scope_closer();
     }
  }
@@ -487,7 +539,7 @@ namespace Sass {
       append_delimiter();
     }
     else {
-      visitBlockStatements(node->elements());
+      visitBlockStatements(node, node->elements());
     }
   }
 

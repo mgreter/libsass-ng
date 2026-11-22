@@ -53,11 +53,28 @@ namespace Sass {
     // leading indentation of the outer selector list again.
     bool in_pseudo_selector;
 
+    // The node a comment is compared with to decide if it is a
+    // trailing comment (see `isTrailingComment`). This is the
+    // previous visible sibling or, for the first child, the parent.
+    // It's null at the root level before the first visible child.
+    CssNode* trailingPrev;
+
     // We should probably pass an emitter, so we can switch implementation?
     Inspect(const OutputOptions& opt);
     // Inspect(Logger& logger, const OutputOptions& opt);
 
-    void visitBlockStatements(const CssNodeVector& children);
+    void visitBlockStatements(CssNode* parent, const CssNodeVector& children);
+
+    // Visit `children` of `parent` (null for the root) and keep track of
+    // `trailingPrev`. Returns true if the only visible child was a comment
+    // trailing the parent, so the block can be closed on the same line.
+    bool acceptCssChildren(CssNode* parent, const CssNodeVector& children,
+      bool specialLinefeeds = false);
+
+    // Whether `node` is a comment that should be written on the same line
+    // as `previous` (a sibling or the parent, as in dart-sass). Like
+    // dart-sass, this compares the positions in the source files.
+    bool isTrailingComment(CssNode* node, CssNode* previous);
     
     void renderQuotedString(const sass::string& text, uint8_t quotes = 0);
     void renderUnquotedString(const sass::string& text);

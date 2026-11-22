@@ -113,7 +113,7 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   // Helper function to append comment to output
-  void Output::printCssComment(CssComment* comment)
+  void Output::printCssComment(CssComment* comment, bool trailing)
   {
     // Ignore sourceMappingURL and sourceURL comments (ToDo: use regexp?).
     if (StringUtils::startsWith(comment->text(), "/*# sourceMappingURL=", 21)) return;
@@ -158,8 +158,8 @@ namespace Sass {
       }
 */
     if (output_style() != SASS_STYLE_COMPRESSED || important) {
-      // was comment on a new line or not?
-      if (comment->isNewline() == false) {
+      // Trailing comments stay on the line of the previous node
+      if (trailing) {
         scheduled_linefeed = false;
         append_optional_space();
         // scheduled_space = false;
@@ -172,7 +172,7 @@ namespace Sass {
       // Like dart-sass, continuation lines of trailing
       // comments are not prefixed with the indentation.
       size_t outer = indentation;
-      if (comment->isNewline() == false) indentation = 0;
+      if (trailing) indentation = 0;
       indent_comment(comment->text(),
         comment->pstate().getRawColumn());
       indentation = outer;
@@ -191,10 +191,11 @@ namespace Sass {
   // Also resets and clears the queue
   void Output::flushCssComments()
   {
-    for (CssComment* comment : comments) {
-      printCssComment(comment);
+    for (size_t i = 0; i < comments.size(); i++) {
+      printCssComment(comments[i], commentsTrailing[i]);
     }
     comments.clear();
+    commentsTrailing.clear();
   }
   // EO flushCssComments
 
@@ -220,13 +221,25 @@ namespace Sass {
   }
   // EO visitCssImport
 
+  void Output::visitCssRoot(CssRoot* root)
+  {
+    Cssize::visitCssRoot(root);
+    // Flush queued comments before the emitter is finalized,
+    // so a trailing comment can still stay on the last line.
+    flushCssComments();
+  }
+  // EO visitCssRoot
+
   void Output::visitCssComment(CssComment* comment)
   {
+    // Decide now, while we know the previous node
+    bool trailing = isTrailingComment(comment, trailingPrev);
     if (hoistComments) {
       comments.emplace_back(comment);
+      commentsTrailing.push_back(trailing);
     }
     else {
-      printCssComment(comment);
+      printCssComment(comment, trailing);
     }
   }
   // EO visitCssComment
