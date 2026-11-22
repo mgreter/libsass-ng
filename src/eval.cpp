@@ -391,6 +391,10 @@ namespace Sass {
 
     ArgumentResults results(_evaluateArguments(arguments));
 
+    // Content blocks run in the frames where they were passed (after the
+    // arguments were evaluated in the frames of the `@content` caller)
+    EnvClosure closure(callable->closure);
+
     // Get reference to positional arguments in the result object
     // Multiple calls to the same function may re-use the object
     ValueVector& positional(results.positional());
@@ -1978,6 +1982,9 @@ namespace Sass {
         // for it to being restored when it is invoked.
         cmixin = SASS_MEMORY_NEW(UserDefinedCallable,
           pstate, name, ctblk, content);
+        // Like a dart-sass closure, remember the frames of the
+        // scopes around the content block to see their variables
+        if (ctblk->idxs) captureEnvOffsets(cmixin->closure, ctblk->idxs->pscope);
         // Check if invoked mixin accepts a content block
         if (!rule->hasContent()) {
           CallStackFrame frame(logger, ctblk->pstate());

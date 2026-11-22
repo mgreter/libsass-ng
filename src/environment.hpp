@@ -409,6 +409,29 @@ namespace Sass {
 
   };
 
+  // Frame offsets of a lexical scope at a given time
+  struct EnvOffsets {
+    EnvRefs* idxs;
+    size_t varOffset;
+    size_t mixOffset;
+    size_t fnOffset;
+  };
+
+  // Remember the current frame offsets of [idxs] and all its parent
+  // scopes. Used for content blocks, which are closures in dart-sass:
+  // they must see the variables of the include where they were passed,
+  // even if a recursive mixin has entered the same scopes again since.
+  void captureEnvOffsets(sass::vector<EnvOffsets>& offsets, EnvRefs* idxs);
+
+  // Reinstate captured frame offsets (RAII), restored on destruction
+  class EnvClosure {
+  private:
+    sass::vector<EnvOffsets> previous;
+  public:
+    EnvClosure(const sass::vector<EnvOffsets>& offsets);
+    ~EnvClosure();
+  };
+
   /////////////////////////////////////////////////////////////////////////
   // EnvScopes are created during evaluation phase. When we enter a parsed
   // scope, e.g. a function, mixin or style-rule, we create a new EnvScope
@@ -421,7 +444,6 @@ namespace Sass {
   // we will push four actual variable/value instance onto the evaluation
   // stack. Once a function is finished, we unwind them from the stack.
   /////////////////////////////////////////////////////////////////////////
-
   class EnvScope {
 
   private:

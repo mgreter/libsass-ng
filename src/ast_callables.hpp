@@ -145,6 +145,11 @@ namespace Sass {
     // the previous content block. Could have been implemented
     // with a stack vector, but we remember it here instead.
     ADD_PROPERTY(UserDefinedCallable*, content);
+  public:
+    // Frame offsets of the lexical scopes of a content block when it
+    // was passed to an include (empty for other callables), restored
+    // while it runs, since its scopes may have been entered again.
+    sass::vector<EnvOffsets> closure;
 
   public:
 

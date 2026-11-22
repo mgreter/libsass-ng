@@ -800,6 +800,38 @@ namespace Sass {
 
   // Put frame onto stack
 
+  void captureEnvOffsets(sass::vector<EnvOffsets>& offsets, EnvRefs* idxs)
+  {
+    offsets.clear();
+    for (EnvRefs* scope = idxs; scope; scope = scope->pscope) {
+      offsets.push_back({ scope, scope->varOffset,
+        scope->mixOffset, scope->fnOffset });
+    }
+  }
+
+  EnvClosure::EnvClosure(const sass::vector<EnvOffsets>& offsets)
+  {
+    if (offsets.empty()) return;
+    previous.reserve(offsets.size());
+    for (const EnvOffsets& offset : offsets) {
+      EnvRefs* scope = offset.idxs;
+      previous.push_back({ scope, scope->varOffset,
+        scope->mixOffset, scope->fnOffset });
+      scope->varOffset = offset.varOffset;
+      scope->mixOffset = offset.mixOffset;
+      scope->fnOffset = offset.fnOffset;
+    }
+  }
+
+  EnvClosure::~EnvClosure()
+  {
+    for (auto it = previous.rbegin(); it != previous.rend(); ++it) {
+      it->idxs->varOffset = it->varOffset;
+      it->idxs->mixOffset = it->mixOffset;
+      it->idxs->fnOffset = it->fnOffset;
+    }
+  }
+
   EnvScope::EnvScope(EnvRoot& env, EnvRefs* idxs) :
     env(env),
     idxs(idxs),
