@@ -272,7 +272,22 @@ namespace Sass {
       // will only work on leading double dot dirs on rhs
       // therefore it is safe if lhs is already resolved cwd
       while ((r.length() > 3) && ((r.substr(0, 3) == "../") || (r.substr(0, 3)) == "..\\")) {
+        // Nothing left to collapse (e.g. "foo/" + "../../x")
+        if (l.empty()) break;
         size_t L = l.length(), pos = find_last_folder_separator(l, L - 2);
+        // Last segment of lhs (without its trailing slash)
+        size_t start = pos == sass::string::npos ? 0 : pos + 1;
+        sass::string segment(l.substr(start, L - 1 - start));
+        // A parent segment can't be collapsed (e.g. "../" + "../x")
+        if (segment == "..") break;
+        // A single relative segment (e.g. "foo/" + "../x" is "x"), but
+        // not the current folder or a drive root (e.g. "./" or "C:/")
+        if (pos == sass::string::npos && segment != "." &&
+          !segment.empty() && segment.back() != ':') {
+          r = r.substr(3);
+          l.clear();
+          continue;
+        }
         bool is_slash = pos + 2 == L && (l[pos+1] == '/' || l[pos+1] == '\\');
         bool is_self = pos + 3 == L && (l[pos+1] == '.');
         if (!is_self && !is_slash) r = r.substr(3);
