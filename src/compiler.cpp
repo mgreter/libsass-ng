@@ -1014,6 +1014,19 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Normalize a folder path to end with exactly one slash. On Windows a
+  // trailing backslash (e.g. `C:\inc\`) otherwise resulted in `C:/inc//`
+  // paths for every file found there. Roots like `/` or `C:/` are kept.
+  static sass::string asFolderPath(sass::string path)
+  {
+    #ifdef _WIN32
+      std::replace(path.begin(), path.end(), '\\', '/');
+    #endif
+    while (path.size() > 1 && path.back() == '/') path.pop_back();
+    if (path.empty() || path.back() != '/') path += '/';
+    return path;
+  }
+
   // Add additional include paths, which can be path separated
   void Compiler::addIncludePaths(const sass::string& paths)
   {
@@ -1023,8 +1036,8 @@ namespace Sass {
     sass::vector<sass::string> split =
       StringUtils::split(paths, PATH_SEP, true);
     for (sass::string& path : split) {
-      if (*path.rbegin() != '/') path += '/';
-      includePaths.emplace_back(path);
+      if (path.empty()) continue;
+      includePaths.emplace_back(asFolderPath(path));
     }
   }
   // EO addIncludePaths
@@ -1039,8 +1052,8 @@ namespace Sass {
     sass::vector<sass::string> split =
       StringUtils::split(paths, PATH_SEP, true);
     for (sass::string& path : split) {
-      if (*path.rbegin() != '/') path += '/';
-      plugins.load_plugins(path);
+      if (path.empty()) continue;
+      plugins.load_plugins(asFolderPath(path));
     }
     // Sort the merged arrays by callback priorities
     sort(cHeaders.begin(), cHeaders.end(), cmpImporterPrio);
