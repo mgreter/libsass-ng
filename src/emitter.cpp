@@ -163,6 +163,22 @@ namespace Sass {
     return wbuf.buffer.back();
   }
 
+  // Whether the buffer ends with whitespace that separates tokens. An
+  // escaped whitespace (e.g. the `\ ` in the selector `.a\ `) belongs
+  // to the token before, so a following space must still be written
+  // (`.a\  .b` must not become `.a\ .b`, which has a different meaning).
+  bool Emitter::endsWithWhitespace() const
+  {
+    const sass::string& buffer = wbuf.buffer;
+    if (buffer.empty() || !isWhitespace(buffer.back())) return false;
+    // Count backslashes in front, an odd number escapes it
+    size_t backslashes = 0;
+    for (size_t i = buffer.size() - 1; i > 0 && buffer[i - 1] == '\\'; --i) {
+      ++backslashes;
+    }
+    return backslashes % 2 == 0;
+  }
+
   // append a single char to the buffer
   void Emitter::append_char(uint8_t chr)
   {
@@ -429,7 +445,7 @@ namespace Sass {
     if (buffer().empty()) {
       scheduled_space = true;
     }
-    else if (!isWhitespace(buffer().back())) {
+    else if (!endsWithWhitespace()) {
       scheduled_space = true;
     }
   }
@@ -440,7 +456,7 @@ namespace Sass {
       // char back = buffer().back();
       // unsigned char foo = (unsigned char)back;
       // std::cerr << "BACK IS " << back << "\n";
-      if (scheduled_delimiter || !isWhitespace(buffer().back())) {
+      if (scheduled_delimiter || !endsWithWhitespace()) {
         //if (buffer().back() != $lparen) // breaks escape sequences
         {
           if (!parentheses_opened)

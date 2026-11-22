@@ -80,6 +80,7 @@ namespace Sass {
       void append_token(const sass::string& text, const AstNode* node);
       // query last appended character
       char last_char();
+      bool endsWithWhitespace() const;
 
     public: // syntax sugar
       void append_indentation();
