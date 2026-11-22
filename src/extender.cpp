@@ -1551,6 +1551,11 @@ namespace Sass {
 
     auto complexes = _unifyComplex(toUnify, pstate);
 
+    // Like dart-sass, a failed unification extends nothing, so it
+    // doesn't matter if the media contexts are compatible (empty
+    // also stands for `null`, i.e. failure, in `_unifyComplex`).
+    if (complexes.empty()) return complexes;
+
     for (auto& extender : extenders) {
       if (extender.mediaContext.isNull()) continue;
       const SourceSpan& span(extender.pstate);
