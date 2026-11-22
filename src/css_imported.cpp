@@ -92,7 +92,15 @@ namespace Sass {
 
   void ImportedCssVisitor::visitCssStyleRule(CssStyleRule* css)
   {
-    eval._addChild(css, SkipStyleRules);
+    // Plain CSS rules with an explicit `&` inside a style rule are
+    // not nested by the evaluator, so they stay in the current rule.
+    if (css->fromPlainCss22() && eval._styleRule() &&
+      Eval::containsParentSelector(css->selector())) {
+      eval._addChild(css, SkipNone);
+    }
+    else {
+      eval._addChild(css, SkipStyleRules);
+    }
   }
 
   void ImportedCssVisitor::visitCssSupportsRule(CssSupportsRule* css)

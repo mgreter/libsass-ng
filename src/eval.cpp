@@ -2279,6 +2279,10 @@ namespace Sass {
         // nest = !(_stylesheet->plainCss && slist->hasAnyExplicitParent());
       }
 
+      // Plain CSS rules with an explicit `&` are kept nested as-is
+      if (nest && _styleRule() && _stylesheet->plainCss &&
+        containsParentSelector(slist)) nest = false;
+
       if (nesting && wasCss) {
         if (_stylesheet->import->syntax == SASS_IMPORT_CSS) {
           for (const auto& complex : slist->elements()) {
@@ -2333,8 +2337,8 @@ namespace Sass {
       //  std::cerr << "++ Evaled style rule with box " << boxed->_inner->dbh() << "\n";
 
       //child->fromPlainCss(wasCss);
-      // Add child to our parent
-      chroot->addChildAt(child, true);
+      // Add child to our parent (only copy parent when bubbling)
+      chroot->addChildAt(child, nest);
       // Register new child as style rule
       RAII_PTR(CssStyleRule, readStyleRule, child);
       // Reset specific flag (not in an at-rule)

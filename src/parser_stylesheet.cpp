@@ -3365,7 +3365,12 @@ namespace Sass {
     InterpolationBuffer buffer(scanner);
     sass::string normalized(StringUtils::unvendor(name));
 
-    if (normalized == "element" || normalized == "expression"
+    // Only the unprefixed `type()` is special (checked before unvendor)
+    if (name == "type" && scanner.scanChar($lparen)) {
+      buffer.write(name);
+      buffer.write($lparen);
+    }
+    else if (normalized == "element" || normalized == "expression"
         || (normalized == "calc" && normalized != name)) {
       if (!scanner.scanChar($lparen)) return nullptr;
       buffer.write(name);

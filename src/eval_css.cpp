@@ -236,6 +236,28 @@ namespace Sass {
     }
   }
 
+  // Whether [list] contains a parent selector `&`, either as an
+  // explicit parent flag or a plain CSS parent selector, including
+  // selectors nested inside pseudo selector arguments.
+  bool Eval::containsParentSelector(const SelectorList* list)
+  {
+    if (list == nullptr) return false;
+    for (const auto& complex : list->elements()) {
+      for (const auto& component : complex->elements()) {
+        const auto& compound = component->selector();
+        if (compound == nullptr) continue;
+        if (compound->withExplicitParent()) return true;
+        for (const auto& simple : compound->elements()) {
+          if (simple->isaCssParentSelector()) return true;
+          if (const auto* pseudo = simple->isaPseudoSelector()) {
+            if (containsParentSelector(pseudo->selector())) return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   void Eval::visitCssStyleRule(CssStyleRule* css)
   {
 
@@ -252,6 +274,9 @@ namespace Sass {
 
     // if (css->selector()->toString() == "c") css->fromPlainCss(true);
     bool nest = !plainCss && !current->fromPlainCss22();
+    // Plain CSS rules with an explicit `&` are kept nested as-is
+    if (nest && _styleRule() && css->fromPlainCss22() &&
+      containsParentSelector(css->selector())) nest = false;
     // var nest = !(_styleRule?.fromPlainCss ?? false);
     // bool nesting = current ? !current->fromPlainCss() : true;
 
@@ -266,7 +291,8 @@ namespace Sass {
     if (true) {
       // Temporary fix
       SelectorListObj slist = css->selector();
-      for (auto& complex : slist->elements()) {
+      // Selectors that are not nested are kept as-is
+      if (nest) for (auto& complex : slist->elements()) {
         for (auto& component : complex->elements()) {
           auto& compound = component->selector();
           if (compound->elements().empty()) continue;
@@ -310,8 +336,8 @@ namespace Sass {
 
       child->fromPlainCss22(css->fromPlainCss22());
 
-      // Add child to our parent
-      chroot->addChildAt(child, true);
+      // Add child to our parent (only copy parent when bubbling)
+      chroot->addChildAt(child, nest);
       // Register new child as style rule
       RAII_PTR(CssStyleRule, readStyleRule, child);
       // Reset specific flag (not in an at-rule)

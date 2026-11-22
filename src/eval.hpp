@@ -344,6 +344,8 @@ namespace Sass {
     SourceData* interpolationToSource(const InterpolationObj& interpolation, bool warnForColor, bool trim = false, bool ws = true);
     sass::string interpolationToCssString(const InterpolationObj& interpolation, bool warnForColor, bool trim = false);
     SelectorListObj interpolationToSelector(Interpolation* interpolation, bool plainCss, bool allowParent = true);
+    // Whether [list] contains a parent selector `&` (plain CSS nesting)
+    static bool containsParentSelector(const SelectorList* list);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
