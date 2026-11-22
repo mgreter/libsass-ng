@@ -85,6 +85,19 @@
 
 namespace sass {
 
+  // Round half away from zero like `std::round`, but also correct for
+  // the largest double below 0.5 (0.49999999999999994), which MinGW-w64
+  // rounds to 1, apparently as `floor(x + 0.5)`. Dart's `round()` gives 0.
+  // Both `trunc` and `value - trunc(value)` are exact for all doubles.
+  inline double round(double value)
+  {
+    double truncated = std::trunc(value);
+    if (std::fabs(value - truncated) >= 0.5) {
+      truncated += std::copysign(1.0, value);
+    }
+    return truncated;
+  }
+
   // Like `math.pow` of the Dart VM (dart-sass), which handles a few
   // exponents itself (see `InvokeDoublePow`) and uses the C library
   // `pow` for the rest. So `pow(x, 3)` is `x * x * x`, which is not

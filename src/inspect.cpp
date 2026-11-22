@@ -70,7 +70,7 @@ namespace Sass {
     // Like dart-sass (`fuzzyAsInt` and `int.toString`), (fuzzy) integers
     // that fit into a 64-bit integer are written with all their digits.
     if (std::fabs(nr) < 9223372036854775808.0) {
-      double rounded = std::round(nr);
+      double rounded = sass::round(nr);
       if (fuzzyEquals(nr, rounded, epsilon)) {
         snprintf(buf, sizeof(buf), "%.0f", rounded);
         return sass::string(buf);
@@ -1264,9 +1264,9 @@ namespace Sass {
   bool Inspect::_tryIntegerRgb(const Color* rgb)
   {
     if (!_canUseHexForColor(rgb)) return false;
-    int red = (int)std::round(rgb->getChannel0());
-    int green = (int)std::round(rgb->getChannel1());
-    int blue = (int)std::round(rgb->getChannel2());
+    int red = (int)sass::round(rgb->getChannel0());
+    int green = (int)sass::round(rgb->getChannel1());
+    int blue = (int)sass::round(rgb->getChannel2());
     auto symmetrical = [](int c) { return (c & 0xF) == (c >> 4); };
     bool shortHex = symmetrical(red) && symmetrical(green) && symmetrical(blue);
     const char* name = color_to_name(red * 0x10000 + green * 0x100 + blue);
@@ -1369,9 +1369,9 @@ namespace Sass {
 
     if (opaque) {
       if (ColorObj rgba = color->toSpace(ColorSpaces::rgb, color->pstate())) {
-        // double a = std::round(std::round(rgba->getChannel0() * sass::iepsilon) * sass::epsilon);
-        // double b = std::round(std::round(rgba->getChannel1() * sass::iepsilon) * sass::epsilon);
-        // double c = std::round(std::round(rgba->getChannel2() * sass::iepsilon) * sass::epsilon);
+        // double a = sass::round(sass::round(rgba->getChannel0() * sass::iepsilon) * sass::epsilon);
+        // double b = sass::round(sass::round(rgba->getChannel1() * sass::iepsilon) * sass::epsilon);
+        // double c = sass::round(sass::round(rgba->getChannel2() * sass::iepsilon) * sass::epsilon);
         // cannot round, we need to check if it is either within fuzzy range of ceil or floor
 
         if (fuzzyIsInt(rgba->getChannel0(), outopt.epsilon) &&
@@ -1394,9 +1394,9 @@ namespace Sass {
         if (_canUseHexForColor(rgba)) {
           flush_schedules();
           write_char('#');
-          _writeHexComponent((int)std::round(rgba->getChannel0()));
-          _writeHexComponent((int)std::round(rgba->getChannel1()));
-          _writeHexComponent((int)std::round(rgba->getChannel2()));
+          _writeHexComponent((int)sass::round(rgba->getChannel0()));
+          _writeHexComponent((int)sass::round(rgba->getChannel1()));
+          _writeHexComponent((int)sass::round(rgba->getChannel2()));
           return;
         }
       }

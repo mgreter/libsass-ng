@@ -499,7 +499,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Calculation,
             pstate, str_min, std::move(simplifieds));
         }
-        if (min->value() > nr->value() * factor) min = nr;
+        if (fuzzyGreaterThanNumber(min->value(), nr->value() * factor)) min = nr;
       }
       // Return min number
       return min.detach();
@@ -546,7 +546,7 @@ namespace Sass {
           return SASS_MEMORY_NEW(Calculation, pstate,
             str_max, std::move(simplifieds));
         }
-        if (max->value() < nr->value() * factor) max = nr;
+        if (fuzzyLessThanNumber(max->value(), nr->value() * factor)) max = nr;
       }
       // Return max number
       return max.detach();
@@ -672,7 +672,7 @@ namespace Sass {
       AstNodeObj arg_0 = args[0]->simplify(logger);
       if (auto nr_number = SASS_CAST(Number, arg_0)) {
         return nr_number->copyWithNewValue(
-          std::round(nr_number->value()));
+          sass::round(nr_number->value()));
       }
       if (auto str_number = SASS_CAST(String, arg_0)) {
         return SASS_MEMORY_NEW(Calculation, pstate, str_round, { str_number });

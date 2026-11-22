@@ -477,7 +477,7 @@ namespace Sass {
   bool Number::operator==(const Number& rhs) const
   {
     if (isUnitless() && rhs.isUnitless()) {
-      return NEAR_EQUAL_INF(value(), rhs.value());
+      return fuzzyEqualsNumber(value(), rhs.value());
     }
     // Ignore units in certain cases
     // if (isSimpleNumberComparison(*this, rhs)) {
@@ -490,7 +490,7 @@ namespace Sass {
     l.normalize(); r.normalize();
     // Ensure both have same units
     return l.Units::operator==(r) &&
-      NEAR_EQUAL_INF(l.value(), r.value());
+      fuzzyEqualsNumber(l.value(), r.value());
   }
 
   size_t Number::hash() const
@@ -521,7 +521,9 @@ namespace Sass {
   // Hash a value rounded to the epsilon used for number equality
   size_t Number::_fuzzyHash(double value)
   {
-    double rounded = std::round(value / NUMBER_EPSILON);
+    // Like dart-sass `fuzzyHashCode`, infinity and NaN as they are
+    if (!std::isfinite(value)) return std::hash<double>{}(value);
+    double rounded = sass::round(value * sass::iepsilon);
     // Fold negative zero into zero (MSVC hashes the raw bytes)
     if (rounded == 0.0) rounded = 0.0;
     return std::hash<double>{}(rounded);
@@ -536,7 +538,7 @@ namespace Sass {
     if (const Number* rhs = other->isaNumber()) {
       // Ignore units in certain cases
       if (isSimpleNumberComparison(*this, *rhs)) {
-        return value() > rhs->value();
+        return fuzzyGreaterThanNumber(value(), rhs->value());
       }
       // Otherwise we need copies
       Number l(*this), r(*rhs);
@@ -545,7 +547,7 @@ namespace Sass {
       l.normalize(); r.normalize();
       // Ensure both have same units
       if (l.Units::operator==(r)) {
-        return l.value() > r.value();
+        return fuzzyGreaterThanNumber(l.value(), r.value());
       }
       // Throw error, unit are incompatible
       CallStackFrame csf(logger, pstate);
@@ -562,7 +564,7 @@ namespace Sass {
     if (const Number* rhs = other->isaNumber()) {
       // Ignore units in certain cases
       if (isSimpleNumberComparison(*this, *rhs)) {
-        return value() >= rhs->value();
+        return fuzzyGreaterThanOrEqualsNumber(value(), rhs->value());
       }
       // Otherwise we need copies
       Number l(*this), r(*rhs);
@@ -571,7 +573,7 @@ namespace Sass {
       l.normalize(); r.normalize();
       // Ensure both have same units
       if (l.Units::operator==(r)) {
-        return l.value() >= r.value();
+        return fuzzyGreaterThanOrEqualsNumber(l.value(), r.value());
       }
       // Throw error, unit are incompatible
       CallStackFrame csf(logger, pstate);
@@ -588,7 +590,7 @@ namespace Sass {
     if (const Number* rhs = other->isaNumber()) {
       // Ignore units in certain cases
       if (isSimpleNumberComparison(*this, *rhs)) {
-        return value() < rhs->value();
+        return fuzzyLessThanNumber(value(), rhs->value());
       }
       // Otherwise we need copies
       Number l(*this), r(*rhs);
@@ -597,7 +599,7 @@ namespace Sass {
       l.normalize(); r.normalize();
       // Ensure both have same units
       if (l.Units::operator==(r)) {
-        return l.value() < r.value();
+        return fuzzyLessThanNumber(l.value(), r.value());
       }
       // Throw error, unit are incompatible
       CallStackFrame csf(logger, pstate);
@@ -614,7 +616,7 @@ namespace Sass {
     if (const Number* rhs = other->isaNumber()) {
       // Ignore units in certain cases
       if (isSimpleNumberComparison(*this, *rhs)) {
-        return value() <= rhs->value();
+        return fuzzyLessThanOrEqualsNumber(value(), rhs->value());
       }
       // Otherwise we need copies
       Number l(*this), r(*rhs);
@@ -623,7 +625,7 @@ namespace Sass {
       l.normalize(); r.normalize();
       // Ensure both have same units
       if (l.Units::operator==(r)) {
-        return l.value() <= r.value();
+        return fuzzyLessThanOrEqualsNumber(l.value(), r.value());
       }
       // Throw error, unit are incompatible
       CallStackFrame csf(logger, pstate);
@@ -1106,7 +1108,7 @@ namespace Sass {
     // Do the actual rounding by strategy
     switch (strategy) {
     case Round::RNDSTRAT::NEAREST: {
-      return std::round(value_ / steps) * steps;
+      return sass::round(value_ / steps) * steps;
     }
     case Round::RNDSTRAT::UP: {
       return (step->value_ < 0

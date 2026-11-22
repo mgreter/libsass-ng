@@ -39,6 +39,26 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Port of dart-sass `fuzzyEquals`: whether the numbers are equal up to
+  // the 11th decimal digit. Also checks the rounded values, so numbers that
+  // are equal have the same hash (`fuzzyHashCode` in dart-sass). Used for
+  // number equality and comparisons (also in calculations).
+  inline bool fuzzyEqualsNumber(double lhs, double rhs) {
+    if (lhs == rhs) return true;
+    return std::fabs(lhs - rhs) <= sass::epsilon &&
+      sass::round(lhs * sass::iepsilon) == sass::round(rhs * sass::iepsilon);
+  }
+
+  // Like dart-sass, comparisons treat fuzzy equal numbers as equal
+  inline bool fuzzyLessThanNumber(double lhs, double rhs) {
+    return lhs < rhs && !fuzzyEqualsNumber(lhs, rhs); }
+  inline bool fuzzyLessThanOrEqualsNumber(double lhs, double rhs) {
+    return lhs < rhs || fuzzyEqualsNumber(lhs, rhs); }
+  inline bool fuzzyGreaterThanNumber(double lhs, double rhs) {
+    return lhs > rhs && !fuzzyEqualsNumber(lhs, rhs); }
+  inline bool fuzzyGreaterThanOrEqualsNumber(double lhs, double rhs) {
+    return lhs > rhs || fuzzyEqualsNumber(lhs, rhs); }
+
   // Returns whether [lhs] and [rhs] are equal within [epsilon].
   inline bool fuzzyEquals(double lhs, double rhs, double epsilon) {
     return fabs(lhs - rhs) < epsilon;

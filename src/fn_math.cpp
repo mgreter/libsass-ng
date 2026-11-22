@@ -35,7 +35,7 @@ namespace Sass {
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
-          std::round(number->value()),
+          sass::round(number->value()),
           number->unit());
       }
 
