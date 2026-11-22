@@ -180,30 +180,28 @@ namespace Sass {
       const char* content = compiler.content71.empty() ?
         nullptr : compiler.content71.c_str();
 
-      // Check if anything is to write
-      if (content || footer) {
-        // Check where to write it to
-        if (path && compiler.hasOutputFile()) {
-          std::ofstream fh(path, std::ios::out | std::ios::binary);
-          if (!fh) throw Exception::IoError(compiler,
-            "Error opening output file",
-            File::abs2rel(path, compiler.PWD, compiler.PWD));
-          // Write stuff to the output file
-          if (content) { fh << content; }
-          if (footer) { fh << footer; }
-          // Close file-handle
-          fh.close();
-          // Check for error state after closing
-          // This should report also write errors
-          if (!fh) throw Exception::IoError(compiler,
-            "Error writing output file",
-            File::abs2rel(path, compiler.PWD, compiler.PWD));
-        }
-        else {
-          // Simply print results to stdout
-          if (content) std::cout << content;
-          if (footer) std::cout << footer;
-        }
+      // Always write the output file, even if empty, as
+      // otherwise the content of a previous run remains
+      if (path && compiler.hasOutputFile()) {
+        std::ofstream fh(path, std::ios::out | std::ios::binary);
+        if (!fh) throw Exception::IoError(compiler,
+          "Error opening output file",
+          File::abs2rel(path, compiler.PWD, compiler.PWD));
+        // Write stuff to the output file
+        if (content) { fh << content; }
+        if (footer) { fh << footer; }
+        // Close file-handle
+        fh.close();
+        // Check for error state after closing
+        // This should report also write errors
+        if (!fh) throw Exception::IoError(compiler,
+          "Error writing output file",
+          File::abs2rel(path, compiler.PWD, compiler.PWD));
+      }
+      else {
+        // Simply print results to stdout
+        if (content) std::cout << content;
+        if (footer) std::cout << footer;
       }
 
     }
