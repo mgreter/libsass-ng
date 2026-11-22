@@ -1175,8 +1175,12 @@ namespace Sass {
       for (SimpleSelectorObj simple : elements()) {
         if (PseudoSelector* pseudo = simple->isaPseudoSelector()) {
           if (SelectorList* sel = pseudo->selector()) {
+            // Only explicit parents are resolved in pseudo selector
+            // arguments, never implicit ones (as in dart-sass). The
+            // parser marks most of them as `chroots`, but e.g. not
+            // the selector of `:nth-child(2n of .a)`.
             auto asd = sel->resolveParentSelectors(
-              parents, traces, implicit_parent);
+              parents, traces, false);
             // std::cerr << "Resolved [" << asd->inspect() << "]\n";
             pseudo->selector(asd);
           }
