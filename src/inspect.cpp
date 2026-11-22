@@ -374,7 +374,16 @@ namespace Sass {
   {
     append_indentation();
     append_token("@media", node);
-    append_mandatory_space();
+    // Like dart-sass, compressed output omits the space if
+    // the first query starts with a parenthesis (condition).
+    bool space = !isCompressed();
+    if (!space && node->queries() != nullptr && !node->queries()->empty()) {
+      const auto& first = node->queries()->front();
+      const auto& features = first->features();
+      space = !first->modifier().empty() || !first->type().empty() ||
+        (features.size() == 1 && StringUtils::startsWith(features.front(), "(not ", 5));
+    }
+    if (space) append_mandatory_space();
     bool joinIt = false;
     if (node->queries() != nullptr)
     {
@@ -436,7 +445,17 @@ namespace Sass {
     // }
     append_indentation();
     append_token("@supports", rule);
-    append_mandatory_space();
+    // Like dart-sass, compressed output omits the
+    // space if the condition starts with a parenthesis.
+    if (isCompressed()) {
+      sass::string condition;
+      if (String* str = rule->condition()->isaString()) condition = str->value();
+      else condition = rule->condition()->toCss();
+      if (condition.empty() || condition[0] != $lparen) append_mandatory_space();
+    }
+    else {
+      append_mandatory_space();
+    }
 //    if (const auto& cond = rule->condition()) {
 //      if (const auto& str = cond->isaString()) {
 //        const auto& text = str->value();
@@ -479,7 +498,10 @@ namespace Sass {
     bool isFirst = true;
     for (const sass::string& feature : query->features()) {
       if (joinIt) {
-        append_mandatory_space();
+        // Like dart-sass, compressed output joins conditions with
+        // "and " (no space before), but always uses " and " after
+        // the media type.
+        if (!isCompressed() || isFirst) append_mandatory_space();
         append_string(query->conjunction() ? "and" : "or");
         append_mandatory_space();
       }
@@ -598,12 +620,26 @@ namespace Sass {
     append_indentation();
     add_open_mapping(import, true);
     append_string("@import");
-    append_mandatory_space();
-    // const sass::string& url(import->url());
-    // append_token(url->text(), url);
-    append_string(import->url());
+    append_optional_space();
+    const sass::string& url(import->url());
+    // Like dart-sass (`_writeImportUrl`), compressed output removes the
+    // surrounding `url()`, which allows removing the whitespace as well.
+    if (isCompressed() && url.size() > 5 && url[0] == 'u') {
+      sass::string contents(url.substr(4, url.size() - 5));
+      if (contents[0] == $apos || contents[0] == $quote) {
+        append_string(contents);
+      }
+      else {
+        // If the URL didn't contain quotes, write them manually
+        flush_schedules();
+        renderQuotedString(contents);
+      }
+    }
+    else {
+      append_string(url);
+    }
     if (!import->modifiers().empty()) {
-      append_mandatory_space();
+      append_optional_space();
       // CssString* text(import->modifiers());
       // append_token(text->text(), text);
       append_string(import->modifiers());
@@ -691,16 +727,17 @@ namespace Sass {
 
   void Inspect::visitComplexSelector(ComplexSelector* complex)
   {
-    bool many = false;
-    // schedule_mapping(complex->last());
-    for (SelectorCombinator* combinator : complex->leadingCombinators()) {
-      visitSelectorCombinator(combinator);
-      append_mandatory_space();
-    }
-    for (const CplxSelComponentObj& item : complex->elements()) {
-      if (many) append_mandatory_space();
-      visitSelectorComponent(item);
-      many = true;
+    // Port of `visitComplexSelector` in dart-sass (serialize.dart).
+    // In compressed mode there is no whitespace around combinators.
+    const SelectorCombinatorVector& leads = complex->leadingCombinators();
+    writeSelectorCombinators(leads);
+    if (!leads.empty() && !complex->empty()) append_optional_space();
+    for (size_t i = 0, L = complex->size(); i < L; i++) {
+      CplxSelComponent* component = complex->get(i);
+      visitSelectorComponent(component);
+      if (i != L - 1 && (!isCompressed() || component->combinators().empty())) {
+        append_mandatory_space();
+      }
     }
     schedule_mapping(nullptr);
   }
@@ -710,8 +747,15 @@ namespace Sass {
     if (CompoundSelector* compound = comp->selector()) {
       visitCompoundSelector(compound);
     }
-    for (SelectorCombinator* combinator : comp->combinators()) {
-      visitSelectorCombinator(combinator);
+    if (!comp->combinators().empty()) append_optional_space();
+    writeSelectorCombinators(comp->combinators());
+  }
+
+  void Inspect::writeSelectorCombinators(const SelectorCombinatorVector& combinators)
+  {
+    for (size_t i = 0; i < combinators.size(); i++) {
+      if (i > 0 && !isCompressed()) append_mandatory_space();
+      visitSelectorCombinator(combinators[i]);
     }
   }
 
@@ -746,13 +790,12 @@ namespace Sass {
 
   void Inspect::visitSelectorCombinator(SelectorCombinator* combinator)
   {
-    append_optional_space();
-     switch (combinator->combinator()) {
-       case SelectorPrefix::CHILD: append_string(">"); break;
-       case SelectorPrefix::SIBLING: append_string("+"); break;
-       case SelectorPrefix::FOLLOWING: append_string("~"); break;
-     }
-     append_optional_space();
+    // Whitespace around it is handled by `visitComplexSelector`
+    switch (combinator->combinator()) {
+      case SelectorPrefix::CHILD: append_string(">"); break;
+      case SelectorPrefix::SIBLING: append_string("+"); break;
+      case SelectorPrefix::FOLLOWING: append_string("~"); break;
+    }
   }
 
   void Inspect::visitIDSelector(IDSelector* id)

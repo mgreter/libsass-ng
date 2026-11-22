@@ -97,6 +97,7 @@ namespace Sass {
 
     virtual void visitSelectorComponent(CplxSelComponent* sel); // LibSass only
     virtual void visitSelectorCombinator(SelectorCombinator* sel); // LibSass only
+    void writeSelectorCombinators(const SelectorCombinatorVector& combinators);
 
     /////////////////////////////////////////////////////////////////////////
     // Implement Value Visitors
