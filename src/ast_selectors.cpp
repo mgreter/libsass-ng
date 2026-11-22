@@ -432,18 +432,28 @@ namespace Sass {
   {
     if (combinators.empty()) return this;
     CplxSelComponentVector components(elements_);
+    ComplexSelector* rv = nullptr;
     if (empty()) {
       // Just add to existing leading combinators
-      return SASS_MEMORY_NEW(ComplexSelector, pstate_,
-        combinators, std::move(components));
+      SelectorCombinatorVector leads(leadingCombinators_);
+      leads.insert(leads.end(),
+        combinators.begin(), combinators.end());
+      rv = SASS_MEMORY_NEW(ComplexSelector, pstate_,
+        std::move(leads), std::move(components));
     }
     else {
       components.back() = components.back()->
         withAdditionalCombinators(combinators);
-      return SASS_MEMORY_NEW(ComplexSelector, pstate_,
+      rv = SASS_MEMORY_NEW(ComplexSelector, pstate_,
         SelectorCombinatorVector(leadingCombinators_),
         std::move(components));
     }
+    // Keep the line breaks (as dart-sass does), otherwise
+    // `.a,\n.b { & ~ .c {} }` lost the line break between
+    // the resolved selectors (but kept it for `&:hover`).
+    rv->hasPreLineFeed(hasPreLineFeed_);
+    rv->hasLineBreak(hasLineBreak_);
+    return rv;
   }
 
   unsigned long ComplexSelector::specificity() const
