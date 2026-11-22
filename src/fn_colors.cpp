@@ -170,6 +170,70 @@ namespace Sass {
     }
     // EO getFunctionString
 
+    // Returns suggested translations for deprecated color modification
+    // functions in terms of both `color.scale()` and `color.adjust()`.
+    // Port of `_suggestScaleAndAdjust` in dart-sass. [original] is the
+    // color that was passed in, [adjustment] is the requested change,
+    // and [channel] is the name of the modified channel.
+    static sass::string suggestScaleAndAdjust(const Color* original,
+      double adjustment, const sass::string& channel, const SourceSpan& pstate)
+    {
+      bool alpha = channel == Strings::alpha;
+      double min = 0.0, max = alpha ? 1.0 : 100.0, oldValue = 0.0;
+      if (alpha) oldValue = original->alpha().value_or(1.0);
+      else {
+        ColorObj hsl = original->toSpace(ColorSpaces::hsl, pstate);
+        oldValue = channel == Strings::saturation
+          ? hsl->getChannel1() : hsl->getChannel2();
+      }
+      double newValue = oldValue + adjustment;
+      sass::string suggestion("Suggestion");
+      if (adjustment != 0) {
+        double factor;
+        if (newValue > max) factor = 1;
+        else if (newValue < min) factor = -1;
+        else if (adjustment > 0) factor = adjustment / (max - oldValue);
+        else factor = (newValue - oldValue) / (oldValue - min);
+        NumberObj factorNumber = SASS_MEMORY_NEW(Number,
+          pstate, factor * 100, Strings::percent);
+        suggestion += "s:\n\ncolor.scale($color, $" + channel +
+          ": " + factorNumber->toCss() + ")\n";
+      }
+      else {
+        suggestion += ":\n\n";
+      }
+      NumberObj difference = SASS_MEMORY_NEW(Number,
+        pstate, adjustment, alpha ? "" : Strings::percent);
+      return suggestion + "color.adjust($color, $" +
+        channel + ": " + difference->toCss() + ")";
+    }
+
+    // Deprecation for the color modification functions (`lighten()` etc.)
+    static void deprecateColorFunction(Compiler& compiler,
+      const SourceSpan& pstate, const char* name, const Color* color,
+      double adjustment, const sass::string& channel)
+    {
+      compiler.addDeprecation(pstate, Logger::DEPR_COLOR_FUNCTIONS,
+        [&]() {
+          return sass::string(name) + "() is deprecated. " +
+            suggestScaleAndAdjust(color, adjustment, channel, pstate) +
+            "\n\nMore info: https://sass-lang.com/d/color-functions";
+        });
+    }
+
+    // Deprecation for the channel functions (`red()` etc.)
+    static void deprecateChannelFunction(Compiler& compiler,
+      const SourceSpan& pstate, bool global, const char* name, const char* space)
+    {
+      compiler.addDeprecation(pstate, Logger::DEPR_COLOR_FUNCTIONS,
+        [&]() {
+          return sass::string(global ? "" : "color.") + name +
+            "() is deprecated. Suggestion:\n\ncolor.channel($color, \"" +
+            name + "\", $space: " + space + ")\n\n"
+            "More info: https://sass-lang.com/d/color-functions";
+        });
+    }
+
 
     /*
     static Value* parseChannels(
@@ -1734,9 +1798,9 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       static BUILT_IN_FN(invert)
       {
 
-        // if (arguments[0] is!SassNumber && !arguments[0].isSpecialNumber) {
-        //   warnForGlobalBuiltIn("color", "invert");
-        // }
+        if (global && !arguments[0]->isaNumber() && !isSpecialNumber(arguments[0])) {
+          compiler.warnForGlobalBuiltIn(pstate, "color.invert");
+        }
 
         const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
         weight->checkPercent(compiler, Strings::weight);
@@ -1980,6 +2044,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
         ColorObj rgb = color->toSpace(ColorSpaces::rgb, pstate, false);
         double value = Sass::round64(rgb->getChannel0(), compiler.epsilon);
+        deprecateChannelFunction(compiler, pstate, global, "red", "rgb");
         return SASS_MEMORY_NEW(Number, pstate, value);
       }
 
@@ -1993,6 +2058,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
         ColorObj rgb = color->toSpace(ColorSpaces::rgb, pstate, false);
         double value = Sass::round64(rgb->getChannel1(), compiler.epsilon);
+        deprecateChannelFunction(compiler, pstate, global, "green", "rgb");
         return SASS_MEMORY_NEW(Number, pstate, value);
       }
 
@@ -2006,6 +2072,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
         ColorObj rgb = color->toSpace(ColorSpaces::rgb, pstate, false);
         double value = Sass::round64(rgb->getChannel2(), compiler.epsilon);
+        deprecateChannelFunction(compiler, pstate, global, "blue", "rgb");
         return SASS_MEMORY_NEW(Number, pstate, value);
       }
 
@@ -2018,6 +2085,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hsl = color->toSpace(ColorSpaces::hsl, pstate);
+        deprecateChannelFunction(compiler, pstate, global, "hue", "hsl");
         return SASS_MEMORY_NEW(Number, pstate, hsl->getChannel0(), unit_deg);
       }
 
@@ -2030,6 +2098,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hsl = color->toSpace(ColorSpaces::hsl, pstate);
+        deprecateChannelFunction(compiler, pstate, global, "saturation", "hsl");
         return SASS_MEMORY_NEW(Number, pstate, hsl->getChannel1(), unit_percent);
       }
 
@@ -2042,6 +2111,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hsl = color->toSpace(ColorSpaces::hsl, pstate);
+        deprecateChannelFunction(compiler, pstate, global, "lightness", "hsl");
         return SASS_MEMORY_NEW(Number, pstate, hsl->getChannel2(), unit_percent);
       }
 
@@ -2054,6 +2124,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hwb = color->toSpace(ColorSpaces::hwb, pstate);
+        deprecateChannelFunction(compiler, pstate, global, "whiteness", "hwb");
         return SASS_MEMORY_NEW(Number, pstate, hwb->getChannel1(), unit_percent);
       }
 
@@ -2066,6 +2137,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hwb = color->toSpace(ColorSpaces::hwb, pstate);
+        deprecateChannelFunction(compiler, pstate, global, "blackness", "hwb");
         return SASS_MEMORY_NEW(Number, pstate, hwb->getChannel2(), unit_percent);
       }
 
@@ -2249,7 +2321,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           return getFunctionString(Strings::grayscale, pstate, arguments);
         }
 
-        // if (global) warForGlobalBuiltIn(compiler, "color", "grayscale");
+        if (global) compiler.warnForGlobalBuiltIn(pstate, "color.grayscale");
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
 
@@ -2299,6 +2371,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         double lightness = clampLikeCss(hsl->getChannel2() - adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), hsl->c1(), lightness, hsl->alpha());
+        deprecateColorFunction(compiler, pstate, "darken",
+          color, -amount->value(), Strings::lightness);
         rv = rv->toSpace(color->space(), pstate);
         return rv.detach();
       }
@@ -2325,6 +2399,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         double lightness = clampLikeCss(hsl->getChannel2() + adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), hsl->c1(), lightness, hsl->alpha());
+        deprecateColorFunction(compiler, pstate, "lighten",
+          color, amount->value(), Strings::lightness);
         rv = rv->toSpace(color->space(), pstate);
         return rv.detach();
       }
@@ -2335,6 +2411,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           throw Exception::SassScriptException(compiler, pstate,
             "The function saturate() isn't in the sass:color module.");
         }
+        compiler.warnForGlobalBuiltIn(pstate, "color.adjust");
 
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         const Number* amount = arguments[1]->assertNumber(compiler, Strings::amount);
@@ -2351,6 +2428,8 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         double saturation = clampLikeCss(hsl->getChannel1() + adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), saturation, hsl->c2(), hsl->alpha());
+        deprecateColorFunction(compiler, pstate, "saturate",
+          color, amount->value(), Strings::saturation);
         rv = rv->toSpace(color->space(), pstate);
         return rv.detach();
       }
@@ -2377,50 +2456,57 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         double saturation = clampLikeCss(hsl->getChannel1() - adjust, 0.0, 100.0);
         ColorObj rv = Color::hsl(hsl->pstate(),
           hsl->c0(), saturation, hsl->c2(), hsl->alpha());
+        deprecateColorFunction(compiler, pstate, "desaturate",
+          color, -amount->value(), Strings::saturation);
         rv = rv->toSpace(color->space(), pstate);
+        return rv.detach();
+      }
+
+      // Implementation of `opacify()` and `fade-in()` (positive)
+      // as well as `transparentize()` and `fade-out()` (negative)
+      static Value* _adjustAlpha(const char* name, double sign,
+        const SourceSpan& pstate, const ValueVector& arguments, Compiler& compiler)
+      {
+        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
+        const Number* nr = arguments[1]->assertNumber(compiler, Strings::amount);
+        double amount = nr->assertRange(compiler, 0.0, 1.0, unit_none, Strings::amount);
+
+        if (!color->isLegacy()) {
+          throw Exception::SassScriptException(compiler, pstate,
+            sass::string(name) + "() is only supported for legacy colors. Please "
+            "use color.adjust() instead with an explicit $space argument.");
+        }
+
+        double a = color->getAlpha() + sign * amount;
+        ColorObj rv = Color::forSpaceInternal(
+          pstate, color->space(),
+          color->getChannel0OrNull(),
+          color->getChannel1OrNull(),
+          color->getChannel2OrNull(),
+          clampLikeCss(a, 0, 1));
+        deprecateColorFunction(compiler, pstate, name,
+          color, sign * nr->value(), Strings::alpha);
         return rv.detach();
       }
 
       static BUILT_IN_FN(opacify)
       {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        const Number* nr = arguments[1]->assertNumber(compiler, Strings::amount);
-        double amount = nr->assertRange(compiler, 0.0, 1.0, unit_none, Strings::amount);
-
-        if (!color->isLegacy()) {
-          throw Exception::SassScriptException(compiler, pstate,
-            "fade-in() is only supported for legacy colors. Please use "
-            "color.adjust() instead with an explicit $space argument.");
-        }
-
-        double a = color->getAlpha() + amount;
-        return Color::forSpaceInternal(
-          pstate, color->space(),
-          color->getChannel0OrNull(),
-          color->getChannel1OrNull(),
-          color->getChannel2OrNull(),
-          clampLikeCss(a, 0, 1));
+        return _adjustAlpha("opacify", 1, pstate, arguments, compiler);
       }
-      // 
+
+      static BUILT_IN_FN(fadeIn)
+      {
+        return _adjustAlpha("fade-in", 1, pstate, arguments, compiler);
+      }
+
       static BUILT_IN_FN(transparentize)
       {
-        const Color* color = arguments[0]->assertColor(compiler, Strings::color);
-        const Number* nr = arguments[1]->assertNumber(compiler, Strings::amount);
-        double amount = nr->assertRange(compiler, 0.0, 1.0, unit_none, Strings::amount);
+        return _adjustAlpha("transparentize", -1, pstate, arguments, compiler);
+      }
 
-        if (!color->isLegacy()) {
-          throw Exception::SassScriptException(compiler, pstate,
-            "fade-out() is only supported for legacy colors. Please use "
-            "color.adjust() instead with an explicit $space argument.");
-        }
-
-        double a = color->getAlpha() - amount;
-        return Color::forSpaceInternal(
-          pstate, color->space(),
-          color->getChannel0OrNull(),
-          color->getChannel1OrNull(),
-          color->getChannel2OrNull(),
-          clampLikeCss(a, 0, 1));
+      static BUILT_IN_FN(fadeOut)
+      {
+        return _adjustAlpha("fade-out", -1, pstate, arguments, compiler);
       }
 
       static BUILT_IN_FN(noOpacify)
@@ -2557,6 +2643,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           }
         }
 
+        if (global) {
+          // Like dart-sass, not for non-legacy colors (error below)
+          const Color* legacy = arguments[0]->isaColor();
+          if (legacy == nullptr || legacy->isLegacy()) {
+            compiler.warnForGlobalBuiltIn(pstate, "color.alpha");
+          }
+        }
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
 
         if (!color->isLegacy()) {
@@ -2605,6 +2698,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           return getFunctionString("opacity",
             pstate, arguments);
         }
+        if (global) compiler.warnForGlobalBuiltIn(pstate, "color.opacity");
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->alpha().value_or(1));
       }
@@ -3239,10 +3333,12 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             "color.adjust() instead with an explicit $space argument.");
         }
 
-        compiler.addDeprecation(arguments[0]->pstate(),
-          Logger::DEPR_COLOR_FUNCTIONS, [arguments]() {
+        compiler.addDeprecation(pstate,
+          Logger::DEPR_COLOR_FUNCTIONS, [&]() {
+            NumberObj suggested = SASS_MEMORY_NEW(Number,
+              pstate, degrees, unit_deg);
             return "adjust-hue() is deprecated. Suggestion:\n\n"
-              "color.adjust($color, $hue: ${suggestedValue.toCssString()})\n\n"
+              "color.adjust($color, $hue: " + suggested->toCss() + ")\n\n"
               "More info: https://sass-lang.com/d/color-functions";
           });
 
@@ -3627,9 +3723,9 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         uint32_t idx_to_gamut = compiler.createBuiltInFunction(key_to_gamut, "$color, $space: null, $method: null", toGamut);
 
 
-        uint32_t idx_fade_in = compiler.createBuiltInFunction(key_fade_in, "$color, $amount", opacify);
+        uint32_t idx_fade_in = compiler.createBuiltInFunction(key_fade_in, "$color, $amount", fadeIn);
         uint32_t idx_opacify = compiler.createBuiltInFunction(key_opacify, "$color, $amount", opacify);
-        uint32_t idx_fade_out = compiler.createBuiltInFunction(key_fade_out, "$color, $amount", transparentize);
+        uint32_t idx_fade_out = compiler.createBuiltInFunction(key_fade_out, "$color, $amount", fadeOut);
         uint32_t idx_transparentize = compiler.createBuiltInFunction(key_transparentize, "$color, $amount", transparentize);
 
         uint32_t idx_fade_in_strict = compiler.createBuiltInFunction(key_fade_in, "$color, $amount", noFadeIn);

@@ -85,7 +85,11 @@ namespace Sass {
       static BUILT_IN_FN(abs)
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
-        if (number->hasUnit("%")) {
+        // Like dart-sass, both deprecations only apply to the global function
+        if (global && !number->hasUnit("%")) {
+          compiler.warnForGlobalBuiltIn(pstate, "math.abs");
+        }
+        else if (global) {
           compiler.addDeprecation(number->pstate(),
             Logger::WARN_ABS_PERCENT, [number]() {
               return "Passing percentage units to the global abs() function is deprecated.\n"

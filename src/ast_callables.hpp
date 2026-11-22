@@ -42,6 +42,9 @@ namespace Sass {
     // Some mixins accept content blocks
     ADD_CONSTREF(bool, acceptsContent);
 
+    // Module function to suggest if called globally (deprecation)
+    ADD_CONSTREF(sass::string, globalReplacement);
+
   public:
 
     // Creates a callable with a single [arguments] declaration
@@ -91,6 +94,9 @@ namespace Sass {
 
     // The overloads declared for this callable.
     ADD_CONSTREF(SassFnPairs, overloads);
+
+    // Module function to suggest if called globally (deprecation)
+    ADD_CONSTREF(sass::string, globalReplacement);
 
   public:
 

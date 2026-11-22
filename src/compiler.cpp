@@ -833,6 +833,82 @@ namespace Sass {
     Functions::Colors::registerFunctions(*this);
     Functions::Texts::registerFunctions(*this);
     Functions::Selectors::registerFunctions(*this);
+    // Global built-in functions that are deprecated in favor of a module
+    // function, like dart-sass (`withDeprecationWarning`). The global and
+    // module function may share the same callable, the `global` flag at
+    // call time tells them apart. Functions that may also be called as
+    // plain CSS functions (invert, grayscale, saturate, alpha, opacity and
+    // abs) warn on their own, only if not used as plain CSS functions.
+    static const char* const deprecatedGlobals[][2] = {
+      // color
+      { "red", "color.red" }, { "green", "color.green" },
+      { "blue", "color.blue" }, { "mix", "color.mix" },
+      { "hue", "color.hue" }, { "saturation", "color.saturation" },
+      { "lightness", "color.lightness" }, { "complement", "color.complement" },
+      { "adjust-hue", "color.adjust" }, { "lighten", "color.adjust" },
+      { "darken", "color.adjust" }, { "desaturate", "color.adjust" },
+      { "opacify", "color.adjust" }, { "fade-in", "color.adjust" },
+      { "transparentize", "color.adjust" }, { "fade-out", "color.adjust" },
+      { "adjust-color", "color.adjust" }, { "scale-color", "color.scale" },
+      { "change-color", "color.change" },
+      // math
+      { "ceil", "math.ceil" }, { "floor", "math.floor" },
+      { "max", "math.max" }, { "min", "math.min" },
+      { "percentage", "math.percentage" }, { "random", "math.random" },
+      { "round", "math.round" }, { "unit", "math.unit" },
+      { "comparable", "math.compatible" }, { "unitless", "math.is-unitless" },
+      // list
+      { "length", "list.length" }, { "nth", "list.nth" },
+      { "set-nth", "list.set-nth" }, { "join", "list.join" },
+      { "append", "list.append" }, { "zip", "list.zip" },
+      { "index", "list.index" }, { "is-bracketed", "list.is-bracketed" },
+      { "list-separator", "list.separator" },
+      // map
+      { "map-get", "map.get" }, { "map-merge", "map.merge" },
+      { "map-remove", "map.remove" }, { "map-keys", "map.keys" },
+      { "map-values", "map.values" }, { "map-has-key", "map.has-key" },
+      // selector
+      { "is-superselector", "selector.is-superselector" },
+      { "simple-selectors", "selector.simple-selectors" },
+      { "selector-parse", "selector.parse" },
+      { "selector-nest", "selector.nest" },
+      { "selector-append", "selector.append" },
+      { "selector-extend", "selector.extend" },
+      { "selector-replace", "selector.replace" },
+      { "selector-unify", "selector.unify" },
+      // string
+      { "unquote", "string.unquote" }, { "quote", "string.quote" },
+      { "to-upper-case", "string.to-upper-case" },
+      { "to-lower-case", "string.to-lower-case" },
+      { "unique-id", "string.unique-id" }, { "str-length", "string.length" },
+      { "str-insert", "string.insert" }, { "str-index", "string.index" },
+      { "str-slice", "string.slice" },
+      // meta
+      { "feature-exists", "meta.feature-exists" }, { "inspect", "meta.inspect" },
+      { "type-of", "meta.type-of" }, { "keywords", "meta.keywords" },
+      { "global-variable-exists", "meta.global-variable-exists" },
+      { "variable-exists", "meta.variable-exists" },
+      { "function-exists", "meta.function-exists" },
+      { "mixin-exists", "meta.mixin-exists" },
+      { "content-exists", "meta.content-exists" },
+      { "module-variables", "meta.module-variables" },
+      { "module-functions", "meta.module-functions" },
+      { "module-mixins", "meta.module-mixins" },
+      { "get-function", "meta.get-function" },
+      { "get-mixin", "meta.get-mixin" }, { "call", "meta.call" },
+    };
+    for (const auto& entry : deprecatedGlobals) {
+      EnvRef fidx = varRoot.findFnIdx(EnvKey(entry[0]), "");
+      if (!fidx.isValid()) continue;
+      Callable* callable = varRoot.getFunction(fidx);
+      if (callable == nullptr) continue;
+      if (BuiltInCallable* fn = callable->isaBuiltInCallable()) {
+        fn->globalReplacement(entry[1]);
+      }
+      else if (BuiltInCallables* fns = callable->isaBuiltInCallables()) {
+        fns->globalReplacement(entry[1]);
+      }
+    }
   }
   // EO loadBuiltInFunctions
 

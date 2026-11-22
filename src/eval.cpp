@@ -230,6 +230,9 @@ namespace Sass {
   {
     ArgumentResults results(_evaluateArguments(arguments));
     const SassFnPair& tuple(callable->callbackFor(results));
+    if (global && !callable->globalReplacement().empty()) {
+      logger.warnForGlobalBuiltIn(pstate, callable->globalReplacement());
+    }
     ValueObj rv = _callBuiltInCallable(results, tuple, pstate, global);
     rv = withoutSlash3(rv);
     return rv.detach();
@@ -247,6 +250,9 @@ namespace Sass {
   {
     ArgumentResults results(_evaluateArguments(arguments));
     const SassFnPair& tuple(callable->callbackFor(results));
+    if (global && !callable->globalReplacement().empty()) {
+      logger.warnForGlobalBuiltIn(pstate, callable->globalReplacement());
+    }
     return _callBuiltInCallable(results, tuple, pstate, global);
   }
   // EO _runBuiltInCallables

@@ -167,9 +167,19 @@ namespace Sass {
   // Print a regular warning or deprecation
   void Logger::printWarning(const sass::string& message, const SourceSpan& pstate, WarningType type, bool deprecation)
   {
-
+    // Don't add the position again if it is already the current frame,
+    // e.g. for deprecations raised by built-in functions at their call.
+    if (!callStack.empty() && callStack.back().pstate == pstate) {
+      printWarningInFrame(message, pstate, deprecation);
+      return;
+    }
     CallStackFrame frame(*this, pstate);
+    printWarningInFrame(message, pstate, deprecation);
+  }
+  // EO printWarning
 
+  void Logger::printWarningInFrame(const sass::string& message, const SourceSpan& pstate, bool deprecation)
+  {
     writeWarnHead(deprecation);
     logstrm << " on line " << pstate.getLine();
     logstrm << ", column " << pstate.getColumn();

@@ -52,6 +52,7 @@ namespace Sass {
       WARN_ABS_PERCENT,
       WARN_MS_ALPHA,
       DEPR_COLOR_FUNCTIONS,
+      DEPR_GLOBAL_BUILTIN,
     };
 
     // Epsilon for precision
@@ -120,6 +121,12 @@ namespace Sass {
       const SourceSpan& pstate,
       WarningType type,
       bool deprecation = false);
+
+    // Helper for `printWarning` (with the frame already on the stack)
+    void printWarningInFrame(
+      const sass::string& message,
+      const SourceSpan& pstate,
+      bool deprecation);
 
   public:
 
@@ -203,6 +210,19 @@ namespace Sass {
       }
       printWarning(message(), pstate, type, true);
       reported[type] = true;
+    }
+
+    // Deprecation for a global built-in function that is also available
+    // as `replacement` in a built-in module, like dart-sass does
+    // (`warnForGlobalBuiltIn`), e.g. `percentage()` -> `math.percentage`.
+    void warnForGlobalBuiltIn(const SourceSpan& pstate,
+      const sass::string& replacement)
+    {
+      addDeprecation(pstate, DEPR_GLOBAL_BUILTIN, [&replacement]() {
+        return "Global built-in functions are deprecated and will be "
+          "removed in LibSass 5.0.0.\nUse " + replacement + " instead.\n\n"
+          "More info and automated migrator: https://sass-lang.com/d/import";
+      });
     }
 
   public:
