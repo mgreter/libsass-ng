@@ -104,6 +104,12 @@ namespace Sass {
 
   void Eval::visitCssAtRule(CssAtRule* node)
   {
+    // Like dart-sass, not allowed within nested declarations
+    if (!declarationName.empty()) {
+      CallStackFrame frame(logger, node->pstate());
+      throw Exception::RuntimeException(logger,
+        "At-rules may not be used within nested declarations.");
+    }
 
     if (node->empty()) {
       current->addChildAt(node, false);
@@ -186,6 +192,12 @@ namespace Sass {
 
   void Eval::visitCssMediaRule(CssMediaRule* node)
   {
+    // Like dart-sass, not allowed within nested declarations
+    if (!declarationName.empty()) {
+      CallStackFrame frame(logger, node->pstate());
+      throw Exception::RuntimeException(logger,
+        "Media rules may not be used within nested declarations.");
+    }
 
     CssMediaQueryVectorObj parsed(node->queries());
 
@@ -408,6 +420,12 @@ namespace Sass {
 
   void Eval::visitCssSupportsRule(CssSupportsRule* node)
   {
+    // Like dart-sass, not allowed within nested declarations
+    if (!declarationName.empty()) {
+      CallStackFrame frame(logger, node->pstate());
+      throw Exception::RuntimeException(logger,
+        "Supports rules may not be used within nested declarations.");
+    }
     // Like `visitSupportsRule`: add a copy of the rule (bubbling through
     // style rules) and evaluate the children inside of it. It used to
     // visit the children only, which dropped the `@supports` wrapper.

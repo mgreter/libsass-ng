@@ -2452,6 +2452,12 @@ namespace Sass {
 
   Value* Eval::visitSupportsRule(SupportsRule* node)
   {
+    // Like dart-sass, not allowed within nested declarations
+    if (!declarationName.empty()) {
+      CallStackFrame frame(logger, node->pstate());
+      throw Exception::RuntimeException(logger,
+        "Supports rules may not be used within nested declarations.");
+    }
     ValueObj condition = SASS_MEMORY_NEW(
       String, node->condition()->pstate(),
       _visitSupportsCondition(node->condition()));
@@ -2593,6 +2599,12 @@ namespace Sass {
 
   Value* Eval::visitAtRule(AtRule* node)
   {
+    // Like dart-sass, not allowed within nested declarations
+    if (!declarationName.empty()) {
+      CallStackFrame frame(logger, node->pstate());
+      throw Exception::RuntimeException(logger,
+        "At-rules may not be used within nested declarations.");
+    }
     sass::string name(interpolationToCssString(node->name(), true, false));
     sass::string value(interpolationToCssString(node->value(), true, true));
 
@@ -2700,6 +2712,12 @@ namespace Sass {
 
   Value* Eval::visitMediaRule(MediaRule* node)
   {
+    // Like dart-sass, not allowed within nested declarations
+    if (!declarationName.empty()) {
+      CallStackFrame frame(logger, node->pstate());
+      throw Exception::RuntimeException(logger,
+        "Media rules may not be used within nested declarations.");
+    }
 
     ExpressionObj mq;
     sass::string str_mq;
@@ -3088,7 +3106,7 @@ namespace Sass {
   {
    // std::cerr << "+++ EXTEND RULE " << selector()->inspect() << "\n";
     //std::cerr << "Visit extend\n";
-    if (!isInStyleRule() /* || !declarationName.empty() */) {
+    if (!isInStyleRule() || !declarationName.empty()) {
       CallStackFrame csf(logger, e->pstate());
       throw Exception::RuntimeException(logger,
         "@extend may only be used within style rules.");
