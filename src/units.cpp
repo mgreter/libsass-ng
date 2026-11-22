@@ -248,7 +248,7 @@ namespace Sass {
       // get the conversion factor for units
       f = conversion_factor(urhs, ulhs, clhs, crhs);
       // left hand side has been consumed
-      f = std::pow(f, lhsexp);
+      f = sass::pow(f, lhsexp);
       rhsexp += lhsexp;
       lhsexp = 0;
     }
@@ -256,7 +256,7 @@ namespace Sass {
       // get the conversion factor for units
       f = conversion_factor(ulhs, urhs, clhs, crhs);
       // right hand side has been consumed
-      f = std::pow(f, rhsexp);
+      f = sass::pow(f, rhsexp);
       lhsexp += rhsexp;
       rhsexp = 0;
     }

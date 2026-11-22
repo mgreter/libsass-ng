@@ -54,9 +54,9 @@ namespace Sass {
     ColorObj lab2 = color2->toSpace(ColorSpaces::oklab, color2->pstate());
 
     return std::sqrt(
-      std::pow(lab1->getChannel0() - lab2->getChannel0(), 2) +
-      std::pow(lab1->getChannel1() - lab2->getChannel1(), 2) +
-      std::pow(lab1->getChannel2() - lab2->getChannel2(), 2));
+      sass::pow(lab1->getChannel0() - lab2->getChannel0(), 2) +
+      sass::pow(lab1->getChannel1() - lab2->getChannel1(), 2) +
+      sass::pow(lab1->getChannel2() - lab2->getChannel2(), 2));
   }
 
 

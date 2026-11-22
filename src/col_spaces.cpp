@@ -325,7 +325,7 @@ namespace Sass {
   double _convertComponentToLabF(double component) {
 
     if (component > labEpsilon)
-      return std::pow(component, 1.0 / 3.0) + 0.0;
+      return sass::pow(component, 1.0 / 3.0) + 0.0;
     return (labKappa * component + 16.0) / 116.0;
   }
 
@@ -392,7 +392,7 @@ namespace Sass {
   double _cubeRootPreservingSign(double number)
   {
     return (std::signbit(number) ? -1.0 : +1.0)
-      * std::pow(std::abs(number), 1.0 / 3.0);
+      * sass::pow(std::abs(number), 1.0 / 3.0);
   }
 
   Color* LmsColorSpace::translate(
@@ -518,17 +518,17 @@ namespace Sass {
     // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
     return ColorSpaces::lms.translate(
       dest, pstate,
-      std::pow(
+      sass::pow(
         ColorSpaces::oklabToLms[0] * lightness.value_or(0) +
         ColorSpaces::oklabToLms[1] * a.value_or(0) +
         ColorSpaces::oklabToLms[2] * b.value_or(0),
         3) + 0.0,
-      std::pow(
+      sass::pow(
         ColorSpaces::oklabToLms[3] * lightness.value_or(0) +
         ColorSpaces::oklabToLms[4] * a.value_or(0) +
         ColorSpaces::oklabToLms[5] * b.value_or(0),
         3) + 0.0,
-      std::pow(
+      sass::pow(
         ColorSpaces::oklabToLms[6] * lightness.value_or(0) +
         ColorSpaces::oklabToLms[7] * a.value_or(0) +
         ColorSpaces::oklabToLms[8] * b.value_or(0),
@@ -630,7 +630,7 @@ namespace Sass {
 
   /// Converts an f-format component to the X or Z channel of an XYZ color.
   static double _convertFToXorZ(double component) {
-    double cubed = std::pow(component, 3.0) + 0.0;
+    double cubed = sass::pow(component, 3.0) + 0.0;
     return cubed > labEpsilon ? cubed : (116.0 * component - 16.0) / labKappa;
   }
 
@@ -676,7 +676,7 @@ namespace Sass {
         dest, pstate,
         _convertFToXorZ((a.value_or(0)) / 500.0 + f1) * d50[0],
         (lightness.value() > labKappa * labEpsilon
-          ? std::pow((lightness.value() + 16.0) / 116.0, 3.0) * 1.0
+          ? sass::pow((lightness.value() + 16.0) / 116.0, 3.0) * 1.0
           : lightness.value() / labKappa) *
         d50[1],
         _convertFToXorZ(f1 - (b.value_or(0.0)) / 200.0) * d50[2],

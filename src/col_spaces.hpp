@@ -164,12 +164,12 @@ namespace Sass {
     inline double toLinear(double channel) const final
     {
       return (std::signbit(channel) ? -1 : +1) *
-        std::pow(std::abs(channel), 563.0 / 256.0);
+        sass::pow(std::abs(channel), 563.0 / 256.0);
     }
     inline double fromLinear(double channel) const final
     {
       return (std::signbit(channel) ? -1 : +1) *
-        std::pow(std::abs(channel), 256.0 / 563.0);
+        sass::pow(std::abs(channel), 256.0 / 563.0);
     }
 
     inline const double* transformationMatrix(ColorSpace dest) const final
@@ -194,14 +194,14 @@ namespace Sass {
     double abs = std::abs(channel);
     if (abs <= 0.04045) return channel / 12.92;
     return (std::signbit(channel) ? -1 : +1) *
-      std::pow((abs + 0.055) / 1.055, 2.4);
+      sass::pow((abs + 0.055) / 1.055, 2.4);
   }
 
   inline double srgbAndDisplayP3FromLinear(double channel) {
     double abs = std::abs(channel);
     if (abs <= 0.0031308) return channel * 12.92;
     return (std::signbit(channel) ? -1 : +1) *
-      (1.055 * std::pow(abs, 1.0 / 2.4) - 0.055);
+      (1.055 * sass::pow(abs, 1.0 / 2.4) - 0.055);
   }
 
   /////////////////////////////////////////////////////////////////////////
@@ -523,7 +523,7 @@ namespace Sass {
       double abs = std::abs(channel);
       if (abs <= 16.0 / 512) return channel / 16.0;
       return (std::signbit(channel) ? -1 : +1) *
-        std::pow(abs, 1.8 / 1.0);
+        sass::pow(abs, 1.8 / 1.0);
 
     }
 
@@ -532,7 +532,7 @@ namespace Sass {
       double abs = std::abs(channel);
       if (abs < 1.0 / 512) return 16.0 * channel;
       return (std::signbit(channel) ? -1 : +1) *
-        std::pow(abs, 1.0 / 1.8);
+        sass::pow(abs, 1.0 / 1.8);
     }
 
     inline const double* transformationMatrix(ColorSpace dest) const final
@@ -570,7 +570,7 @@ namespace Sass {
       double abs = std::abs(channel);
       if (abs < rec2020_beta * 4.5) return channel / 4.5;
       return (std::signbit(channel) ? -1 : +1) *
-        std::pow((abs + rec2020_alpha - 1.0)
+        sass::pow((abs + rec2020_alpha - 1.0)
           / rec2020_alpha, 1.0 / 0.45);
 
     }
@@ -580,7 +580,7 @@ namespace Sass {
       double abs = std::abs(channel);
       if (abs < rec2020_beta) return 4.5 * channel;
       return (std::signbit(channel) ? -1 : +1) *
-        (rec2020_alpha * std::pow(abs, 0.45)
+        (rec2020_alpha * sass::pow(abs, 0.45)
           - (rec2020_alpha - 1.0));
     }
 

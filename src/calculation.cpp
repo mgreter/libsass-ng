@@ -416,7 +416,7 @@ namespace Sass {
           nr_base->assertNumberStrictWithoutUnit(logger, str_base);
           nr_exp->assertNumberStrictWithoutUnit(logger, str_exp);
           return SASS_MEMORY_NEW(Number, pstate,
-            std::pow(nr_base->value(), nr_exp->value()));
+            sass::pow(nr_base->value(), nr_exp->value()));
         }
       }
       return SASS_MEMORY_NEW(Calculation, pstate,

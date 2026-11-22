@@ -123,7 +123,7 @@ namespace Sass {
           auto& number = numbers[i];
           if (number->hasUnits() == numbers[0]->hasUnits()) {
             if (double factor = number->getUnitConversionFactor(numbers[0])) {
-              subtotal += std::pow(number->value() * factor, 2.0);
+              subtotal += sass::pow(number->value() * factor, 2.0);
             }
             else {
               throw Exception::UnitMismatch(compiler, *numbers[0], *number);
@@ -203,7 +203,7 @@ namespace Sass {
         exponent->assertNumberStrictWithoutUnit(compiler, Strings::exponent);
         // Exponentiating certain real numbers leads to special behaviors. Ensure
         // that these behaviors are consistent for numbers within the precision limit.
-        return SASS_MEMORY_NEW(Number, pstate, std::pow(base->value(), exponent->value()));
+        return SASS_MEMORY_NEW(Number, pstate, sass::pow(base->value(), exponent->value()));
       }
 
       static BUILT_IN_FN(fnSqrt)

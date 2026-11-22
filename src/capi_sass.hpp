@@ -83,6 +83,41 @@
 // Small helper to avoid typing
 #define NPOS std::string::npos
 
+namespace sass {
+
+  // Like `math.pow` of the Dart VM (dart-sass), which handles a few
+  // exponents itself (see `InvokeDoublePow`) and uses the C library
+  // `pow` for the rest. So `pow(x, 3)` is `x * x * x`, which is not
+  // always the correctly rounded result, e.g. for color conversions.
+  inline double pow(double base, double exponent)
+  {
+    if (exponent == 0.0) return 1.0;
+    if (exponent == 1.0) return base;
+    if (exponent == 2.0) return base * base;
+    if (exponent == 3.0) return base * base * base;
+    if (base == 1.0) return 1.0;
+    if (std::isnan(base) || std::isnan(exponent)) return NAN;
+    if (base != -INFINITY && exponent == 0.5) {
+      if (base == 0.0) return 0.0;
+      return std::sqrt(base);
+    }
+#ifdef __MINGW32__
+    // The `pow` of MinGW-w64 (libmingwex, also used with UCRT) is often
+    // off by one ulp, e.g. for about half of all integer exponents, so
+    // `math.pow(0.000000000001, -2)` gave `1000000000000000100000000`.
+    // Computing it with 80-bit `powl` and rounding to double is correct
+    // in all but rare double rounding cases, like the accurate `pow` of
+    // other C libraries (MSVC, glibc, Apple) used by the Dart VM.
+    return static_cast<double>(::powl(
+      static_cast<long double>(base),
+      static_cast<long double>(exponent)));
+#else
+    return std::pow(base, exponent);
+#endif
+  }
+
+}
+
 // output behaviors
 namespace Sass {
 

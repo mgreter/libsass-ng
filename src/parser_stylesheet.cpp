@@ -3021,7 +3021,7 @@ namespace Sass {
       exponent += scanner.readChar() - $0;
     }
 
-    return pow(10.0, exponentSign * exponent);
+    return sass::pow(10.0, exponentSign * exponent);
   }
   // EO tryExponent
 

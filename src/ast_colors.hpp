@@ -310,8 +310,8 @@ namespace Sass {
       tl::optional<double> chroma, hue;
       // Requires computation in any case
       double chromatic = std::sqrt(
-        std::pow(a.value_or(0), 2.0) +
-        std::pow(b.value_or(0), 2.0));
+        sass::pow(a.value_or(0), 2.0) +
+        sass::pow(b.value_or(0), 2.0));
 
       if (missingChroma == false) {
         chroma = chromatic;
