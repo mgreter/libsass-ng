@@ -359,13 +359,14 @@ extern "C" {
   struct SassValue* ADDCALL sass_value_op(SassOperator op, struct SassValue* left, struct SassValue* right)
   {
 
-    Logger logger;
-    SourceSpan pstate;
-    Sass::ValueObj copy;
-    Value* lhs = getValue(left);
-    Value* rhs = getValue(right);
-
     try {
+      // Must be within the try block, as no exception
+      // must escape through the C-API (e.g. bad_alloc)
+      Logger logger;
+      SourceSpan pstate;
+      Sass::ValueObj copy;
+      Value* lhs = getValue(left);
+      Value* rhs = getValue(right);
       switch (op) {
         // Return a new reference like all other operations (caller deletes it)
         case SassOperator::OR:  return newSassValue(lhs->isTruthy() ? lhs : rhs);
