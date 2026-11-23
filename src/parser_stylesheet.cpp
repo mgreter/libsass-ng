@@ -3602,10 +3602,36 @@ namespace Sass {
         // try to parse the legacy one and fall back to the CSS syntax.
         StringScannerState beforeParen = scanner.state();
         try {
-          CallableArguments* invocation = readArgumentInvocation();
+          CallableArgumentsObj invocation = readArgumentInvocation();
           // Like dart-sass, it spans from the name to the arguments
-          return SASS_MEMORY_NEW(IfExpression,
+          IfExpression* expression = SASS_MEMORY_NEW(IfExpression,
             scanner.relevantSpanFrom(start), invocation);
+          // Like dart-sass (1.95), the legacy syntax is deprecated
+          compiler.addDeprecation(expression->pstate(),
+            Logger::WARN_IF_FUNCTION, [invocation]() {
+              sass::string suggestion;
+              const auto& positional = invocation->positional();
+              if (positional.size() == 3 && !invocation->hasNamed() &&
+                invocation->restArg().isNull() && invocation->kwdRest().isNull()) {
+                if (positional[2]->isaNullExpression()) {
+                  suggestion = "if(sass(" + positional[0]->toString()
+                    + "): " + positional[1]->toString() + ")";
+                }
+                else if (positional[1]->isaNullExpression()) {
+                  suggestion = "if(not sass(" + positional[0]->toString()
+                    + "): " + positional[2]->toString() + ")";
+                }
+                else {
+                  suggestion = "if(sass(" + positional[0]->toString()
+                    + "): " + positional[1]->toString()
+                    + "; else: " + positional[2]->toString() + ")";
+                }
+              }
+              return "The Sass if() syntax is deprecated in favor of the modern CSS syntax.\n\n"
+                + (suggestion.empty() ? sass::string() : "Suggestion: " + suggestion + "\n\n")
+                + "More info: https://sass-lang.com/d/if-function";
+            });
+          return expression;
         }
         catch (Exception::ParserException&) {
           scanner.backtrack(beforeParen);
@@ -3757,6 +3783,85 @@ namespace Sass {
 
   // If [name] is the name of a function with special syntax, consumes it.
   // Otherwise, returns `null`. [start] is the location before the beginning of [name].
+  // Returns whether [condition] of a CSS `if()` is valid plain CSS
+  // (interpolation is allowed, like dart-sass `IsPlainCssVisitor`).
+  static bool isPlainCssCondition(const IfCondition* condition)
+  {
+    switch (condition->kind()) {
+    case IfCondition::SASS: return false;
+    case IfCondition::FUNCTION:
+    case IfCondition::RAW: return true;
+    default:
+      for (const IfConditionObj& inner : condition->conditions()) {
+        if (!isPlainCssCondition(inner)) return false;
+      }
+      return true;
+    }
+  }
+
+  // Returns whether [expression] is valid plain CSS that produces the same
+  // result as it would in Sass (with interpolations allowed as exceptions,
+  // like dart-sass `isPlainCss(allowInterpolation: true)`).
+  static bool isPlainCssExpression(Expression* expression)
+  {
+    if (expression == nullptr) return false;
+    if (expression->isaColorExpression()) return true;
+    if (expression->isaNumberExpression()) return true;
+    if (expression->isaStringExpression()) return true;
+    InvocationExpression* invocation = nullptr;
+    if (FunctionExpression* fn = expression->isaFunctionExpression()) {
+      if (!fn->ns().empty()) return false;
+      invocation = fn;
+    }
+    else if (ItplFnExpression* fn = dynamic_cast<ItplFnExpression*>(expression)) {
+      invocation = fn;
+    }
+    if (invocation != nullptr) {
+      CallableArguments* args = invocation->arguments();
+      if (args->hasNamed() || !args->restArg().isNull()) return false;
+      for (Expression* argument : args->positional()) {
+        if (!isPlainCssExpression(argument)) return false;
+      }
+      return true;
+    }
+    if (ListExpression* list = expression->isaListExpression()) {
+      if (list->items().empty() && !list->hasBrackets()) return false;
+      for (Expression* item : list->items()) {
+        if (!isPlainCssExpression(item)) return false;
+      }
+      return true;
+    }
+    if (ParenthesizedExpression* paren = expression->isaParenthesizedExpression()) {
+      return isPlainCssExpression(paren->expression());
+    }
+    if (CssIfExpression* cssIf = expression->isaCssIfExpression()) {
+      for (const auto& branch : cssIf->branches()) {
+        if (!branch.first.isNull() && !isPlainCssCondition(branch.first)) return false;
+        if (!isPlainCssExpression(branch.second)) return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  // Returns [itpl] as a quoted Sass string (for deprecation suggestions)
+  static sass::string quoteInterpolation(const Interpolation* itpl)
+  {
+    sass::string quoted("\"");
+    for (const InterpolantObj& part : itpl->elements()) {
+      if (const ItplString* str = part->isaItplString()) {
+        for (char chr : str->text()) {
+          if (chr == '"' || chr == '\\') quoted += '\\';
+          quoted += chr;
+        }
+      }
+      else {
+        quoted += "#{" + part->toString() + "}";
+      }
+    }
+    return quoted + "\"";
+  }
+
   StringExpression* StylesheetParser::trySpecialFunction(sass::string name, const Offset& start)
   {
     uint8_t next = 0;
@@ -3768,6 +3873,47 @@ namespace Sass {
     if (name == "type" && scanner.scanChar($lparen)) {
       buffer.write(name);
       buffer.write($lparen);
+    }
+    else if (normalized == "expression" && normalized != name) {
+      if (!scanner.scanChar($lparen)) return nullptr;
+      buffer.write(name);
+      buffer.write($lparen);
+      // Like dart-sass (1.99), check if the argument would be valid plain CSS
+      // when parsed as SassScript (special parsing will be removed later)
+      StringScannerState beforeArg = scanner.state();
+      bool invalidSassScript = false;
+      bool nonCssSassScript = false;
+      try {
+        scanWhitespace(true);
+        if (!scanner.scanChar($rparen)) {
+          ExpressionObj argument = readExpression();
+          scanner.expectChar($rparen);
+          nonCssSassScript = !isPlainCssExpression(argument);
+        }
+      }
+      catch (Exception::ParserException&) {
+        invalidSassScript = true;
+      }
+      scanner.backtrack(beforeArg);
+      InterpolationObj value = readInterpolatedDeclarationValue(true);
+      buffer.addInterpolation(value);
+      scanner.expectChar($rparen);
+      buffer.write($rparen);
+      SourceSpan pstate(scanner.relevantSpanFrom(start));
+      if (invalidSassScript || nonCssSassScript) {
+        sass::string suggestion(quoteInterpolation(value));
+        compiler.addDeprecation(pstate, Logger::WARN_FUNCTION_NAME,
+          [name, normalized, suggestion, invalidSassScript]() {
+            return "Vendor-prefixed " + normalized + "() functions will no longer have "
+              "special parsing in a future release of LibSass. Once that "
+              "happens, this argument will " + sass::string(invalidSassScript
+                ? "no longer be valid syntax" : "be parsed as SassScript") +
+              ". To preserve current behavior:\n\n" + name + "(#{" + suggestion +
+              "})\n\nMore info: https://sass-lang.com/d/function-name";
+          });
+      }
+      return SASS_MEMORY_NEW(StringExpression,
+        pstate, buffer.getInterpolation(pstate));
     }
     else if (normalized == "element" || normalized == "expression"
         || (normalized == "calc" && normalized != name)) {
@@ -3806,10 +3952,48 @@ namespace Sass {
       }
       scanner.expectChar($lparen);
       buffer.write($lparen);
+      buffer.addInterpolation(readInterpolatedDeclarationValue(true));
+      scanner.expectChar($rparen);
+      buffer.write($rparen);
+      SourceSpan pstate(scanner.relevantSpanFrom(start));
+      InterpolationObj itpl = buffer.getInterpolation(pstate);
+      if (normalized != name) {
+        // Like dart-sass (1.99), vendor-prefixed progid is deprecated
+        sass::string suggestion(quoteInterpolation(itpl));
+        compiler.addDeprecation(pstate, Logger::WARN_FUNCTION_NAME, [suggestion]() {
+          return "Vendor-prefixed progid:...() functions will no longer be "
+            "supported in a future release of LibSass. To preserve "
+            "current behavior:\n\n#{" + suggestion + "}\n\n"
+            "More info: https://sass-lang.com/d/function-name";
+        });
+      }
+      return SASS_MEMORY_NEW(StringExpression, pstate, itpl);
     }
     else if (normalized == "url") {
+      // Like dart-sass (1.99), check if a vendor-prefixed url() would be valid
+      // SassScript (special parsing for it will be removed in the future)
+      bool invalidSassScript = false;
+      if (normalized != name) {
+        StringScannerState beforeArg = scanner.state();
+        if (scanner.scanChar($lparen)) {
+          try { ExpressionObj argument = readExpression(); }
+          catch (Exception::ParserException&) { invalidSassScript = true; }
+        }
+        scanner.backtrack(beforeArg);
+      }
       InterpolationObj contents = tryUrlContents(start);
       if (contents == nullptr) return nullptr;
+      if (invalidSassScript) {
+        sass::string suggestion(quoteInterpolation(contents));
+        compiler.addDeprecation(scanner.relevantSpanFrom(start), Logger::WARN_FUNCTION_NAME,
+          [name, suggestion]() {
+            return "Vendor-prefixed url() functions will no longer have special parsing "
+              "in a future release of LibSass. Once that happens, this argument "
+              "will be parsed as SassScript. To preserve current behavior:\n\n"
+              + name + "(#{" + suggestion + "})\n\n"
+              "More info: https://sass-lang.com/d/function-name";
+          });
+      }
       return SASS_MEMORY_NEW(StringExpression,
         scanner.relevantSpanFrom(start), contents);
     }

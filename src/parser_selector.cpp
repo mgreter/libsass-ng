@@ -4,6 +4,7 @@
 /* Implementations are mostly a direct code-port from dart-sass.             */
 /*****************************************************************************/
 #include "parser_selector.hpp"
+#include "compiler.hpp"
 
 #include "charcode.hpp"
 #include "character.hpp"
@@ -109,7 +110,9 @@ namespace Sass {
     SelectorCombinatorVector prefixes;
 
     while (true) {
+      const char* beforeWhitespace = scanner.position;
       scanWhitespace();
+      bool consumedWhitespace = scanner.position != beforeWhitespace;
 
       // Offset before(scanner.offset);
       bool hasIdentifier = false;
@@ -152,6 +155,9 @@ namespace Sass {
       default:
         if (hasIdentifier || lookingAtIdentifier())
         {
+          // Like dart-sass (1.100), adjacent compounds are deprecated
+          CompoundSelectorObj previous = lastCompound;
+          bool adjacent = previous != nullptr && combinators.empty() && !consumedWhitespace;
           if (lastCompound != nullptr) {
             components.push_back(SASS_MEMORY_NEW(CplxSelComponent,
               scanner.rawSpanFrom(offset), // from inner offset
@@ -162,7 +168,17 @@ namespace Sass {
             prefixes = std::move(combinators);
             offset = scanner.offset; // reset
           }
-          lastCompound = readCompoundSelector();
+          CompoundSelectorObj nextCompound = readCompoundSelector();
+          if (adjacent) {
+            sass::string suggestion(previous->inspect() + " " + nextCompound->inspect());
+            compiler.addDeprecation(SourceSpan::delta(previous->pstate(), nextCompound->pstate()),
+              Logger::WARN_ADJACENT_COMPOUNDS, [suggestion]() {
+                return "Adjacent compound selectors must be separated by whitespace. "
+                  "This will be an error in LibSass 5.0.0. Suggestion:\n\n"
+                  + suggestion + "\n\nMore info: https://sass-lang.com/d/adjacent-compounds";
+              });
+          }
+          lastCompound = nextCompound;
           combinators.clear(); // restart them
           if (scanner.peekChar() == $ampersand && !plainCss) {
             error(

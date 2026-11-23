@@ -2649,12 +2649,16 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           }
         }
 
-        if (global) {
-          // Like dart-sass, not for non-legacy colors (error below)
-          const Color* legacy = arguments[0]->isaColor();
-          if (legacy == nullptr || legacy->isLegacy()) {
-            compiler.warnForGlobalBuiltIn(pstate, "color.alpha");
-          }
+        // Like dart-sass (1.109), alpha() is deprecated in favor of
+        // color.channel() (not for non-legacy colors, error below)
+        const Color* legacy = arguments[0]->isaColor();
+        if (legacy == nullptr || legacy->isLegacy()) {
+          compiler.addDeprecation(pstate, Logger::WARN_COLOR_OPACITY, [global]() {
+            return sass::string(global ? "alpha()" : "color.alpha()") +
+              " is deprecated. Suggestion:\n\n"
+              "color.channel($color, \"alpha\")\n\n"
+              "More info: https://sass-lang.com/d/color-opacity";
+          });
         }
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
 
@@ -2705,6 +2709,14 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             pstate, arguments);
         }
         if (global) compiler.warnForGlobalBuiltIn(pstate, "color.opacity");
+        else {
+          // Like dart-sass (1.109), deprecated in favor of color.channel()
+          compiler.addDeprecation(pstate, Logger::WARN_COLOR_OPACITY, []() {
+            return "color.opacity() is deprecated. Suggestion:\n\n"
+              "color.channel($color, \"alpha\")\n\n"
+              "More info: https://sass-lang.com/d/color-opacity";
+          });
+        }
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         return SASS_MEMORY_NEW(Number, pstate, color->alpha().value_or(1));
       }
