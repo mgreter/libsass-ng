@@ -1420,8 +1420,18 @@ namespace Sass {
     return true;
   }
 
+  // Empty maps are equal to any empty list (like dart-sass, regardless of
+  // the separator or brackets), so they must all have the same hash.
+  static size_t emptyCollectionHash()
+  {
+    size_t hash = 0;
+    hash_start(hash, typeid(List).hash_code());
+    return hash;
+  }
+
   size_t Map::hash() const
   {
+    if (empty()) return emptyCollectionHash();
     if (Hashed<ValueObj, ValueObj>::hash_ == 0) {
       VALUE_NESTING_GUARD();
       // Only cache the complete hash (children may throw)
@@ -1553,6 +1563,8 @@ namespace Sass {
 
   size_t List::hash() const
   {
+    // See Map::hash (empty lists equal an empty map)
+    if (empty()) return emptyCollectionHash();
     if (Vectorized<Value>::hash_ == 0) {
       VALUE_NESTING_GUARD();
       // Only cache the complete hash (children may throw)
