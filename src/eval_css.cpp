@@ -118,8 +118,9 @@ namespace Sass {
 
     sass::string normalized(StringUtils::unvendor(node->name()));
     bool isKeyframe = normalized == "keyframes";
-    RAII_FLAG(inUnknownAtRule, !isKeyframe);
-    RAII_FLAG(inKeyframes, isKeyframe);
+    // Like dart-sass, flags are only set (nested at-rules inherit them)
+    RAII_FLAG(inUnknownAtRule, inUnknownAtRule || !isKeyframe);
+    RAII_FLAG(inKeyframes, inKeyframes || isKeyframe);
 
     auto chroot = current->bubbleThrough(true);
 
