@@ -1061,10 +1061,10 @@ namespace Sass {
       msg.str(), logger, pstate(), name);
   }
 
-  const Number* Number::checkPercent(Logger& logger, const sass::string& name) const
+  const Number* Number::checkPercent(Logger& logger, const sass::string& name, const SourceSpan& pstate) const
   {
     if (!hasUnit("%")) {
-      logger.addDeprecation(pstate(), Logger::WARN_NUMBER_PERCENT, [&]() {
+      logger.addDeprecation(pstate, Logger::WARN_NUMBER_PERCENT, [&]() {
         sass::string txt = "$" + name + ": ";
         txt += "Passing a number without unit % (" + inspect() + ") is deprecated.\n";
         txt += "\nTo preserve current behavior: " + unitSuggestion(name, "%") + "\n";

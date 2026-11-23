@@ -316,7 +316,8 @@ namespace Sass {
     double valueInRange(Logger& logger, double min, double max, const sass::string& name) const;
     double valueInRangeWithUnit(Logger& logger, double min, double max, const sass::string& name, const Units& units) const;
 
-    const Number* checkPercent(Logger& logger, const sass::string& name) const;
+    // Like dart-sass `_checkPercent`, warns at [pstate] (the function call)
+    const Number* checkPercent(Logger& logger, const sass::string& name, const SourceSpan& pstate) const;
 
     // Implement equality comparators for base value class
     bool operator==(const Value& rhs) const final;

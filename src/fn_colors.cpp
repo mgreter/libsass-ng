@@ -719,10 +719,19 @@ namespace Sass {
       }
     }
 
-    double _angleValue(Number* value, const sass::string& name)
+    // Like dart-sass, returns the value of [value] in degrees and
+    // warns (at the function call [pstate]) for non-angle units.
+    double _angleValue(Logger& logger, const SourceSpan& pstate,
+      Number* value, const sass::string& name)
     {
       double factor = value->getUnitConversionFactor(unit_deg);
       if (factor != 0.0) return value->value() * factor;
+      logger.addDeprecation(pstate, Logger::WARN_FN_UNITS, [value, name]() {
+        return "$" + name + ": Passing a unit other than deg ("
+          + value->inspect() + ") is deprecated.\n"
+          "\nTo preserve current behavior: " + value->unitSuggestion(name) + "\n"
+          "\nSee https://sass-lang.com/d/function-units";
+      });
       return value->value();
     }
 
@@ -743,18 +752,18 @@ namespace Sass {
 
         tl::optional<double> hue;
         if (chn0 != nullptr) {
-          hue = _angleValue(chn0, "hue");
+          hue = _angleValue(logger, pstate, chn0, "hue");
         }
 
         tl::optional<double> saturation;
         if (chn1 != nullptr) {
-          // _checkPercent(chn1, "saturation"); // maybe print deprecation warning
+          chn1->checkPercent(logger, "saturation", pstate);
           saturation = _channelFromValue(logger, space->_channels[1], chn1, clamp, true);
         }
 
         tl::optional<double> lightness;
         if (chn2 != nullptr) {
-          // _checkPercent(chn1, "lightness"); // maybe print deprecation warning
+          chn2->checkPercent(logger, "lightness", pstate);
           lightness = _channelFromValue(logger, space->_channels[2], chn2, clamp, true);
         }
 
@@ -770,7 +779,7 @@ namespace Sass {
 
         tl::optional<double> hue;
         if (chn0 != nullptr) {
-          hue = _angleValue(chn0, "hue");
+          hue = _angleValue(logger, pstate, chn0, "hue");
         }
 
         tl::optional<double> whiteness;
@@ -1809,7 +1818,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
 
         const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
-        weight->checkPercent(compiler, Strings::weight);
+        weight->checkPercent(compiler, Strings::weight, pstate);
         if (arguments[0]->isaNumber() || isSpecialNumber(arguments[0]) /* or isSpecialValue*/) {
           // Allow only the value `100` or a percentage (unit == `% `)
           const Number* weight = arguments[1]->assertNumber(compiler, Strings::weight);
@@ -2227,17 +2236,24 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         {
           adjust = SASS_MEMORY_NEW(Number,
             adjustmentArg->pstate(),
-            _angleValue(adjustmentArg, "hue"));
+            _angleValue(compiler, pstate, adjustmentArg, "hue"));
         }
         else if (color->space() == ColorSpaces::hsl && (channel.name == "saturation" || channel.name == "lightness"))
         {
-          // _checkPercent(adjustmentArg, channel.name);
+          adjustmentArg->checkPercent(compiler, channel.name, pstate);
           adjust = SASS_MEMORY_NEW(Number,
             adjustmentArg->pstate(),
             adjustmentArg->value(),
             unit_percent);
         }
         else if (channel.name == "alpha" && adjustmentArg->hasUnits()) {
+          // Like dart-sass, units are deprecated (`%` is unitless here)
+          compiler.addDeprecation(pstate, Logger::WARN_FN_UNITS, [adjustmentArg]() {
+            return "$alpha: Passing a number with unit " + adjustmentArg->unit2()
+              + " is deprecated.\n\nTo preserve current behavior: "
+              + adjustmentArg->unitSuggestion("alpha") + "\n"
+              "\nMore info: https://sass-lang.com/d/function-units";
+          });
           adjust = SASS_MEMORY_NEW(Number,
             adjustmentArg->pstate(),
             adjustmentArg->value());
@@ -3194,8 +3210,11 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           if (a_nr->isPercent()) a = a_nr->valueInRangeWithUnit(compiler, 0.0, 100.0, "alpha", unit_percent) / 100.0; 
           else if (!a_nr->hasUnits()) a = a_nr->valueInRange(compiler, 0.0, 1.0, "alpha");
           else {
-            compiler.addDeprecation(pstate, Logger::WarningType::WARN_COLOR_ITPL, []() {
-              return "$alpha: Passing a unit other than %";
+            compiler.addDeprecation(pstate, Logger::WARN_FN_UNITS, [a_nr]() {
+              return "$alpha: Passing a unit other than % (" + a_nr->inspect()
+                + ") is deprecated.\n\nTo preserve current behavior: "
+                + a_nr->unitSuggestion("alpha") + "\n"
+                "\nSee https://sass-lang.com/d/function-units";
             });
             a = a_nr->valueInRange(compiler, 0.0, 1.0, "alpha");
           }
@@ -3344,7 +3363,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
 
         const Color* color = arguments[0]->assertColor(compiler, "color");
         Number* angle = arguments[1]->assertNumber(compiler, "degrees");
-        double degrees = _angleValue(angle, "degrees");
+        double degrees = _angleValue(compiler, pstate, angle, "degrees");
 
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
@@ -3570,7 +3589,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
             false);
         }
 
-        weight->checkPercent(compiler, Strings::weight);
+        weight->checkPercent(compiler, Strings::weight, pstate);
 
         if (!color1->isLegacy()) {
           SourceSpan span(color1->pstate());
