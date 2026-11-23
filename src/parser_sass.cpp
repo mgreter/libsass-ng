@@ -170,11 +170,13 @@ namespace Sass {
 
   StatementVector SassParser::readStatements(Statement* (StylesheetParser::* parser)())
   {
-    uint8_t first = scanner.peekChar();
-    if (first == $tab || first == $space) {
+    // Like dart-sass, empty lines are skipped and the error
+    // spans the indentation of the first non-empty line.
+    if (readIndentation(true) != 0) {
+      Offset lineStart(scanner.offset);
+      lineStart.column = 0;
       error("Indenting at the beginning of the document is illegal.",
-        scanner.rawSpan());
-        /*position: 0, length : scanner.position*/
+        scanner.rawSpanFrom(lineStart));
     }
 
     StatementVector statements;
@@ -478,10 +480,10 @@ namespace Sass {
 
   }
 
-  size_t SassParser::readIndentation()
+  size_t SassParser::readIndentation(bool startOfStylesheet)
   {
     if (nextIndentation == sass::string::npos) {
-      peekIndentation();
+      peekIndentation(startOfStylesheet);
     }
     currentIndentation = nextIndentation;
     scanner.backtrack(nextIndentationEnd);
@@ -493,7 +495,7 @@ namespace Sass {
   }
 
   // Returns the indentation level of the next line.
-  size_t SassParser::peekIndentation()
+  size_t SassParser::peekIndentation(bool startOfStylesheet)
   {
     if (nextIndentation != sass::string::npos) {
       return nextIndentation;
@@ -506,7 +508,7 @@ namespace Sass {
     }
 
     StringScannerState start = scanner.state();
-    if (!scanCharIf(isNewline)) {
+    if (!startOfStylesheet && !scanCharIf(isNewline)) {
       error("Expected newline.",
         scanner.rawSpan());
     }

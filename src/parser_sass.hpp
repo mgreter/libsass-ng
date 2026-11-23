@@ -138,10 +138,12 @@ namespace Sass {
 
     // Consumes indentation whitespace and returns
     // the indentation level of the next line.
-    size_t readIndentation();
+    // With [startOfStylesheet], the beginning of the
+    // stylesheet is treated as a virtual newline.
+    size_t readIndentation(bool startOfStylesheet = false);
 
     // Returns the indentation level of the next line.
-    size_t peekIndentation();
+    size_t peekIndentation(bool startOfStylesheet = false);
 
     // Ensures that the document uses consistent characters for indentation.
     // The [containsTab] and [containsSpace] parameters refer to
