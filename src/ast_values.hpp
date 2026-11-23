@@ -709,9 +709,9 @@ namespace Sass {
     }
 
     Map* keywordsAsSassMap() const;
+    // Equality and hash are inherited from List (like dart-sass,
+    // argument lists are compared like lists, ignoring keywords)
 
-    // Implement interface for base Value class
-    size_t hash() const final;
     const sass::string& type() const final { return Strings::arglist; }
 
     ArgumentList* assertArgumentList(Logger& logger, const sass::string& name = Strings::empty) final {
@@ -719,10 +719,6 @@ namespace Sass {
     }
 
 
-    // Implement equality comparators for base value class
-    bool operator==(const Value& rhs) const final;
-    // Implement same class compare operator
-    bool operator==(const ArgumentList& rhs) const;
 
     // Copy operations for childless items
     ArgumentList* copy(SASS_MEMORY_ARGS bool childless) const final {

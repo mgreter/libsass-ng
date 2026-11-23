@@ -1624,37 +1624,6 @@ namespace Sass {
 
   /////////////////////////////////////////////////////////////////////////
 
-  bool ArgumentList::operator==(const Value& rhs) const
-  {
-    if (const ArgumentList* right = rhs.isaArgumentList()) {
-      return *this == *right;
-    }
-    return List::operator==(rhs);
-  }
-
-  bool ArgumentList::operator==(const ArgumentList& rhs) const
-  {
-    return _keywords.ptr() == rhs._keywords.ptr();
-    // return ObjEqualityFn(_keywords, rhs._keywords);
-  }
-
-  size_t ArgumentList::hash() const
-  {
-    if (Vectorized<Value>::hash_ == 0) {
-      VALUE_NESTING_GUARD();
-      // Only cache the complete hash (children may throw)
-      size_t hash = 0;
-      hash_start(hash, typeid(ArgumentList).hash_code());
-      hash_combine(hash, Vectorized<Value>::hash());
-      if (_keywords) for (const auto& child : *_keywords) {
-        hash_combine(hash, child.first.hash());
-        hash_combine(hash, child.second->hash());
-      }
-      Value::hash_ = hash;
-    }
-    return Value::hash_;
-  }
-
   /////////////////////////////////////////////////////////////////////////
 
   // Convert native string keys to sass strings
