@@ -30,6 +30,7 @@ namespace Sass {
     virtual T visitItplFnExpression(ItplFnExpression*) = 0;
     virtual T visitFunctionExpression(FunctionExpression*) = 0;
     virtual T visitIfExpression(IfExpression*) = 0;
+    virtual T visitCssIfExpression(CssIfExpression*) = 0;
     virtual T visitListExpression(ListExpression*) = 0;
     virtual T visitMapExpression(MapExpression*) = 0;
     virtual T visitNullExpression(NullExpression*) = 0;

@@ -3294,6 +3294,291 @@ namespace Sass {
   }
   // EO readInterpolatedString
 
+  /////////////////////////////////////////////////////////////////////////
+  // CSS `if()` expressions (ported from dart-sass)
+  /////////////////////////////////////////////////////////////////////////
+
+  // Creates a condition of [kind] spanning from [start] to here
+  IfCondition* StylesheetParser::newIfCondition(Offset start, IfCondition::Kind kind)
+  {
+    return SASS_MEMORY_NEW(IfCondition,
+      scanner.relevantSpanFrom(start), kind);
+  }
+
+  // Returns the single condition or an operation of all [groups]
+  static IfConditionObj makeIfOperation(sass::vector<IfConditionObj>& groups, int op)
+  {
+    if (groups.size() == 1) return groups.front();
+    IfCondition* operation = SASS_MEMORY_NEW(IfCondition,
+      SourceSpan::delta(groups.front()->pstate(), groups.back()->pstate()),
+      IfCondition::OPERATION);
+    operation->isOr(op == 2);
+    operation->conditions() = groups;
+    return operation;
+  }
+
+  // Creates an interpolation with the plain [text]
+  static Interpolation* plainInterpolation(const SourceSpan& pstate, const char* text)
+  {
+    InterpolationBuffer buffer(pstate);
+    buffer.write(text);
+    return buffer.getInterpolation(pstate);
+  }
+
+  // Consumes a modern CSS-style `if()` expression, starting after the name.
+  CssIfExpression* StylesheetParser::readCssIfExpression(Offset start)
+  {
+    scanner.expectChar($lparen);
+    scanWhitespace(true);
+    sass::vector<std::pair<IfConditionObj, ExpressionObj>> branches;
+    while (scanner.peekChar() != $rparen) {
+      IfConditionObj condition;
+      if (!scanIdentifier("else")) condition = readIfConditionExpression();
+      scanWhitespace(true);
+      scanner.expectChar($colon);
+      scanWhitespace(true);
+      ExpressionObj value = readExpression(false, false, true);
+      branches.emplace_back(condition, value);
+      scanWhitespace(true);
+      if (!scanner.scanChar($semicolon)) break;
+      scanWhitespace(true);
+    }
+    scanner.expectChar($rparen);
+    CssIfExpression* expression = SASS_MEMORY_NEW(
+      CssIfExpression, scanner.relevantSpanFrom(start));
+    expression->branches() = std::move(branches);
+    return expression;
+  }
+
+  // Consumes a modern CSS-style `if()` condition.
+  IfCondition* StylesheetParser::readIfConditionExpression()
+  {
+    Offset start(scanner.offset);
+    if (scanIdentifier("not")) {
+      if (scanner.peekChar() == $lparen) {
+        error("Whitespace is required between \"not\" and \"(\"",
+          scanner.relevantSpan());
+      }
+      scanWhitespace(true);
+      IfConditionObj group = readIfGroup();
+      IfCondition* negation = newIfCondition(start, IfCondition::NEGATION);
+      negation->conditions().push_back(group);
+      return negation;
+    }
+    sass::vector<IfConditionObj> groups;
+    groups.push_back(readIfGroup());
+    int op = 0; // 1 is `and`, 2 is `or`
+    scanWhitespace(true);
+    while (true) {
+      if (op != 2 && scanIdentifier("and")) {
+        if (scanner.peekChar() == $lparen) {
+          error("Whitespace is required between \"and\" and \"(\"",
+            scanner.relevantSpan());
+        }
+        scanWhitespace(true);
+        if (op == 0) op = 1;
+        groups.push_back(readIfGroup());
+      }
+      else if (op != 1 && scanIdentifier("or")) {
+        // Note: dart-sass reports "and" here too
+        if (scanner.peekChar() == $lparen) {
+          error("Whitespace is required between \"and\" and \"(\"",
+            scanner.relevantSpan());
+        }
+        scanWhitespace(true);
+        if (op == 0) op = 2;
+        groups.push_back(readIfGroup());
+      }
+      else if (scanner.peekChar() != $nul && scanner.peekChar() != $rparen &&
+        scanner.peekChar() != $colon && groups.back()->isArbitrarySubstitution()) {
+        IfConditionObj preceding = makeIfOperation(groups, op);
+        IfConditionObj next = readIfGroup();
+        return readIfConditionRaw(preceding, next);
+      }
+      else if (IfConditionObj substitution = tryArbitrarySubstitution()) {
+        IfConditionObj preceding = makeIfOperation(groups, op);
+        return readIfConditionRaw(preceding, substitution);
+      }
+      else {
+        break;
+      }
+      scanWhitespace(true);
+    }
+    // Detach, otherwise a single group is deleted with [groups]
+    return makeIfOperation(groups, op).detach();
+  }
+
+  // Adds [condition] as an interpolation to [buffer], or throws an error
+  // if it contains a `sass()` condition (reported at [substitution]).
+  void StylesheetParser::addIfInterpolation(InterpolationBuffer& buffer,
+    IfCondition* condition, IfCondition* substitution)
+  {
+    InterpolationObj interpolation = condition->toInterpolation();
+    if (interpolation.isNull()) {
+      error("if() conditions with arbitrary substitutions may "
+        "not contain sass() expressions.", substitution->pstate());
+    }
+    buffer.addInterpolation(interpolation);
+  }
+
+  // Consumes the remainder of what would have been an operation as a raw
+  // condition instead (called right after [next] was consumed).
+  IfCondition* StylesheetParser::readIfConditionRaw(
+    IfCondition* preceding, IfCondition* next)
+  {
+    IfCondition* substitution = nullptr;
+    if (preceding->isArbitrarySubstitution()) {
+      substitution = preceding;
+    }
+    else if (preceding->kind() == IfCondition::OPERATION &&
+      preceding->conditions().back()->isArbitrarySubstitution()) {
+      substitution = preceding->conditions().back();
+    }
+    else {
+      substitution = next;
+    }
+    InterpolationBuffer buffer(preceding->pstate());
+    addIfInterpolation(buffer, preceding, substitution);
+    buffer.write($space);
+    addIfInterpolation(buffer, next, substitution);
+    IfConditionObj lastGroup = next;
+    int op = preceding->kind() == IfCondition::OPERATION
+      ? (preceding->isOr() ? 2 : 1) : 0;
+    scanWhitespace(true);
+    while (true) {
+      if (op != 2 && scanIdentifier("and")) {
+        if (scanner.peekChar() == $lparen) {
+          error("Whitespace is required between \"and\" and \"(\"",
+            scanner.relevantSpan());
+        }
+        scanWhitespace(true);
+        if (op == 0) op = 1;
+        // Like dart-sass, this doesn't update the last group
+        IfConditionObj group = readIfGroup();
+        buffer.write(" and ");
+        addIfInterpolation(buffer, group, substitution);
+      }
+      else if (op != 1 && scanIdentifier("or")) {
+        if (scanner.peekChar() == $lparen) {
+          error("Whitespace is required between \"or\" and \"(\"",
+            scanner.relevantSpan());
+        }
+        scanWhitespace(true);
+        if (op == 0) op = 2;
+        lastGroup = readIfGroup();
+        scanWhitespace(true);
+        buffer.write(" or ");
+        addIfInterpolation(buffer, lastGroup, substitution);
+      }
+      else if (scanner.peekChar() != $nul && scanner.peekChar() != $rparen &&
+        scanner.peekChar() != $colon && lastGroup->isArbitrarySubstitution()) {
+        lastGroup = readIfGroup();
+        buffer.write($space);
+        addIfInterpolation(buffer, lastGroup, substitution);
+      }
+      else if (IfConditionObj substitution2 = tryArbitrarySubstitution()) {
+        lastGroup = substitution2;
+        buffer.write($space);
+        addIfInterpolation(buffer, lastGroup, substitution);
+      }
+      else {
+        break;
+      }
+      scanWhitespace(true);
+    }
+    SourceSpan pstate(SourceSpan::delta(preceding->pstate(), scanner.relevantSpan()));
+    IfCondition* raw = SASS_MEMORY_NEW(IfCondition, pstate, IfCondition::RAW);
+    raw->name(buffer.getInterpolation(pstate));
+    return raw;
+  }
+
+  // Consumes a grouped expression in a CSS-style `if()` condition.
+  IfCondition* StylesheetParser::readIfGroup()
+  {
+    Offset start(scanner.offset);
+    if (scanner.peekChar() == $lparen) {
+      scanner.expectChar($lparen);
+      scanWhitespace(true);
+      IfConditionObj expression = readIfConditionExpression();
+      scanWhitespace(true);
+      scanner.expectChar($rparen);
+      IfCondition* paren = newIfCondition(start, IfCondition::PARENTHESIZED);
+      paren->conditions().push_back(expression);
+      return paren;
+    }
+    if (scanIdentifier("sass", true)) {
+      scanner.expectChar($lparen);
+      scanWhitespace(true);
+      ExpressionObj expression = readExpression();
+      scanWhitespace(true);
+      scanner.expectChar($rparen);
+      if (parsingCss()) {
+        error("sass() conditions aren't allowed in plain CSS",
+          scanner.relevantSpanFrom(start));
+      }
+      IfCondition* sass = newIfCondition(start, IfCondition::SASS);
+      sass->expression(expression);
+      return sass;
+    }
+    InterpolationObj identifier = readInterpolatedIdentifier();
+    if (identifier->size() == 1 && identifier->first()->isaItplString() == nullptr
+      && scanner.peekChar() != $lparen) {
+      IfCondition* raw = newIfCondition(start, IfCondition::RAW);
+      raw->name(identifier);
+      return raw;
+    }
+    sass::string plain(StringUtils::toLowerCase(identifier->getPlainString()));
+    if ((plain == "and" || plain == "or" || plain == "not")
+      && scanner.peekChar() == $lparen) {
+      error("Whitespace is required between \""
+        + identifier->getPlainString() + "\" and \"(\"",
+        scanner.relevantSpan());
+    }
+    scanner.expectChar($lparen);
+    scanWhitespace(true);
+    InterpolationObj arguments = readInterpolatedDeclarationValue(
+      true, true, true, true, true, true);
+    scanWhitespace(true);
+    scanner.expectChar($rparen);
+    IfCondition* function = newIfCondition(start, IfCondition::FUNCTION);
+    function->name(identifier);
+    function->arguments(arguments);
+    return function;
+  }
+
+  // Consumes an arbitrary substitution expression,
+  // or returns null if there isn't one to consume.
+  IfCondition* StylesheetParser::tryArbitrarySubstitution()
+  {
+    Offset start(scanner.offset);
+    if (scanner.peekChar() == $hash) {
+      ExpressionObj expression = readSingleInterpolation();
+      InterpolationBuffer buffer(expression->pstate());
+      buffer.add(expression.ptr());
+      IfCondition* raw = newIfCondition(start, IfCondition::RAW);
+      raw->name(buffer.getInterpolation(expression->pstate()));
+      return raw;
+    }
+    StringScannerState state(scanner.state());
+    InterpolationObj name;
+    if (scanIdentifier("if")) name = plainInterpolation(scanner.relevantSpanFrom(start), "if");
+    else if (scanIdentifier("var")) name = plainInterpolation(scanner.relevantSpanFrom(start), "var");
+    else if (scanIdentifier("attr")) name = plainInterpolation(scanner.relevantSpanFrom(start), "attr");
+    else if (scanner.matches("--")) name = readInterpolatedIdentifier();
+    else return nullptr;
+    if (!scanner.scanChar($lparen)) {
+      scanner.backtrack(state);
+      return nullptr;
+    }
+    InterpolationObj arguments = readInterpolatedDeclarationValue(
+      true, true, true, true, true, true);
+    scanner.expectChar($rparen);
+    IfCondition* function = newIfCondition(start, IfCondition::FUNCTION);
+    function->name(name);
+    function->arguments(arguments);
+    return function;
+  }
+
   // Consumes an expression that starts like an identifier.
   Expression* StylesheetParser::readIdentifierLike()
   {
@@ -3312,9 +3597,23 @@ namespace Sass {
 
     if (!plain.empty()) {
       if (plain == "if" && scanner.peekChar() == $lparen) {
-        CallableArguments* invocation = readArgumentInvocation();
-        return SASS_MEMORY_NEW(IfExpression,
-          invocation->pstate(), invocation);
+        // Like dart-sass, legacy and modern if syntax are not ambiguous, but
+        // we'd need arbitrary lookahead to disambiguate between them. So we
+        // try to parse the legacy one and fall back to the CSS syntax.
+        StringScannerState beforeParen = scanner.state();
+        try {
+          CallableArguments* invocation = readArgumentInvocation();
+          // Like dart-sass, it spans from the name to the arguments
+          return SASS_MEMORY_NEW(IfExpression,
+            scanner.relevantSpanFrom(start), invocation);
+        }
+        catch (Exception::ParserException&) {
+          scanner.backtrack(beforeParen);
+          return readCssIfExpression(start);
+        }
+      }
+      else if (StringUtils::equalsIgnoreCase(plain, "if", 2) && scanner.peekChar() == $lparen) {
+        return readCssIfExpression(start);
       }
       else if (plain == "not") {
         scanWhitespace(true);

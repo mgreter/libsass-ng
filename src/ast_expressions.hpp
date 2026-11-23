@@ -731,6 +731,69 @@ namespace Sass {
   };
 
   /////////////////////////////////////////////////////////////////////////
+  // A condition of a CSS `if()` expression (like dart-sass, all kinds of
+  // conditions are represented by this class, distinguished by [kind]).
+  /////////////////////////////////////////////////////////////////////////
+  class IfCondition final : public AstNode
+  {
+  public:
+    enum Kind { PARENTHESIZED, NEGATION, OPERATION, FUNCTION, SASS, RAW };
+    // The kind of this condition
+    ADD_CONSTREF(Kind, kind);
+    // Whether an operation is `or` (otherwise `and`)
+    ADD_CONSTREF(bool, isOr);
+    // The inner conditions (one for parenthesized and negation)
+    ADD_REF(sass::vector<IfConditionObj>, conditions);
+    // The function name (or raw text) and its arguments
+    ADD_CONSTREF(InterpolationObj, name);
+    ADD_CONSTREF(InterpolationObj, arguments);
+    // The expression of a `sass()` condition
+    ADD_CONSTREF(ExpressionObj, expression);
+  public:
+    // Value constructor
+    IfCondition(const SourceSpan& pstate, Kind kind) :
+      AstNode(pstate), kind_(kind), isOr_(false) {}
+    // Whether this is an arbitrary substitution expression which
+    // may be replaced with multiple tokens at evaluation time.
+    bool isArbitrarySubstitution() const;
+    // Converts this condition into an interpolation that produces the same
+    // value. Returns null if it contains a `sass()` condition (an error).
+    Interpolation* toInterpolation() const;
+    // Convert to string (only for debugging)
+    sass::string toString() const override;
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  // A CSS `if()` expression. In addition to supporting the plain-CSS
+  // syntax, this supports a `sass()` condition that evaluates SassScript.
+  /////////////////////////////////////////////////////////////////////////
+  typedef std::pair<IfConditionObj, ExpressionObj> IfBranch;
+  typedef sass::vector<IfBranch> IfBranches;
+  class CssIfExpression final : public Expression
+  {
+  public:
+    // The conditional branches (a null condition is an `else` branch)
+    ADD_REF(IfBranches, branches);
+  public:
+    // Value constructor
+    CssIfExpression(const SourceSpan& pstate) :
+      Expression(pstate) {}
+    // Expression visitor to sass values entry function
+    Value* accept(ExpressionVisitor<Value*>* visitor) final {
+      return visitor->visitCssIfExpression(this);
+    }
+    Expression* accept(ExpressionVisitor<Expression*>* visitor) final {
+      return visitor->visitCssIfExpression(this);
+    }
+    // Return if expression can be used in calculations
+    bool isCalcSafe() final { return true; }
+    // Convert to string (only for debugging)
+    sass::string toString() const final;
+    // Implement specialized up-casting method
+    IMPLEMENT_ISA_CASTER(CssIfExpression);
+  };
+
+  /////////////////////////////////////////////////////////////////////////
   // Expression to invoke a function or if the function
   // is not defined, renders as a plain css function.
   /////////////////////////////////////////////////////////////////////////

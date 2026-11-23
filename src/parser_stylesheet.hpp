@@ -472,6 +472,14 @@ namespace Sass {
     // Consumes a quoted string expression.
     StringExpression* readInterpolatedString();
     Interpolation* readInterpolatedStringToken();
+    // CSS `if()` expressions
+    CssIfExpression* readCssIfExpression(Offset start);
+    IfCondition* readIfConditionExpression();
+    IfCondition* readIfConditionRaw(IfCondition* preceding, IfCondition* next);
+    IfCondition* readIfGroup();
+    IfCondition* tryArbitrarySubstitution();
+    IfCondition* newIfCondition(Offset start, IfCondition::Kind kind);
+    void addIfInterpolation(InterpolationBuffer& buffer, IfCondition* condition, IfCondition* substitution);
 
     // Consumes an expression that starts like an identifier.
     virtual Expression* readIdentifierLike();

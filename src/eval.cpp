@@ -1397,6 +1397,102 @@ namespace Sass {
     return (result = withoutSlash3(result)).detach();
   }
 
+  // Evaluates a CSS `if()` expression (like dart-sass `visitIfExpression`).
+  // Conditions that are resolved at compile time pick the branch; others
+  // are kept as plain CSS `if()` together with their evaluated values.
+  Value* Eval::visitCssIfExpression(CssIfExpression* node)
+  {
+    sass::vector<std::pair<sass::string, ValueObj>> results;
+    bool hasResults = false;
+    for (const auto& branch : node->branches()) {
+      bool isCss = false;
+      sass::string css;
+      bool result = true;
+      if (!branch.first.isNull()) {
+        result = evalIfCondition(branch.first, css, isCss);
+      }
+      if (isCss) {
+        hasResults = true;
+        results.emplace_back(css, branch.second->accept(this));
+      }
+      else if (result && hasResults) {
+        results.emplace_back("else", branch.second->accept(this));
+      }
+      else if (result) {
+        return branch.second->accept(this);
+      }
+    }
+    if (!hasResults) return SASS_MEMORY_NEW(Null, node->pstate());
+    sass::string css("if(");
+    bool first = true;
+    for (const auto& result : results) {
+      if (!first) css += "; ";
+      css += result.first + ": " + result.second->toCss();
+      first = false;
+    }
+    css += ")";
+    return SASS_MEMORY_NEW(String, node->pstate(), std::move(css), false);
+  }
+
+  // Evaluates a condition of a CSS `if()`. Returns the boolean result
+  // or sets [isCss] and returns the plain CSS text of it in [css].
+  bool Eval::evalIfCondition(IfCondition* condition, sass::string& css, bool& isCss)
+  {
+    isCss = false;
+    switch (condition->kind()) {
+    case IfCondition::PARENTHESIZED: {
+      bool result = evalIfCondition(condition->conditions()[0], css, isCss);
+      if (isCss) css = "(" + css + ")";
+      return result;
+    }
+    case IfCondition::NEGATION: {
+      bool result = evalIfCondition(condition->conditions()[0], css, isCss);
+      if (isCss) css = "not " + css;
+      return !result;
+    }
+    case IfCondition::OPERATION: {
+      bool isOr = condition->isOr();
+      sass::vector<std::pair<IfCondition*, sass::string>> values;
+      for (const IfConditionObj& inner : condition->conditions()) {
+        bool innerCss = false;
+        sass::string text;
+        bool result = evalIfCondition(inner, text, innerCss);
+        if (innerCss) values.emplace_back(inner, text);
+        else if (!result && !isOr) return false;
+        else if (result && isOr) return true;
+      }
+      if (values.empty()) return !isOr;
+      isCss = true;
+      // If the only CSS node left in the operation is parenthesized,
+      // remove the parentheses (like dart-sass, this is always valid).
+      if (values.size() == 1 && values[0].first->kind() == IfCondition::PARENTHESIZED) {
+        css = values[0].second.substr(1, values[0].second.size() - 2);
+        return false;
+      }
+      css.clear();
+      for (const auto& value : values) {
+        if (!css.empty()) css += isOr ? " or " : " and ";
+        css += value.second;
+      }
+      return false;
+    }
+    case IfCondition::FUNCTION:
+      isCss = true;
+      css = acceptInterpolation(condition->name(), false) + "("
+        + acceptInterpolation(condition->arguments(), false) + ")";
+      return false;
+    case IfCondition::SASS: {
+      ValueObj result = condition->expression()->accept(this);
+      return result->isTruthy();
+    }
+    case IfCondition::RAW:
+      isCss = true;
+      css = acceptInterpolation(condition->name(), false);
+      return false;
+    }
+    return false;
+  }
+
   Value* Eval::visitParenthesizedExpression(ParenthesizedExpression* ex)
   {
     Import* imp = compiler.import_stack.back();

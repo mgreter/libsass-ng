@@ -1320,13 +1320,19 @@ namespace Sass {
         || StringUtils::startsWithIgnoreCase(value(), "min(", 4)
         || StringUtils::startsWithIgnoreCase(value(), "max(", 4)
         || StringUtils::startsWithIgnoreCase(value(), "attr(", 5)
-        || StringUtils::startsWithIgnoreCase(value(), "clamp(", 6);
+        || StringUtils::startsWithIgnoreCase(value(), "clamp(", 6)
+        // Like dart-sass, the CSS `if()` may produce a number too
+        || StringUtils::startsWithIgnoreCase(value(), "if(", 3);
   }
 
+  // Like dart-sass `isSpecialVariable`: whether this is an unquoted `var()`,
+  // `attr()` or `if()` (special values that may expand to multiple values).
   bool String::isVar() const
   {
-    return !hasQuotes_ && value_.size() > 7 &&
-      StringUtils::startsWithIgnoreCase(value_, "var(", 4);
+    if (hasQuotes_ || value_.size() < 6) return false;
+    return StringUtils::startsWithIgnoreCase(value_, "var(", 4)
+      || StringUtils::startsWithIgnoreCase(value_, "attr(", 5)
+      || StringUtils::startsWithIgnoreCase(value_, "if(", 3);
   }
 
   size_t String::hash() const

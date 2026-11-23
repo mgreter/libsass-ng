@@ -59,6 +59,8 @@ namespace Sass {
   class SupportsExpression;
   class InvocationExpression;
   class IfExpression;
+  class CssIfExpression;
+  class IfCondition;
   class ExternalCallable;
   class PlainCssCallable;
   class BuiltInCallables;
@@ -148,6 +150,8 @@ namespace Sass {
   class UnaryOpExpression;
   class FunctionExpression;
   class IfExpression;
+  class CssIfExpression;
+  class IfCondition;
   class Calculation;
   class Mixin;
   class CalcOperation;
@@ -287,6 +291,8 @@ namespace Sass {
   IMPL_MEM_OBJ(UnaryOpExpression);
   IMPL_MEM_OBJ(FunctionExpression);
   IMPL_MEM_OBJ(IfExpression);
+  IMPL_MEM_OBJ(CssIfExpression);
+  IMPL_MEM_OBJ(IfCondition);
   IMPL_MEM_OBJ(Calculation);
   IMPL_MEM_OBJ(CustomWarning);
   IMPL_MEM_OBJ(CustomError);

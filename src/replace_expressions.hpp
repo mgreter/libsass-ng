@@ -27,6 +27,7 @@ namespace Sass {
     Expression* visitItplFnExpression(ItplFnExpression*) override;
     Expression* visitFunctionExpression(FunctionExpression*) override;
     Expression* visitIfExpression(IfExpression*) override;
+    Expression* visitCssIfExpression(CssIfExpression*) override;
     Expression* visitListExpression(ListExpression*) override;
     Expression* visitMapExpression(MapExpression*) override;
     Expression* visitNullExpression(NullExpression*) override;

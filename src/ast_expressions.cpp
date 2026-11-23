@@ -484,6 +484,97 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Whether this is an arbitrary substitution expression (like dart-sass)
+  bool IfCondition::isArbitrarySubstitution() const
+  {
+    if (kind_ == RAW) return true;
+    if (kind_ != FUNCTION) return false;
+    sass::string plain(StringUtils::toLowerCase(name_->getPlainString()));
+    return plain == "if" || plain == "var" || plain == "attr"
+      || StringUtils::startsWith(plain, "--", 2);
+  }
+
+  // Converts this condition into an interpolation that produces
+  // the same value, or returns null if it contains a `sass()`.
+  Interpolation* IfCondition::toInterpolation() const
+  {
+    InterpolationBuffer buffer(pstate());
+    switch (kind_) {
+    case PARENTHESIZED: {
+      InterpolationObj inner = conditions_[0]->toInterpolation();
+      if (inner.isNull()) return nullptr;
+      buffer.write('('); buffer.addInterpolation(inner); buffer.write(')');
+      break;
+    }
+    case NEGATION: {
+      InterpolationObj inner = conditions_[0]->toInterpolation();
+      if (inner.isNull()) return nullptr;
+      buffer.write("not "); buffer.addInterpolation(inner);
+      break;
+    }
+    case OPERATION: {
+      bool first = true;
+      for (const IfConditionObj& condition : conditions_) {
+        InterpolationObj inner = condition->toInterpolation();
+        if (inner.isNull()) return nullptr;
+        if (!first) buffer.write(isOr_ ? " or " : " and ");
+        buffer.addInterpolation(inner);
+        first = false;
+      }
+      break;
+    }
+    case FUNCTION:
+      buffer.addInterpolation(name_);
+      buffer.write('(');
+      buffer.addInterpolation(arguments_);
+      buffer.write(')');
+      break;
+    case SASS:
+      return nullptr;
+    case RAW:
+      return name_.ptr();
+    }
+    return buffer.getInterpolation(pstate());
+  }
+
+  // Convert to string (only for debugging)
+  sass::string IfCondition::toString() const
+  {
+    switch (kind_) {
+    case PARENTHESIZED: return "(" + conditions_[0]->toString() + ")";
+    case NEGATION: return "not " + conditions_[0]->toString();
+    case OPERATION: {
+      sass::string str;
+      for (const IfConditionObj& condition : conditions_) {
+        if (!str.empty()) str += isOr_ ? " or " : " and ";
+        str += condition->toString();
+      }
+      return str;
+    }
+    case FUNCTION: return name_->toString() + "(" + arguments_->toString() + ")";
+    case SASS: return "sass(" + expression_->toString() + ")";
+    case RAW: return name_->toString();
+    }
+    return sass::string();
+  }
+
+  // Convert to string (only for debugging)
+  sass::string CssIfExpression::toString() const
+  {
+    sass::string str("if(");
+    bool first = true;
+    for (const auto& branch : branches_) {
+      if (!first) str += "; ";
+      str += branch.first.isNull() ? "else" : branch.first->toString();
+      str += ": " + branch.second->toString();
+      first = false;
+    }
+    return str + ")";
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
   // Convert to string (only for debugging)
   sass::string IfExpression::toString() const
   {

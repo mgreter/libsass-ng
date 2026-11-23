@@ -253,6 +253,10 @@ namespace Sass {
     if (scanner.scanChar($dot)) {
       return readNamespacedExpression(plain, start);
     }
+    // Like dart-sass, plain CSS supports the CSS `if()` syntax
+    if (lower == "if" && scanner.peekChar() == $lparen) {
+      return readCssIfExpression(start);
+    }
 
     if (!scanner.scanChar($lparen)) {
       return SASS_MEMORY_NEW(StringExpression,

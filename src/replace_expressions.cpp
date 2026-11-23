@@ -127,6 +127,7 @@ namespace Sass {
   Expression* ReplaceExpressionVisitor::visitBooleanExpression(BooleanExpression* node) { return node; }
   Expression* ReplaceExpressionVisitor::visitColorExpression(ColorExpression* node) { return node; };
   Expression* ReplaceExpressionVisitor::visitIfExpression(IfExpression* node) { return node; }
+  Expression* ReplaceExpressionVisitor::visitCssIfExpression(CssIfExpression* node) { return node; }
   Expression* ReplaceExpressionVisitor::visitListExpression(ListExpression* node) { return node; }
   Expression* ReplaceExpressionVisitor::visitMapExpression(MapExpression* node) { return node; }
   Expression* ReplaceExpressionVisitor::visitNullExpression(NullExpression* node) { return node; }

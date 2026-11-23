@@ -237,6 +237,7 @@ namespace Sass {
     DECLARE_ISA_CASTER(ListExpression);
     DECLARE_ISA_CASTER(MapExpression);
     DECLARE_ISA_CASTER(IfExpression);
+    DECLARE_ISA_CASTER(CssIfExpression);
     // Implement our up-casting
     IMPLEMENT_ISA_CASTER(Expression);
 

@@ -438,6 +438,9 @@ namespace Sass {
     Value* visitFunctionExpression(FunctionExpression*) override;
     void _checkAdjacentCalculationValues(const ValueVector& elements, const ListExpression* node);
     Value* visitIfExpression(IfExpression*) override;
+    Value* visitCssIfExpression(CssIfExpression*) override;
+    // Evaluates a CSS `if()` condition (returns true/false or the css text in [css])
+    bool evalIfCondition(IfCondition* condition, sass::string& css, bool& isCss);
     Value* visitListExpression(ListExpression*) override;
     Value* visitMapExpression(MapExpression*) override;
     Value* visitNullExpression(NullExpression*) override;
