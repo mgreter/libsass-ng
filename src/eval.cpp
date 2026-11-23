@@ -1580,8 +1580,10 @@ namespace Sass {
     UserDefinedCallableObj callable =
       SASS_MEMORY_NEW(UserDefinedCallable,
         rule->pstate(), rule->name(), rule, nullptr);
-    rule->midx(compiler.varRoot.findMixIdx(
-      rule->name(), Strings::empty));
+    // Like dart-sass, a declaration never refers to (and
+    // must not overwrite) a member of a global module.
+    rule->midx(compiler.envstack.back()->findMixIdx(
+      rule->name(), true));
     compiler.varRoot.setMixin(
       rule->midx(), callable, false);
     return nullptr;
@@ -1593,8 +1595,10 @@ namespace Sass {
     UserDefinedCallableObj callable =
       SASS_MEMORY_NEW(UserDefinedCallable,
         rule->pstate(), rule->name(), rule, nullptr);
-    rule->fidx(compiler.varRoot.findFnIdx(
-      rule->name(), Strings::empty));
+    // Like dart-sass, a declaration never refers to (and
+    // must not overwrite) a member of a global module.
+    rule->fidx(compiler.envstack.back()->findFnIdx(
+      rule->name(), true));
     compiler.varRoot.setFunction(
       rule->fidx(), callable, false);
     return nullptr;
@@ -1612,6 +1616,8 @@ namespace Sass {
 
     // Check if variable expression was already resolved
     if (variable->vidxs().empty()) {
+      // May throw if available from multiple global modules.
+      CallStackFrame csf(logger, variable->pstate());
       // Is variable on the local scope?
       if (variable->isLexical()) {
         // Find all idxs and fill vidxs
@@ -1677,6 +1683,8 @@ namespace Sass {
       // Try to fetch the function by finding it by name
       // This may fail, as function expressions can also be
       // css functions if the function by name is not declared.
+      // May throw if available from multiple global modules.
+      CallStackFrame csf(logger, function->pstate());
       function->fidx(compiler.varRoot.findFnIdx(function->name(), function->ns()));
     }
 
@@ -2156,6 +2164,8 @@ namespace Sass {
     // Check if mixin expression was already resolved
     if (!include->midx().isValid()) {
       // Try to fetch the mixin by finding it by name
+      // May throw if available from multiple global modules.
+      CallStackFrame csf(logger, include->pstate());
       include->midx(compiler.varRoot.findMixIdx(include->name(), include->ns()));
     }
 
@@ -3635,27 +3645,32 @@ namespace Sass {
 
     if (a->ns().empty()) {
 
-      if (!a->is_global() && a->is_default()) {
-        sass::vector<EnvRef> vidxs;
-        if (compiler.envstack.size() > 0) {
-          auto noda = compiler.envstack.back();
-          //while (noda->isImport) noda = noda->pscope;
-          // Like dart-sass, `!default` only checks variables of the
-          // current module; outer values must come via configuration.
-          noda->findVarIdxs(vidxs, a->variable(), true);
-          for (const auto& vidx : vidxs) {
-            Value* value = compiler.varRoot.getVariable(vidx);
-            //std::cerr << "Check var " << qwe.offset << " - " << asd << "\n";
-            //if (asd != nullptr) std::cerr << " === " << asd->toString() << "\n";
-            if (value == nullptr) continue;
-            a->vidx(vidx);
-            break;
+      {
+        // Lookups may throw if available from multiple global modules.
+        CallStackFrame csf(logger, a->pstate());
+
+        if (!a->is_global() && a->is_default()) {
+          sass::vector<EnvRef> vidxs;
+          if (compiler.envstack.size() > 0) {
+            auto noda = compiler.envstack.back();
+            //while (noda->isImport) noda = noda->pscope;
+            // Like dart-sass, `!default` only checks variables of the
+            // current module; outer values must come via configuration.
+            noda->findVarIdxs(vidxs, a->variable(), true);
+            for (const auto& vidx : vidxs) {
+              Value* value = compiler.varRoot.getVariable(vidx);
+              //std::cerr << "Check var " << qwe.offset << " - " << asd << "\n";
+              //if (asd != nullptr) std::cerr << " === " << asd->toString() << "\n";
+              if (value == nullptr) continue;
+              a->vidx(vidx);
+              break;
+            }
           }
         }
-      }
-      if (!a->vidx().isValid()) {
-        a->vidx(compiler.varRoot.findVarIdx(
-          a->variable(), a->ns(), a->is_global()));
+        if (!a->vidx().isValid()) {
+          a->vidx(compiler.varRoot.findVarIdx(
+            a->variable(), a->ns(), a->is_global()));
+        }
       }
       if (!a->vidx().isValid())
       {

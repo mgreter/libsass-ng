@@ -160,7 +160,6 @@ namespace Sass {
     void _extendModules(const sass::vector<StylesheetObj>& sortedModules);
 
 
-    EnvRefs* pudding(EnvRefs* idxs, bool intoRoot, EnvRefs* modFrame);
 
 
 

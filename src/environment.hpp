@@ -11,6 +11,7 @@
 #include "ast_fwd_decl.hpp"
 #include "environment_cnt.hpp"
 #include "strings.hpp"
+#include <algorithm>
 
 namespace Sass {
 
@@ -149,6 +150,15 @@ namespace Sass {
     // possibility to hoist forwarded entities at any lexical scope.
     // All @use as "*" do not get exposed to the parent scope though.
     sass::vector<EnvRefs*> forwards;
+    // The [forwards] exposed by imports (members forwarded by the imported
+    // file). Like dart-sass, they act like local members, so later ones
+    // override earlier ones instead of conflicting like global modules.
+    sass::vector<const EnvRefs*> importForwards;
+    // Check if [fwds] was added to [forwards] by an import
+    bool isImportForward(const EnvRefs* fwds) const {
+      return std::find(importForwards.begin(),
+        importForwards.end(), fwds) != importForwards.end();
+    }
     // Scopes of imports nested in this (non-internal) scope. Their variables
     // are visible in this scope once the import was evaluated (e.g. for
     // `a {@import "x"; b: $x}`), since we can't add them to this scope.
@@ -251,8 +261,10 @@ namespace Sass {
     // Non-namespaced entities are either directly declared in the root
     // stylesheet or via forwarded module entities into star "*" namespace.
     EnvRef findVarIdx(const EnvKey& name) const;
-    EnvRef findFnIdx(const EnvKey& name) const;
-    EnvRef findMixIdx(const EnvKey& name) const;
+    // With [localOnly], members of global modules are skipped
+    // (e.g. to find the slot of a function or mixin declaration).
+    EnvRef findFnIdx(const EnvKey& name, bool localOnly = false) const;
+    EnvRef findMixIdx(const EnvKey& name, bool localOnly = false) const;
 
     bool hasNameSpace(const sass::string& ns) const;
 

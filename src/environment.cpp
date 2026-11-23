@@ -425,28 +425,72 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
+  // Like dart-sass `_fromOneModule`, a member must not be available from
+  // more than one global module (e.g. `@use "a" as *; @use "b" as *`),
+  // unless both reference the same member. Only checked when the member
+  // is used, so modules with conflicting members can be used together.
+  template <typename IT>
+  static void assertFromOneModule(const EnvRefs* current, IT it, IT end, const EnvKey& name,
+    uint32_t offset, VidxEnvKeyMap EnvRefs::* local, VidxEnvKeyMap Module::* merged,
+    Compiler& compiler, const char* kind)
+  {
+    // Members exposed by imports are never ambiguous
+    if (current->isImportForward(*it)) return;
+    for (++it; it != end; ++it) {
+      const EnvRefs* fwds = *it;
+      if (current->isImportForward(fwds)) continue;
+      const auto& members(fwds->*local);
+      auto fwd = members.find(name);
+      if (fwd != members.end()) {
+        if (fwd->second == offset) continue;
+      }
+      else {
+        Module* mod = fwds->module;
+        if (mod == nullptr || mod->idxs->isImport) continue;
+        const auto& mergedMembers(mod->*merged);
+        auto mfwd = mergedMembers.find(name);
+        if (mfwd == mergedMembers.end()) continue;
+        if (mfwd->second == offset) continue;
+      }
+      throw Exception::RuntimeException(compiler, sass::string("This ")
+        + kind + " is available from multiple global modules.");
+    }
+  }
+
   // Get a function associated with the under [name].
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  EnvRef EnvRefs::findMixIdx(const EnvKey& named) const
+  EnvRef EnvRefs::findMixIdx(const EnvKey& named, bool localOnly) const
   {
     EnvKey name(named);
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
-      if (!name.isPrivate()) {
+      // Like dart-sass, a declared local mixin wins over global modules
+      if (!localOnly && !current->isImport && !current->forwards.empty()) {
+        const auto& it = current->mixIdxs.find(name);
+        if (it != current->mixIdxs.end()) {
+          EnvRef midx(current, it->second);
+          if (root.getMixin(midx) != nullptr) return midx;
+        }
+      }
+      if (!localOnly && !name.isPrivate()) {
         for (auto it = current->forwards.rbegin();
           it != current->forwards.rend(); it++)
         {
           const auto& fwds = *it;
           const auto& fwd = fwds->mixIdxs.find(name);
           if (fwd != fwds->mixIdxs.end()) {
+            assertFromOneModule(current, it, current->forwards.rend(), name, fwd->second,
+              &EnvRefs::mixIdxs, &Module::mergedFwdMix, root.compiler, "mixin");
             return { fwds, fwd->second };
           }
           if (Module* mod = fwds->module) {
             if (!mod->idxs->isImport) {
               const auto& fwd = mod->mergedFwdMix.find(name);
               if (fwd != mod->mergedFwdMix.end()) {
+                assertFromOneModule(current, it, current->forwards.rend(), name, fwd->second,
+                  &EnvRefs::mixIdxs, &Module::mergedFwdMix, root.compiler, "mixin");
                 return { fwd->second };
               }
             }
@@ -471,24 +515,36 @@ namespace Sass {
   // Will lookup from the last runtime stack scope.
   // We will move up the runtime stack until we either
   // find a defined function or run out of parent scopes.
-  EnvRef EnvRefs::findFnIdx(const EnvKey& named) const
+  EnvRef EnvRefs::findFnIdx(const EnvKey& named, bool localOnly) const
   {
     EnvKey name(named);
     for (const EnvRefs* current = this; current; current = current->nextScope())
     {
-      if (!name.isPrivate()) {
+      // Like dart-sass, a declared local function wins over global modules
+      if (!localOnly && !current->isImport && !current->forwards.empty()) {
+        const auto& it = current->fnIdxs.find(name);
+        if (it != current->fnIdxs.end()) {
+          EnvRef fidx(current, it->second);
+          if (root.getFunction(fidx) != nullptr) return fidx;
+        }
+      }
+      if (!localOnly && !name.isPrivate()) {
         for (auto it = current->forwards.rbegin();
           it != current->forwards.rend(); it++)
         {
           const auto& fwds = *it;
           const auto& fwd = fwds->fnIdxs.find(name);
           if (fwd != fwds->fnIdxs.end()) {
+            assertFromOneModule(current, it, current->forwards.rend(), name, fwd->second,
+              &EnvRefs::fnIdxs, &Module::mergedFwdFn, root.compiler, "function");
             return { fwds, fwd->second };
           }
           if (Module* mod = fwds->module) {
             if (!mod->idxs->isImport) {
               const auto& fwd = mod->mergedFwdFn.find(name);
               if (fwd != mod->mergedFwdFn.end()) {
+                assertFromOneModule(current, it, current->forwards.rend(), name, fwd->second,
+                  &EnvRefs::fnIdxs, &Module::mergedFwdFn, root.compiler, "function");
                 return { fwd->second };
               }
             }
@@ -535,6 +591,8 @@ namespace Sass {
               "Private members can't be accessed "
               "from outside their modules.");
           }
+          assertFromOneModule(current, it, current->forwards.rend(), name, fwd->second,
+            &EnvRefs::varIdxs, &Module::mergedFwdVar, root.compiler, "variable");
           return { fwds, fwd->second }; // SPECED
         }
         if (Module* mod = fwds->module) {
@@ -546,6 +604,8 @@ namespace Sass {
                   "Private members can't be accessed "
                   "from outside their modules.");
               }
+              assertFromOneModule(current, it, current->forwards.rend(), name, fwd->second,
+                &EnvRefs::varIdxs, &Module::mergedFwdVar, root.compiler, "variable");
               return { fwd->second }; // SPECED
             }
           }
@@ -604,6 +664,8 @@ namespace Sass {
         if (!name.isPrivate()) {
           const auto& fwd = fwds->varIdxs.find(name);
           if (fwd != fwds->varIdxs.end()) {
+            assertFromOneModule(current, it, current->forwards.rend(), name, fwd->second,
+              &EnvRefs::varIdxs, &Module::mergedFwdVar, root.compiler, "variable");
             vidxs.emplace_back(fwds, fwd->second);
           }
           if (Module* mod = fwds->module) {
@@ -611,6 +673,8 @@ namespace Sass {
             {
               const auto& fwd = mod->mergedFwdVar.find(name);
               if (fwd != mod->mergedFwdVar.end()) {
+                assertFromOneModule(current, it, current->forwards.rend(), name, fwd->second,
+                  &EnvRefs::varIdxs, &Module::mergedFwdVar, root.compiler, "variable");
                 vidxs.emplace_back(fwd->second);
               }
             }

@@ -329,57 +329,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  EnvRefs* Eval::pudding(EnvRefs* idxs, bool intoRoot, EnvRefs* modFrame)
-  {
-
-    if (intoRoot) {
-
-      // Check if we push the same stuff twice
-      for (auto& fwd : modFrame->forwards) {
-
-        // if (idxs == fwd) continue;
-
-        // Checked, needed
-        for (auto& var : idxs->varIdxs) {
-          auto it = fwd->varIdxs.find(var.first);
-          if (it != fwd->varIdxs.end()) {
-            if (var.second == it->second) continue;
-            throw Exception::ParserException(compiler,
-              "$" + var.first.norm() + " is available "
-              "from multiple global modules.");
-          }
-        }
-        // Checked, needed
-        for (auto& var : idxs->mixIdxs) {
-          auto it = fwd->mixIdxs.find(var.first);
-          if (it != fwd->mixIdxs.end()) {
-            if (var.second == it->second) continue;
-            throw Exception::ParserException(compiler,
-              "Mixin \"" + var.first.norm() + "(...)\" is "
-              "available from multiple global modules.");
-          }
-        }
-        // Checked, needed
-        for (auto& var : idxs->fnIdxs) {
-          auto it = fwd->fnIdxs.find(var.first);
-          if (it != fwd->fnIdxs.end()) {
-            if (var.second == it->second) continue;
-            throw Exception::ParserException(compiler,
-              "Function \"" + var.first.norm() + "(...)\" is "
-              "available from multiple global modules.");
-          }
-        }
-      }
-
-    }
-    // Note: the variables of the using module must not be
-    // merged into the used module (e.g. for module-variables).
-
-
-    return idxs;
-
-  }
-
   void Eval::exposeUseRule(UseRule* rule)
   {
 
@@ -412,8 +361,6 @@ namespace Sass {
 
     }
     else if (rule->root47()) {
-
-      pudding(rule->root47()->idxs, rule->ns().empty(), frame);
 
       if (rule->ns().empty() && !rule->module32()->idxs->isImport) {
 
@@ -667,6 +614,7 @@ namespace Sass {
         for (auto qwe : rule->module32()->idxs->delayedMerge) {
           const auto& scope = compiler.getCurrentScope();
           scope->forwards.push_back(forwardedView(qwe));
+          scope->importForwards.push_back(scope->forwards.back());
           RAII_FLAG(viaImport, true);
           exposeFwdRule(qwe);
         }

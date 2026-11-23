@@ -294,7 +294,7 @@ namespace Sass {
           if (global->mixIdxs.count(name) != 0) {
             if (hasFn) {
               throw Exception::RuntimeException(compiler,
-                "This function is available from multiple global modules.");
+                "This mixin is available from multiple global modules.");
             }
             hasFn = true;
           }
