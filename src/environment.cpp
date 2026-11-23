@@ -121,14 +121,16 @@ namespace Sass {
       // Lives in built-in scope
       idxs->isInternal53 = true;
     }
+    // Account for allocated memory first, so it's also released if we
+    // throw below (the destructor isn't called if the constructor throws)
+    try { idxs->root.scopes57.push_back(idxs); }
+    catch (...) { delete idxs; throw; }
     // Check and prevent stack smashing
     if (stack55.size() > SassMaxNesting) {
       throw Exception::RecursionLimitError();
     }
-    // Push onto our stack
+    // Push onto our stack (last, nothing to undo if it throws)
     stack55.push_back(this->idxs);
-    // Account for allocated memory
-    idxs->root.scopes57.push_back(idxs);
   }
   // EO EnvFrame ctor
   /////////////////////////////////////////////////////////////////////////
