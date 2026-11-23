@@ -990,17 +990,22 @@ namespace Sass {
     for (size_t i = stack.size(); i-- > 0;) {
       const char* parent = stack[i]->source->getAbsPath();
       if (parent && path && std::strcmp(parent, path) == 0) {
-        // make path relative to the current directory
-        sass::string msg("An @import loop has been found:");
-        for (size_t n = i; n < stack.size(); ++n) {
-          const char* from = stack[n]->source->getAbsPath();
-          const char* to = n + 1 < stack.size() ? stack[n + 1]->source->getAbsPath() : path;
-          msg += "\n    " + sass::string(File::abs2rel(from ? from : "", compiler.PWD, compiler.PWD)) +
-            " imports " + sass::string(File::abs2rel(to ? to : "", compiler.PWD, compiler.PWD));
+        // Use the messages of dart-sass, depending on the kind of the
+        // current load (the stack trace shows all files of the loop)
+        const BackTraces& calls(compiler.callStack);
+        const BackTrace* current = calls.empty() ? nullptr : &calls.back();
+        if (current && (current->name == Strings::useRule ||
+          current->name == Strings::forwardRule)) {
+          throw Exception::RuntimeException(compiler,
+            "Module loop: this module is already being loaded.");
         }
-        // implement error throw directly until we
-        // decided how to handle full stack traces
-        throw Exception::RuntimeException(compiler, msg);
+        if (current && current->fn && current->name == "load-css") {
+          throw Exception::RuntimeException(compiler, "Module loop: "
+            + File::abs2rel(path, compiler.PWD, compiler.PWD)
+            + " is already being loaded.");
+        }
+        throw Exception::RuntimeException(compiler,
+          "This file is already being loaded.");
       }
     }
     stack.push_back(import);
