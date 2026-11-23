@@ -48,25 +48,35 @@ namespace Sass {
           std::ceil(number->value()) + 0.0,
           number->unit());
       }
+      // Like dart-sass `convertValueToMatch`, throws if [number] can't be
+      // converted to the units of [other], naming both arguments in the
+      // error (e.g. "$number: 1px and $min: 1deg have incompatible units.").
+      static void assertConvertible(Compiler& compiler,
+        const Number* number, const char* name,
+        const Number* other, const char* otherName)
+      {
+        bool mismatch = number->hasUnits() != other->hasUnits();
+        if (!mismatch && number->hasUnits() &&
+          number->getUnitConversionFactor(other) == 0.0) mismatch = true;
+        if (!mismatch) return;
+        throw Exception::RuntimeException(compiler,
+          sass::string("$") + name + ": " + number->inspect() + " and $" +
+          otherName + ": " + other->inspect() + " have incompatible units" +
+          (number->hasUnits() && other->hasUnits() ? "" :
+            " (one has units and the other doesn't)") + ".");
+      }
+
       static BUILT_IN_FN(fnClamp)
       {
-
         Number* min = arguments[0]->assertNumber(compiler, "min");
         Number* number = arguments[1]->assertNumber(compiler, Strings::number);
         Number* max = arguments[2]->assertNumber(compiler, "max");
-        if (min->hasUnits() == number->hasUnits() && number->hasUnits() == max->hasUnits()) {
-          if (min->greaterThanOrEquals(max, compiler, pstate)) return min;
-          if (min->greaterThanOrEquals(number, compiler, pstate)) return min;
-          if (number->greaterThanOrEquals(max, compiler, pstate)) return max;
-          return number;
-        }
-
-        auto arg2 = min->hasUnits() != number->hasUnits() ? number : max;
-        auto arg2Name = min->hasUnits() != number->hasUnits() ? "$number" : "$max";
-        throw Exception::RuntimeException(compiler,
-          sass::string(arg2Name) + ": " + arg2->inspect() + " and " +
-          "$min: " + min->inspect() + " have incompatible units " +
-          "(one has units and the other doesn't).");
+        assertConvertible(compiler, number, "number", min, "min");
+        assertConvertible(compiler, max, "max", min, "min");
+        if (min->greaterThanOrEquals(max, compiler, pstate)) return min;
+        if (min->greaterThanOrEquals(number, compiler, pstate)) return min;
+        if (number->greaterThanOrEquals(max, compiler, pstate)) return max;
+        return number;
       }
 
 
@@ -367,17 +377,10 @@ namespace Sass {
       {
         Number* y = arguments[0]->assertNumber(compiler, "y");
         Number* x = arguments[1]->assertNumber(compiler, "x");
-        if (y->hasUnits() != x->hasUnits()) {
-          throw Exception::RuntimeException(compiler,
-            "$x: " + x->inspect() + " and $y: " +
-            y->inspect() + " have incompatible units " +
-            "(one has units and the other doesn't).");
-        }
-        if (double factor = x->getUnitConversionFactor(y)) {
-          double result = std::atan2(y->value(), x->value() * factor) * 180.0 / PI;
-          return SASS_MEMORY_NEW(Number, pstate, result, unit_deg);
-        }
-        throw Exception::UnitMismatch(compiler, *y, *x);
+        assertConvertible(compiler, x, "x", y, "y");
+        double factor = x->hasUnits() ? x->getUnitConversionFactor(y) : 1.0;
+        double result = std::atan2(y->value(), x->value() * factor) * 180.0 / PI;
+        return SASS_MEMORY_NEW(Number, pstate, result, unit_deg);
       }
 
       /*******************************************************************/

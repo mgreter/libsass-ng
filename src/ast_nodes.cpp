@@ -638,7 +638,14 @@ namespace Sass {
     sass::string text(getSelectorString(compiler, name));
     SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, pstate(), std::move(text));
     SelectorParser parser(compiler, source, allowParent);
-    return parser.parseSelectorList();
+    try {
+      return parser.parseSelectorList();
+    }
+    catch (Exception::ParserException& error) {
+      // Like dart-sass, prefix errors with the argument name
+      if (!name.empty()) error.msg = "$" + name + ": " + error.msg;
+      throw;
+    }
   }
 
   /// Parses [this] as a compound selector, in the same manner as the
@@ -656,7 +663,14 @@ namespace Sass {
     sass::string text(getSelectorString(compiler, name));
     SourceDataObj source = SASS_MEMORY_NEW(SourceItpl, pstate(), std::move(text));
     SelectorParser parser(compiler, source, allowParent);
-    return parser.parseCompoundSelector();
+    try {
+      return parser.parseCompoundSelector();
+    }
+    catch (Exception::ParserException& error) {
+      // Like dart-sass, prefix errors with the argument name
+      if (!name.empty()) error.msg = "$" + name + ": " + error.msg;
+      throw;
+    }
   }
 
 
