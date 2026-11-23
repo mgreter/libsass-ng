@@ -71,7 +71,8 @@ namespace Sass {
       }
     }
 
-    if (scanIdentCharInsensitive($e)) {
+    // Like dart-sass, an escaped `e` is not an exponent
+    if (scanner.scanChar($e) || scanner.scanChar($E)) {
       buffer.writeCharCode($e);
       uint8_t next = scanner.peekChar();
       if (next == $plus || next == $minus) buffer.write(scanner.readChar());

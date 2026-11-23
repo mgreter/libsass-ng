@@ -461,6 +461,11 @@ namespace Sass {
       }
 
       scanCharIf(isWhitespace);
+      // Like dart-sass (1.106), invalid code points (zero, surrogates and
+      // too large values) are normalized to U+FFFD REPLACEMENT CHARACTER.
+      if (value == 0 || (value >= 0xD800 && value <= 0xDFFF) || value > 0x10FFFF) {
+        value = 0xFFFD;
+      }
     }
     else {
       // Read the whole (possibly multi-byte) character
@@ -491,6 +496,26 @@ namespace Sass {
     }
   }
   // EO tryUrl
+
+  // Returns the character [offset] away from the current position without
+  // consuming it. If this character begins an escape, returns its contents
+  // instead of a literal backslash and sets [escaped] to true.
+  uint32_t Parser::peekCharOrEscape(size_t offset, bool& escaped)
+  {
+    escaped = false;
+    uint8_t next = scanner.peekChar(offset);
+    if (next != $backslash) return next;
+    StringScannerState state = scanner.state();
+    for (size_t i = 0; i < offset; i++) scanner.readChar();
+    // Newlines can't be escaped (would be a parse error)
+    uint8_t after = scanner.peekChar(1);
+    if (isNewline(after)) { scanner.backtrack(state); return next; }
+    uint32_t value = escapeCharacter();
+    scanner.backtrack(state);
+    escaped = true;
+    return value;
+  }
+  // EO peekCharOrEscape
 
   // Consumes an escape sequence and returns the character it represents.
   uint32_t Parser::escapeCharacter()

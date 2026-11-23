@@ -21,7 +21,7 @@ namespace Sass {
   {
     uint8_t next = scanner.peekChar();
     ExpressionObj url;
-    if (next == $u || next == $U) {
+    if (next == $u || next == $U || isEscapedU()) {
       url = readFunctionOrStringExpression();
     }
     else {

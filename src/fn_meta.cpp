@@ -356,7 +356,7 @@ namespace Sass {
         }
         else {
           throw Exception::RuntimeException(compiler,
-            "Mixin not found: " + name->value());
+            "Mixin not found: " + name->inspect());
         }
 
         // auto name = arguments[0]->assertString(compiler, "name");
@@ -609,16 +609,10 @@ namespace Sass {
 
 
         if (callable == nullptr) {
-          if (name->hasQuotes()) {
-            throw
-              Exception::RuntimeException(compiler,
-                "Function not found: \"" + name->value() + "\"");
-          }
-          else {
-            throw
-              Exception::RuntimeException(compiler,
-                "Function not found: " + name->value() + "");
-          }
+          // Like dart-sass, the name is inspected (quotes and escapes)
+          throw
+            Exception::RuntimeException(compiler,
+              "Function not found: " + name->inspect());
         }
 
         // Remember if it was looked up without a namespace, so
@@ -677,16 +671,10 @@ namespace Sass {
         }
 
         if (callable == nullptr) {
-          if (name->hasQuotes()) {
-            throw
-              Exception::RuntimeException(compiler,
-                "Mixin not found: \"" + name->value() + "\"");
-          }
-          else {
-            throw
-              Exception::RuntimeException(compiler,
-                "Mixin not found: " + name->value() + "");
-          }
+          // Like dart-sass, the name is inspected (quotes and escapes)
+          throw
+            Exception::RuntimeException(compiler,
+              "Mixin not found: " + name->inspect());
         }
 
         return SASS_MEMORY_NEW(Mixin, pstate, callable);

@@ -358,7 +358,9 @@ namespace Sass {
     }
     else {
       value = string();
-      isIdent = isIdentifier(value); // 1%
+      // Like dart-sass, it must parse to the same identifier (so a value
+      // with a backslash, which would start an escape, must stay quoted)
+      isIdent = value.find('\\') == sass::string::npos && isIdentifier(value); // 1%
     }
 
     scanWhitespace(true);
@@ -543,7 +545,11 @@ namespace Sass {
 
     StringBuffer buffer;
     uint8_t first, next, last;
-    switch (scanner.peekChar()) {
+    // Like dart-sass, even and odd may start with an escape
+    bool escaped; uint32_t head = peekCharOrEscape(0, escaped);
+    uint8_t lead = scanner.peekChar();
+    if (escaped && (head == $e || head == $E || head == $o || head == $O)) lead = (uint8_t)head;
+    switch (lead) {
     case $e:
     case $E:
       expectIdentifier("even", "\"even\"");

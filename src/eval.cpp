@@ -2251,7 +2251,8 @@ namespace Sass {
       // Create a new keyframe parser from the evaluated interpolation
       KeyframeSelectorParser parser(compiler, SASS_MEMORY_NEW(SourceItpl,
         node->interpolation()->pstate(),
-        acceptInterpolation(node->interpolation(), true, true)));
+        // Don't trim, so error spans match the original source
+        acceptInterpolation(node->interpolation(), true, false)));
       // Invoke the keyframe parser and create a new CssKeyframeBlock
       CssKeyframeBlockObj child = SASS_MEMORY_NEW(CssKeyframeBlock, node->pstate(),
         chroot, parser.parse());

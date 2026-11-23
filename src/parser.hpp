@@ -152,6 +152,23 @@ namespace Sass {
     // Consumes an escape sequence and returns the character it represents.
     uint32_t escapeCharacter();
 
+    // Returns the character [offset] away from the current position without
+    // consuming it. If this character begins an escape, returns its contents
+    // instead of a literal backslash and sets [escaped] to true.
+    uint32_t peekCharOrEscape(size_t offset, bool& escaped);
+
+    // Returns whether the next character is an escaped `u` or `U`.
+    bool isEscapedU() {
+      bool escaped; uint32_t chr = peekCharOrEscape(0, escaped);
+      return escaped && (chr == Charcode::$u || chr == Charcode::$U);
+    }
+
+    // Returns whether the character at [offset] is an escaped `i` or `I`.
+    bool isEscapedI(size_t offset) {
+      bool escaped; uint32_t chr = peekCharOrEscape(offset, escaped);
+      return escaped && (chr == Charcode::$i || chr == Charcode::$I);
+    }
+
     // Consumes one full UTF-8 encoded code point (the scanner
     // reads single bytes). Returns 0xFFFD for invalid sequences.
     uint32_t readCodePoint();

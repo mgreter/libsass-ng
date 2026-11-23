@@ -315,13 +315,19 @@ namespace Sass {
     if (asd > 1) {
       uint32_t code_point = 0;
       /*auto foo =*/ utf8::internal::validate_next(it, end, code_point);
-      if (code_point >= 0xE000 && code_point <= 0xF8FF) {
+      // Private use areas of the BMP and the supplementary planes 15 and 16
+      if ((code_point >= 0xE000 && code_point <= 0xF8FF) || code_point >= 0xF0000) {
         append_char($backslash);
         // ToDo: do without sstream
         sass::sstream is;
         is << std::hex << code_point;
         append_string(is.str());
         offset += asd - 1;
+        // Like dart-sass, separate it from a following hex digit or space
+        if (begin + offset + 1 < end) {
+          uint8_t next = *(begin + offset + 1);
+          if (isHex(next) || next == $space || next == $tab) append_char($space);
+        }
         return true;
       }
     }
@@ -1892,6 +1898,20 @@ namespace Sass {
 
   }
 
+  // Returns whether the given [unit], when serialized without escapes,
+  // would be parsable as a numeric exponent (like dart-sass).
+  static bool isUnitAmbiguousWithExponent(const sass::string& unit)
+  {
+    if (unit.size() < 2) return false;
+    if (unit[0] != 'e' && unit[0] != 'E') return false;
+    size_t next = 1;
+    if (unit[1] == '-') {
+      if (unit.size() == 2) return false;
+      next = 2;
+    }
+    return unit[next] >= '0' && unit[next] <= '9';
+  }
+
   void Inspect::visitNumber(Number* value)
   {
     if (value->lhsAsSlash() && value->rhsAsSlash()) {
@@ -1911,7 +1931,12 @@ namespace Sass {
       return;
     }
     sass::string res = PrintNumber(value->value(), outopt);
-    if (!value->numerators.empty()) res += value->numerators[0];
+    if (value->isValidCssUnit() && value->numerators.size() == 1 &&
+      isUnitAmbiguousWithExponent(value->numerators[0])) {
+      // Like dart-sass, escape a unit that could be parsed as an exponent
+      res += "\\65 "; res += value->numerators[0].substr(1);
+    }
+    else if (!value->numerators.empty()) res += value->numerators[0];
     if (value->isValidCssUnit()) {
       // output the final token
       append_token(res, value);

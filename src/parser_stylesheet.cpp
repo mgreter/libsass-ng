@@ -197,7 +197,7 @@ namespace Sass {
     const char* startpos = scanner.position;
     Offset start(scanner.offset);
     uint8_t next = scanner.peekChar();
-    if (next == $u || next == $U) {
+    if (next == $u || next == $U || isEscapedU()) {
       ExpressionObj url = readFunctionOrStringExpression();
       scanWhitespace();
       auto modifiers = tryImportModifiers();
@@ -328,6 +328,9 @@ namespace Sass {
     // from old-style property syntax. We don't support old property syntax, but
     // we do support the backslash because it's easy to do.
     if (isIndented()) scanner.scanChar($backslash);
+    // Like dart-sass, the rule spans from before the selector (e.g. for
+    // warnings; the selector may end after a newline in indented syntax).
+    Offset start(itpl ? itpl->pstate().position : scanner.offset);
     InterpolationObj readStyleRule(styleRuleSelector());
     if (itpl) {
       itpl->concat(readStyleRule); readStyleRule = itpl;
@@ -336,7 +339,6 @@ namespace Sass {
 
     EnvFrame local(compiler, false);
 
-    Offset start(scanner.offset);
     StyleRuleObj styles = withChildren<StyleRule>(
       &StylesheetParser::readChildStatement,
       start, readStyleRule.ptr(), local.idxs);
@@ -2209,7 +2211,7 @@ namespace Sass {
         }
         else if (next == $nul ||
             equalsLetterIgnoreCase($i, next) ||
-          isWhitespace(next))
+          isWhitespace(next) || isEscapedI(1))
         {
           ep.addSingleExpression(readImportantExpression());
         }
@@ -3232,8 +3234,16 @@ namespace Sass {
   Expression* StylesheetParser::readIdentifierLike()
   {
     Offset start(scanner.offset);
+    const char* begin = scanner.position;
     InterpolationObj identifier = readInterpolatedIdentifier();
     sass::string plain(identifier->getPlainString());
+    // Like dart-sass, special-case the exact identifier `\0` (it's
+    // used in CSS hacks), otherwise it's normalized to U+FFFD.
+    if (plain == "\xEF\xBF\xBD" && scanner.position - begin >= 2 &&
+      begin[0] == '\\' && begin[1] == '0') {
+      return SASS_MEMORY_NEW(StringExpression,
+        scanner.relevantSpanFrom(start), "\\0 ");
+    }
     // std::cerr << "readIdentifierLike " << plain << "\n";
 
     if (!plain.empty()) {
@@ -3715,6 +3725,19 @@ namespace Sass {
       }
       switch (next) {
       case $backslash:
+        // Like dart-sass, an escaped `u` may start an `url()`
+        if (isEscapedU()) {
+          start = scanner.state();
+          if (scanIdentifier("url") || scanIdentifier("url-prefix")) {
+            contents = tryUrlContents(start.offset,
+              scanner.substring(start.position));
+            if (contents != nullptr) {
+              buffer.addInterpolation(contents);
+              break;
+            }
+          }
+          scanner.backtrack(start);
+        }
         // Write a literal backslash because this text will be re-parsed.
         buffer.write(scanner.readChar());
         // ToDo: Check unexpected file end here?
@@ -3873,6 +3896,21 @@ namespace Sass {
       }
       switch (next) {
       case $backslash:
+        // Like dart-sass, an escaped `u` may start an `url()`
+        if (isEscapedU()) {
+          beforeUrl = scanner.state();
+          isUrl = scanIdentifier("url");
+          if (isUrl || scanIdentifier("url-prefix")) {
+            contents = tryUrlContents(beforeUrl.offset,
+              scanner.substring(beforeUrl.position));
+            if (contents != nullptr) {
+              buffer.addInterpolation(contents);
+              wroteNewline = false;
+              break;
+            }
+          }
+          scanner.backtrack(beforeUrl);
+        }
         escape(buffer.text, true);
         wroteNewline = false;
         break;
@@ -4692,7 +4730,8 @@ namespace Sass {
       // (`next` would be uninitialized otherwise)
       if (!scanner.peekChar(next, 1)) return true;
       return isWhitespace(next)
-        || equalsLetterIgnoreCase($i, next);
+        || equalsLetterIgnoreCase($i, next)
+        || const_cast<StylesheetParser*>(this)->isEscapedI(1);
     }
 
     return character == $lparen
