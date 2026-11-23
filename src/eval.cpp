@@ -328,10 +328,21 @@ namespace Sass {
     // be passed to the function via the rest argument array
     else {
 
+      // Like dart-sass, first check for arguments passed both ways
+      if (results.hasNamed()) {
+        size_t count = std::min(positional.size(), parameters.size());
+        for (size_t i = 0; i < count; i += 1) {
+          if (results.named()->count(parameters[i]->name())) {
+            throw Exception::ArgumentGivenTwice(
+              logger, parameters[i]->name());
+          }
+        }
+      }
+
       // Check that all positional arguments are consumed
       if (positional.size() > parameters.size()) {
         throw Exception::TooManyArguments(logger,
-          positional.size(), prototype);
+          positional.size(), prototype, results.hasNamed());
       }
 
       // Try to get needed function parameters from argument results
@@ -451,7 +462,7 @@ namespace Sass {
       // Check that all positional arguments are consumed
       if (positional.size() > parameters.size()) {
         throw Exception::TooManyArguments(logger,
-          positional.size(), parameters.size());
+          positional.size(), parameters.size(), results.hasNamed());
       }
 
       // Check that all named arguments are consumed

@@ -284,7 +284,7 @@ namespace Sass {
       if (names && names->count(arguments_[i]->name()) == 1) {
         throw Exception::RuntimeException(traces,
           "Argument $" + arguments_[i]->name().orig() +
-          " name was passed both by position and by name.");
+          " was passed both by position and by name.");
       }
       i++;
     }
@@ -294,7 +294,7 @@ namespace Sass {
       }
       else if (arguments_[i]->defval() == nullptr) {
         throw Exception::RuntimeException(traces,
-          "Missing element $" + arguments_[i]->name().orig() + ".");
+          "Missing argument $" + arguments_[i]->name().orig() + ".");
       }
       i++;
     }
@@ -303,7 +303,9 @@ namespace Sass {
 
     if (positional > arguments_.size()) {
       sass::sstream strm;
-      strm << "Only " << arguments_.size() << " "; //  " positional ";
+      strm << "Only " << arguments_.size() << " ";
+      // Like dart-sass, if named arguments were passed too
+      if (names && !names->empty()) strm << "positional ";
       strm << pluralize("argument", arguments_.size());
       strm << " allowed, but " << positional << " ";
       strm << pluralize("was", positional, "were");

@@ -1151,6 +1151,21 @@ namespace Sass {
     // make sure we resolve against an absolute path
     sass::string base_path(File::rel2abs(import.base_path, ".", PWD));
 
+    // Like dart-sass, an empty url resolves to the importing file itself
+    // (e.g. `@import` followed by a newline in the indented syntax), so
+    // the loop is reported instead of not finding the stylesheet.
+    if (import.imp_path.empty() && !import.ctx_path.empty()) {
+      sass::string abs_path(File::rel2abs(import.ctx_path, ".", PWD));
+      if (File::file_exists(abs_path, PWD, fileExistsCache)) {
+        ImportRequest request(File::base_name(abs_path),
+          base_path, import.considerImports);
+        sass::vector<ResolvedImport> vec{ ResolvedImport(
+          request, abs_path, SASS_IMPORT_AUTO) };
+        cache[import] = vec;
+        return vec;
+      }
+    }
+
     // first try to resolve the load path relative to the base path
     sass::vector<ResolvedImport> vec(File::resolve_includes(
       base_path, import.imp_path, PWD, forImport, fileExistsCache));

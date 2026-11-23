@@ -278,8 +278,8 @@ namespace Sass {
         toSentence(getKeyVector(superfluous), "or", "$") + ".";
     }
 
-    TooManyArguments::TooManyArguments(BackTraces traces, size_t given, size_t expected)
-      : RuntimeException(traces, formatTooManyArguments(given, expected))
+    TooManyArguments::TooManyArguments(BackTraces traces, size_t given, size_t expected, bool positional)
+      : RuntimeException(traces, formatTooManyArguments(given, expected, positional))
     {}
 
     TooManyArguments::TooManyArguments(BackTraces traces, const ExpressionFlatMap* given, const Sass::EnvKeySet& expected)
@@ -290,8 +290,8 @@ namespace Sass {
       : RuntimeException(traces, formatTooManyArguments(superflous, true))
     {}
 
-    TooManyArguments::TooManyArguments(BackTraces traces, size_t given, const CallableSignature * signature)
-      : RuntimeException(traces, formatTooManyArguments(given, signature->maxArgs(), false)) // signature->restArg().norm() != ""
+    TooManyArguments::TooManyArguments(BackTraces traces, size_t given, const CallableSignature * signature, bool positional)
+      : RuntimeException(traces, formatTooManyArguments(given, signature->maxArgs(), positional))
     {
     }
 
@@ -313,7 +313,7 @@ namespace Sass {
     {}
 
     ArgumentGivenTwice::ArgumentGivenTwice(BackTraces traces, const EnvKey& name)
-      : RuntimeException(traces, "Argument $" + name.norm() + " name was passed both by position and by name.")
+      : RuntimeException(traces, "Argument $" + name.norm() + " was passed both by position and by name.")
     {}
 
     UnknownNamedArgument::UnknownNamedArgument(BackTraces traces, ValueFlatMap* names)

@@ -348,7 +348,7 @@ namespace Sass {
             }
 
             if (!scanner.isDone() && !isNewline(scanner.peekChar())) {
-              error("Unexpected text after end of comment.",
+              error("Unexpected text after end of comment",
                 scanner.rawSpan());
               // Dart-sass consumes the text for error reporting
               // auto errorStart = scanner.state();

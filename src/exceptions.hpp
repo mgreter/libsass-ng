@@ -300,10 +300,12 @@ namespace Sass {
 
     class TooManyArguments : public RuntimeException {
       public:
-        TooManyArguments(BackTraces traces, size_t given, size_t expected);
+        // With [positional], like dart-sass when named arguments were
+      // passed too ("Only 1 positional argument allowed, ...")
+      TooManyArguments(BackTraces traces, size_t given, size_t expected, bool positional = false);
         TooManyArguments(BackTraces traces, const ExpressionFlatMap* given, const Sass::EnvKeySet& expected);
         TooManyArguments(BackTraces traces, const ValueFlatMap* superfluous);
-        TooManyArguments(BackTraces traces, size_t given, const CallableSignature* signature);
+        TooManyArguments(BackTraces traces, size_t given, const CallableSignature* signature, bool positional = false);
         
     };
 
