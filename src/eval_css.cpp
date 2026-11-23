@@ -298,6 +298,37 @@ namespace Sass {
     return false;
   }
 
+  // Returns [list] with a leading `&` of a compound selector (in plain css)
+  // turned into an explicit parent, as used by `resolveParentSelectors`.
+  // Only the first such compound of each complex selector is converted.
+  // The selectors of compiled css are shared (e.g. emitted again with
+  // `meta.load-css()`), so they are copied instead of changed in place.
+  static SelectorList* withExplicitParents(SelectorList* list)
+  {
+    SelectorListObj result;
+    for (size_t i = 0; i < list->size(); i += 1) {
+      ComplexSelector* complex = list->get(i);
+      for (size_t j = 0; j < complex->size(); j += 1) {
+        CplxSelComponent* component = complex->get(j);
+        CompoundSelector* compound = component->selector();
+        if (compound == nullptr || compound->empty()) continue;
+        if (!compound->first()->isaCssParentSelector()) continue;
+        CompoundSelectorObj resolved = SASS_MEMORY_COPY(compound);
+        resolved->withExplicitParent(true);
+        resolved->erase(resolved->begin());
+        CplxSelComponentObj copy = SASS_MEMORY_NEW(
+          CplxSelComponent, component);
+        copy->selector(resolved);
+        ComplexSelectorObj changed = SASS_MEMORY_COPY(complex);
+        changed->set(j, copy);
+        if (result.isNull()) result = SASS_MEMORY_COPY(list);
+        result->set(i, changed);
+        break;
+      }
+    }
+    return result.isNull() ? list : result.detach();
+  }
+
   void Eval::visitCssStyleRule(CssStyleRule* css)
   {
 
@@ -335,18 +366,7 @@ namespace Sass {
       // Temporary fix
       SelectorListObj slist = css->selector();
       // Selectors that are not nested are kept as-is
-      if (nest) for (auto& complex : slist->elements()) {
-        for (auto& component : complex->elements()) {
-          auto& compound = component->selector();
-          if (compound->elements().empty()) continue;
-          auto& head = compound->elements().front();
-          if (head->isaCssParentSelector()) {
-            compound->withExplicitParent(true);
-            compound->erase(compound->begin());
-            break;
-          }
-        }
-      }
+      if (nest) slist = withExplicitParents(slist);
 
       if (nest) slist = slist->resolveParentSelectors(original(), logger, !atRootExcludingStyleRule);
 
