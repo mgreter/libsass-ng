@@ -630,7 +630,11 @@ namespace Sass {
     }
 
     static double clampLikeCss(double val, double min, double max) {
-      return std::isnan(val) ? min : std::min(std::max(val, min), max);
+      // Like Dart's `clamp` (used by dart-sass), which orders -0 before 0
+      if (std::isnan(val)) return min;
+      if (val < min || (val == min && std::signbit(val))) return min;
+      if (val > max || (val == max && std::signbit(max))) return max;
+      return val;
     }
 
     /// The implementation of the two-argument `rgb()` and `rgba()` functions.
@@ -703,7 +707,7 @@ namespace Sass {
             chnValue->assertPercentageOrUnitless(logger, chnInfo.max, chnInfo.name);
           double min = chnInfo.lowerClamped ? chnInfo.min : -std::numeric_limits<double>::infinity();
           double max = chnInfo.upperClamped ? chnInfo.max : +std::numeric_limits<double>::infinity();
-          return std::isnan(val) ? min : std::min(std::max(val, min), max);
+          return clampLikeCss(val, min, max);
         }
         // else {
         //   return chnValue->value();

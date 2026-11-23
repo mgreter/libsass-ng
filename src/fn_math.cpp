@@ -45,7 +45,7 @@ namespace Sass {
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
-          std::ceil(number->value()),
+          std::ceil(number->value()) + 0.0,
           number->unit());
       }
       static BUILT_IN_FN(fnClamp)
@@ -76,7 +76,7 @@ namespace Sass {
       {
         Number* number = arguments[0]->assertNumber(compiler, Strings::number);
         return SASS_MEMORY_NEW(Number, pstate,
-          std::floor(number->value()),
+          std::floor(number->value()) + 0.0,
           number->unit());
       }
 

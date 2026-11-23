@@ -190,6 +190,9 @@ namespace Sass {
   {
 
     // add units later
+    // Like dart-sass (since 1.104), an exact negative zero is written as
+    // `-0` (numbers that only round to zero are still written as `0`).
+    if (nr == 0.0 && std::signbit(nr)) return sass::string("-0");
     return formatNumber(nr, outopt);
 
   }
@@ -1210,6 +1213,10 @@ namespace Sass {
     }
   }
 
+  // Like dart-sass, which writes integer rgb channels as ints,
+  // never print negative zero for them (adding +0 turns -0 to 0).
+  static double intChannel(double channel) { return channel + 0.0; }
+
   void Inspect::_writeRgb(Color* color)
   {
     sass::string ss;
@@ -1218,16 +1225,16 @@ namespace Sass {
 
     if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {
       ss += "rgb(";
-      ss += PrintNumber(rgb->channel(str_red), outopt); ss += ", ";
-      ss += PrintNumber(rgb->channel(str_green), outopt); ss += ", ";
-      ss += PrintNumber(rgb->channel(str_blue), outopt); ss += ")";
+      ss += PrintNumber(intChannel(rgb->channel(str_red)), outopt); ss += ", ";
+      ss += PrintNumber(intChannel(rgb->channel(str_green)), outopt); ss += ", ";
+      ss += PrintNumber(intChannel(rgb->channel(str_blue)), outopt); ss += ")";
     }
     else {
       ss += "rgba(";
-      ss += PrintNumber(rgb->channel(str_red), outopt); ss += ", ";
-      ss += PrintNumber(rgb->channel(str_green), outopt); ss += ", ";
-      ss += PrintNumber(rgb->channel(str_blue), outopt); ss += ", ";
-      ss += PrintNumber(rgb->channel(str_alpha), outopt); ss += ")";
+      ss += PrintNumber(intChannel(rgb->channel(str_red)), outopt); ss += ", ";
+      ss += PrintNumber(intChannel(rgb->channel(str_green)), outopt); ss += ", ";
+      ss += PrintNumber(intChannel(rgb->channel(str_blue)), outopt); ss += ", ";
+      ss += PrintNumber(intChannel(rgb->channel(str_alpha)), outopt); ss += ")";
     }
     append_token(ss, color);
   }
@@ -1319,9 +1326,9 @@ namespace Sass {
     if (outopt.output_style == SASS_STYLE_COMPRESSED && !inspect) {
       ColorObj rgb = color->toSpace(ColorSpaces::rgb, color->pstate());
       if (opaque && _tryIntegerRgb(rgb)) return;
-      sass::string red(PrintNumber(rgb->getChannel0(), outopt));
-      sass::string green(PrintNumber(rgb->getChannel1(), outopt));
-      sass::string blue(PrintNumber(rgb->getChannel2(), outopt));
+      sass::string red(PrintNumber(intChannel(rgb->getChannel0()), outopt));
+      sass::string green(PrintNumber(intChannel(rgb->getChannel1()), outopt));
+      sass::string blue(PrintNumber(intChannel(rgb->getChannel2()), outopt));
       ColorObj hsl = color->toSpace(ColorSpaces::hsl, color->pstate());
       sass::string hue(PrintNumber(hsl->getChannel0(), outopt));
       sass::string saturation(PrintNumber(hsl->getChannel1(), outopt));

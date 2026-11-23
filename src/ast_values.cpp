@@ -672,7 +672,8 @@ namespace Sass {
     }
     else {
       double ret = std::fmod(x, y);
-      return ret;
+      // Dart also returns zero results as positive zero
+      return ret + 0.0;
     }
   }
   inline static double rem(double x, double y)
@@ -1115,22 +1116,22 @@ namespace Sass {
       return sass::round(value_ / steps) * steps;
     }
     case Round::RNDSTRAT::UP: {
-      return (step->value_ < 0
+      return ((step->value_ < 0
         ? std::floor(value_ / steps)
         : std::ceil(value_ / steps)
-        ) * steps;
+        ) + 0.0) * steps;
     }
     case Round::RNDSTRAT::DOWN: {
-      return (step->value_ < 0
+      return ((step->value_ < 0
         ? std::ceil(value_ / steps)
         : std::floor(value_ / steps)
-        ) * steps;
+        ) + 0.0) * steps;
     }
     case Round::RNDSTRAT::TO_ZERO: {
-      return (value_ < 0
+      return ((value_ < 0
         ? std::ceil(value_ / steps)
         : std::floor(value_ / steps)
-        ) * steps;
+        ) + 0.0) * steps;
     }
     default:
       throw "Invalid rounding strategy";

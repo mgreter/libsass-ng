@@ -95,7 +95,9 @@ namespace sass {
     if (std::fabs(value - truncated) >= 0.5) {
       truncated += std::copysign(1.0, value);
     }
-    return truncated;
+    // Like dart-sass (which rounds to an int), never return
+    // negative zero (adding positive zero turns -0 into +0).
+    return truncated + 0.0;
   }
 
   // Like `math.pow` of the Dart VM (dart-sass), which handles a few

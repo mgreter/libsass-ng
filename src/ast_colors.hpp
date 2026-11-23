@@ -236,53 +236,55 @@ namespace Sass {
       return rv;
     }
 
+    // Like dart-sass, normalizes NaN and negative zero to zero.
+    static tl::optional<double> _normalizeLinear(
+      tl::optional<double> value)
+    {
+      if (value.has_value() == false) return value;
+      if (value.value() == 0.0 || std::isnan(value.value())) return 0.0;
+      return value;
+    }
+    // Normalizes hue to [0, 360) and, like dart-sass, NaN,
+    // infinity and negative zero to zero (even if inverted).
     static tl::optional<double> _normalizeHue(
       tl::optional<double> hue, bool invert)
     {
       if (hue.has_value() == false) return hue;
-      auto rv = std::fmod(std::fmod(hue.value(), 360.0)
+      if (hue.value() == 0.0 || !std::isfinite(hue.value())) return 0.0;
+      return std::fmod(std::fmod(hue.value(), 360.0)
         + 360.0 + (invert ? 180.0 : 0.0), 360.0);
-      // std::cerr << "norm hue " << rv << "\n";
-        return rv;
     }
-
     static Color* forSpaceInternal(
       const SourceSpan& pstate, const ColorSpace& space,
       tl::optional<double> c0, tl::optional<double> c1,
       tl::optional<double> c2, tl::optional<double> alpha)
     {
-
-       // std::cerr << "=> forSpaceInternal " << space.name() << " " << c0.value_or(-32) << ", "
-       //   << c1.value_or(-42) << ", " << c2.value_or(-52) << "\n";
-
       if (space == ColorSpaces::hsl) {
         return _forSpace(pstate, space,
           _normalizeHue(c0, c1.value_or(0) < 0.0),
-          c1.has_value() ? std::abs(c1.value()) : c1,
-          c2, alpha);
+          _normalizeLinear(c1.has_value() ? std::abs(c1.value()) : c1),
+          _normalizeLinear(c2), _normalizeLinear(alpha));
       }
       else if (space == ColorSpaces::hwb)
       {
         return _forSpace(pstate, space,
           _normalizeHue(c0, false),
-          c1, c2, alpha);
+          _normalizeLinear(c1), _normalizeLinear(c2),
+          _normalizeLinear(alpha));
       }
       else if (space == ColorSpaces::lch || space == ColorSpaces::oklch) {
-        auto rv = _forSpace(pstate, space,
-          c0,
-          c1.has_value() ? std::abs(c1.value()) : c1,
+        return _forSpace(pstate, space,
+          _normalizeLinear(c0),
+          _normalizeLinear(c1.has_value() ? std::abs(c1.value()) : c1),
           _normalizeHue(c2, c1.value_or(0) < 0.0), // fuzzyLessThan
-          alpha);
-        // std::cerr << "for space " << rv->debug() << "\n";
-        return rv;
+          _normalizeLinear(alpha));
       }
       else {
-        auto rv = _forSpace(pstate, space, c0, c1, c2, alpha);
-        // std::cerr << "for space " << rv->debug() << "\n";
-        return rv;
+        return _forSpace(pstate, space,
+          _normalizeLinear(c0), _normalizeLinear(c1),
+          _normalizeLinear(c2), _normalizeLinear(alpha));
       }
     }
-
     Color* changeAlpha(double alpha) {
       return Color::forSpaceInternal(
         pstate_, space_,

@@ -12,7 +12,11 @@ namespace Sass {
 
 
   static double clampLikeCss(double val, double min, double max) {
-    return std::isnan(val) ? min : std::min(std::max(val, min), max);
+    // Like Dart's `clamp` (used by dart-sass), which orders -0 before 0
+    if (std::isnan(val)) return min;
+    if (val < min || (val == min && std::signbit(val))) return min;
+    if (val > max || (val == max && std::signbit(max))) return max;
+    return val;
   }
 
   static tl::optional<double> _clampChannel(tl::optional<double> value, const ColorChannel& channel)
