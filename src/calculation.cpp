@@ -26,8 +26,11 @@ namespace Sass {
     // Verifies that all the numbers in [args] aren't known to be
     // incompatible with one another, and that they don't have units
     // that are too complex for calculations.
+    // Unless [inCalculation] is false (e.g. for `math.max()`), throws
+    // with the message of dart-sass ("x and y are incompatible.").
     static void verifyCompatibleNumberValues(Logger& logger,
-      const SourceSpan& pstate, const ValueVector& args, bool strict = true)
+      const SourceSpan& pstate, const ValueVector& args, bool strict = true,
+      bool inCalculation = true)
     {
       // Note: this logic is largely duplicated in
       // _EvaluateVisitor._verifyCompatibleNumbers and
@@ -42,7 +45,7 @@ namespace Sass {
           for (unsigned int j = i + 1; j < args.size(); j++) {
             if (const Number* rnr = args[j]->isaNumber()) {
               if (!lnr->hasPossiblyCompatibleUnits(rnr, strict)) {
-                throw Exception::UnitMismatch(logger, *lnr, *rnr);
+                throw Exception::UnitMismatch(logger, *lnr, *rnr, inCalculation);
               }
             }
           }
@@ -65,7 +68,7 @@ namespace Sass {
       verifyCompatibleCalcValue(logger, rhs);
       if (lhs == nullptr || rhs == nullptr) return;
       if (!lhs->hasPossiblyCompatibleUnits(rhs, true)) {
-        throw Exception::UnitMismatch(logger, *lhs, *rhs);
+        throw Exception::UnitMismatch(logger, *lhs, *rhs, true);
       }
     }
     // EO verifyCompatibleNumbers
@@ -474,20 +477,20 @@ namespace Sass {
       for (size_t i = 0; i < args.size(); i++) {
         Value* val = SASS_CAST(Value, simplifieds[i]);
         if (val->isaCalculation() || val->isaCalcOperation()) {
-          verifyCompatibleNumberValues(logger, pstate, args);
+          verifyCompatibleNumberValues(logger, pstate, args, true, !strict);
           return SASS_MEMORY_NEW(Calculation,
             pstate, str_min, std::move(simplifieds));
         }
         if (auto str = val->isaString()) {
           if (str->isVar()) {
-            verifyCompatibleNumberValues(logger, pstate, args);
+            verifyCompatibleNumberValues(logger, pstate, args, true, !strict);
             return SASS_MEMORY_NEW(Calculation,
               pstate, str_min, std::move(simplifieds));
           }
         }
         Number* nr = strict ? val->assertNumber(logger, str_empty) : val->isaNumber();
         if (nr == nullptr) {
-          verifyCompatibleNumberValues(logger, pstate, args);
+          verifyCompatibleNumberValues(logger, pstate, args, true, !strict);
           return SASS_MEMORY_NEW(Calculation,
             pstate, str_min, std::move(simplifieds));
         }
@@ -495,7 +498,7 @@ namespace Sass {
         // Will return zero if the units are to compatible
         double factor = nr->getUnitConversionFactor(min, false);
         if (factor == 0.0) {
-          verifyCompatibleNumberValues(logger, pstate, args);
+          verifyCompatibleNumberValues(logger, pstate, args, true, !strict);
           return SASS_MEMORY_NEW(Calculation,
             pstate, str_min, std::move(simplifieds));
         }
@@ -521,20 +524,20 @@ namespace Sass {
       for (size_t i = 0; i < simplifieds.size(); i++) {
         Value* val = SASS_CAST(Value, simplifieds[i]);
         if (val->isaCalculation() || val->isaCalcOperation()) {
-          verifyCompatibleNumberValues(logger, pstate, args);
+          verifyCompatibleNumberValues(logger, pstate, args, true, !strict);
           return SASS_MEMORY_NEW(Calculation, pstate,
             str_max, std::move(simplifieds));
         }
         if (auto str = val->isaString()) {
           if (str->isVar()) {
-            verifyCompatibleNumberValues(logger, pstate, args);
+            verifyCompatibleNumberValues(logger, pstate, args, true, !strict);
             return SASS_MEMORY_NEW(Calculation, pstate,
               str_max, std::move(simplifieds));
           }
         }
         Number* nr = strict ? val->assertNumber(logger, str_empty) : val->isaNumber();
         if (nr == nullptr) {
-          verifyCompatibleNumberValues(logger, pstate, args);
+          verifyCompatibleNumberValues(logger, pstate, args, true, !strict);
           return SASS_MEMORY_NEW(Calculation, pstate,
             str_max, std::move(simplifieds));
         }
@@ -542,7 +545,7 @@ namespace Sass {
         // Will return zero if the units are to compatible
         double factor = nr->getUnitConversionFactor(max, false);
         if (factor == 0.0) {
-          verifyCompatibleNumberValues(logger, pstate, args);
+          verifyCompatibleNumberValues(logger, pstate, args, true, !strict);
           return SASS_MEMORY_NEW(Calculation, pstate,
             str_max, std::move(simplifieds));
         }

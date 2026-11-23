@@ -100,8 +100,9 @@ namespace Sass {
       : Base(msg, traces, pstate)
     {}
 
-    UnitMismatch::UnitMismatch(BackTraces traces, const Number& lhs, const Number& rhs)
-      : RuntimeException(traces, lhs.inspect() + " and " + rhs.inspect() + " have incompatible units.")
+    UnitMismatch::UnitMismatch(BackTraces traces, const Number& lhs, const Number& rhs, bool inCalculation)
+      : RuntimeException(traces, lhs.inspect() + " and " + rhs.inspect() +
+        (inCalculation ? " are incompatible." : " have incompatible units."))
     {
       this->traces.push_back(lhs.pstate());
       this->traces.push_back(rhs.pstate());

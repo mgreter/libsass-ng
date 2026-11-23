@@ -135,10 +135,13 @@ namespace Sass {
     class UnitMismatch : public RuntimeException
     {
     public:
+      // With [inCalculation], uses the message of dart-sass
+      // `_verifyCompatibleNumbers` ("x and y are incompatible.")
       UnitMismatch(
         BackTraces traces,
         const Number& lhs,
-        const Number& rhs);
+        const Number& rhs,
+        bool inCalculation = false);
     };
 
 
