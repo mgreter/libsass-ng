@@ -21,11 +21,17 @@ namespace Sass {
   {
     Offset start(scanner.offset);
     InterpolationBuffer buffer(scanner);
-    do {
+    // Like dart-sass (#2848), newlines are only added between the
+    // lines of a selector (a trailing one broke error positions)
+    while (true) {
       buffer.addInterpolation(readAlmostAnyValue(true));
-      buffer.writeCharCode($lf);
-    } while (buffer.trailingStringEndsWith(",") &&
-      scanCharIf(isNewline));
+      if (buffer.trailingStringEndsWith(",") && scanCharIf(isNewline)) {
+        buffer.writeCharCode($lf);
+      }
+      else {
+        break;
+      }
+    }
 
     return buffer.getInterpolation(scanner.rawSpanFrom(start));
   }

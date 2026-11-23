@@ -174,6 +174,12 @@ namespace Sass {
       return relevantSpan();
     }
 
+    // Like dart-sass `_adjustExceptionSpan`, returns an empty span at the
+    // current position, moved back to the first newline after the previous
+    // non-whitespace character if they are separated by newlines. So errors
+    // for missing tokens point at the line where the problem occurred.
+    SourceSpan errorSpan() const;
+
     // Get a source span pointing to last relevant position
     // Last relevant means whitespace is not yet parsed (word ending)
     inline SourceSpan relevantSpan() const // 161

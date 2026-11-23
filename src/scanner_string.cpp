@@ -274,6 +274,20 @@ namespace Sass {
     return sass::string(start, end);
   }
 
+  SourceSpan StringScanner::errorSpan() const
+  {
+    const char* cur = position;
+    const char* lastNewline = nullptr;
+    while (cur > startpos && Character::isWhitespace((uint8_t)cur[-1])) {
+      if (Character::isNewline((uint8_t)cur[-1])) lastNewline = cur - 1;
+      cur -= 1;
+    }
+    // Only if there is any non-whitespace before
+    if (lastNewline == nullptr || cur == startpos) return rawSpan();
+    Offset local(startpos, lastNewline);
+    return spanAt(local);
+  }
+
   // Throws a [FormatException] describing that [name] is
   // expected at the current position in the string.
   void StringScanner::fail(

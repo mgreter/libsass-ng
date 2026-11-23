@@ -744,6 +744,23 @@ namespace Sass {
   // Throws a parser error associated with [pstate].
   void Parser::error(const sass::string& message, const SourceSpan& pstate)
   {
+    // Like dart-sass `_adjustExceptionSpan`, an empty span for a missing
+    // token at the current position is moved back to the first newline
+    // after the previous non-whitespace character. So the error points
+    // at the line where the problem occurred, not the next token.
+    if (pstate.span.line == 0 && pstate.span.column == 0 &&
+      StringUtils::startsWithIgnoreCase(message, "expected", 8))
+    {
+      SourceSpan current(scanner.rawSpan());
+      if (current.getSource() == pstate.getSource() &&
+        current.position == pstate.position)
+      {
+        // Must outlive the frame (back traces only hold references)
+        SourceSpan adjusted(scanner.errorSpan());
+        CallStackFrame frame(compiler, BackTrace(adjusted));
+        throw Exception::ParserException(compiler, message);
+      }
+    }
     CallStackFrame frame(compiler, BackTrace(pstate));
     throw Exception::ParserException(compiler, message);
   }
