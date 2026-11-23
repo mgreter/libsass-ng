@@ -62,6 +62,10 @@ namespace Sass {
 
     // The current media queries, if any.
     CssMediaQueryVectorObj mediaQueries;
+    // The set of media queries that were merged together to create
+    // [mediaQueries] (like dart-sass `_mediaQuerySources`). A nested
+    // media rule may only bubble through media rules from this set.
+    CssMediaQueryVector mediaQuerySources;
 
     // The selectors from style rules
     // ToDo: document why having two
@@ -545,6 +549,10 @@ public:
 
 
     CssMediaQueryVector* evalMediaQueries(Interpolation* itpl);
+    // Like dart-sass: all previous sources, the current queries and
+    // the new [parsed] queries (only if the queries could be merged)
+    void collectMediaQuerySources(CssMediaQueryVector& uses,
+      const CssMediaQueryVector* parsed) const;
 
 
 

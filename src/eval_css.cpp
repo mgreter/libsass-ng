@@ -225,6 +225,14 @@ namespace Sass {
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
       node->pstate(), current, mergedQueries);
 
+    // Like dart-sass, the merged sources are empty if not merged
+    if (bubbleQuery && mediaQueries && !mediaQueries->empty()) {
+      collectMediaQuerySources(uses, parsed);
+    }
+    else {
+      uses.clear();
+    }
+
     CssParentNode* chroot = current;
     while (BubbleMediaQuery(chroot, uses, bubbleQuery)) {
       if (!chroot->parent()) break;
@@ -235,6 +243,7 @@ namespace Sass {
 
     RAII_OBJ(CssParentNode, current, css);
     RAII_OBJ(CssMediaQueryVector, mediaQueries, mergedQueries);
+    LocalOption<CssMediaQueryVector> sources(mediaQuerySources, uses);
 
     // If we're in a style rule, copy it into the media rule so that
     // declarations immediately inside @media have somewhere to go.

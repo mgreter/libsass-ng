@@ -2554,6 +2554,7 @@ namespace Sass {
       RAII_FLAG(inUnknownAtRule, inUnknownAtRule);
       RAII_FLAG(atRootExcludingStyleRule, atRootExcludingStyleRule);
       CssMediaQueryVectorObj oldQueries = mediaQueries;
+      CssMediaQueryVector oldSources(mediaQuerySources);
 
       if (query->excludesStyleRules()) {
         atRootExcludingStyleRule = true;
@@ -2561,6 +2562,7 @@ namespace Sass {
 
       if (query->excludesMedia()) {
         mediaQueries = nullptr;
+        mediaQuerySources.clear();
       }
 
       if (inKeyframes && query->excludesName("keyframes")) {
@@ -2584,6 +2586,7 @@ namespace Sass {
       acceptChildrenAt(newParent, node);
 
       mediaQueries = oldQueries;
+      mediaQuerySources = oldSources;
 
     }
 
@@ -2667,14 +2670,27 @@ namespace Sass {
     if (uses.empty()) return false;
     if (const auto& rule = node->isaCssMediaRule()) {
       if (rule->queries() == nullptr) return false;
-      for (const auto& query : *rule->queries()) {
-        return std::find_if(uses.begin(), uses.end(),
-          [&](const CssMediaQueryObj& rhs) {
-            return ObjEqualityFn(query, rhs);
-          }) != uses.end();
-      }
+      // Like dart-sass, all queries must be from the merged sources
+      // (only the first one was checked before, returning in the loop)
+      return std::all_of(rule->queries()->begin(), rule->queries()->end(),
+        [&](const CssMediaQueryObj& query) {
+          return std::find_if(uses.begin(), uses.end(),
+            [&](const CssMediaQueryObj& rhs) {
+              return ObjEqualityFn(query, rhs);
+            }) != uses.end();
+        });
     }
     return false;
+  }
+
+  void Eval::collectMediaQuerySources(CssMediaQueryVector& uses,
+    const CssMediaQueryVector* parsed) const
+  {
+    uses = mediaQuerySources;
+    if (mediaQueries) uses.insert(uses.end(),
+      mediaQueries->begin(), mediaQueries->end());
+    if (parsed) uses.insert(uses.end(),
+      parsed->begin(), parsed->end());
   }
 
   void Eval::_addChild(CssNode* node, bool(*through)(CssNode*)) const {
@@ -2743,7 +2759,17 @@ namespace Sass {
       mergedQueries =
       (mergeMediaQueries(mediaQueries, parsed, uses, bubbleQuery));
 
+      // Like dart-sass, skip the rule if the merged queries cancel each
+      // other (e.g. `foo` and `bar`, since they never match together)
+      if (bubbleQuery && mergedQueries && mergedQueries->empty()) {
+        return nullptr;
+      }
+
     }
+
+    // Like dart-sass, the merged sources are empty if not merged
+    if (bubbleQuery) collectMediaQuerySources(uses, parsed);
+    else uses.clear();
 
     // Create a new CSS only representation of the media rule
     CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
@@ -2764,6 +2790,7 @@ namespace Sass {
     RAII_OBJ(CssParentNode, current, css);
 
     RAII_OBJ(CssMediaQueryVector, mediaQueries, mergedQueries);
+    LocalOption<CssMediaQueryVector> sources(mediaQuerySources, uses);
 
     if (isInStyleRule()) {
       CssStyleRule* copy = SASS_MEMORY_RESECT(readStyleRule);

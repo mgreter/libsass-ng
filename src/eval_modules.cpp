@@ -816,6 +816,8 @@ namespace Sass {
     // at-rules, which its extension store doesn't know about).
     RAII_PTR(CssStyleRule, readStyleRule, nullptr);
     RAII_OBJ(CssMediaQueryVector, mediaQueries, nullptr);
+    LocalOption<CssMediaQueryVector> flag_mediaQuerySources(
+      mediaQuerySources, CssMediaQueryVector());
     LocalOption<sass::string> flag_declarationName(declarationName, "");
     RAII_FLAG(inUnknownAtRule, false);
     RAII_FLAG(atRootExcludingStyleRule, false);
