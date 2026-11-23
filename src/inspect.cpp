@@ -854,7 +854,9 @@ namespace Sass {
 
     size_t position = wbuf.buffer.size();
 
-    if (inspect && compound->withExplicitParent()) {
+    // Unresolved parent selectors (e.g. at the root of the document)
+    // are written as is (like dart-sass, they refer to the scoping root).
+    if (compound->withExplicitParent()) {
       append_string("&");
     }
 

@@ -60,11 +60,11 @@ namespace Sass {
               "a list of strings, or a list of lists of strings.");
           }
           // Read and parse argument into selectors
+          // Like dart-sass, parent selectors are also allowed in the first
+          // selector (they are kept as is, unless they have a suffix).
           SelectorListObj slist(arg->assertSelector(
-            compiler, Strings::empty, !result.isNull()));
-          // First item is just taken as it is
-          if (result.isNull()) { result = slist; continue; }
-          // Otherwise resolve it with the previous selector
+            compiler, Strings::empty, true));
+          // Resolve it with the previous selector (or without a parent)
           result = slist->resolveParentSelectors(result, compiler);
         }
         // Convert and return value

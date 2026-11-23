@@ -1027,10 +1027,19 @@ namespace Sass {
 
     const Selector* expl = getExplicitParent();
     // debug_ast(this, "test: ");
-    if (!parent) {
-      if (expl != nullptr) {
-      throw Exception::TopLevelParent(traces, expl->pstate());
-    }
+    // Like dart-sass, a parent selector without any parent is kept
+    // as is (it refers to the scoping root), unless it has a suffix.
+    if (!parent && expl != nullptr) {
+      if (auto compound = dynamic_cast<const CompoundSelector*>(expl)) {
+        // The parser stores the suffix as a leading type selector
+        if (compound->withExplicitParent() && !compound->empty()) {
+          if (auto suffix = dynamic_cast<const TypeSelector*>(compound->first().ptr())) {
+            throw Exception::TopLevelParent(traces,
+              SourceSpan::delta(compound->pstate(), suffix->pstate()));
+          }
+        }
+      }
+      return { this };
     }
     if (parent) {
       // std::cerr << "Resolve parent selector " << parent->toString() << "\n";
@@ -1250,10 +1259,17 @@ namespace Sass {
           CompoundSelector* ptail = cptail->selector();
           ptail = SASS_MEMORY_COPY(ptail);
 
-          if (ptail && ptail->size() > 0) {
+          // An unresolved parent (`&` at the root) is a valid parent too
+          if (ptail && (ptail->size() > 0 || ptail->withExplicitParent())) {
             // Create copies to alter them
             ComplexSelectorObj parent = SASS_MEMORY_COPY(parent1);
 
+            // Like dart-sass, a suffix can not be added to a bare `&`
+            if (ptail->size() == 0 && size() > 0 && first()->isaTypeSelector()) {
+              CallStackFrame frame(traces, ptail->pstate());
+              throw Exception::RuntimeException(traces,
+                "Selector \"&\" can't have a suffix");
+            }
             // Check if we can merge front with back
             if (size() > 0 && ptail->size() > 0) {
               SimpleSelector* front = first();

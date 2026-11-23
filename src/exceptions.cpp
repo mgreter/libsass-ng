@@ -328,9 +328,9 @@ namespace Sass {
       : Base(val.inspect() + " isn't a valid CSS value.", traces, val.pstate())
     {}
 
-    // Thrown when a parent selector is used without any parent
+    // Thrown when a parent selector with a suffix is used without any parent
     TopLevelParent::TopLevelParent(BackTraces traces, SourceSpan pstate)
-      : Base("Top-level selectors may not contain the parent selector \"&\".", traces, pstate)
+      : Base("A top-level selector may not contain a parent selector with a suffix.", traces, pstate)
     {}
 
     // Thrown when a non-optional extend found nothing to extend
