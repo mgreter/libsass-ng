@@ -115,6 +115,11 @@ namespace Sass {
 
       static BUILT_IN_FN(featureExists)
       {
+        // Like dart-sass (1.78), the function is deprecated
+        compiler.addDeprecation(pstate, Logger::WARN_FEATURE_EXISTS, []() {
+          return "The feature-exists() function is deprecated.\n"
+            "\nMore info: https://sass-lang.com/d/feature-exists";
+        });
         const String* feature = arguments[0]->assertString(compiler, "feature");
         const sass::string& name(feature->value());
         return SASS_MEMORY_NEW(Boolean, pstate,

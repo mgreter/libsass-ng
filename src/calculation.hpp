@@ -33,7 +33,7 @@ namespace Sass {
 
     Value* operate(Logger& logger, const SourceSpan& span,
       SassOperator op, AstNode* lhs, AstNode* rhs,
-      bool inLegacySassFunction, bool simplify);
+      const sass::string* inLegacySassFunction, bool simplify);
 
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////

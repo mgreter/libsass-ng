@@ -80,7 +80,7 @@ namespace Sass {
     Value* operate(
       Logger& logger, const SourceSpan& pstate,
       SassOperator op, AstNode* left, AstNode* right,
-      bool inLegacySassFunction, bool simplify)
+      const sass::string* inLegacySassFunction, bool simplify)
     {
 
       if (!simplify) {
@@ -101,9 +101,20 @@ namespace Sass {
         // Case when both sides are numbers
         if (lnr != nullptr && rnr != nullptr) {
           // Is the operation valid
-          if (inLegacySassFunction ?
-            lnr->canCompareTo(rnr, false) :
-            lnr->hasCompatibleUnits(rnr, true))
+          bool compatible = lnr->hasCompatibleUnits(rnr, true);
+          // Like dart-sass, the legacy global functions allow unitless
+          // numbers to be mixed with units, but this is deprecated
+          if (!compatible && inLegacySassFunction && lnr->canCompareTo(rnr, false)) {
+            const sass::string& fn(*inLegacySassFunction);
+            logger.addDeprecation(pstate, Logger::DEPR_GLOBAL_BUILTIN, [&fn]() {
+              return "In future versions of Sass, " + fn + "() will be interpreted as "
+                "the CSS " + fn + "() calculation. This doesn't allow unitless numbers "
+                "to be mixed with numbers with units. If you want to use the Sass "
+                "function, call math." + fn + "() instead.\n\nSee https://sass-lang.com/d/import";
+            });
+            compatible = true;
+          }
+          if (compatible)
           {
             return op == ADD
               ? lnr->plus(rnr, logger, pstate)

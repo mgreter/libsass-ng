@@ -1761,14 +1761,14 @@ namespace Sass {
             [&](const ExpressionObj& expression) {
               return expression->isCalcSafe(); }))
           {
-            return visitCalcuation(fn, function, true);
+            return visitCalcuation(fn, function, &function->name());
           }
 
         }
       }
 
       if (Calc::hasCalculationVisitor(fn)) {
-        return visitCalcuation(fn, function, false);
+        return visitCalcuation(fn, function, nullptr);
       }
 
       if (!callable)
@@ -1860,7 +1860,7 @@ namespace Sass {
 
   }
 
-  Value* Eval::_visitCalculationExpression(Expression* node, bool inLegacySassFunction)
+  Value* Eval::_visitCalculationExpression(Expression* node, const sass::string* inLegacySassFunction)
   {
     // std::cerr << "visit calc exp " << node->toString() << "\n";
     if (auto inner = node->isaParenthesizedExpression()) {
@@ -2014,7 +2014,7 @@ namespace Sass {
   }
 
   // Name is already in lowercase (original name can be found on function node)
-  Value* Eval::visitCalcuation(Calc::CFN fn, FunctionExpression* node, bool inLegacySassFunction)
+  Value* Eval::visitCalcuation(Calc::CFN fn, FunctionExpression* node, const sass::string* inLegacySassFunction)
   {
 
     if (node->arguments()->hasNamed()) {
@@ -2047,6 +2047,20 @@ namespace Sass {
         std::make_move_iterator(arguments.end()));
       return new Calculation(node->pstate(),
         node->name(), std::move(inputs));
+    }
+
+    // Like dart-sass, the legacy global `round()` with a single number with
+    // units is deprecated (the css function requires an explicit modulus)
+    if (inLegacySassFunction && fn == Calc::CFN::ROUND && arguments.size() == 1) {
+      const Number* number = arguments[0]->isaNumber();
+      if (number && number->hasUnits()) {
+        logger.addDeprecation(node->pstate(), Logger::DEPR_GLOBAL_BUILTIN, []() {
+          return "In future versions of Sass, round() will be interpreted as a CSS "
+            "round() calculation. This requires an explicit modulus when rounding "
+            "numbers with units. If you want to use the Sass function, call "
+            "math.round() instead.\n\nSee https://sass-lang.com/d/import";
+        });
+      }
     }
 
     // Add logger in case of error for reporting

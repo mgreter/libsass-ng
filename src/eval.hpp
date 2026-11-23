@@ -417,7 +417,9 @@ namespace Sass {
     public:
     void renderArgumentInvocation(sass::string& strm, CallableArguments* args);
 
-    Value* _visitCalculationExpression(Expression* node, bool inLegacySassFunction);
+    // [inLegacySassFunction] is the name of the legacy global function (e.g.
+    // `min`) if called as one with calc-safe arguments, otherwise nullptr.
+    Value* _visitCalculationExpression(Expression* node, const sass::string* inLegacySassFunction);
 
     void _checkCalculationArguments(Calc::CFN fn, FunctionExpression* node, size_t maxArgs);
 
@@ -431,7 +433,7 @@ namespace Sass {
 
     private:
 
-    Value* visitCalcuation(Calc::CFN fn, FunctionExpression* node, bool inLegacySassFunction);
+    Value* visitCalcuation(Calc::CFN fn, FunctionExpression* node, const sass::string* inLegacySassFunction);
 
 
     protected:
