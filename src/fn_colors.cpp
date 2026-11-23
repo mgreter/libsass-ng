@@ -107,8 +107,9 @@ namespace Sass {
     static bool isMsFilterStart(const sass::string& text)
     {
       auto it = text.begin();
-      // The filter must start with alpha
-      if (!Character::isAlphabetic(*it)) return false;
+      // The filter must start with alpha (can't
+      // dereference the begin of an empty string)
+      if (it == text.end() || !Character::isAlphabetic(*it)) return false;
       while (it != text.end() && Character::isAlphabetic(*it)) ++it;
       while (it != text.end() && Character::isWhitespace(*it)) ++it;
       return it != text.end() && *it == '=';
