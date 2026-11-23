@@ -78,6 +78,9 @@ namespace Sass
 
   // For meta functions
   const sass::string str_load_css("load-css");
+  const sass::string str_css("css");
+  const sass::string str_load("load");
+  const sass::string str_get_module("get-module");
   const sass::string str_feature_exists("feature-exists");
   const sass::string str_type_of("type-of");
   const sass::string str_inspect("inspect");
@@ -286,6 +289,9 @@ namespace Sass
 
   // For meta functions
   const EnvKey key_load_css(str_load_css);
+  const EnvKey key_css(str_css);
+  const EnvKey key_load(str_load);
+  const EnvKey key_get_module(str_get_module);
   const EnvKey key_feature_exists(str_feature_exists);
   const EnvKey key_type_of(str_type_of);
   const EnvKey key_inspect(str_inspect);

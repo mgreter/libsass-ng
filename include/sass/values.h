@@ -60,7 +60,8 @@ extern "C" {
     SASS_FUNCTION,
     SASS_CALCULATION,
     SASS_CALC_OPERATION,
-    SASS_MIXIN
+    SASS_MIXIN,
+    SASS_MODULE
   };
 
   // List separators

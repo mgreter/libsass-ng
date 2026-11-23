@@ -372,21 +372,8 @@ namespace Sass {
       }
 
     }
-    else {
-
-      // No idea why this is needed!
-      // Probably for "with" configs!?
-      for (auto& var : modFrame->varIdxs) {
-        idxs->module->mergedFwdVar.insert(var);
-      }
-      //for (auto& var : modFrame->mixIdxs) {
-      //  idxs->mixIdxs.insert(var);
-      //}
-      //for (auto var : modFrame->fnIdxs) {
-      //  idxs->fnIdxs.insert(var);
-      //}
-
-    }
+    // Note: the variables of the using module must not be
+    // merged into the used module (e.g. for module-variables).
 
 
     return idxs;
@@ -704,13 +691,30 @@ namespace Sass {
 
   void Eval::importCssModule(String* url, Map* withMap, const SourceSpan& pstate)
   {
+    if (Stylesheet* sheet = loadModuleForSassScript(url, withMap, pstate)) {
+      emitModuleCss(sheet);
+    }
+  }
+
+  void Eval::emitModuleCss(Stylesheet* sheet)
+  {
+    CssRootObj rv = _combineCss(sheet, true);
+    if (rv != nullptr) rv->accept(this);
+  }
+
+  Stylesheet* Eval::loadModuleForSassScript(String* url, Map* withMap,
+    const SourceSpan& pstate, BuiltInMod** builtIn)
+  {
 
     bool hasWith = withMap && !withMap->empty();
 
     if (StringUtils::startsWith(url->value(), "sass:", 5)) {
       if (hasWith) throw Exception::RuntimeException(compiler,
         "Built-in module " + url->value() + " can't be configured.");
-      return;
+      BuiltInMod* module = compiler.getModule24(url->value().substr(5));
+      if (module == nullptr) throw Exception::UnknownImport(compiler);
+      if (builtIn != nullptr) *builtIn = module;
+      return nullptr;
     }
 
     // Owned by the evaluator (see `loadCssConfigs`)
@@ -744,13 +748,10 @@ namespace Sass {
           + " was already loaded, so it "
           "can't be configured using \"with\".");
       }
-      // debug_ast(sheet);
-      CssRootObj rv = _combineCss(sheet, true);
-      // debug_ast(rv);
-      // debug_ast(current->parent());
-      if (rv != nullptr) rv->accept(this);
-//       debug_ast(current->parent());
+      return sheet;
     }
+
+    return nullptr;
 
   }
 
@@ -776,7 +777,7 @@ namespace Sass {
         withConfigs.push_back(kvar);
         if (config.count(kname) == 1) {
           throw Exception::RuntimeException(compiler,
-            "The variable $" + kname.norm() + " was configured twice.");
+            "The variable $" + name->value() + " was configured twice.");
         }
         config[name->value()] = kv.second;
       }

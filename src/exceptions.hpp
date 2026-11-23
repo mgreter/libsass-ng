@@ -349,7 +349,8 @@ namespace Sass {
         BackTraces traces,
         SourceSpan pstate,
         const Value* val,
-        sass::string op);
+        sass::string op,
+        sass::string suffix = "");
     };
 
 

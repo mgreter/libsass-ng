@@ -123,6 +123,7 @@ namespace Sass {
     void visitCalculation(Calculation* value) override;
     void visitCalcOperation(CalcOperation* value) override;
     void visitMixin(Mixin* value) override;
+    void visitModuleRef(ModuleRef* value) override;
     void visitList(List* value) override;
     void visitMap(Map* value) override;
     void visitNull(Null* value) override;

@@ -933,6 +933,62 @@ namespace Sass {
     FINALIZE_AST_NODE(Mixin);
   };
 
+  ///////////////////////////////////////////////////////////////////////
+  // A first-class module reference (dart-sass `SassModule`), as returned
+  // by `meta.get-module()` and `meta.load()`. It references the module's
+  // scope, so it reflects later changes (e.g. to its variables).
+  ///////////////////////////////////////////////////////////////////////
+
+  class ModuleRef final : public Value
+  {
+  public:
+    // The scope with the module's own members
+    ADD_PROPERTY(EnvRefs*, refs);
+    // The loaded stylesheet (nullptr for built-in modules)
+    ADD_PROPERTY(Stylesheet*, sheet);
+    // The module itself (stylesheet or built-in module)
+    ADD_PROPERTY(Module*, module);
+  public:
+    // Value constructor
+    ModuleRef(
+      const SourceSpan& pstate,
+      EnvRefs* refs,
+      Stylesheet* sheet,
+      Module* module);
+    // Copy constructor
+    ModuleRef(const ModuleRef* ptr);
+    // Implement simple checkers for base value class
+    bool isNull() const final { return false; }
+    bool isBlank() const final { return false; }
+    bool isTruthy() const final { return true; }
+    // Like dart-sass, modules don't support these operations
+    Value* plus(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* minus(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const final;
+    Value* unaryPlus(Logger& logger, const SourceSpan& pstate) const final;
+    Value* unaryMinus(Logger& logger, const SourceSpan& pstate) const final;
+    Value* unaryDivide(Logger& logger, const SourceSpan& pstate) const final;
+    // Implement interface for base Value class
+    size_t hash() const final;
+    SassValueType getTag() const final { return SASS_MODULE; }
+    const sass::string& type() const final { return Strings::module; }
+    // Implement equality comparators for base value class
+    bool operator==(const Value& rhs) const final;
+    // Main entry point for Value Visitor pattern
+    void accept(ValueVisitor<void>* visitor) final {
+      return visitor->visitModuleRef(this);
+    }
+    Value* accept(ValueVisitor<Value*>* visitor) final {
+      return visitor->visitModuleRef(this);
+    }
+    // Copy operations for childless items
+    ModuleRef* copy(SASS_MEMORY_ARGS bool childless) const final {
+      return SASS_MEMORY_NEW_DBG(ModuleRef, this);
+    }
+    IMPLEMENT_ISA_CASTER(ModuleRef);
+    FINALIZE_AST_NODE(ModuleRef);
+  };
+
 
   ///////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////

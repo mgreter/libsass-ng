@@ -10,6 +10,7 @@
 #include "ast_callables.hpp"
 #include "ast_expressions.hpp"
 #include "string_utils.hpp"
+#include "stylesheet.hpp"
 
 namespace Sass {
 
@@ -126,25 +127,84 @@ namespace Sass {
 
       /*******************************************************************/
 
+      // A module passed to a meta function (see `getNullableModule`)
+      struct ModuleArg {
+        // The scope with the module's own members
+        EnvRefs* refs = nullptr;
+        // The loaded stylesheet (nullptr for built-ins)
+        Stylesheet* sheet = nullptr;
+        // The module itself (stylesheet or built-in)
+        Module* module = nullptr;
+      };
+
+      // Like dart-sass `_getNullableModule`, resolves a module reference or
+      // the namespace of a module used by the current module. Returns false
+      // for `null`, otherwise throws if [value] can't be resolved.
+      static bool getNullableModule(Compiler& compiler, Value* value, ModuleArg& arg)
+      {
+        if (ModuleRef* ref = value->isaModuleRef()) {
+          arg.refs = ref->refs();
+          arg.sheet = ref->sheet();
+          arg.module = ref->module();
+          return true;
+        }
+        if (String* ns = value->isaString()) {
+          auto parent = compiler.getCurrentModule();
+          auto& moduse = parent->module->moduse;
+          auto it = moduse.find(ns->value());
+          // A module is not available before it was compiled
+          if (it != moduse.end() && (it->second.second == nullptr
+            || it->second.second->isCompiled))
+          {
+            arg.refs = it->second.first;
+            // Only stylesheets are registered with a module
+            arg.sheet = static_cast<Stylesheet*>(it->second.second);
+            arg.module = arg.sheet;
+            // Built-in modules are only registered by their scope
+            if (arg.module == nullptr) {
+              for (auto& builtin : compiler.modules64) {
+                if (builtin.second->idxs == arg.refs) {
+                  arg.module = builtin.second;
+                  break;
+                }
+              }
+            }
+            return true;
+          }
+          throw Exception::RuntimeException(compiler,
+            "There is no module with namespace \"" + ns->value() + "\".");
+        }
+        if (value->isNull()) return false;
+        CallStackFrame csf(compiler, value->pstate());
+        throw Exception::SassScriptException(value->toString() +
+          " is neither a string nor a module reference.",
+          compiler, value->pstate(), Strings::module);
+      }
+
+      // Like dart-sass `_getModule`, but `null` is not allowed
+      static ModuleArg getModule(Compiler& compiler, Value* value)
+      {
+        ModuleArg arg;
+        if (!getNullableModule(compiler, value, arg)) {
+          CallStackFrame csf(compiler, value->pstate());
+          throw Exception::SassScriptException(value->toString() +
+            " is neither a string nor a module reference.",
+            compiler, value->pstate(), Strings::module);
+        }
+        return arg;
+      }
+
+      /*******************************************************************/
+
       static BUILT_IN_FN(globalVariableExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
-        String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
         auto parent = compiler.getCurrentModule();
         EnvKey name(variable->value());
-        if (plugin != nullptr) {
-          auto pp = parent->module->moduse.find(plugin->value());
-          if (pp != parent->module->moduse.end()) {
-            EnvRefs* module = pp->second.first;
-            auto it = module->varIdxs.find(name);
-            return SASS_MEMORY_NEW(Boolean, pstate,
-              it != module->varIdxs.end());
-          }
-          else {
-            throw Exception::RuntimeException(compiler,
-              "There is no module with the namespace \"" + plugin->value() + "\".");
-          }
-          return SASS_MEMORY_NEW(Boolean, pstate, false);
+        ModuleArg plugin;
+        if (getNullableModule(compiler, arguments[1], plugin)) {
+          return SASS_MEMORY_NEW(Boolean, pstate,
+            plugin.refs->varIdxs.count(name) != 0);
         }
         bool hasVar = false;
         for (auto& global : parent->forwards) {
@@ -194,22 +254,12 @@ namespace Sass {
       static BUILT_IN_FN(functionExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
-        String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
         auto parent = compiler.getCurrentModule();
         EnvKey name(variable->value());
-        if (plugin != nullptr) {
-          auto pp = parent->module->moduse.find(plugin->value());
-          if (pp != parent->module->moduse.end()) {
-            EnvRefs* module = pp->second.first;
-            auto it = module->fnIdxs.find(name);
-            return SASS_MEMORY_NEW(Boolean, pstate,
-              it != module->fnIdxs.end());
-          }
-          else {
-            throw Exception::RuntimeException(compiler,
-              "There is no module with the namespace \"" + plugin->value() + "\".");
-          }
-          return SASS_MEMORY_NEW(Boolean, pstate, false);
+        ModuleArg plugin;
+        if (getNullableModule(compiler, arguments[1], plugin)) {
+          return SASS_MEMORY_NEW(Boolean, pstate,
+            plugin.refs->fnIdxs.count(name) != 0);
         }
         bool hasFn = false;
         for (auto& global : parent->forwards) {
@@ -231,23 +281,13 @@ namespace Sass {
       static BUILT_IN_FN(mixinExists)
       {
         String* variable = arguments[0]->assertString(compiler, Sass::Strings::name);
-        String* plugin = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
         EnvKey name(variable->value());
 
         auto parent = compiler.getCurrentModule();
-        if (plugin != nullptr) {
-          auto pp = parent->module->moduse.find(plugin->value());
-          if (pp != parent->module->moduse.end()) {
-            EnvRefs* module = pp->second.first;
-            auto it = module->mixIdxs.find(name);
-            return SASS_MEMORY_NEW(Boolean, pstate,
-              it != module->mixIdxs.end());
-          }
-          else {
-            throw Exception::RuntimeException(compiler,
-              "There is no module with the namespace \"" + plugin->value() + "\".");
-          }
-          return SASS_MEMORY_NEW(Boolean, pstate, false);
+        ModuleArg plugin;
+        if (getNullableModule(compiler, arguments[1], plugin)) {
+          return SASS_MEMORY_NEW(Boolean, pstate,
+            plugin.refs->mixIdxs.count(name) != 0);
         }
         bool hasFn = false;
         for (auto& global : parent->forwards) {
@@ -334,7 +374,7 @@ namespace Sass {
           }
           else {
             throw Exception::RuntimeException(compiler,
-              "There is no module with the namespace \"" + plugin->value() + "\".");
+              "There is no module with namespace \"" + plugin->value() + "\".");
           }
           return SASS_MEMORY_NEW(Boolean, pstate, false);
         }
@@ -419,17 +459,11 @@ namespace Sass {
 
       static BUILT_IN_FN(moduleVariables)
       {
-        String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
+        ModuleArg arg(getModule(compiler, arguments[0]));
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
-        auto module = compiler.getCurrentModule();
-        auto it = module->module->moduse.find(ns->value());
-        if (it != module->module->moduse.end()) {
-          EnvRefs* refs = it->second.first;
-          Module* root = it->second.second;
-          if (root && !root->isCompiled) {
-            throw Exception::RuntimeException(compiler, "There is "
-              "no module with namespace \"" + ns->value() + "\".");
-          }
+        {
+          EnvRefs* refs = arg.refs;
+          Module* root = arg.sheet;
           for (auto& entry : refs->varIdxs) {
             String* name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
@@ -446,10 +480,6 @@ namespace Sass {
               varRoot.getVariable(vidx) });
           }
         }
-        else {
-          throw Exception::RuntimeException(compiler, "There is "
-            "no module with namespace \"" + ns->value() + "\".");
-        }
         return list.detach();
       }
 
@@ -457,17 +487,11 @@ namespace Sass {
 
       static BUILT_IN_FN(fnModuleMixins)
       {
-        String* ns = arguments[0]->assertString(compiler, Sass::Strings::module);
+        ModuleArg arg(getModule(compiler, arguments[0]));
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
-        auto module = compiler.getCurrentModule();
-        auto it = module->module->moduse.find(ns->value());
-        if (it != module->module->moduse.end()) {
-          EnvRefs* refs = it->second.first;
-          Module* root = it->second.second;
-          if (root && !root->isCompiled) {
-            throw Exception::RuntimeException(compiler, "There is "
-              "no module with namespace \"" + ns->value() + "\".");
-          }
+        {
+          EnvRefs* refs = arg.refs;
+          Module* root = arg.sheet;
           for (const auto& entry : refs->mixIdxs) {
             String* name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
@@ -486,26 +510,16 @@ namespace Sass {
               list->insert({ name, fn });
             }
         }
-        else {
-          throw Exception::RuntimeException(compiler, "There is "
-            "no module with namespace \"" + ns->value() + "\".");
-        }
         return list.detach();
       }
 
       static BUILT_IN_FN(moduleFunctions)
       {
-        String* ns = arguments[0]->assertStringOrNull(compiler, Sass::Strings::module);
+        ModuleArg arg(getModule(compiler, arguments[0]));
         MapObj list = SASS_MEMORY_NEW(Map, pstate);
-        auto module = compiler.getCurrentModule();
-        auto it = module->module->moduse.find(ns->value());
-        if (it != module->module->moduse.end()) {
-          EnvRefs* refs = it->second.first;
-          Module* root = it->second.second;
-          if (root && !root->isCompiled) {
-            throw Exception::RuntimeException(compiler, "There is "
-              "no module with namespace \"" + ns->value() + "\".");
-          }
+        {
+          EnvRefs* refs = arg.refs;
+          Module* root = arg.sheet;
           for (const auto& entry : refs->fnIdxs) {
             String* name = SASS_MEMORY_NEW(String, pstate,
               sass::string(entry.first.norm()), true);
@@ -523,10 +537,6 @@ namespace Sass {
             Function* fn = SASS_MEMORY_NEW(Function, pstate, callable);
             list->insert({ name, fn });
           }
-        }
-        else {
-          throw Exception::RuntimeException(compiler, "There is "
-            "no module with namespace \"" + ns->value() + "\".");
         }
         return list.detach();
       }
@@ -554,9 +564,10 @@ namespace Sass {
 
         String* name = arguments[0]->assertString(compiler, Sass::Strings::name);
         bool css = arguments[1]->isTruthy(); // supports all values
-        String* ns = arguments[2]->assertStringOrNull(compiler, Sass::Strings::module);
+        ModuleArg plugin;
+        bool hasModule = getNullableModule(compiler, arguments[2], plugin);
 
-        if (css && ns != nullptr) {
+        if (css && hasModule) {
           throw Exception::RuntimeException(compiler,
             "$css and $module may not both be passed at once.");
         }
@@ -571,19 +582,12 @@ namespace Sass {
 
         auto parent = compiler.getCurrentModule();
 
-        if (ns != nullptr && !ns->value().empty()) {
-          auto pp = parent->module->moduse.find(ns->value());
-          if (pp != parent->module->moduse.end()) {
-            EnvRefs* module = pp->second.first;
-            auto it = module->fnIdxs.find(varkey);
-            if (it != module->fnIdxs.end()) {
-              EnvRef fidx({ module, it->second });
-              callable = compiler.varRoot.getFunction(fidx);
-            }
-          }
-          else {
-            throw Exception::RuntimeException(compiler,
-              "There is no module with the namespace \"" + ns->value() + "\".");
+        if (hasModule) {
+          EnvRefs* module = plugin.refs;
+          auto it = module->fnIdxs.find(varkey);
+          if (it != module->fnIdxs.end()) {
+            EnvRef fidx({ module, it->second });
+            callable = compiler.varRoot.getFunction(fidx);
           }
         }
         else {
@@ -617,7 +621,7 @@ namespace Sass {
 
         // Remember if it was looked up without a namespace, so
         // `call()` behaves like a direct call (see `Function`).
-        bool unqualified = ns == nullptr || ns->value().empty();
+        bool unqualified = !hasModule;
         return SASS_MEMORY_NEW(Function, pstate, callable, unqualified);
 
       }
@@ -627,26 +631,20 @@ namespace Sass {
       {
 
         String* name = arguments[0]->assertString(compiler, Sass::Strings::name);
-        String* ns = arguments[1]->assertStringOrNull(compiler, Sass::Strings::module);
+        ModuleArg plugin;
+        bool hasModule = getNullableModule(compiler, arguments[1], plugin);
 
         CallableObj callable;
         EnvKey varkey(name->value());
 
         auto parent = compiler.getCurrentModule();
 
-        if (ns != nullptr && !ns->value().empty()) {
-          auto pp = parent->module->moduse.find(ns->value());
-          if (pp != parent->module->moduse.end()) {
-            EnvRefs* module = pp->second.first;
-            auto it = module->mixIdxs.find(varkey);
-            if (it != module->mixIdxs.end()) {
-              EnvRef fidx({ module, it->second });
-              callable = compiler.varRoot.getMixin(fidx);
-            }
-          }
-          else {
-            throw Exception::RuntimeException(compiler,
-              "There is no module with the namespace \"" + ns->value() + "\".");
+        if (hasModule) {
+          EnvRefs* module = plugin.refs;
+          auto it = module->mixIdxs.find(varkey);
+          if (it != module->mixIdxs.end()) {
+            EnvRef fidx({ module, it->second });
+            callable = compiler.varRoot.getMixin(fidx);
           }
         }
         else {
@@ -749,6 +747,45 @@ namespace Sass {
 
       /*******************************************************************/
 
+      // Returns a module reference for a module or its namespace
+      static BUILT_IN_FN(fnGetModule)
+      {
+        ModuleArg arg(getModule(compiler, arguments[0]));
+        return SASS_MEMORY_NEW(ModuleRef, pstate,
+          arg.refs, arg.sheet, arg.module);
+      }
+
+      /*******************************************************************/
+
+      // Loads a module like `meta.load-css()`, but returns a
+      // module reference instead of emitting its CSS.
+      static BUILT_IN_FN(fnLoad)
+      {
+        String* url = arguments[0]->assertString(compiler, Strings::url);
+        MapObj withMap = arguments[1]->assertMapOrNull(compiler, Strings::with);
+        BuiltInMod* builtIn = nullptr;
+        if (Stylesheet* sheet = eval.loadModuleForSassScript(
+          url, withMap, pstate, &builtIn))
+        {
+          return SASS_MEMORY_NEW(ModuleRef, pstate,
+            sheet->idxs, sheet, sheet);
+        }
+        return SASS_MEMORY_NEW(ModuleRef, pstate,
+          builtIn->idxs, nullptr, builtIn);
+      }
+
+      /*******************************************************************/
+
+      // Emits the CSS of a module (again), like `meta.load-css()`
+      static BUILT_IN_FN(fnCss)
+      {
+        ModuleArg arg(getModule(compiler, arguments[0]));
+        if (arg.sheet != nullptr) eval.emitModuleCss(arg.sheet);
+        return SASS_MEMORY_NEW(Null, SourceSpan::internal32("[CSS]"));
+      }
+
+      /*******************************************************************/
+
       void registerFunctions(Compiler& compiler)
 	    {
 
@@ -758,6 +795,7 @@ namespace Sass {
 
         module.addMixin(key_apply, compiler.createBuiltInMixin(key_apply, "$mixin, $args...", fnApply, true));
         module.addMixin(key_load_css, compiler.createBuiltInMixin(key_load_css, "$url, $with: null", loadCss));
+        module.addMixin(key_css, compiler.createBuiltInMixin(key_css, "$module", fnCss));
 
         module.addFunction(key_calc_name, compiler.registerBuiltInFunction(key_calc_name, "$calc", fnCalcName));
         module.addFunction(key_calc_args, compiler.registerBuiltInFunction(key_calc_args, "$calc", fnCalcArgs));
@@ -778,6 +816,8 @@ namespace Sass {
         module.addFunction(key_module_functions, compiler.registerBuiltInFunction(key_module_functions, "$module", moduleFunctions));
         module.addFunction(key_get_function, compiler.registerBuiltInFunction(key_get_function, "$name, $css: false, $module: null", findFunction));
         module.addFunction(key_call, compiler.registerBuiltInFunction(key_call, "$function, $args...", call));
+        module.addFunction(key_get_module, compiler.registerBuiltInFunction(key_get_module, "$module", fnGetModule));
+        module.addFunction(key_load, compiler.registerBuiltInFunction(key_load, "$url, $with: null", fnLoad));
 
 	    }
 

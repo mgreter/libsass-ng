@@ -154,6 +154,7 @@ namespace Sass {
   class IfCondition;
   class Calculation;
   class Mixin;
+  class ModuleRef;
   class CalcOperation;
   class CustomWarning;
   class CustomError;
@@ -314,6 +315,7 @@ namespace Sass {
   IMPL_MEM_OBJ(AtRootQuery);
   IMPL_MEM_OBJ(Null);
   IMPL_MEM_OBJ(Mixin);
+  IMPL_MEM_OBJ(ModuleRef);
 
   IMPL_MEM_OBJ(SelectorExpression);
   IMPL_MEM_OBJ(BooleanExpression);

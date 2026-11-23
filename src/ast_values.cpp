@@ -1768,6 +1768,78 @@ namespace Sass {
   {
     return ObjEqualityFn(callable_, rhs.callable());
   }
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  ModuleRef::ModuleRef(
+    const SourceSpan& pstate,
+    EnvRefs* refs,
+    Stylesheet* sheet,
+    Module* module) :
+    Value(pstate),
+    refs_(refs),
+    sheet_(sheet),
+    module_(module)
+  {}
+
+  ModuleRef::ModuleRef(
+    const ModuleRef* ptr) :
+    Value(ptr),
+    refs_(ptr->refs_),
+    sheet_(ptr->sheet_),
+    module_(ptr->module_)
+  {}
+
+  size_t ModuleRef::hash() const
+  {
+    return std::hash<const void*>()(refs_);
+  }
+
+  // Two references are equal if they reference the same module
+  bool ModuleRef::operator==(const Value& rhs) const
+  {
+    if (const ModuleRef* other = rhs.isaModuleRef()) {
+      return refs_ == other->refs_;
+    }
+    return false;
+  }
+
+  Value* ModuleRef::plus(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  {
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "+");
+  }
+
+  Value* ModuleRef::minus(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  {
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "-");
+  }
+
+  Value* ModuleRef::dividedBy(const Value* other, Logger& logger, const SourceSpan& pstate) const
+  {
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, other, "/");
+  }
+
+  Value* ModuleRef::unaryPlus(Logger& logger, const SourceSpan& pstate) const
+  {
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, "+");
+  }
+
+  // Like dart-sass, the operand is wrapped in parentheses
+  Value* ModuleRef::unaryMinus(Logger& logger, const SourceSpan& pstate) const
+  {
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, "-(", ")");
+  }
+
+  Value* ModuleRef::unaryDivide(Logger& logger, const SourceSpan& pstate) const
+  {
+    throw Exception::UndefinedOperation(
+      logger, pstate, this, "/");
+  }
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////

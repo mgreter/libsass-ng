@@ -676,6 +676,7 @@ namespace Sass {
     OVERRIDE_ISA_CASTER(Calculation);
     DECLARE_ISA_CASTER(CalcOperation);
     DECLARE_ISA_CASTER(Mixin);
+    DECLARE_ISA_CASTER(ModuleRef);
     // Implement final up-casting method
     IMPLEMENT_ISA_CASTER(Value);
     // Expose class as SassValue struct to C

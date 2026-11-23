@@ -30,6 +30,7 @@ namespace Sass {
     virtual T visitCalculation(Calculation* value) = 0;
     virtual T visitCalcOperation(CalcOperation* value) = 0;
     virtual T visitMixin(Mixin* value) = 0;
+    virtual T visitModuleRef(ModuleRef* value) = 0;
     virtual T visitList(List* value) = 0;
     virtual T visitMap(Map* value) = 0;
     virtual T visitNull(Null* value) = 0;

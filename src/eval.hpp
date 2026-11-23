@@ -198,7 +198,14 @@ namespace Sass {
     sass::vector<WithConfigVar> toWithConfig(Map* withMap);
 
     void importCssModule(String* url, Map* config, const SourceSpan& pstate);
-
+    // Loads (and compiles) a module as for `meta.load()` and `meta.load-css()`.
+    // Returns the loaded stylesheet, or nullptr if [url] is a built-in module,
+    // in which case [builtIn] is set to it. Doesn't emit any of its CSS.
+    Stylesheet* loadModuleForSassScript(String* url, Map* config,
+      const SourceSpan& pstate, BuiltInMod** builtIn = nullptr);
+    // Emits the CSS of [sheet] (and its upstream modules) to the current
+    // parent, as for `meta.load-css()` and `meta.css()`.
+    void emitModuleCss(Stylesheet* sheet);
     /////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////
 

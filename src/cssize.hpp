@@ -30,6 +30,8 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
 
     void visitFunction(Function*) override;
+    void visitMixin(Mixin*) override;
+    void visitModuleRef(ModuleRef*) override;
     void visitNumber(Number*) override;
     void visitList(List*) override;
     void visitMap(Map*) override;

@@ -85,6 +85,9 @@ namespace Sass {
 
   // For meta functions
   extern const sass::string str_load_css;
+  extern const sass::string str_css;
+  extern const sass::string str_load;
+  extern const sass::string str_get_module;
   extern const sass::string str_feature_exists;
   extern const sass::string str_type_of;
   extern const sass::string str_inspect;
@@ -303,6 +306,9 @@ namespace Sass {
 
   // For meta functions
   extern const EnvKey key_load_css;
+  extern const EnvKey key_css;
+  extern const EnvKey key_load;
+  extern const EnvKey key_get_module;
   extern const EnvKey key_feature_exists;
   extern const EnvKey key_type_of;
   extern const EnvKey key_inspect;

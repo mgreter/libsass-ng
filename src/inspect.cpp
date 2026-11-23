@@ -14,6 +14,7 @@
 #include "ast_values.hpp"
 #include "ast_selectors.hpp"
 #include "fn_utils.hpp"
+#include "modules.hpp"
 
 namespace Sass {
 
@@ -1134,9 +1135,10 @@ namespace Sass {
     append_string("(");
     parentheses_opened = true;
     Callable* fn = value->callable();
-    // Function names are safe to quote!
+    // Like dart-sass, names are serialized as quoted strings
+    // (e.g. the backslash of an escaped name is escaped too)
     if (fn == nullptr) append_string("NULL");
-    else append_token("\""+ fn->name() + "\"", fn);;
+    else renderQuotedString(fn->name());
     append_string(")");
   }
 
@@ -1799,11 +1801,47 @@ namespace Sass {
       throw Exception::InvalidCssValue({}, *mixin);
     }
     add_open_mapping(mixin, false);
-    append_string("get-mixin(\"");
+    append_string("get-mixin(");
     if (mixin->callable() != nullptr)
-      append_string(mixin->callable()->name());
-    append_string("\")");
+      renderQuotedString(mixin->callable()->name());
+    else append_string("\"\"");
+    append_string(")");
     add_close_mapping(mixin, false);
+  }
+  // Like dart-sass, a module is serialized with the default
+  // namespace of its url (e.g. `get-module("math")`). It's
+  // left out if the url doesn't have a valid default namespace.
+  void Inspect::visitModuleRef(ModuleRef* value)
+  {
+    if (output_style() == SASS_STYLE_TO_CSS) {
+      throw Exception::InvalidCssValue({}, *value);
+    }
+    sass::string ns;
+    if (Module* module = value->module()) {
+      const sass::string& url(module->url);
+      size_t sep = url.find_last_of("/\\:");
+      ns = sep == NPOS ? url : url.substr(sep + 1);
+      if (!ns.empty() && ns[0] == $_) ns.erase(0, 1);
+      size_t dot = ns.find($dot);
+      if (dot != NPOS) ns.erase(dot);
+    }
+    // Check if it's a valid (unescaped) identifier
+    size_t i = 0;
+    if (i < ns.size() && ns[i] == $minus) i++;
+    if (i < ns.size() && ns[i] == $minus) i++;
+    else if (i >= ns.size() || !isNameStart((uint8_t)ns[i])) ns.clear();
+    for (; i < ns.size(); i++) {
+      if (!isName((uint8_t)ns[i])) {
+        ns.clear(); break;
+      }
+    }
+    add_open_mapping(value, false);
+    append_string("get-module(");
+    if (!ns.empty()) {
+      append_string("\"" + ns + "\"");
+    }
+    append_string(")");
+    add_close_mapping(value, false);
   }
 
   void Inspect::visitCalcOperation(CalcOperation* op)

@@ -26,6 +26,18 @@ namespace Sass {
     throw Exception::InvalidCssValue({}, *f);
   }
 
+  void Cssize::visitMixin(Mixin* value)
+  {
+    // Mixins can't be represented in css
+    throw Exception::InvalidCssValue({}, *value);
+  }
+
+  void Cssize::visitModuleRef(ModuleRef* value)
+  {
+    // Modules can't be represented in css
+    throw Exception::InvalidCssValue({}, *value);
+  }
+
   void Cssize::visitMap(Map* value)
   {
     // maps can't be handled when writing to css

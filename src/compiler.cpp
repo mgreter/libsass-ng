@@ -926,6 +926,7 @@ namespace Sass {
       { "module-mixins", "meta.module-mixins" },
       { "get-function", "meta.get-function" },
       { "get-mixin", "meta.get-mixin" }, { "call", "meta.call" },
+      { "get-module", "meta.get-module" }, { "load", "meta.load" },
     };
     for (const auto& entry : deprecatedGlobals) {
       EnvRef fidx = varRoot.findFnIdx(EnvKey(entry[0]), "");
@@ -999,7 +1000,8 @@ namespace Sass {
           throw Exception::RuntimeException(compiler,
             "Module loop: this module is already being loaded.");
         }
-        if (current && current->fn && current->name == "load-css") {
+        if (current && current->fn && (current->name == "load-css"
+          || current->name == "load")) {
           throw Exception::RuntimeException(compiler, "Module loop: "
             + File::abs2rel(path, compiler.PWD, compiler.PWD)
             + " is already being loaded.");

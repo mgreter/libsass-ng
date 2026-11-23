@@ -397,8 +397,7 @@ namespace Sass {
     BackTraces traces,
     sass::string name) :
     RuntimeException(traces,
-      "There is no module with the"
-      " namespace \"" + name + "\".")
+      "There is no module with namespace \"" + name + "\".")
   {}
 
   VariableUnknown::VariableUnknown(
@@ -524,9 +523,9 @@ namespace Sass {
     this->traces.push_back(pstate);
   }
 
-  UndefinedOperation::UndefinedOperation(BackTraces traces, SourceSpan pstate, const Value* val, sass::string op)
+  UndefinedOperation::UndefinedOperation(BackTraces traces, SourceSpan pstate, const Value* val, sass::string op, sass::string suffix)
     : Base("Undefined operation \"" +
-        op + val->inspect() + "\".",
+        op + val->inspect() + suffix + "\".",
     traces, pstate)
     {
       this->traces.push_back(pstate);
