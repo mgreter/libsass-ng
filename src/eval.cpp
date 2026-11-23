@@ -3741,7 +3741,11 @@ namespace Sass {
     auto grandparent = parent->parent();
     if (grandparent == nullptr || grandparent->empty()) return parent;
     if (grandparent->elements().back() != parent) {
+      #ifdef DEBUG_SHARED_PTR
+      CssParentNode* copy = parent->copy(SASS_MEMORY_POS, true);
+      #else
       CssParentNode* copy = parent->copy(true);
+      #endif
       grandparent->append(copy);
       return copy;
     }
