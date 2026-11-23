@@ -131,21 +131,11 @@ namespace Sass {
         auto subtotal = 0.0;
         for (size_t i = 0; i < numbers.size(); i++) {
           auto& number = numbers[i];
-          if (number->hasUnits() == numbers[0]->hasUnits()) {
-            if (double factor = number->getUnitConversionFactor(numbers[0])) {
-              subtotal += sass::pow(number->value() * factor, 2.0);
-            }
-            else {
-              throw Exception::UnitMismatch(compiler, *numbers[0], *number);
-            }
-          }
-          else {
-            sass::sstream strm; strm << (i + 1);
-            throw Exception::RuntimeException(compiler,
-              "$numbers[" + strm.str() + "]: " + number->inspect() + " and " +
-              "$numbers[1]: " + numbers[0]->inspect() + " have incompatible units " +
-              "(one has units and the other doesn't).");
-          }
+          // Like dart-sass, name the list elements in errors
+          sass::string name("numbers[" + std::to_string(i + 1) + "]");
+          assertConvertible(compiler, number, name.c_str(), numbers[0], "numbers[1]");
+          double factor = number->getUnitConversionFactor(numbers[0]);
+          subtotal += sass::pow(number->value() * factor, 2.0);
         }
 
         return SASS_MEMORY_NEW(Number, pstate,
@@ -226,24 +216,31 @@ namespace Sass {
 
       /*******************************************************************/
 
+      // Like dart-sass, `math.max()` compares plain numbers (it never
+      // returns a calculation, so e.g. `1px` and `2em` are incompatible).
       static BUILT_IN_FN(max)
       {
-        ValueVector foobar;
+        Number* max = nullptr;
         for (Value* value : arguments[0]->start()) {
-          foobar.push_back(value);
+          Number* number = value->assertNumber(compiler, str_empty);
+          if (max == nullptr || max->lessThan(number, compiler, pstate)) max = number;
         }
-        return Calc::calc_max(compiler, pstate, foobar, true);
+        if (max == nullptr) throw Exception::MustHaveArguments(compiler, str_max);
+        return max;
       }
 
       /*******************************************************************/
 
+      // Like dart-sass, `math.min()` compares plain numbers (see `max()`)
       static BUILT_IN_FN(min)
       {
-        ValueVector foobar;
+        Number* min = nullptr;
         for (Value* value : arguments[0]->start()) {
-          foobar.push_back(value);
+          Number* number = value->assertNumber(compiler, str_empty);
+          if (min == nullptr || min->greaterThan(number, compiler, pstate)) min = number;
         }
-        return Calc::calc_min(compiler, pstate, foobar, true);
+        if (min == nullptr) throw Exception::MustHaveArguments(compiler, str_min);
+        return min;
       }
 
       /*******************************************************************/
