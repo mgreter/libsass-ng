@@ -122,6 +122,16 @@ namespace Sass {
     RAII_FLAG(inUnknownAtRule, inUnknownAtRule || !isKeyframe);
     RAII_FLAG(inKeyframes, inKeyframes || isKeyframe);
 
+    // Like dart-sass (1.97.3), keep it nested with plain CSS nesting
+    if (hasCssNesting()) {
+      CssAtRuleObj copy = SASS_MEMORY_RESECT(node);
+      current->addChildAt(copy, true);
+      RAII_OBJ(CssParentNode, current, copy);
+      for (const auto& child : node->elements()) {
+        child->accept(this);
+      }
+      return;
+    }
     auto chroot = current->bubbleThrough(true);
 
     // ModifiableCssKeyframeBlock
@@ -201,6 +211,14 @@ namespace Sass {
     }
 
     CssMediaQueryVectorObj parsed(node->queries());
+    // Like dart-sass (1.97.3), keep it nested with plain CSS nesting
+    if (hasCssNesting()) {
+      CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
+        node->pstate(), current, parsed);
+      current->addChildAt(css, true);
+      acceptChildrenAt(css, node->elements());
+      return;
+    }
 
     bool bubbleQuery = true;
 
@@ -295,7 +313,8 @@ namespace Sass {
     }
 
     // if (css->selector()->toString() == "c") css->fromPlainCss(true);
-    bool nest = !plainCss && !current->fromPlainCss22();
+    // Like dart-sass, check the style rule (an at-rule may be in between)
+    bool nest = !plainCss && (_styleRule() ? !_styleRule()->fromPlainCss22() : true);
     // Whether we are outside of any style rule
     bool topLevel = _styleRule() == nullptr;
     // Plain CSS rules with an explicit `&` are kept nested as-is
@@ -439,6 +458,13 @@ namespace Sass {
     // Like `visitSupportsRule`: add a copy of the rule (bubbling through
     // style rules) and evaluate the children inside of it. It used to
     // visit the children only, which dropped the `@supports` wrapper.
+    // Like dart-sass (1.97.3), keep it nested with plain CSS nesting
+    if (hasCssNesting()) {
+      CssSupportsRuleObj copy = SASS_MEMORY_RESECT(node);
+      current->addChildAt(copy, true);
+      acceptChildrenAt(copy, node->elements());
+      return;
+    }
     CssParentNode* chroot = current->bubbleThrough(true);
     CssSupportsRuleObj copy = SASS_MEMORY_RESECT(node);
     chroot->addChildAt(copy, false);

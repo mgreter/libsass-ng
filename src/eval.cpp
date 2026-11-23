@@ -2236,7 +2236,9 @@ namespace Sass {
 
     // std::cerr << "EVAL RULE " << current->toString() << " => " << node->fromPlainCss() << "\n";
 
-    bool nest = current ? !current->fromPlainCss22() : true;
+    // Like dart-sass, don't merge into a style rule from plain CSS (checks the
+    // style rule, since e.g. an at-rule may be in between with CSS nesting)
+    bool nest = _styleRule() ? !_styleRule()->fromPlainCss22() : true;
     // bool nest = current ? !current->fromPlainCss() : true;
     bool nesting = current ? !current->fromPlainCss22() : true;
 
@@ -2452,6 +2454,14 @@ namespace Sass {
       String, node->condition()->pstate(),
       _visitSupportsCondition(node->condition()));
     EnvScope envscope(compiler.varRoot, node->idxs);
+    // Like dart-sass (1.97.3), keep it nested with plain CSS nesting
+    if (hasCssNesting()) {
+      CssSupportsRuleObj css = SASS_MEMORY_NEW(CssSupportsRule,
+        node->pstate(), current, condition);
+      current->addChildAt(css, true);
+      acceptChildrenAt(css, node->elements());
+      return nullptr;
+    }
     auto chroot = current->bubbleThrough(true);
     CssSupportsRuleObj css = SASS_MEMORY_NEW(CssSupportsRule,
       node->pstate(), chroot, condition);
@@ -2621,6 +2631,18 @@ namespace Sass {
     RAII_FLAG(inKeyframes, inKeyframes || isKeyframe);
 
 
+    // Like dart-sass (1.97.3), keep it nested with plain CSS nesting
+    if (hasCssNesting()) {
+      CssAtRuleObj css = SASS_MEMORY_NEW(CssAtRule,
+        node->pstate(), current, std::move(name),
+        std::move(value), node->isChildless());
+      current->addChildAt(css, true);
+      RAII_OBJ(CssParentNode, current, css);
+      for (const auto& child : node->elements()) {
+        ValueObj val = child->accept(this);
+      }
+      return nullptr;
+    }
     CssParentNode* pu = current->bubbleThrough(true);
 
 
@@ -2744,6 +2766,14 @@ namespace Sass {
 
     // Parse current media queries for local rule
     CssMediaQueryVectorObj parsed(parser.parse());
+    // Like dart-sass (1.97.3), keep it nested with plain CSS nesting
+    if (hasCssNesting()) {
+      CssMediaRuleObj css = SASS_MEMORY_NEW(CssMediaRule,
+        node->pstate(), current, parsed);
+      current->addChildAt(css, true);
+      acceptChildrenAt(css, node->elements());
+      return nullptr;
+    }
 
     CssMediaQueryVectorObj mergedQueries;
 

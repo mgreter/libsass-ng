@@ -101,6 +101,7 @@ namespace Sass {
     // The variable before the colon is defined on the new frame.
     // But the right side is evaluated in the parent scope.
     CallableSignature* parseArgumentDeclaration();
+    void throwDuplicateParameter(const sass::vector<ArgumentObj>& arguments, const EnvKey& name);
 
     // Consumes a number value.
     Number* readSingleNumber();

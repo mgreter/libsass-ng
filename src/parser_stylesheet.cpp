@@ -1961,6 +1961,19 @@ namespace Sass {
   }
   // EO throwDisallowedAtRule
 
+  // Throws the error for a duplicate parameter [name]. Like dart-sass, the
+  // error is reported at the first parameter of that name.
+  void StylesheetParser::throwDuplicateParameter(
+    const sass::vector<ArgumentObj>& arguments, const EnvKey& name)
+  {
+    for (const ArgumentObj& argument : arguments) {
+      if (argument->name() == name) {
+        error("Duplicate parameter.", argument->pstate());
+      }
+    }
+    error("Duplicate parameter.", scanner.rawSpan());
+  }
+
   // Argument declaration is tricky in terms of scoping.
   // The variable before the colon is defined on the new frame.
   // But the right side is evaluated in the parent scope.
@@ -1989,6 +2002,9 @@ namespace Sass {
         scanWhitespace(true);
         if (scanner.scanChar($comma))
           scanWhitespace(true);
+        // Like dart-sass (1.106), the rest parameter can't
+        // have the same name as another parameter.
+        if (named.count(name)) throwDuplicateParameter(arguments, name);
         restArgument = name.orig();
         // Defer adding variable until we parsed expression
         // Just in case the same variable is mentioned again
@@ -2000,14 +2016,11 @@ namespace Sass {
       // Just in case the same variable is mentioned again
       compiler.envstack.back()->createVariable(name);
 
+      if (named.count(name)) throwDuplicateParameter(arguments, name);
+      named.insert(name);
       arguments.emplace_back(SASS_MEMORY_NEW(Argument,
         scanner.relevantSpanFrom(variableStart), name, defaultValue));
 
-      // Insert into set and check if it already existed
-      if (!named.insert(std::move(name)).second) {
-        error("Duplicate argument.",
-          arguments.back()->pstate());
-      }
 
       if (!scanner.scanChar($comma)) break;
       scanWhitespace(true);

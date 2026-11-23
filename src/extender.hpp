@@ -257,7 +257,7 @@ namespace Sass {
     void addExtensions(
       sass::vector<ExtensionStoreObj>& extensionStores);
 
-    static Extension* PutOrMerge(ExtSelExtMapEntry& map, const ComplexSelectorObj& key, Extension* value);
+    static Extension* PutOrMerge(ExtSelExtMapEntry& map, const ComplexSelectorObj& key, Extension* value, BackTraces& traces);
 
   private:
 
@@ -279,10 +279,12 @@ namespace Sass {
     /////////////////////////////////////////////////////////////////////////
     static Extension* mergeExtension(
       Extension* lhs,
-      Extension* rhs);
+      Extension* rhs,
+      BackTraces& traces);
     static Extension* mergeExtension2(
       Extension* lhs,
-      Extension* rhs);
+      Extension* rhs,
+      BackTraces& traces);
 
     /////////////////////////////////////////////////////////////////////////
     // Extend [extensions] using [newExtensions].

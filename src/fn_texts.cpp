@@ -2,6 +2,7 @@
 /* Part of LibSass, released under the MIT license (See LICENSE.txt).        */
 /*****************************************************************************/
 #include "fn_texts.hpp"
+#include <mutex>
 
 #include <iomanip>
 #include "unicode.hpp"
@@ -220,11 +221,27 @@ namespace Sass {
 
       static BUILT_IN_FN(uniqueId)
       {
-        sass::sstream ss; ss << "u"
-          << std::setfill('0') << std::setw(8)
-          << std::hex << getRandomUint32();
-        return SASS_MEMORY_NEW(String,
-          pstate, ss.str(), true);
+        // Like dart-sass, increase a counter by a random amount, which
+        // makes it hard to guess the next ID while ensuring that IDs
+        // are unique (purely random IDs may be generated twice).
+        static const int64_t limit = 36LL * 36 * 36 * 36 * 36 * 36;
+        static std::mutex mutex;
+        static int64_t previous = -1;
+        int64_t id;
+        {
+          std::lock_guard<std::mutex> lock(mutex);
+          if (previous < 0) previous = int64_t(getRandomUint32()) % limit;
+          previous += getRandomInt(1, 36);
+          if (previous > limit) previous %= limit;
+          id = previous;
+        }
+        // The leading "u" ensures that the result is a valid identifier.
+        char buf[7] = "000000";
+        for (int i = 5; i >= 0 && id > 0; i--, id /= 36) {
+          buf[i] = "0123456789abcdefghijklmnopqrstuvwxyz"[id % 36];
+        }
+        return SASS_MEMORY_NEW(String, pstate,
+          sass::string("u") + buf, false);
       }
 
 	    void registerFunctions(Compiler& ctx)

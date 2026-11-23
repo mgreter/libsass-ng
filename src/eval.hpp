@@ -89,6 +89,18 @@ namespace Sass {
       return atRootExcludingStyleRule ? nullptr : readStyleRule;
     }
 
+    // Returns whether the current position in the output uses plain CSS
+    // nesting (the style rule is nested in another style rule). Like dart-sass,
+    // at-rules are then not merged or bubbled (browsers support it natively).
+    bool hasCssNesting() const {
+      CssParentNode* parent = _styleRule();
+      if (parent == nullptr) return false;
+      for (parent = parent->parent(); parent; parent = parent->parent()) {
+        if (parent->isaCssStyleRule()) return true;
+      }
+      return false;
+    }
+
     // Whether we're currently building the output of a `@keyframes` rule.
     bool inKeyframes = false;
 

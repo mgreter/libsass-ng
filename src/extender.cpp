@@ -249,11 +249,18 @@ namespace Sass {
   // and [right] don't have the same extender and target.
   /////////////////////////////////////////////////////////////////////////
   Extension* ExtensionStore::mergeExtension(
-    Extension* lhs, Extension* rhs)
+    Extension* lhs, Extension* rhs, BackTraces& traces)
   {
 
     if (rhs == nullptr) return lhs;
     if (lhs == nullptr) return rhs;
+    // Like dart-sass, extensions with different media contexts can't be merged
+    if (!lhs->mediaContext.isNull() && !rhs->mediaContext.isNull() &&
+      !ObjEqualityFn<CssMediaQueryVectorObj>(lhs->mediaContext, rhs->mediaContext)) {
+      CallStackFrame frame(traces, rhs->pstate);
+      throw Exception::RuntimeException(traces, "You may not @extend the same "
+        "selector from within different media queries.");
+    }
 
     // If one extension is optional and doesn't add a
     // special media context, it doesn't need to be merged.
@@ -439,7 +446,7 @@ namespace Sass {
         // we don't need to re-run the extension. We may need to
         // mark the extension as mandatory, though.
         sources[complex] = mergeExtension(
-          existingExtension.value(), extension);
+          existingExtension.value(), extension, *traces);
         // ToDo: implement behavior once use case is found!?
         // ToDo: mergeExtension needs error checks etc.
         continue;
@@ -581,7 +588,7 @@ namespace Sass {
         auto it = sources.find(complex);
         if (it != sources.end()) {
           sources[complex] = mergeExtension(
-            it->second, withExtender);
+            it->second, withExtender, *traces);
           // std::cerr << "      C1 -> " << oldExtensions.size() << "\n";
         }
         else {
@@ -710,11 +717,18 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
 
   Extension* ExtensionStore::mergeExtension2(
-    Extension* lhs, Extension* rhs)
+    Extension* lhs, Extension* rhs, BackTraces& traces)
   {
 
     if (rhs == nullptr) return lhs;
     if (lhs == nullptr) return rhs;
+    // Like dart-sass, extensions with different media contexts can't be merged
+    if (!lhs->mediaContext.isNull() && !rhs->mediaContext.isNull() &&
+      !ObjEqualityFn<CssMediaQueryVectorObj>(lhs->mediaContext, rhs->mediaContext)) {
+      CallStackFrame frame(traces, rhs->pstate);
+      throw Exception::RuntimeException(traces, "You may not @extend the same "
+        "selector from within different media queries.");
+    }
 
     // If one extension is optional and doesn't add a
     // special media context, it doesn't need to be merged.
@@ -730,10 +744,10 @@ namespace Sass {
   }
 
 
-  Extension* ExtensionStore::PutOrMerge(ExtSelExtMapEntry& map, const ComplexSelectorObj& key, Extension* value)
+  Extension* ExtensionStore::PutOrMerge(ExtSelExtMapEntry& map, const ComplexSelectorObj& key, Extension* value, BackTraces& traces)
   {
     if (map.count(key) > 0) {
-      return map[key] = mergeExtension2(map[key], value);
+      return map[key] = mergeExtension2(map[key], value, traces);
     }
     else {
       return map[key] = value;
@@ -831,7 +845,7 @@ namespace Sass {
             }
             else { // merge
               // existingSources[extender] = extension;
-              extension = PutOrMerge(existingSources, extender, extension);
+              extension = PutOrMerge(existingSources, extender, extension, *traces);
             }
             if (hasExtensions || hasSelectors) {
               newExtensions[target][extender] = extension;
