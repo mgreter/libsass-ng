@@ -2072,6 +2072,8 @@ namespace Sass {
     ExpressionFlatMapObj named;
     ExpressionObj restArg;
     ExpressionObj kwdRest;
+    // Like dart-sass, warn once for arguments after the rest argument
+    bool emittedRestDeprecation = false;
     while (lookingAtExpression()) {
       Offset start(scanner.offset);
       ExpressionObj expression = readExpressionUntilComma(!mixin);
@@ -2090,6 +2092,14 @@ namespace Sass {
         }
         ExpressionObj ex = readExpressionUntilComma(!mixin);
         (*named)[var->name()] = ex;
+        if (restArg && !emittedRestDeprecation) {
+          emittedRestDeprecation = true;
+          compiler.addDeprecation(scanner.relevantSpanFrom(start),
+            Logger::WARN_MISPLACED_REST, []() {
+              return "Named arguments must come before rest arguments.\n"
+                "This will be an error in LibSass 5.0.0.";
+            });
+        }
       }
       else if (scanner.scanChar($dot)) {
         scanner.expectChar($dot);
@@ -2115,6 +2125,14 @@ namespace Sass {
       }
       else {
         positional.emplace_back(expression);
+        if (restArg && !emittedRestDeprecation) {
+          emittedRestDeprecation = true;
+          compiler.addDeprecation(expression->pstate(),
+            Logger::WARN_MISPLACED_REST, []() {
+              return "Positional arguments must come before rest arguments.\n"
+                "This will be an error in LibSass 5.0.0.";
+            });
+        }
       }
 
       scanWhitespace(true);

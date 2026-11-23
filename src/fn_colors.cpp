@@ -1829,7 +1829,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
           }
           // Return function string since first argument was a number
           // Need to remove the weight argument as it has a default value
-          return getFunctionString(Strings::invert, pstate, { arguments[0] });
+          Value* result = getFunctionString(Strings::invert, pstate, { arguments[0] });
+          // Like dart-sass, deprecated for the module function
+          if (!global) compiler.addDeprecation(pstate, Logger::WARN_NUMBER_ARG, [&]() {
+            return "Passing a number (" + arguments[0]->inspect() + ") to color.invert() "
+              "is deprecated.\n\nRecommendation: " + result->inspect();
+          });
+          return result;
 
         }
 
@@ -2340,7 +2346,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         // Gracefully handle if number is passed
         if (arguments[0]->isaNumber() || (global && isSpecialNumber(arguments[0]))) {
-          return getFunctionString(Strings::grayscale, pstate, arguments);
+          Value* result = getFunctionString(Strings::grayscale, pstate, arguments);
+          // Like dart-sass, deprecated for the module function
+          if (!global) compiler.addDeprecation(pstate, Logger::WARN_NUMBER_ARG, [&]() {
+            return "Passing a number (" + arguments[0]->inspect() + ") to color.grayscale() "
+              "is deprecated.\n\nRecommendation: " + result->inspect();
+          });
+          return result;
         }
 
         if (global) compiler.warnForGlobalBuiltIn(pstate, "color.grayscale");
@@ -2657,11 +2669,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
       {
         if (String * string = arguments[0]->isaString()) {
           if (!string->hasQuotes() && isMsFilterStart(string->value())) {
-            // dart-sass has two different code paths for this deprecation!?
-            // compiler.addDeprecation("Using color.alpha() for a Microsoft"
-            //   "filter is deprecated.\n\n  Recommendation: " + fn->toCss(),
-            //   arguments[0]->pstate(), Logger::WARN_MS_ALPHA);
-            return getFunctionString(Strings::alpha, pstate, arguments);
+            Value* result = getFunctionString(Strings::alpha, pstate, arguments);
+            // Like dart-sass, deprecated for the module function
+            if (!global) compiler.addDeprecation(pstate, Logger::WARN_MS_ALPHA, [&]() {
+              return "Using color.alpha() for a Microsoft filter is deprecated.\n"
+                "\nRecommendation: " + result->inspect();
+            });
+            return result;
           }
         }
 
@@ -2710,7 +2724,13 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         }
         if (isOnlyIeFilters) {
           // Support the proprietary Microsoft alpha() function.
-          return getFunctionString(Strings::alpha, pstate, arguments);
+          Value* result = getFunctionString(Strings::alpha, pstate, arguments);
+          // Like dart-sass, deprecated for the module function
+          if (!global) compiler.addDeprecation(pstate, Logger::WARN_MS_ALPHA, [&]() {
+            return "Using color.alpha() for a Microsoft filter is deprecated.\n"
+              "\nRecommendation: " + result->inspect();
+          });
+          return result;
         }
         CallStackFrame csf(compiler, arguments[0]->pstate());
         throw Exception::TooManyArguments(compiler, size, 1);
