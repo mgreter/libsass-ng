@@ -317,6 +317,21 @@ namespace Sass {
   // EO assertPublicIdentifier
 
   // Consumes a style rule.
+  // Like dart-sass `_styleRule`, a style rule needs a selector. Throws
+  // "expected end of rule." if nothing follows (e.g. for a block that
+  // isn't closed at the end of the file), otherwise "unrecognized syntax".
+  void StylesheetParser::errorEmptySelector()
+  {
+    Offset start(scanner.offset);
+    InterpolationObj unknown(readInterpolatedDeclarationValue(
+      true, false, true, false));
+    if (unknown->empty()) {
+      error("expected end of rule.", scanner.relevantSpan());
+    }
+    error("unrecognized syntax",
+      scanner.rawSpanFrom(start));
+  }
+
   StyleRule* StylesheetParser::readStyleRule(Interpolation* itpl)
   {
     isUseAllowed = false;
@@ -337,6 +352,7 @@ namespace Sass {
       readStyleRule->pstate(scanner.rawSpanFrom(itpl->pstate().position));
     }
 
+    if (readStyleRule->empty()) errorEmptySelector();
     EnvFrame local(compiler, false);
 
     StyleRuleObj styles = withChildren<StyleRule>(
@@ -410,10 +426,7 @@ namespace Sass {
 
     RAII_FLAG(inStyleRule, true);
 
-    if (buffer.empty()) {
-      error("expected \"}\".",
-        scanner.relevantSpan());
-    }
+    if (buffer.empty()) errorEmptySelector();
 
     EnvFrame local(compiler, true);
     InterpolationObj itpl = buffer.getInterpolation(

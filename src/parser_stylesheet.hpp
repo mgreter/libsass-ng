@@ -186,6 +186,9 @@ namespace Sass {
     // Consumes a style rule.
     StyleRule* readStyleRule(Interpolation* itpl = nullptr);
 
+    // Throws the error for a style rule without a selector.
+    [[noreturn]] void errorEmptySelector();
+
     // Consumes a [Declaration] or a [StyleRule].
     //
     // When parsing the contents of a style rule, it can be difficult to tell
