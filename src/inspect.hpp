@@ -110,6 +110,7 @@ namespace Sass {
     virtual void _writeHsl(Color* color);
     virtual void _writeHwb(Color* color);
     virtual void _writeRgb(Color* color);
+    sass::string _rgbChannels(const Color* rgb, const char* separator);
     virtual void _writeLegacyColor(Color* color);
 
     void _maybeWriteSlashAlpha(const Color* color);

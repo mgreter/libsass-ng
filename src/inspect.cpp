@@ -1225,23 +1225,38 @@ namespace Sass {
   // never print negative zero for them (adding +0 turns -0 to 0).
   static double intChannel(double channel) { return channel + 0.0; }
 
+  // Like dart-sass (1.101.4), rgb channels are written as integers if they
+  // are all (fuzzy) integers, otherwise as (decimal) percentages, since
+  // older browsers don't support decimal non-percent channels.
+  sass::string Inspect::_rgbChannels(const Color* rgb, const char* separator)
+  {
+    double r = rgb->getChannel0(), g = rgb->getChannel1(), b = rgb->getChannel2();
+    sass::string ss;
+    if (fuzzyIsInt(r, outopt.epsilon) && fuzzyIsInt(g, outopt.epsilon) && fuzzyIsInt(b, outopt.epsilon)) {
+      ss += PrintNumber(intChannel(r), outopt); ss += separator;
+      ss += PrintNumber(intChannel(g), outopt); ss += separator;
+      ss += PrintNumber(intChannel(b), outopt);
+    }
+    else {
+      ss += PrintNumber(r * 100 / 255, outopt); ss += "%"; ss += separator;
+      ss += PrintNumber(g * 100 / 255, outopt); ss += "%"; ss += separator;
+      ss += PrintNumber(b * 100 / 255, outopt); ss += "%";
+    }
+    return ss;
+  }
+
   void Inspect::_writeRgb(Color* color)
   {
     sass::string ss;
     ColorObj rgb = color->toSpace(ColorSpaces::rgb, color->pstate());
-    // std::cerr << "write rgb " << rgb->debug() << "\n";
-
     if (fuzzyEquals(color->alpha().value_or(1.0), 1, outopt.epsilon)) {
       ss += "rgb(";
-      ss += PrintNumber(intChannel(rgb->channel(str_red)), outopt); ss += ", ";
-      ss += PrintNumber(intChannel(rgb->channel(str_green)), outopt); ss += ", ";
-      ss += PrintNumber(intChannel(rgb->channel(str_blue)), outopt); ss += ")";
+      ss += _rgbChannels(rgb, ", ");
+      ss += ")";
     }
     else {
       ss += "rgba(";
-      ss += PrintNumber(intChannel(rgb->channel(str_red)), outopt); ss += ", ";
-      ss += PrintNumber(intChannel(rgb->channel(str_green)), outopt); ss += ", ";
-      ss += PrintNumber(intChannel(rgb->channel(str_blue)), outopt); ss += ", ";
+      ss += _rgbChannels(rgb, ", "); ss += ", ";
       ss += PrintNumber(intChannel(rgb->channel(str_alpha)), outopt); ss += ")";
     }
     append_token(ss, color);
@@ -1334,30 +1349,22 @@ namespace Sass {
     if (outopt.output_style == SASS_STYLE_COMPRESSED && !inspect) {
       ColorObj rgb = color->toSpace(ColorSpaces::rgb, color->pstate());
       if (opaque && _tryIntegerRgb(rgb)) return;
-      sass::string red(PrintNumber(intChannel(rgb->getChannel0()), outopt));
-      sass::string green(PrintNumber(intChannel(rgb->getChannel1()), outopt));
-      sass::string blue(PrintNumber(intChannel(rgb->getChannel2()), outopt));
       ColorObj hsl = color->toSpace(ColorSpaces::hsl, color->pstate());
-      sass::string hue(PrintNumber(hsl->getChannel0(), outopt));
-      sass::string saturation(PrintNumber(hsl->getChannel1(), outopt));
-      sass::string lightness(PrintNumber(hsl->getChannel2(), outopt));
-      sass::string css;
-      // Add two characters for HSL for the %s on saturation and lightness
-      if (red.size() + green.size() + blue.size() <=
-        hue.size() + saturation.size() + lightness.size() + 2) {
-        css += opaque ? "rgb(" : "rgba(";
-        css += red; css += ','; css += green; css += ','; css += blue;
-      }
-      else {
-        css += opaque ? "hsl(" : "hsla(";
-        css += hue; css += ','; css += saturation;
-        css += "%,"; css += lightness; css += '%';
-      }
+      // Build both representations and use the shorter one (like dart-sass,
+      // adding two characters for HSL for the %s on saturation and lightness)
+      sass::string alpha;
       if (!opaque) {
-        css += ',';
-        css += PrintNumber(color->alpha().value_or(1), outopt);
+        alpha += ',';
+        alpha += PrintNumber(color->alpha().value_or(1), outopt);
       }
-      css += ')';
+      sass::string rgbcss(opaque ? "rgb(" : "rgba(");
+      rgbcss += _rgbChannels(rgb, ","); rgbcss += alpha; rgbcss += ')';
+      sass::string hslcss(opaque ? "hsl(" : "hsla(");
+      hslcss += PrintNumber(hsl->getChannel0(), outopt); hslcss += ',';
+      hslcss += PrintNumber(hsl->getChannel1(), outopt); hslcss += "%,";
+      hslcss += PrintNumber(hsl->getChannel2(), outopt); hslcss += '%';
+      hslcss += alpha; hslcss += ')';
+      sass::string css(rgbcss.size() <= hslcss.size() + 2 ? rgbcss : hslcss);
       flush_schedules();
       append_token(css, color);
       return;
