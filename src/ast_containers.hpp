@@ -115,7 +115,7 @@ namespace Sass {
     }
 
     // Some simple method delegations
-    void clear() { return elements_.clear(); }
+    void clear() { hash_ = 0; return elements_.clear(); }
     size_t size() const { return elements_.size(); }
     void reserve(size_t n) { return elements_.reserve(n); }
     bool empty() const { return elements_.empty(); }
@@ -256,7 +256,7 @@ namespace Sass {
     }
 
     // Some simple method delegations
-    void clear() { return elements_.clear(); }
+    void clear() { hash_ = 0; return elements_.clear(); }
     size_t size() const { return elements_.size(); }
     void reserve(size_t n) { return elements_.reserve(n); }
     bool empty() const { return elements_.empty(); }

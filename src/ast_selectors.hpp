@@ -1092,6 +1092,13 @@ namespace Sass {
 
     bool hasPlaceholder() const final;
 
+    // Like dart-sass, returns this compound with parent selectors resolved
+    // in the selector arguments of pseudo selectors. Returns `this` if none
+    // were changed, otherwise a copy (selectors may be shared, e.g. by the
+    // compiled css of a module, so they must never be changed in place).
+    CompoundSelector* withResolvedPseudos(
+      SelectorList* parents, BackTraces& traces);
+
     // Resolve parents and form the final selector
     ComplexSelectors
       resolveParentSelectors2(

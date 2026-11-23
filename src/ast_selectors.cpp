@@ -1070,7 +1070,10 @@ namespace Sass {
 
       CplxSelComponent* component = elements_[n];
 
-      if (CompoundSelector* compound = component->selector()) {
+      if (CompoundSelectorObj compound = component->selector()) {
+
+        // Never changes the selector in place (it may be shared)
+        compound = compound->withResolvedPseudos(parent, traces);
 
         SelectorCombinatorVector leads;
         if (n == 0) leads.insert(leads.end(),
@@ -1191,6 +1194,28 @@ namespace Sass {
 
   // 
 
+  CompoundSelector* CompoundSelector::withResolvedPseudos(
+    SelectorList* parents, BackTraces& traces)
+  {
+    if (parents == nullptr) return this;
+    CompoundSelector* resolved = nullptr;
+    for (size_t i = 0; i < size(); i += 1) {
+      if (PseudoSelector* pseudo = get(i)->isaPseudoSelector()) {
+        if (SelectorList* sel = pseudo->selector()) {
+          // Only explicit parents are resolved in pseudo selector
+          // arguments, never implicit ones (as in dart-sass). The
+          // parser marks most of them as `chroots`, but e.g. not
+          // the selector of `:nth-child(2n of .a)`.
+          SelectorListObj inner = sel->resolveParentSelectors(
+            parents, traces, false);
+          if (resolved == nullptr) resolved = SASS_MEMORY_COPY(this);
+          resolved->set(i, pseudo->withSelector(inner));
+        }
+      }
+    }
+    return resolved ? resolved : this;
+  }
+
   ComplexSelectors
     CompoundSelector::resolveParentSelectors2(
       SelectorList* parents, BackTraces& traces,
@@ -1208,22 +1233,6 @@ namespace Sass {
 
     // Missing this->combinators
 
-    if (parents) {
-      for (SimpleSelectorObj simple : elements()) {
-        if (PseudoSelector* pseudo = simple->isaPseudoSelector()) {
-          if (SelectorList* sel = pseudo->selector()) {
-            // Only explicit parents are resolved in pseudo selector
-            // arguments, never implicit ones (as in dart-sass). The
-            // parser marks most of them as `chroots`, but e.g. not
-            // the selector of `:nth-child(2n of .a)`.
-            auto asd = sel->resolveParentSelectors(
-              parents, traces, false);
-            // std::cerr << "Resolved [" << asd->inspect() << "]\n";
-            pseudo->selector(asd);
-          }
-        }
-      }
-    }
 
     // Mix with parents from stack
     // Equivalent to dart-sass parent selector tail
@@ -1389,7 +1398,7 @@ namespace Sass {
   }
 
   CssParentSelector::CssParentSelector(const CssParentSelector* ptr)
-    : SimpleSelector(this)
+    : SimpleSelector(ptr)
   {
   }
 
