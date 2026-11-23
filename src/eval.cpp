@@ -1896,7 +1896,12 @@ namespace Sass {
           if (str->hasQuotes() == false)
             return result.detach();
         }
-        //std::cerr << "cant be used in calculon\n";
+        // Like dart-sass, other values (including quoted strings) can't
+        // be used. Before, the expression was evaluated a second time
+        // (e.g. calling a function twice) and failed when simplified.
+        CallStackFrame frame(logger, node->pstate());
+        throw Exception::SassScriptException(logger, node->pstate(),
+          "Value " + result->toString() + " can't be used in a calculation.");
     }
     else if (auto inner = node->isaBinaryOpExpression()) {
 
