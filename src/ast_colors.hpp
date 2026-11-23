@@ -308,6 +308,9 @@ namespace Sass {
       tl::optional<double> b, tl::optional<double> alpha,
       bool missingChroma = false, bool missingHue = false)
     {
+      // Like dart-sass (1.103), a and b are analogous to chroma and hue
+      missingChroma = missingChroma || (!a.has_value() && !b.has_value());
+      missingHue = missingHue || (!a.has_value() && !b.has_value());
       // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
       tl::optional<double> chroma, hue;
       // Requires computation in any case

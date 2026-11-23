@@ -24,26 +24,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
   
-  static bool _isAnalogousChannelMissing(
-    Logger& logger, Color* original,
-    Color* output, int outputChannelIndex)
-  {
-
-    if (output->isChannelMissing(outputChannelIndex)) return true;
-
-    if (*original == *output) return false;
-
-    const ColorChannel& outputChannel = output->space()._channels[outputChannelIndex];
-    tl::optional<const ColorChannel&> originalChannel;
-    for (int i = 0; i < original->space()._channelSize; i++) {
-      auto& channel = original->space()._channels[i];
-      if (!channel.isAnalogous(outputChannel)) continue;
-      originalChannel = channel;
-      break;
-    }
-    if (!originalChannel.has_value()) return false;
-    return original->isChannelMissing(logger, originalChannel.value().name);
-  }
 
   double _interpolateHues(
     double hue1,
@@ -105,12 +85,14 @@ namespace Sass {
         pstate, "Weight out of Range."); // unchecked
     }
 
-    bool missing1_0 = _isAnalogousChannelMissing(logger, this, color1, 0);
-    bool missing1_1 = _isAnalogousChannelMissing(logger, this, color1, 1);
-    bool missing1_2 = _isAnalogousChannelMissing(logger, this, color1, 2);
-    bool missing2_0 = _isAnalogousChannelMissing(logger, other, color2, 0);
-    bool missing2_1 = _isAnalogousChannelMissing(logger, other, color2, 1);
-    bool missing2_2 = _isAnalogousChannelMissing(logger, other, color2, 2);
+    // Like dart-sass (1.103), analogous missing channels are now preserved by
+    // the conversion itself, so only the converted channels are checked here.
+    bool missing1_0 = color1->isChannelMissing(0);
+    bool missing1_1 = color1->isChannelMissing(1);
+    bool missing1_2 = color1->isChannelMissing(2);
+    bool missing2_0 = color2->isChannelMissing(0);
+    bool missing2_1 = color2->isChannelMissing(1);
+    bool missing2_2 = color2->isChannelMissing(2);
 
     double channel1_0 = (missing1_0 ? color2 : color1)->getChannel0();
     double channel1_1 = (missing1_1 ? color2 : color1)->getChannel1();

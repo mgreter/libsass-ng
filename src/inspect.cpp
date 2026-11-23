@@ -1232,7 +1232,11 @@ namespace Sass {
   {
     double r = rgb->getChannel0(), g = rgb->getChannel1(), b = rgb->getChannel2();
     sass::string ss;
-    if (fuzzyIsInt(r, outopt.epsilon) && fuzzyIsInt(g, outopt.epsilon) && fuzzyIsInt(b, outopt.epsilon)) {
+    // Like dart-sass (`_asInt`), channels must be exact integers in CSS output
+    // (only when inspecting they may be fuzzy integers)
+    auto isInt = [this](double nr) { return inspect ? fuzzyIsInt(nr, outopt.epsilon)
+      : (std::isfinite(nr) && std::round(nr) == nr); };
+    if (isInt(r) && isInt(g) && isInt(b)) {
       ss += PrintNumber(intChannel(r), outopt); ss += separator;
       ss += PrintNumber(intChannel(g), outopt); ss += separator;
       ss += PrintNumber(intChannel(b), outopt);

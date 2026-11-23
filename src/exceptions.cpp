@@ -535,7 +535,7 @@ namespace Sass {
   MissingColorChannel::MissingColorChannel(BackTraces traces, const Color* color, const ColorChannel& channel)
     : SassScriptException("Because the CSS working group is still deciding on the best behavior, "
       "Sass doesn't currently support modifying missing channels (color: " +
-      color->toCss() + ".", traces, color->pstate(), channel.name)
+      color->toCss() + ").", traces, color->pstate(), channel.name)
   {
     // this->traces.push_back(color->pstate());
   }

@@ -124,6 +124,20 @@ namespace Sass {
   {
 
 
+    // Like dart-sass (1.103), normalize analogous sets of missing channels,
+    // so the destination has its analogous channels missing as well.
+    if (missingA && missingB) {
+      missingChroma = true;
+      missingHue = true;
+    }
+    else if (missingChroma && missingHue) {
+      missingA = true;
+      missingB = true;
+    }
+    if ((missingLightness && missingChroma && missingHue) ||
+      (!red.has_value() && !green.has_value() && !blue.has_value())) {
+      return Color::forSpaceInternal(pstate, dest, {}, {}, {}, alpha);
+    }
     const ColorSpace& linearDest = getLinearDest(dest);
 
     // if (dest.name_ == "hsl" || dest.name_ == "hwb") { linearDest = ColorSpaces::srgb; }
@@ -180,12 +194,12 @@ namespace Sass {
     else if (dest == ColorSpaces::lab || dest == ColorSpaces::lch) {
       return ColorSpaces::xyzd50.translate(dest, pstate,
         transformedRed, transformedGreen, transformedBlue,
-        alpha, missingLightness, missingChroma, missingHue);
+        alpha, missingLightness, missingChroma, missingHue, missingA, missingB);
     }
     else if (dest.name() == "oklab" || dest.name() == "oklch") {
       return ColorSpaces::lms.translate(dest, pstate,
         transformedRed, transformedGreen, transformedBlue,
-        alpha, missingLightness, missingChroma, missingHue);
+        alpha, missingLightness, missingChroma, missingHue, missingA, missingB);
     }
 
     return Color::forSpaceInternal(
@@ -215,6 +229,11 @@ namespace Sass {
     bool missingHue) const
   {
 
+    // Like dart-sass, all channels missing gives a fully missing color
+    if ((!red.has_value() && !green.has_value() && !blue.has_value()) ||
+      (missingLightness && missingChroma && missingHue)) {
+      return Color::forSpaceInternal(pstate, dest, {}, {}, {}, alpha);
+    }
     if (dest == ColorSpaces::hsl || dest == ColorSpaces::hwb)
     {
 
@@ -272,8 +291,9 @@ namespace Sass {
           missingHue || fuzzyGreaterThanOrEquals(whiteness + blackness, 100, 0.00001)
           ? tl::optional<double>()
           : std::fmod(hue, 360),
-          whiteness,
-          blackness,
+          // Like dart-sass, whiteness and blackness are analogous to chroma and lightness
+          missingChroma && missingLightness ? tl::optional<double>() : whiteness,
+          missingChroma && missingLightness ? tl::optional<double>() : blackness,
           alpha);
         return rv;
 
@@ -349,6 +369,20 @@ namespace Sass {
     bool missingB) const
   {
 
+    // Like dart-sass (1.103), normalize analogous sets of missing channels,
+    // so the destination has its analogous channels missing as well.
+    if (missingA && missingB) {
+      missingChroma = true;
+      missingHue = true;
+    }
+    else if (missingChroma && missingHue) {
+      missingA = true;
+      missingB = true;
+    }
+    if ((missingLightness && missingChroma && missingHue) ||
+      (!x.has_value() && !y.has_value() && !z.has_value())) {
+      return Color::forSpaceInternal(pstate, dest, {}, {}, {}, alpha);
+    }
     if (dest == ColorSpaces::lab || dest == ColorSpaces::lch) {
       // Algorithm from https://www.w3.org/TR/css-color-4/#color-conversion-code
       // and http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
@@ -412,6 +446,20 @@ namespace Sass {
     bool missingB) const
   {
 
+    // Like dart-sass (1.103), normalize analogous sets of missing channels,
+    // so the destination has its analogous channels missing as well.
+    if (missingA && missingB) {
+      missingChroma = true;
+      missingHue = true;
+    }
+    else if (missingChroma && missingHue) {
+      missingA = true;
+      missingB = true;
+    }
+    if ((missingLightness && missingChroma && missingHue) ||
+      (!lng.has_value() && !med.has_value() && !shrt.has_value())) {
+      return Color::forSpaceInternal(pstate, dest, {}, {}, {}, alpha);
+    }
     if (dest == ColorSpaces::oklab) {
       // Algorithm from https://drafts.csswg.org/css-color-4/#color-conversion-code
       double longScaled = _cubeRootPreservingSign(lng.value_or(0));
@@ -511,6 +559,15 @@ namespace Sass {
         missingChroma, missingHue);
     }
 
+    // Like dart-sass (1.103), a and b are analogous to chroma and hue
+    if (!a.has_value() && !b.has_value()) {
+      missingChroma = true;
+      missingHue = true;
+    }
+    else if (missingChroma && missingHue) {
+      a.reset();
+      b.reset();
+    }
     bool missingLightness = !lightness.has_value();
     bool missingA = !a.has_value();
     bool missingB = !b.has_value();
@@ -581,6 +638,24 @@ namespace Sass {
     tl::optional<double> blackness,
     tl::optional<double> alpha) const
   {
+    // Like dart-sass (1.103), whiteness and blackness are not analogous to
+    // any other channels, but if both are missing the result is the color
+    // with only an (analogous) hue, if there is one.
+    if (!whiteness.has_value() && !blackness.has_value()) {
+      if (!hue.has_value()) {
+        return Color::forSpaceInternal(pstate, dest, {}, {}, {}, alpha);
+      }
+      ColorObj converted = convert(dest, pstate, hue, 0.0, 0.0, alpha);
+      if (dest == ColorSpaces::hsl) {
+        return Color::forSpaceInternal(pstate, dest, converted->getChannel0(),
+          {}, {}, converted->getAlpha());
+      }
+      if (dest == ColorSpaces::lch || dest == ColorSpaces::oklch) {
+        return Color::forSpaceInternal(pstate, dest, {}, {},
+          converted->getChannel2(), converted->getAlpha());
+      }
+      return converted.detach();
+    }
     // From https://www.w3.org/TR/css-color-4/#hwb-to-rgb
     double scaledHue = std::fmod(hue.value_or(0), 360.0) / 360.0;
     double scaledWhiteness = whiteness.value_or(0) / 100.0;
@@ -650,6 +725,15 @@ namespace Sass {
 
     // std::cerr << "LAB.CONVERT " << lightness.value_or(-42) << "; " << a.value_or(-42) << ", " << b.value_or(-42) << "\n";
 
+    // Like dart-sass (1.103), a and b are analogous to chroma and hue
+    if (missingChroma && missingHue) {
+      a.reset();
+      b.reset();
+    }
+    else if (!a.has_value() && !b.has_value()) {
+      missingChroma = true;
+      missingHue = true;
+    }
     if (dest == ColorSpaces::lab)
     {
       bool powerlessAB = !lightness.has_value() || fuzzyEquals(lightness.value(), 0, sass::epsilon);
@@ -662,8 +746,7 @@ namespace Sass {
     else if (dest == ColorSpaces::lch)
     {
       return Color::labToLch(pstate,
-        dest, lightness, a, b, alpha,
-        missingChroma, missingHue);
+        dest, lightness, a, b, alpha);
     }
     else
     {

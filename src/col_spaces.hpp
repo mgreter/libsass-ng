@@ -19,11 +19,6 @@ namespace Sass {
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
 
-  /// A constant used in the rec2020 gamma encoding/decoding functions.
-  constexpr double rec2020_alpha = 1.09929682680944;
-
-  /// A constant used in the rec2020 gamma encoding/decoding functions.
-  constexpr double rec2020_beta = 0.018053968510807;
 
   /////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////
@@ -620,25 +615,20 @@ namespace Sass {
       SassColorSpace::REC2020, RgbColorChannels)
     {}
 
+    // Like dart-sass (1.102), use the 2.4 gamma transfer function
+    // of the latest draft of CSS Color 4 (sign keeps negatives).
     inline double toLinear(double channel) const final
     {
       double abs = std::abs(channel);
-      if (abs < rec2020_beta * 4.5) return channel / 4.5;
-      return (std::signbit(channel) ? -1 : +1) *
-        sass::pow((abs + rec2020_alpha - 1.0)
-          / rec2020_alpha, 1.0 / 0.45);
-
+      if (abs == 0) return channel;
+      return (std::signbit(channel) ? -1 : +1) * sass::pow(abs, 2.40);
     }
-
     inline double fromLinear(double channel) const final
     {
       double abs = std::abs(channel);
-      if (abs < rec2020_beta) return 4.5 * channel;
-      return (std::signbit(channel) ? -1 : +1) *
-        (rec2020_alpha * sass::pow(abs, 0.45)
-          - (rec2020_alpha - 1.0));
+      if (abs == 0) return channel;
+      return (std::signbit(channel) ? -1 : +1) * sass::pow(abs, 1.0 / 2.40);
     }
-
     inline const double* transformationMatrix(ColorSpace dest) const final
     {
       switch (dest.space()) {
