@@ -53,6 +53,7 @@ namespace Sass {
     { "srgb", ColorSpaces::srgb },
     { "srgb-linear", ColorSpaces::srgb_linear },
     { "display-p3", ColorSpaces::displayP3 },
+    { "display-p3-linear", ColorSpaces::displayP3Linear },
     { "a98-rgb", ColorSpaces::a98rgb },
     { "prophoto-rgb", ColorSpaces::protophotoRgb },
     { "rec2020", ColorSpaces::rec2020 },
@@ -690,6 +691,49 @@ namespace Sass {
         !b.has_value());
     }
 
+  }
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // Like dart-sass, convert directly between display-p3 and its linear-light
+  // variant (only the transfer function differs, no matrix is involved).
+  Color* DisplayP3ColorSpace::convert(
+    const ColorSpace& dest,
+    const SourceSpan& pstate,
+    tl::optional<double> red,
+    tl::optional<double> green,
+    tl::optional<double> blue,
+    tl::optional<double> alpha) const
+  {
+    if (dest == ColorSpaces::displayP3Linear) {
+      return Color::forSpaceInternal(pstate, dest,
+        red.transform(srgbAndDisplayP3ToLinear),
+        green.transform(srgbAndDisplayP3ToLinear),
+        blue.transform(srgbAndDisplayP3ToLinear),
+        alpha);
+    }
+    return ColorSpace::convert(dest,
+      pstate, red, green, blue, alpha);
+  }
+
+  Color* DisplayP3LinearColorSpace::convert(
+    const ColorSpace& dest,
+    const SourceSpan& pstate,
+    tl::optional<double> red,
+    tl::optional<double> green,
+    tl::optional<double> blue,
+    tl::optional<double> alpha) const
+  {
+    if (dest == ColorSpaces::displayP3) {
+      return Color::forSpaceInternal(pstate, dest,
+        red.transform(srgbAndDisplayP3FromLinear),
+        green.transform(srgbAndDisplayP3FromLinear),
+        blue.transform(srgbAndDisplayP3FromLinear),
+        alpha);
+    }
+    return ColorSpace::convert(dest,
+      pstate, red, green, blue, alpha);
   }
 
   /////////////////////////////////////////////////////////////////////////

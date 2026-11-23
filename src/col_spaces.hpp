@@ -180,6 +180,7 @@ namespace Sass {
       case SassColorSpace::SRGB: return ColorSpaces::linearA98RgbToLinearSrgb;
       case SassColorSpace::SRGB_LINEAR: return ColorSpaces::linearA98RgbToLinearSrgb;
       case SassColorSpace::DISPLAY_P3: return ColorSpaces::linearA98RgbToLinearDisplayP3;
+      case SassColorSpace::DISPLAY_P3_LINEAR: return ColorSpaces::linearA98RgbToLinearDisplayP3;
       case SassColorSpace::PROPHOTO_RGB: return ColorSpaces::linearA98RgbToLinearProphotoRgb;
       case SassColorSpace::REC2020: return ColorSpaces::linearA98RgbToLinearRec2020;
       case SassColorSpace::XYZ_D65: return ColorSpaces::linearA98RgbToXyzD65;
@@ -242,6 +243,58 @@ namespace Sass {
       }
     }
 
+    // Direct conversion to display-p3-linear
+    Color* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha)
+        const final;
+  };
+
+  /////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////
+
+  // The display-p3-linear color space (like display-p3, but linear-light)
+  // https://drafts.csswg.org/css-color/#predefined-display-p3-linear
+  class DisplayP3LinearColorSpace : public ColorSpace
+  {
+  public:
+    DisplayP3LinearColorSpace() : ColorSpace("display-p3-linear",
+      SassColorSpace::DISPLAY_P3_LINEAR, RgbColorChannels)
+    {}
+    inline double toLinear(double channel) const final {
+      return channel;
+    }
+    inline double fromLinear(double channel) const final {
+      return channel;
+    }
+    inline const double* transformationMatrix(ColorSpace dest) const final
+    {
+      switch (dest.space()) {
+        case SassColorSpace::LMS: return ColorSpaces::linearDisplayP3ToLms;
+        case SassColorSpace::RGB: return ColorSpaces::linearDisplayP3ToLinearSrgb;
+        case SassColorSpace::SRGB: return ColorSpaces::linearDisplayP3ToLinearSrgb;
+        case SassColorSpace::SRGB_LINEAR: return ColorSpaces::linearDisplayP3ToLinearSrgb;
+        case SassColorSpace::A98RGB: return ColorSpaces::linearDisplayP3ToLinearA98Rgb;
+        case SassColorSpace::PROPHOTO_RGB: return ColorSpaces::linearDisplayP3ToLinearProphotoRgb;
+        case SassColorSpace::REC2020: return ColorSpaces::linearDisplayP3ToLinearRec2020;
+        case SassColorSpace::XYZ_D65: return ColorSpaces::linearDisplayP3ToXyzD65;
+        case SassColorSpace::XYZ_D50: return ColorSpaces::linearDisplayP3ToXyzD50;
+        default: return ColorSpace::transformationMatrix(dest);
+      }
+    }
+    // Direct conversion to display-p3
+    Color* convert(
+      const ColorSpace& dest,
+      const SourceSpan& pstate,
+      tl::optional<double> red,
+      tl::optional<double> green,
+      tl::optional<double> blue,
+      tl::optional<double> alpha)
+        const final;
   };
 
   /////////////////////////////////////////////////////////////////////////
@@ -397,6 +450,7 @@ namespace Sass {
         case SassColorSpace::A98RGB: return ColorSpaces::lmsToLinearA98Rgb;
         case SassColorSpace::PROPHOTO_RGB: return ColorSpaces::lmsToLinearProphotoRgb;
         case SassColorSpace::DISPLAY_P3: return ColorSpaces::lmsToLinearDisplayP3;
+        case SassColorSpace::DISPLAY_P3_LINEAR: return ColorSpaces::lmsToLinearDisplayP3;
         case SassColorSpace::REC2020: return ColorSpaces::lmsToLinearRec2020;
         case SassColorSpace::XYZ_D65: return ColorSpaces::lmsToXyzD65;
         case SassColorSpace::XYZ_D50: return ColorSpaces::lmsToXyzD50;
@@ -543,6 +597,7 @@ namespace Sass {
         case SassColorSpace::SRGB_LINEAR: return ColorSpaces::linearProphotoRgbToLinearSrgb;
         case SassColorSpace::A98RGB: return ColorSpaces::linearProphotoRgbToLinearA98Rgb;
         case SassColorSpace::DISPLAY_P3: return ColorSpaces::linearProphotoRgbToLinearDisplayP3;
+        case SassColorSpace::DISPLAY_P3_LINEAR: return ColorSpaces::linearProphotoRgbToLinearDisplayP3;
         case SassColorSpace::REC2020: return ColorSpaces::linearProphotoRgbToLinearRec2020;
         case SassColorSpace::XYZ_D65: return ColorSpaces::linearProphotoRgbToXyzD65;
         case SassColorSpace::XYZ_D50: return ColorSpaces::linearProphotoRgbToXyzD50;
@@ -592,6 +647,7 @@ namespace Sass {
         case SassColorSpace::SRGB_LINEAR: return ColorSpaces::linearRec2020ToLinearSrgb;
         case SassColorSpace::A98RGB: return ColorSpaces::linearRec2020ToLinearA98Rgb;
         case SassColorSpace::DISPLAY_P3: return ColorSpaces::linearRec2020ToLinearDisplayP3;
+        case SassColorSpace::DISPLAY_P3_LINEAR: return ColorSpaces::linearRec2020ToLinearDisplayP3;
         case SassColorSpace::PROPHOTO_RGB: return ColorSpaces::linearRec2020ToLinearProphotoRgb;
         case SassColorSpace::XYZ_D65: return ColorSpaces::linearRec2020ToXyzD65;
         case SassColorSpace::XYZ_D50: return ColorSpaces::linearRec2020ToXyzD50;
@@ -662,6 +718,7 @@ namespace Sass {
     {
       switch (dest.space()) {
         case SassColorSpace::DISPLAY_P3: return ColorSpaces::linearSrgbToLinearDisplayP3;
+        case SassColorSpace::DISPLAY_P3_LINEAR: return ColorSpaces::linearSrgbToLinearDisplayP3;
         case SassColorSpace::A98RGB: return ColorSpaces::linearSrgbToLinearA98Rgb;
         case SassColorSpace::PROPHOTO_RGB: return ColorSpaces::linearSrgbToLinearProphotoRgb;
         case SassColorSpace::REC2020: return ColorSpaces::linearSrgbToLinearRec2020;
@@ -708,6 +765,7 @@ namespace Sass {
     {
       switch (dest.space()) {
         case SassColorSpace::DISPLAY_P3: return ColorSpaces::linearSrgbToLinearDisplayP3;
+        case SassColorSpace::DISPLAY_P3_LINEAR: return ColorSpaces::linearSrgbToLinearDisplayP3;
         case SassColorSpace::A98RGB: return ColorSpaces::linearSrgbToLinearA98Rgb;
         case SassColorSpace::PROPHOTO_RGB: return ColorSpaces::linearSrgbToLinearProphotoRgb;
         case SassColorSpace::REC2020: return ColorSpaces::linearSrgbToLinearRec2020;
@@ -779,6 +837,7 @@ namespace Sass {
         case SassColorSpace::A98RGB: return ColorSpaces::xyzD50ToLinearA98Rgb;
         case SassColorSpace::PROPHOTO_RGB: return ColorSpaces::xyzD50ToLinearProphotoRgb;
         case SassColorSpace::DISPLAY_P3: return ColorSpaces::xyzD50ToLinearDisplayP3;
+        case SassColorSpace::DISPLAY_P3_LINEAR: return ColorSpaces::xyzD50ToLinearDisplayP3;
         case SassColorSpace::REC2020: return ColorSpaces::xyzD50ToLinearRec2020;
         case SassColorSpace::XYZ_D65: return ColorSpaces::xyzD50ToXyzD65;
         case SassColorSpace::LMS: return ColorSpaces::xyzD50ToLms;
@@ -846,6 +905,7 @@ namespace Sass {
         case SassColorSpace::A98RGB: return ColorSpaces::xyzD65ToLinearA98Rgb;
         case SassColorSpace::PROPHOTO_RGB: return ColorSpaces::xyzD65ToLinearProphotoRgb;
         case SassColorSpace::DISPLAY_P3: return ColorSpaces::xyzD65ToLinearDisplayP3;
+        case SassColorSpace::DISPLAY_P3_LINEAR: return ColorSpaces::xyzD65ToLinearDisplayP3;
         case SassColorSpace::REC2020: return ColorSpaces::xyzD65ToLinearRec2020;
         case SassColorSpace::XYZ_D50: return ColorSpaces::xyzD65ToXyzD50;
         case SassColorSpace::LMS: return ColorSpaces::xyzD65ToLms;
@@ -873,6 +933,7 @@ namespace Sass {
     static const XyzD65ColorSpace xyzd65;
     static const Rec2020ColorSpace rec2020;
     static const DisplayP3ColorSpace displayP3;
+    static const DisplayP3LinearColorSpace displayP3Linear;
     static const A98RgbColorSpace a98rgb;
     static const ProphotoRgbColorSpace protophotoRgb;
     static const LmsColorSpace lms;

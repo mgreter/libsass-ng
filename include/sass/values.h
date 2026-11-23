@@ -90,7 +90,9 @@ extern "C" {
     PROPHOTO_RGB,REC2020,
     XYZ_D65, XYZ_D50,
     LAB, LCH, LMS,
-    OKLAB, OKLCH
+    OKLAB, OKLCH,
+    // Added later (keeps the values above stable)
+    DISPLAY_P3_LINEAR
   };
 
   // Creator functions for all value types
