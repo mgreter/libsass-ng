@@ -231,7 +231,9 @@ namespace Sass {
       else if (max == nr_red) {
         hue = 60 * (nr_green - nr_blue) / delta + 360;
       }
-      else if (max == green) {
+      // Compare against the value (a missing green is zero, like
+      // dart-sass; comparing with the optional was always false)
+      else if (max == nr_green) {
         hue = 60 * (nr_blue - nr_red) / delta + 120;
       }
       else {
