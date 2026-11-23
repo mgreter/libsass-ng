@@ -471,6 +471,7 @@ namespace Sass {
 
     // Consumes a quoted string expression.
     StringExpression* readInterpolatedString();
+    Interpolation* readInterpolatedStringToken();
 
     // Consumes an expression that starts like an identifier.
     virtual Expression* readIdentifierLike();

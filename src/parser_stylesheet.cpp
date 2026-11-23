@@ -1791,12 +1791,12 @@ namespace Sass {
           else {
             scanner.expectChar($lparen);
             scanWhitespace();
-            StringExpressionObj argument = readInterpolatedString();
+            InterpolationObj argument = readInterpolatedStringToken();
             scanner.expectChar($rparen);
 
             buffer.write(identifier);
             buffer.write($lparen);
-            buffer.addInterpolation(argument->getAsInterpolation());
+            buffer.addInterpolation(argument);
             buffer.write($rparen);
           }
 
@@ -1812,8 +1812,7 @@ namespace Sass {
         else if (identifier == "regexp") {
           buffer.write("regexp(");
           scanner.expectChar($lparen);
-          StringExpressionObj str = readInterpolatedString();
-          buffer.addInterpolation(str->getAsInterpolation());
+          buffer.addInterpolation(readInterpolatedStringToken());
           scanner.expectChar($rparen);
           buffer.write($rparen);
           needsDeprecationWarning = true;
@@ -3178,6 +3177,58 @@ namespace Sass {
   }
   // readParentExpression
 
+  // Consumes a quoted string without processing its contents semantically
+  // (like dart-sass `interpolatedStringToken`). The quotes and escapes are
+  // kept as written, only interpolations are evaluated later.
+  Interpolation* StylesheetParser::readInterpolatedStringToken()
+  {
+    Offset start(scanner.offset);
+    uint8_t quote = scanner.readChar();
+    uint8_t next = 0, second = 0;
+    if (quote != $apos && quote != $quote) {
+      error("Expected string.",
+        scanner.relevantSpanFrom(start));
+    }
+    InterpolationBuffer buffer(scanner);
+    buffer.write(quote);
+    while (true) {
+      if (!scanner.peekChar(next)) next = $nul;
+      if (next == quote) {
+        buffer.write(scanner.readChar());
+        break;
+      }
+      else if (next == $nul || isNewline(next)) {
+        sass::sstream strm;
+        strm << "Expected " << quote << ".";
+        error(strm.str(),
+          scanner.relevantSpan());
+      }
+      else if (next == $backslash) {
+        if (!scanner.peekChar(second, 1)) second = $nul;
+        if (isNewline(second)) {
+          buffer.write(scanner.readChar());
+          buffer.write(scanner.readChar());
+          if (second == $cr && scanner.scanChar($lf)) {
+            buffer.write($lf);
+          }
+        }
+        else {
+          const char* before = scanner.position;
+          escapeCharacter();
+          buffer.write(scanner.substring(before));
+        }
+      }
+      else if (next == $hash && scanner.peekChar(1) == $lbrace) {
+        buffer.add(readSingleInterpolation());
+      }
+      else {
+        buffer.write(scanner.readChar());
+      }
+    }
+    return buffer.getInterpolation(scanner.rawSpanFrom(start));
+  }
+  // EO readInterpolatedStringToken
+
   // Consumes a quoted string expression.
   StringExpression* StylesheetParser::readInterpolatedString()
   {
@@ -3759,8 +3810,8 @@ namespace Sass {
 
       case $apos:
       case $quote:
-        strex = readInterpolatedString();
-        buffer.addInterpolation(strex->getAsInterpolation());
+        // Like dart-sass, keep the string as written
+        buffer.addInterpolation(readInterpolatedStringToken());
         break;
 
       case $slash:
@@ -3930,8 +3981,8 @@ namespace Sass {
 
       case $apos:
       case $quote:
-        strex = readInterpolatedString();
-        itpl = strex->getAsInterpolation();
+        // Like dart-sass, keep the string as written
+        itpl = readInterpolatedStringToken();
         buffer.addInterpolation(itpl);
         wroteNewline = false;
         break;
