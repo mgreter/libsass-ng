@@ -130,6 +130,7 @@ namespace Sass {
     // Private helper for "messy" calc values
     void _writeCalculationValue(AstNode* node, bool wrap = true);
     void _writeCalculationUnits(Units* units);
+    void _writeCalcUnits(const Number* nr, size_t skip);
 
     void write_channel(tl::optional<double> value, const char* unit);
 

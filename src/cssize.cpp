@@ -54,15 +54,9 @@ namespace Sass {
     // reduce units
     n->reduce();
 
-    // Check if unit is valid for css
-    if (n->isValidCssUnit()) {
-      // Output valid css number
-      Inspect::visitNumber(n);
-    }
-    else {
-      // Units can't be represented in css
-      throw Exception::InvalidCssValue({}, *n);
-    }
+    // Like dart-sass (since 1.96), numbers with units that can't be
+    // represented in CSS are written as calculations (see Inspect)
+    Inspect::visitNumber(n);
 
   }
 

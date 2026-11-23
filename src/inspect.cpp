@@ -1686,54 +1686,39 @@ namespace Sass {
     return false;
   }
 
+  // Like dart-sass `_writeCalculationUnits`: writes the numerator units
+  // (from [skip]) as ` * 1unit` and the denominator units as ` / 1unit`.
+  void Inspect::_writeCalcUnits(const Number* nr, size_t skip)
+  {
+    for (size_t i = skip; i < nr->numerators.size(); i += 1) {
+      append_optional_space(); append_string("*"); append_optional_space();
+      append_string("1"); append_string(nr->numerators[i]);
+    }
+    for (const auto& unit : nr->denominators) {
+      append_optional_space(); append_string("/"); append_optional_space();
+      append_string("1"); append_string(unit);
+    }
+  }
+
   void Inspect::_writeCalculationValue(AstNode* node, bool wrap)
   {
     if (auto nr = dynamic_cast<Number*>(node)) {
-
-      if (output_style() == SASS_STYLE_TO_CSS) {
-        if (!nr->isValidCssUnit()) {
-          throw Exception::SassScriptException(
-            "isn't a valid CSS value.",
-            {}, node->pstate()
-          );
-        }
-      }
-
-      if (std::isnan(nr->value())) {
-        if (nr->value() < 0) {
-          append_string("-NaN");
-        }
-        else {
-          append_string("NaN");
-        }
-        if (nr->hasUnits()) {
-          append_string(" * 1");
-          _writeCalculationUnits(nr);
-        }
+      // Like dart-sass, non-finite numbers and numbers with complex units
+      // are written with their units as operands (no error, since 1.96).
+      if (std::isnan(nr->value()) || std::isinf(nr->value())) {
+        if (std::isnan(nr->value())) append_string(nr->value() < 0 ? "-NaN" : "NaN");
+        else append_string(nr->value() < 0 ? "-infinity" : "infinity");
+        _writeCalcUnits(nr, 0);
         return;
       }
-
-      if (std::isinf(nr->value())) {
-        if (nr->value() < 0) {
-          append_string("-infinity");
-        }
-        else {
-          append_string("infinity");
-        }
-        if (nr->hasUnits()) {
-          append_string(" * 1");
-          _writeCalculationUnits(nr);
-        }
-        return;
-      }
-
       if (nr->isValidCssUnit()) {
         nr->accept(this);
       }
       else {
-        nr->accept(this);
+        append_string(PrintNumber(nr->value(), outopt));
+        if (!nr->numerators.empty()) append_string(nr->numerators[0]);
+        _writeCalcUnits(nr, nr->numerators.empty() ? 0 : 1);
       }
-
     }
     else if (auto op = dynamic_cast<CalcOperation*>(node)) {
       auto lcalc = dynamic_cast<CalcOperation*>(op->left().ptr());
@@ -1906,61 +1891,18 @@ namespace Sass {
       visitNumber(value->rhsAsSlash());
       return;
     }
-
-    if (std::isnan(value->value())) {
+    // Like dart-sass, non-finite numbers and numbers with complex
+    // units are written as calculations (valid CSS since 1.96).
+    if (std::isnan(value->value()) || std::isinf(value->value())) {
       append_string("calc(");
-      if (value->value() < 0) {
-        append_string("-NaN");
-      }
-      else {
-        append_string("NaN");
-      }
-      if (!value->isUnitless()) {
-        if (value->numerators.size() > 0)
-          append_string(" * 1");
-        append_string(value->unit2());
-      }
+      if (std::isnan(value->value())) append_string(value->value() < 0 ? "-NaN" : "NaN");
+      else append_string(value->value() < 0 ? "-infinity" : "infinity");
+      _writeCalcUnits(value, 0);
       append_string(")");
       return;
     }
-
-    if (std::isinf(value->value())) {
-      append_string("calc(");
-      if (value->value() < 0) {
-        append_string("-infinity");
-      }
-      else {
-        append_string("infinity");
-      }
-      if (!value->isUnitless()) {
-        if (value->numerators.size() > 0)
-          append_string(" * 1");
-        append_string(value->unit2());
-      }
-      append_string(")");
-      return;
-    }
-
     sass::string res = PrintNumber(value->value(), outopt);
-
-    if (true)
-    {
-      size_t iL = value->numerators.size();
-      size_t nL = value->denominators.size();
-      if (iL != 0) res += value->numerators[0];
-      for (size_t i = 1; i < iL; i += 1) {
-        res += " * 1";
-        res += value->numerators[i];
-      }
-      for (size_t i = 0; i < nL; i += 1) {
-        res += " / 1";
-        res += value->denominators[i];
-      }
-    }
-    else {
-      res += value->unit();
-    }
-
+    if (!value->numerators.empty()) res += value->numerators[0];
     if (value->isValidCssUnit()) {
       // output the final token
       append_token(res, value);
@@ -1968,6 +1910,7 @@ namespace Sass {
     else {
       append_string("calc(");
       append_token(res, value);
+      _writeCalcUnits(value, value->numerators.empty() ? 0 : 1);
       append_string(")");
     }
   }
