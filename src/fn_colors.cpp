@@ -67,15 +67,17 @@ namespace Sass {
     */
     // EO isVarSlash
 
-    // Returns whether [value] is an unquoted
-    // string that start with `var(`.
+    // Returns whether [value] is an unquoted string that starts with `var(`
+    // (case-insensitive, and at least as long as `var(--_)`, like dart-sass).
     static bool isVar(const Value* value)
     {
       if (value == nullptr) return false;
       const String* str = value->isaString();
       if (str == nullptr) return false;
       if (str->hasQuotes()) return false;
-      return startsWith(str->value(), "var(", 4);
+      const sass::string& text(str->value());
+      if (text.size() < 8) return false;
+      return StringUtils::startsWithIgnoreCase(text, "var(", 4);
     }
     // EO isVar
 
