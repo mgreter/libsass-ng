@@ -4929,6 +4929,24 @@ namespace Sass {
         scanner.relevantSpanFrom(before));
     }
 
+    // Like dart-sass (1.99), only some lowercase names are invalid,
+    // while some others (with other cases) are only deprecated.
+    if (name.str == "expression" || name.str == "url" || name.str == "and" ||
+      name.str == "or" || name.str == "not" || StringUtils::unvendor(name.str) == "element") {
+      error("Invalid function name.",
+        scanner.relevantSpanFrom(before));
+    }
+    else {
+      sass::string lower(StringUtils::toLowerCase(name.str));
+      if (lower == "expression" || lower == "url" || StringUtils::unvendor(lower) == "element") {
+        compiler.addDeprecation(name.pstate,
+          Logger::WARN_FUNCTION_NAME, []() {
+            return "Custom functions with this name are deprecated and will be removed in a future\n"
+              "release. Please choose a different name.\n"
+              "More info: https://sass-lang.com/d/function-name";
+          });
+      }
+    }
     sass::string normalized(name.str);
 
     scanWhitespace(true);
@@ -4944,12 +4962,6 @@ namespace Sass {
         scanner.relevantSpanFrom(start));
     }
 
-    sass::string fname(StringUtils::unvendor(name.str));
-    if (fname == "calc" || fname == "element" || fname == "expression" || fname == "url"
-      || fname == "and" || fname == "or" || fname == "not" || fname == "clamp") {
-      error("Invalid function name.",
-        scanner.relevantSpanFrom(start));
-    }
 
     scanWhitespace();
     FunctionRule* rule = withChildren<FunctionRule>(

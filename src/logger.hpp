@@ -51,6 +51,7 @@ namespace Sass {
       WARN_DOUBLE_DASH_MIXIN,
       WARN_ABS_PERCENT,
       WARN_MS_ALPHA,
+      WARN_FUNCTION_NAME,
       DEPR_COLOR_FUNCTIONS,
       DEPR_GLOBAL_BUILTIN,
     };

@@ -635,7 +635,8 @@ namespace Sass {
       NumberObj nr_val = arg_val->isaNumber();
       NumberObj nr_max = arg_max->isaNumber();
       if (nr_min && nr_val && nr_max) {
-        if (nr_min->hasCompatibleUnits(nr_val) && nr_max->hasCompatibleUnits(nr_val)) {
+        // Like dart-sass, unitless numbers are not compatible with units here
+        if (nr_min->hasCompatibleUnits(nr_val, true) && nr_min->hasCompatibleUnits(nr_max, true)) {
           if (nr_val->lessThanOrEquals(nr_min, logger, pstate)) return nr_min.detach();
           if (nr_val->greaterThanOrEquals(nr_max, logger, pstate)) return nr_max.detach();
           else return nr_val.detach();
@@ -643,6 +644,7 @@ namespace Sass {
       }
       verifyCompatibleNumbers(logger, pstate, nr_min, nr_val);
       verifyCompatibleNumbers(logger, pstate, nr_min, nr_max);
+      verifyCompatibleNumbers(logger, pstate, nr_val, nr_max);
       return SASS_MEMORY_NEW(Calculation, pstate,
         str_clamp, { arg_min, arg_val, arg_max });
     }
