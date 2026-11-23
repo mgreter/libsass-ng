@@ -2045,7 +2045,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "red() is only supported for legacy colors. Please use "
+            "color.red() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj rgb = color->toSpace(ColorSpaces::rgb, pstate, false);
@@ -2059,7 +2059,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "green() is only supported for legacy colors. Please use "
+            "color.green() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj rgb = color->toSpace(ColorSpaces::rgb, pstate, false);
@@ -2073,7 +2073,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "blue() is only supported for legacy colors. Please use "
+            "color.blue() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj rgb = color->toSpace(ColorSpaces::rgb, pstate, false);
@@ -2087,7 +2087,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "hue() is only supported for legacy colors. Please use "
+            "color.hue() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hsl = color->toSpace(ColorSpaces::hsl, pstate);
@@ -2100,7 +2100,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "saturation() is only supported for legacy colors. Please use "
+            "color.saturation() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hsl = color->toSpace(ColorSpaces::hsl, pstate);
@@ -2113,7 +2113,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "lightness() is only supported for legacy colors. Please use "
+            "color.lightness() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hsl = color->toSpace(ColorSpaces::hsl, pstate);
@@ -2126,7 +2126,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "whiteness() is only supported for legacy colors. Please use "
+            "color.whiteness() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hwb = color->toSpace(ColorSpaces::hwb, pstate);
@@ -2139,7 +2139,7 @@ if (channels.any((channel) => channel.isSpecialNumber)) {
         const Color* color = arguments[0]->assertColor(compiler, Strings::color);
         if (!color->isLegacy()) {
           throw Exception::SassScriptException(compiler, pstate,
-            "blackness() is only supported for legacy colors. Please use "
+            "color.blackness() is only supported for legacy colors. Please use "
             "color.channel() instead with an explicit $space argument.");
         }
         ColorObj hwb = color->toSpace(ColorSpaces::hwb, pstate);
