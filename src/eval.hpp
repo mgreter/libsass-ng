@@ -194,7 +194,7 @@ namespace Sass {
     void visitStylesheet(Stylesheet* module);
     void exposeModule(Stylesheet* module);
 
-    sass::vector<WithConfigVar> toWithConfig(Map* withMap);
+    sass::vector<WithConfigVar> toWithConfig(Map* withMap, const SourceSpan& pstate);
 
     void importCssModule(String* url, Map* config, const SourceSpan& pstate);
     // Loads (and compiles) a module as for `meta.load()` and `meta.load-css()`.

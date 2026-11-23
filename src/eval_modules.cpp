@@ -667,7 +667,7 @@ namespace Sass {
 
     // Owned by the evaluator (see `loadCssConfigs`)
     loadCssConfigs.emplace_back(new WithConfig(wconfig,
-      toWithConfig(withMap), hasWith));
+      toWithConfig(withMap, pstate), hasWith));
     WithConfig& configs = *loadCssConfigs.back();
     // Only uses its own `$with` config
     configs.isolated = true;
@@ -704,7 +704,7 @@ namespace Sass {
   }
 
 
-  sass::vector<WithConfigVar> Eval::toWithConfig(Map* withMap) {
+  sass::vector<WithConfigVar> Eval::toWithConfig(Map* withMap, const SourceSpan& pstate) {
 
     bool hasWith = withMap && !withMap->empty();
 
@@ -712,6 +712,7 @@ namespace Sass {
 
     if (hasWith) {
       sass::flatmap::env<EnvKey, ValueObj> config;
+      bool privateDeprecation = false;
       config.reserve(withMap->elements().size());
       for (auto& kv : withMap->elements()) {
         String* name = kv.first->assertString(compiler, "with key");
@@ -728,6 +729,18 @@ namespace Sass {
             "The variable $" + name->value() + " was configured twice.");
         }
         config[name->value()] = kv.second;
+        // Like dart-sass (1.92), configuring private variables is
+        // deprecated (only reported once per configuration)
+        const sass::string& original(name->value());
+        if (!privateDeprecation && !original.empty() &&
+          (original[0] == '-' || original[0] == '_'))
+        {
+          privateDeprecation = true;
+          compiler.addDeprecation(pstate, Logger::WARN_WITH_PRIVATE, [original]() {
+            return "Configuring private variables (such as $" + original + ") is deprecated.\n"
+              "This will be an error in LibSass 5.0.0.";
+          });
+        }
       }
     }
 

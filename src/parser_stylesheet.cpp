@@ -1246,6 +1246,14 @@ namespace Sass {
 
       Offset variableStart(scanner.offset);
       sass::string name(variableName());
+      // Like dart-sass (1.92), configuring private variables is deprecated
+      if (!name.empty() && (name[0] == $minus || name[0] == $_)) {
+        compiler.addDeprecation(scanner.relevantSpanFrom(variableStart),
+          Logger::WARN_WITH_PRIVATE, []() {
+            return "Configuring private variables is deprecated.\n"
+              "This will be an error in LibSass 5.0.0.";
+          });
+      }
       scanWhitespace(true);
       scanner.expectChar($colon);
       scanWhitespace(true);
