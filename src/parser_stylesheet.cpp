@@ -502,15 +502,18 @@ namespace Sass {
 
     // Parse custom properties as declarations no matter what.
     InterpolationObj name = nameBuffer.getInterpolation(beforeColon);
-    if (startsWith(name->getInitialPlain(), "--", 2)) {
+    bool isCustomProperty = startsWith(name->getInitialPlain(), "--", 2);
+    // Like dart-sass, `result` in a plain-CSS `@function` is raw CSS too
+    if (isCustomProperty || (inPlainCssFunction &&
+      StringUtils::equalsIgnoreCase(name->getPlainString(), "result", 6))) {
       // Custom properties may be empty (`--a:;`), like in dart-sass
       InterpolationObj value(atEndOfStatement()
         ? SASS_MEMORY_NEW(Interpolation, scanner.rawSpan())
         : readInterpolatedDeclarationValue(false, false, true, true, false));
-      expectStatementSeparator("custom property");
+      expectStatementSeparator(isCustomProperty ? "custom property" : "@function result");
       return SASS_MEMORY_NEW(Declaration,
         scanner.relevantSpanFrom(start), name,
-        value->wrapInStringExpression());
+        value->wrapInStringExpression(), {}, false);
     }
 
     if (scanner.scanChar($colon)) {
@@ -624,13 +627,19 @@ namespace Sass {
     scanner.expectChar($colon);
     scanWhitespace();
 
+    // Like dart-sass, nested declarations (where custom properties are
+    // not parsed) can't have names that begin with `--`.
+    if (!parseCustomProperties && startsWith(name->getInitialPlain(), "--", 2)) {
+      error("Declarations whose names begin with \"--\" may not be nested.",
+        name->pstate());
+    }
     if (parseCustomProperties && startsWith(name->getInitialPlain(), "--", 2)) {
       InterpolationObj value(readInterpolatedDeclarationValue(
         false, false, true, true, false, false));
       expectStatementSeparator("custom property");
       return SASS_MEMORY_NEW(Declaration,
         scanner.relevantSpanFrom(start),
-        name, value->wrapInStringExpression());
+        name, value->wrapInStringExpression(), {}, false);
     }
 
     scanWhitespace();
@@ -725,7 +734,7 @@ namespace Sass {
       return readForRule(start, child);
     }
     else if (plain == "function") {
-      return readFunctionRule(start);
+      return readFunctionRule(start, name);
     }
     else if (plain == "if") {
       return readIfRule(start, child);
@@ -1911,6 +1920,10 @@ namespace Sass {
   AtRule* StylesheetParser::readAnyAtRule(Offset start, Interpolation* name) // unknownAtRule
   {
     RAII_FLAG(inUnknownAtRule, true);
+    // Like dart-sass, the `result` property of a plain-CSS
+    // `@function` rule is parsed as raw CSS (like custom properties).
+    RAII_FLAG(inPlainCssFunction, inPlainCssFunction ||
+      StringUtils::equalsIgnoreCase(name->getPlainString(), "function", 8));
     EnvFrame local(compiler, false);
 
     scanWhitespace(false);
@@ -4853,12 +4866,10 @@ namespace Sass {
     StringToken name = readIdentifierToken();
 
     if (StringUtils::startsWith(name.str, "--", 2)) {
-      compiler.addDeprecation(name.pstate,
-        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
-          return "Sass @mixin names beginning with -- are deprecated for forward-"
-            "compatibility with plain CSS mixins.\n"
-            "For details, see https://sass-lang.com/d/css-function-mixin";
-        });
+      error("Sass @mixin names beginning with -- are forbidden for forward-"
+        "compatibility with plain CSS mixins.\n\n"
+        "For details, see https://sass-lang.com/d/css-function-mixin",
+        name.pstate);
     }
 
     scanWhitespace();
@@ -4902,13 +4913,16 @@ namespace Sass {
 
   // Consumes a function declaration.
   // [start] should point before the `@`.
-  FunctionRule* StylesheetParser::readFunctionRule(Offset start)
+  Statement* StylesheetParser::readFunctionRule(Offset start, Interpolation* atRuleName)
   {
+    scanWhitespace(true);
+    // Like dart-sass (1.94), functions with names beginning with `--`
+    // are plain CSS functions and parsed as unknown at-rules.
+    if (scanner.matches("--")) return readAnyAtRule(start, atRuleName);
     // Variables should not be hoisted through
     EnvRefs* parent = compiler.envstack.back();
     EnvFrame local(compiler, false);
 
-    scanWhitespace(true);
 
     // var precedingComment = lastSilentComment;
     // lastSilentComment = null;
@@ -4916,15 +4930,7 @@ namespace Sass {
     Offset before(scanner.offset);
     StringToken name = readIdentifierToken();
 
-    if (StringUtils::startsWith(name.str, "--", 2)) {
-      compiler.addDeprecation(name.pstate,
-        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
-          return "Sass @function names beginning with -- are deprecated for forward-"
-            "compatibility with plain CSS functions.\n"
-            "For details, see https://sass-lang.com/d/css-function-mixin";
-        });
-    }
-    else if (StringUtils::equalsIgnoreCase(name.str, "type", 4)) {
+    if (StringUtils::equalsIgnoreCase(name.str, "type", 4)) {
       error("This name is reserved for the plain-CSS function.",
         scanner.relevantSpanFrom(before));
     }

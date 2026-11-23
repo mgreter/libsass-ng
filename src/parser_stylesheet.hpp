@@ -50,6 +50,8 @@ namespace Sass {
 
     // Whether the parser is currently parsing an unknown rule.
     bool inUnknownAtRule = false;
+    // Whether the parser is currently parsing a plain-CSS `@function` rule.
+    bool inPlainCssFunction = false;
 
     // Whether the parser is currently parsing a style rule.
     bool inStyleRule = false;
@@ -81,6 +83,7 @@ namespace Sass {
       inContentBlock(false),
       inControlDirective(false),
       inUnknownAtRule(false),
+      inPlainCssFunction(false),
       inStyleRule(false),
       inParentheses(false),
       inRoot(true),
@@ -274,7 +277,7 @@ namespace Sass {
 
     // Consumes a `@function` rule.
     // [start] should point before the `@`.
-    FunctionRule* readFunctionRule(Offset start);
+    Statement* readFunctionRule(Offset start, Interpolation* atRuleName);
 
     // Try to parse either `to` or `through`, if successful
     // we will return `true`. The boolean passed via [inclusive]

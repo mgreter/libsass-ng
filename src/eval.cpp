@@ -1593,7 +1593,9 @@ namespace Sass {
 
     Callable* callable = nullptr;
 
-    if (function->fidx().isValid()) {
+    // Like dart-sass (1.94), calls to functions with names beginning with
+    // `--` are plain CSS functions (even if e.g. `__a` is defined).
+    if (function->fidx().isValid() && !StringUtils::startsWith(fname, "--", 2)) {
       callable = compiler.varRoot.getFunction (function->fidx());
     }
 
@@ -1678,14 +1680,6 @@ namespace Sass {
         function->ns().empty());
     }
 
-    if (StringUtils::startsWith(fname, "--", 2) /* dart has some more conditions */) {
-      compiler.addDeprecation(function->span(),
-        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
-          return "Sass @function names beginning with -- are deprecated for forward-"
-            "compatibility with plain CSS functions.\n"
-            "For details, see https://sass-lang.com/d/css-function-mixin";
-        });
-    }
 
     // Check if function is already defined on the frame/scope
     // Can fail if the function definition comes after the usage
@@ -2062,14 +2056,6 @@ namespace Sass {
   Value* Eval::visitIncludeRule(IncludeRule* include)
   {
 
-    if (StringUtils::startsWith(include->name().orig(), "--", 2) /* dart has some more conditions */) {
-      compiler.addDeprecation(include->span(),
-        Logger::WARN_DOUBLE_DASH_MIXIN, []() {
-          return "Sass @mixin names beginning with -- are deprecated for forward-"
-            "compatibility with plain CSS mixins.\n"
-            "For details, see https://sass-lang.com/d/css-function-mixin";
-        });
-    }
 
     // Check if mixin expression was already resolved
     if (!include->midx().isValid()) {
@@ -2083,6 +2069,16 @@ namespace Sass {
       // Check if mixin is already defined on the frame/scope
       // Can fail if the mixin definition comes after the usage
       if (Callable* callable = compiler.varRoot.getMixin(include->midx())) {
+        // Like dart-sass (1.94), user-defined mixins can't be included with
+        // names beginning with `--` (e.g. `@include --a` for `@mixin __a`).
+        if (StringUtils::startsWith(include->name().orig(), "--", 2) &&
+          callable->isaUserDefinedCallable()) {
+          CallStackFrame frame(logger, include->span());
+          throw Exception::RuntimeException(logger,
+            "Sass @mixin names beginning with -- are forbidden for forward-"
+            "compatibility with plain CSS mixins.\n\n"
+            "For details, see https://sass-lang.com/d/css-function-mixin");
+        }
         // CallStackFrame frame(logger, include->pstate(), true);
         ValueObj value = applyMixin(include->pstate(), include->name(),
           callable, include->content(), include->arguments());
@@ -2994,11 +2990,12 @@ namespace Sass {
       throw Exception::RuntimeException(logger,
         "Declarations may only be used within style rules.");
     }
-    bool was_custom_property = node->isCustomProperty();
+    bool was_custom_property = !node->parsedAsSassScript();
     if (!declarationName.empty() && was_custom_property) {
       CallStackFrame csf(logger, node->pstate());
-      throw Exception::RuntimeException(logger,
-        "Declarations whose names begin with \"--\" may not be nested.");
+      throw Exception::RuntimeException(logger, node->isCustomProperty()
+        ? "Declarations whose names begin with \"--\" may not be nested."
+        : "Declarations parsed as raw CSS may not be nested.");
     }
 
     sass::string name(interpolationToCssString(node->name(), true, false));

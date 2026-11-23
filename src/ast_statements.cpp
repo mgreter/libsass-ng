@@ -177,13 +177,15 @@ namespace Sass {
     SourceSpan&& pstate,
     Interpolation* name,
     Expression* value,
-    StatementVector&& children) :
+    StatementVector&& children,
+    bool parsedAsSassScript) :
     ParentStatement(
       std::move(pstate),
       std::move(children),
       nullptr),
     name_(name),
-    value_(value)
+    value_(value),
+    parsedAsSassScript_(parsedAsSassScript)
   {}
 
   bool Declaration::isCustomProperty() const

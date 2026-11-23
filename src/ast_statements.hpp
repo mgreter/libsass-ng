@@ -151,6 +151,9 @@ namespace Sass {
 
     ADD_CONSTREF(InterpolationObj, name);
     ADD_CONSTREF(ExpressionObj, value);
+    // Whether the value was parsed as SassScript. This is false for
+    // custom properties and the `result` of plain-CSS `@function`s.
+    ADD_CONSTREF(bool, parsedAsSassScript);
 
   public:
 
@@ -158,7 +161,8 @@ namespace Sass {
     Declaration(SourceSpan&& pstate,
       Interpolation* name,
       Expression* value = nullptr,
-      StatementVector&& children = {});
+      StatementVector&& children = {},
+      bool parsedAsSassScript = true);
 
     // Statement visitor to sass values entry function
     Value* accept(StatementVisitor<Value*>* visitor) final {

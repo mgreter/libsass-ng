@@ -79,7 +79,6 @@ namespace Sass {
       || name == "error"
       || name == "extend"
       || name == "for"
-      || name == "function"
       || name == "if"
       || name == "include"
       || name == "mixin"
@@ -116,6 +115,13 @@ namespace Sass {
     }
     else if (plain == "import") {
       return readImportRule(start);
+    }
+    else if (plain == "function") {
+      // Like dart-sass, plain CSS functions (--name) are allowed
+      if (scanner.matches("--")) return readAnyAtRule(start, name);
+      InterpolationObj value = readAlmostAnyValue();
+      error("This at-rule isn't allowed in plain CSS.",
+        scanner.relevantSpanFrom(start));
     }
     else if (plain == "media") {
       return readMediaRule(start);
